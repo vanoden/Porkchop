@@ -286,4 +286,5 @@ exit;
 	}
 
 	$page->title("Edit Form");
+	$page->setAdminMenuSection("Forms");  // Keep Forms section open
 	$page->addBreadcrumb("Forms","/_form/browse");

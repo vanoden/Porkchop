@@ -1,17 +1,19 @@
+<link rel="stylesheet" type="text/css" href="/html.src/css/admin.css">
 <?= $page->showAdminPageInfo() ?>
 
 <?php $activeTab = 'metadata'; ?>
 <?php
     $__defImg = $item->getDefaultStorageImage();
     if ($__defImg && $__defImg->id) {
-        $__thumb = "/api/media/downloadMediaImage?height=50&width=50&code=".$__defImg->code;
-        $__title = htmlspecialchars($item->getMetadata('name') ?: $item->name ?: $item->code);
-        echo '<div class="product-container">'
-            . '<img src="'. $__thumb .'" alt="Default" class="product-thumb" />'
-            . '<div class="product-title">'. $__title .'</div>'
-            . '</div>';
+        $thumb = "/api/media/downloadMediaImage?height=50&width=50&code=".$__defImg->code;
+        $title = htmlspecialchars($item->getMetadata('name') ?: $item->name ?: $item->code);
     }
 ?>
+<div class="product-container">
+    <img src="<?=$thumb?>" alt="Default" class="product-thumb" />
+    <div class="product-title"><?=$title?></div>
+</div>
+
 <div class="tabs">
     <a href="/_spectros/admin_product/<?= $item->code ?>" class="tab <?= $activeTab==='details'?'active':'' ?>">Details</a>
     <a href="/_product/admin_product_prices/<?= $item->code ?>" class="tab <?= $activeTab==='prices'?'active':'' ?>">Prices</a>
@@ -118,88 +120,6 @@
     <input type="hidden" name="deleteMetadata" value="1">
     <input type="hidden" name="delete_metadata_key" id="delete_metadata_key" value="">
 </form>
-
-<style>
-.metadata-section {
-    margin-bottom: 30px;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-}
-
-.metadata-section h4 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    color: #333;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 5px;
-}
-
-.input-horiz {
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-}
-
-.input-horiz .label {
-    min-width: 150px;
-    font-weight: bold;
-    margin-right: 10px;
-}
-
-.input-horiz input,
-.input-horiz select,
-.input-horiz textarea {
-    flex: 1;
-    max-width: 500px;
-}
-
-.textarea-height-100 {
-    height: 100px;
-    resize: vertical;
-}
-
-.button-bar {
-    margin-top: 20px;
-    padding: 10px 0;
-}
-
-.button-bar .button {
-    margin-right: 10px;
-}
-
-.new-metadata-section {
-    border: 1px solid #ddd;
-    background-color: #f9f9f9;
-}
-
-.new-metadata-section h4 {
-    color: #333;
-    border-bottom: 1px solid #ccc;
-}
-
-.delete-metadata-btn {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    padding: 5px 8px;
-    margin-left: 10px;
-    cursor: pointer;
-    font-size: 16px;
-    line-height: 1;
-    min-width: 30px;
-}
-
-.delete-metadata-btn:hover {
-    background-color: #c82333;
-}
-
-.input-horiz {
-    align-items: center;
-}
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

@@ -142,3 +142,7 @@
     $repositories = $repositorylist->find();
 
     $statii = $package->statii();
+    
+    $page->title("Package");
+    $page->setAdminMenuSection("Package");  // Keep Package section open
+    $page->addBreadcrumb("Package", "/_package/packages");

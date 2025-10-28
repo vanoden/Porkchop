@@ -193,6 +193,7 @@
 
 	// Set up page navigation
 	$page->title("Shipment Detail");
+	$page->setAdminMenuSection("Shipping");  // Keep Shipping section open
 	$page->addBreadCrumb("Warehouse");
 	$page->addBreadcrumb("Shipments", "/_shipping/admin_shipments");
 	if (isset($shipment->id)) {

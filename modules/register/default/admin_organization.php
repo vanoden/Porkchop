@@ -28,6 +28,24 @@
 <?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
+<?php $activeTab = 'details'; ?>
+<?php
+    // Show organization info container similar to product container
+    $title = htmlspecialchars($organization->name ?: $organization->code);
+?>
+<div class="product-container">
+    <div class="product-title"><?=$title?></div>
+</div>
+<?php
+?>
+<div class="tabs">
+    <a href="/_register/admin_organization/<?= $organization->code ?>" class="tab <?= $activeTab==='details'?'active':'' ?>">Details</a>
+    <a href="/_register/admin_organization_users/<?= $organization->code ?>" class="tab <?= $activeTab==='users'?'active':'' ?>">Users</a>
+    <a href="/_register/admin_organization_tags/<?= $organization->code ?>" class="tab <?= $activeTab==='tags'?'active':'' ?>">Tags</a>
+    <a href="/_register/admin_organization_locations/<?= $organization->code ?>" class="tab <?= $activeTab==='locations'?'active':'' ?>">Locations</a>
+    <a href="/_register/admin_organization_audit_log/<?= $organization->code ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
+</div>
+
 <form id="orgDetails" name="orgDetails" method="POST">
 
     <input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
@@ -70,7 +88,7 @@
 				    foreach ($resellers as $reseller) {
 				        if ($organization->id == $reseller->id) continue;
 				    ?>
-				        <option value="<?=$reseller->id?>"<?php	if($organization->reseller->id == $reseller->id) print " selected";?>><?=$reseller->name?></option>
+				        <option value="<?=$reseller->id?>"<?php	if($organization->assigned_reseller_id == $reseller->id) print " selected";?>><?=$reseller->name?></option>
 				    <?php
 				    } 
 				    ?>
@@ -85,6 +103,7 @@
 	    <div class="tableRowHeader">
 			<div class="tableCell">Is A Customer</div>
 			<div class="tableCell">Is A Vendor</div>
+			<div class="tableCell">Account Number</div>
 			<div class="tableCell">Website URL</div>
 		    <div class="tableCell">Require Two-Factor Authentication</div>
 	    </div> <!-- end row header -->
@@ -94,6 +113,9 @@
 		    </div>
 			<div class="tableCell">
 			    <input name="is_vendor" type="checkbox" value="1" <?php if ($organization->is_vendor) print " checked"?>>
+		    </div>
+			<div class="tableCell">
+			    <input name="account_number" type="text" class="width-100per" value="<?=$organization->account_number?>" placeholder="Enter account number"/>
 		    </div>
 			<div class="tableCell">
 			    <input id="website_url" name="website_url" class="width-250px" placeholder="http://" value="<?=$organization->website_url?>"/>
@@ -115,146 +137,6 @@
 	    </div>
     </div>
     <div><input type="submit" name="method" value="Apply" class="button"/></div>
-	<input type="button" name="btnAuditLog" value="Audit Log" onclick="location.href='/_register/organization_audit_log?organization_id=<?=$organization->id?>';" />
 
     <!--End first row-->
-	<?php	if ($organization->id) { ?>
-    <h3>Add Organization Tag</h3>
-    <div class="tableBody min-tablet">
-	    <div class="tableRowHeader">
-		    <div class="tableCell width-35per">Tag</div>
-	    </div>
-        <?php	
-            foreach ($organizationTags as $tag) {
-        ?>
-	        <div class="tableRow">
-		        <div class="tableCell">
-			        <input type="button" onclick="removeTagById('<?=$tag->id?>')" name="removeTag" value="Remove" class="button"/> <strong><?=$tag->name?></strong>
-		        </div>
-	        </div>
-        <?php	
-            } 
-        ?>
-	    
-	    <div class="tableRow">
-		    <div class="tableCell"><label>New Tag</label><input type="text" class="" name="newTag" value="" /></div>
-	    </div>
-    </div>
-    <div><input type="submit" name="addTag" value="Add Tag" class="button"/></div>
-    <div class="user_accounts_container">
-        <input type="checkbox" id="showAllUsers" name="showAllUsers" value="showAllUsers" onclick="showHidden()" <?=(isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? 'checked' : ''?>> SHOW ALL (Expired/Hidden/Deleted)
-        <h3>Current Users</h3>
-        <!--	Start First Row-->
-        <div class="tableBody">
-	        <div class="tableRowHeader">
-		        <div class="tableCell value width-20per">Username</div>
-		        <div class="tableCell value width-20per">First Name</div>
-		        <div class="tableCell value width-20per">Last Name</div>
-		        <div class="tableCell value width-10per">Status</div>
-		        <div class="tableCell value width-30per">Last Active</div>
-	        </div>
-        <?php	foreach ($members as $member) { ?>
-	        <div class="tableRow member_status_<?=strtolower($member->status)?>">
-		        <div class="tableCell">
-			        <a href="/_register/admin_account?customer_id=<?=$member->id?>"><?=$member->code?></a>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->first_name?>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->last_name?>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->status?>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->last_active()?>
-		        </div>
-	        </div>
-        <?php	} ?>
-        </div>
-        <!--End first row-->
-
-        <h3>Automation Users</h3>
-        <!--	Start First Row-->
-        <?php	if ($organization->id) { ?>
-        <div class="tableBody min-tablet">
-	        <div class="tableRowHeader">
-		        <div class="tableCell value width-20per">Username</div>
-		        <div class="tableCell value width-10per">Status</div>
-		        <div class="tableCell value width-30per">Last Active</div>
-	        </div>
-        <?php	foreach ($automationMembers as $member) { ?>
-	        <div class="tableRow member_status_<?=strtolower($member->status)?>">
-		        <div class="tableCell">
-			        <a href="/_register/admin_account?customer_id=<?=$member->id?>"><?=$member->code?></a>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->status?>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->last_active()?>
-		        </div>
-	        </div>
-        <?php	} ?>
-        </div>
-        <!--End first row-->
-        <?php	} ?>
-    </div>
-		    
-    <h3>Add New User</h3>
-    <!--	Start First Row-->
-    <div class="tableBody">
-	    <div class="tableRowHeader">
-		    <div class="tableCell width-35per">Username</div>
-		    <div class="tableCell width-30per">First Name</div>
-		    <div class="tableCell width-35per">Last Name</div>
-	    </div>
-	    <div class="tableRow">
-		    <div class="tableCell"><input type="text" class="width-100per" name="new_login" value="" /></div>
-		    <div class="tableCell"><input type="text" class="width-100per" name="new_first_name" value="" /></div>
-		    <div class="tableCell"><input type="text" class="width-100per" name="new_last_name" value="" /></div>
-	    </div>
-    </div>
-    <div><input type="submit" name="method" value="Add User" class="button"/></div>
-
-    <h3>Locations</h3>
-    <!--	Start First Row-->
-    <div class="tableBody">
-	    <div class="tableRowHeader">
-        	<div class="tableCell value width-5per">Default Billing</div>
-        	<div class="tableCell value width-5per">Default Shipping</div>
-		    <div class="tableCell value width-20per">Name</div>
-		    <div class="tableCell value width-20per">Address</div>
-		    <div class="tableCell value width-20per">City</div>
-		    <div class="tableCell value width-20per">Province/Region</div>
-	    </div>
-	    	    
-    <?php	foreach ($locations as $location) { ?>
-	    <div class="tableRow">
-	        <div class="tableCell">
-        	    <input type="radio" name="default_billing_location_id" <?php if ($organization->default_billing_location_id == $location->id) echo "checked='checked'"; ?> value="<?=$location->id?>" onclick="submitDefaultLocation('setDefaultBilling',<?=$location->id?>)">
-	        </div>
-	        <div class="tableCell">	    	
-        	    <input type="radio" name="default_shipping_location_id" <?php if ($organization->default_shipping_location_id == $location->id) echo "checked='checked'"; ?> value="<?=$location->id?>" onclick="submitDefaultLocation('setDefaultShipping',<?=$location->id?>)">
-	        </div>
-		    <div class="tableCell">
-			    <a href="/_register/admin_location?organization_id=<?=$organization->id?>&id=<?=$location->id?>"><?=$location->name?></a>
-		    </div>
-		    <div class="tableCell">
-			    <?=$location->address_1?>
-		    </div>
-		    <div class="tableCell">
-			    <?=$location->city?>
-		    </div>
-		    <div class="tableCell">
-			    <?=$location->province()->name?><br/>
-			    <?=$location->province()->country()->name?>
-		    </div>
-	    </div>
-    <?php	} ?>
-    </div>
-    <div><input type="button" name="method" value="Add Location" class="button" onclick="addLocation()"/></div>
-    <!--End first row-->
-    <?php	} ?>
 </form>

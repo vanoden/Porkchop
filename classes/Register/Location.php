@@ -3,15 +3,16 @@
 
 	class Location extends \BaseModel {
 	
-		public $name;
-		public $address_1;
-		public $address_2;
-		public $city;
-		public $province_id;
-		public $zip_code;
-		public $notes;
-		public $province;
-		public $country;
+	public $name;
+	public $address_1;
+	public $address_2;
+	public $city;
+	public $province_id;
+	public $zip_code;
+	public $notes;
+	public $country_id;
+	public $province;
+	public $country;
 
 		public function __construct($id = 0,$parameters = array()) {		
 			$this->_tableName = 'register_locations';
@@ -92,49 +93,81 @@
 		}
 
         public function applyDefaultBillingAndShippingAddresses($organizationId, $locationId, $isDefaultBilling=false, $isDefaultShipping=false) {
-            if (!empty($isDefaultBilling)|| !empty($isDefaultShipping)) {
+            // bust register_organizations cache
+            $cache_key = "organization[".$organizationId."]";
+            $cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+            $cache_item->delete();
+        
+            // Handle billing address independently
+            if (!empty($isDefaultBilling)) {
+                // Set this location as default billing
+                $update_record_query = "
+                    UPDATE `register_organizations` SET `default_billing_location_id` = ? WHERE id = ?;
+                ";
+                $bind_params = array($locationId, $organizationId);	                
+                query_log($update_record_query,$bind_params,true);
+                $GLOBALS['_database']->Execute($update_record_query,$bind_params);
+                if ($GLOBALS['_database']->ErrorMsg()) {
+                    $this->SQLError($GLOBALS['_database']->ErrorMsg());
+                    return false;
+                }
+            } else {
+                // Clear default billing if this location was previously set as default
+                $check_current_query = "
+                    SELECT default_billing_location_id FROM `register_organizations` WHERE id = ?;
+                ";
+                $rs = $GLOBALS['_database']->Execute($check_current_query, array($organizationId));
+                if ($rs && !$rs->EOF) {
+                    list($current_billing_id) = $rs->FetchRow();
+                    if ($current_billing_id == $locationId) {
+                        $update_record_query = "
+                            UPDATE `register_organizations` SET `default_billing_location_id` = NULL WHERE id = ?;
+                        ";
+                        $bind_params = array($organizationId);
+                        query_log($update_record_query,$bind_params,true);
+                        $GLOBALS['_database']->Execute($update_record_query,$bind_params);
+                        if ($GLOBALS['_database']->ErrorMsg()) {
+                            $this->SQLError($GLOBALS['_database']->ErrorMsg());
+                            return false;
+                        }
+                    }
+                }
+            }
             
-			    // bust register_organizations cache
-			    $cache_key = "organization[".$organizationId."]";
-			    $cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
-			    $cache_item->delete();
-            
-			    $update_record_query = "
-				    UPDATE `register_organizations` SET default_billing_location_id = NULL AND default_shipping_location_id = NULL WHERE id = ?;
-			    ";
-	            $bind_params = array($organizationId);
-	            query_log($update_record_query,$bind_params,true);
-	            $GLOBALS['_database']->Execute($update_record_query,$bind_params);
-	            if ($GLOBALS['_database']->ErrorMsg()) {
-		            $this->SQLError($GLOBALS['_database']->ErrorMsg());
-		            return false;
-	            }
-
-	            if (!empty($isDefaultBilling)) {
-			        $update_record_query = "
-				        UPDATE `register_organizations` SET `default_billing_location_id` = ? WHERE id = ?;
-			        ";
-	                $bind_params = array($locationId, $organizationId);	                
-	                query_log($update_record_query,$bind_params,true);
-	                $GLOBALS['_database']->Execute($update_record_query,$bind_params);
-	                if ($GLOBALS['_database']->ErrorMsg()) {
-		                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-		                return false;
-	                }
-	            }
-	            
-	            if (!empty($isDefaultShipping)) {
-			        $update_record_query = "
-				        UPDATE `register_organizations` SET `default_shipping_location_id` = ? WHERE id = ?;
-			        ";
-	                $bind_params = array($locationId, $organizationId);
-	                query_log($update_record_query,$bind_params,true);
-	                $GLOBALS['_database']->Execute($update_record_query,$bind_params);
-	                if ($GLOBALS['_database']->ErrorMsg()) {
-		                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-		                return false;
-	                }
-	            }
+            // Handle shipping address independently
+            if (!empty($isDefaultShipping)) {
+                // Set this location as default shipping
+                $update_record_query = "
+                    UPDATE `register_organizations` SET `default_shipping_location_id` = ? WHERE id = ?;
+                ";
+                $bind_params = array($locationId, $organizationId);
+                query_log($update_record_query,$bind_params,true);
+                $GLOBALS['_database']->Execute($update_record_query,$bind_params);
+                if ($GLOBALS['_database']->ErrorMsg()) {
+                    $this->SQLError($GLOBALS['_database']->ErrorMsg());
+                    return false;
+                }
+            } else {
+                // Clear default shipping if this location was previously set as default
+                $check_current_query = "
+                    SELECT default_shipping_location_id FROM `register_organizations` WHERE id = ?;
+                ";
+                $rs = $GLOBALS['_database']->Execute($check_current_query, array($organizationId));
+                if ($rs && !$rs->EOF) {
+                    list($current_shipping_id) = $rs->FetchRow();
+                    if ($current_shipping_id == $locationId) {
+                        $update_record_query = "
+                            UPDATE `register_organizations` SET `default_shipping_location_id` = NULL WHERE id = ?;
+                        ";
+                        $bind_params = array($organizationId);
+                        query_log($update_record_query,$bind_params,true);
+                        $GLOBALS['_database']->Execute($update_record_query,$bind_params);
+                        if ($GLOBALS['_database']->ErrorMsg()) {
+                            $this->SQLError($GLOBALS['_database']->ErrorMsg());
+                            return false;
+                        }
+                    }
+                }
             }
             
             return true;

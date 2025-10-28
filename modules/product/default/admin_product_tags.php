@@ -1,16 +1,27 @@
+<!-- Autocomplete CSS and JS -->
+<link href="/css/autocomplete.css" type="text/css" rel="stylesheet">
+<script language="JavaScript" src="/js/autocomplete.js"></script>
+<script language="JavaScript">
+  // define existing categories and tags for autocomplete
+  var existingCategories = <?= $uniqueTagsData['categoriesJson'] ?>;
+  var existingTags = <?= $uniqueTagsData['tagsJson'] ?>;
+</script>
+
 <?= $page->showAdminPageInfo() ?>
 
 <?php $activeTab = 'tags'; ?>
 <?php
     $__defImg = $item->getDefaultStorageImage();
     if ($__defImg && $__defImg->id) {
-        $__thumb = "/api/media/downloadMediaImage?height=50&width=50&code=".$__defImg->code;
-        $__title = htmlspecialchars($item->getMetadata('name') ?: $item->name ?: $item->code);
-        echo '<div class="product-container">'
-            . '<img src="'. $__thumb .'" alt="Default" class="product-thumb" />'
-            . '<div class="product-title">'. $__title .'</div>'
-            . '</div>';
+        $thumb = "/api/media/downloadMediaImage?height=50&width=50&code=".$__defImg->code;
+        $title = htmlspecialchars($item->getMetadata('name') ?: $item->name ?: $item->code);
     }
+?>
+<div class="product-container">
+    <img src="<?=$thumb?>" alt="Default" class="product-thumb" />
+    <div class="product-title"><?=$title?></div>
+</div>
+<?php
 ?>
 <div class="tabs">
     <a href="/_spectros/admin_product/<?= $item->code ?>" class="tab <?= $activeTab==='details'?'active':'' ?>">Details</a>
@@ -34,22 +45,22 @@
 <h4 class="text-inline">(customer support knowledge center)</h4>
 <div class="tableBody min-tablet">
 	<div class="tableRowHeader">
-		<div class="tableCell tableCell-width-33">&nbsp;</div>
 		<div class="tableCell tableCell-width-33">Category</div>
 		<div class="tableCell tableCell-width-33">Search Tag</div>
+		<div class="tableCell tableCell-width-33">&nbsp;</div>
 	</div>
 <?php
 	foreach ($productSearchTags as $searchTag) {
 ?>
 	<div class="tableRow">
 		<div class="tableCell">
-			<input type="button" onclick="removeSearchTagById('<?= $searchTag->id ?>')" name="removeSearchTag" value="Remove" class="button" />
-		</div>
-		<div class="tableCell">
 			<?= $searchTag->category ?>
 		</div>
 		<div class="tableCell">
 			<?= $searchTag->value ?>
+		</div>
+		<div class="tableCell">
+			<img src="/img/icons/icon_tools_trash_active.svg" onclick="removeSearchTagById('<?= $searchTag->id ?>')" style="cursor: pointer; width: 20px; height: 20px;" alt="Remove" title="Remove" />
 		</div>
 	</div>
 

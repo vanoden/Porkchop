@@ -4,13 +4,15 @@
 <?php
     $__defImg = $item->getDefaultStorageImage();
     if ($__defImg && $__defImg->id) {
-        $__thumb = "/api/media/downloadMediaImage?height=50&width=50&code=".$__defImg->code;
-        $__title = htmlspecialchars($item->getMetadata('name') ?: $item->name ?: $item->code);
-        echo '<div class="product-container">'
-            . '<img src="'. $__thumb .'" alt="Default" class="product-thumb" />'
-            . '<div class="product-title">'. $__title .'</div>'
-            . '</div>';
+        $thumb = "/api/media/downloadMediaImage?height=50&width=50&code=".$__defImg->code;
+        $title = htmlspecialchars($item->getMetadata('name') ?: $item->name ?: $item->code);
     }
+?>
+<div class="product-container">
+    <img src="<?=$thumb?>" alt="Default" class="product-thumb" />
+    <div class="product-title"><?=$title?></div>
+</div>
+<?php
 ?>
 <div class="tabs">
     <a href="/_spectros/admin_product/<?= $item->code ?>" class="tab <?= $activeTab==='details'?'active':'' ?>">Details</a>
@@ -28,7 +30,7 @@
 <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
 <input type="hidden" name="id" value="<?= $item->id ?>">
 
-<div class="label align-top">Add Price</div>
+<h3>Add Price</h3>
 	<table class="body">
 	<tr><th>Date Active</th>
 		<th>Status</th>

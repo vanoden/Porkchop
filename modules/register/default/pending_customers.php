@@ -1,75 +1,4 @@
-<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 
-<style>
-#search_container {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0 5px;
-	max-width: 1000px;
-	align-items: center;
-	padding: 0.6rem 1rem;
-	background: #e8e8e8;
-	margin-top: 0.5rem;
-}
-#search_container form {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0 5px;
-	align-items: center;
-	width: 100%;
-}
-#search_container input[type="text"],
-#search_container input[type="submit"],
-#search_container input[type="button"] {
-	margin: 0;
-}
-#search_container .button-group {
-	display: flex;
-	gap: 5px;
-	align-items: center;
-}
-#search_container .button-group input[type="submit"] {
-	background-color: #28a745;
-	color: white;
-	padding: 5px 10px;
-	border: none;
-	border-radius: 3px;
-	cursor: pointer;
-}
-#search_container .button-group input[type="button"] {
-	background-color: #6c757d;
-	color: white;
-	padding: 5px 10px;
-	border: none;
-	border-radius: 3px;
-	cursor: pointer;
-}
-#search_container label {
-	margin: 0 0 0 2px;
-	font-size: 0.9em;
-}
-.button-group {
-	display: flex;
-	gap: 10px;
-	align-items: center;
-	padding: 0.6rem 1rem;
-}
-.button-item {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 3px;
-}
-.button-label {
-	font-size: 0.7em;
-	color: #666;
-	text-align: center;
-	line-height: 1.2;
-}
-</style>
-
-<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script>
 
     // check if the organization already exists for button states
@@ -145,53 +74,68 @@
 <script>
    // reset the page forms to only allow the one in question
    function resetPage() {
-	   $(".customer_status_form").hide();
-	   $(".customer_status_form_links").show();
-	   $(".customer_notes_form").hide();
-	   $(".customer_notes_edit_links").show();
+	   var statusForms = document.getElementsByClassName("customer_status_form");
+	   for (var i = 0; i < statusForms.length; i++) {
+		   statusForms[i].style.display = "none";
+	   }
+	   
+	   var statusLinks = document.getElementsByClassName("customer_status_form_links");
+	   for (var i = 0; i < statusLinks.length; i++) {
+		   statusLinks[i].style.display = "block";
+	   }
+	   
+	   var notesForms = document.getElementsByClassName("customer_notes_form");
+	   for (var i = 0; i < notesForms.length; i++) {
+		   notesForms[i].style.display = "none";
+	   }
+	   
+	   var notesLinks = document.getElementsByClassName("customer_notes_edit_links");
+	   for (var i = 0; i < notesLinks.length; i++) {
+		   notesLinks[i].style.display = "block";
+	   }
    }
    
    // edit status for pending customer
    function editStatus(queueId) {
 	   resetPage();
-	   $("#customer_status_form_" + queueId).show();
-	   $("#customer_status_form_links_" + queueId).hide();       
+	   document.getElementById("customer_status_form_" + queueId).style.display = "block";
+	   document.getElementById("customer_status_form_links_" + queueId).style.display = "none";       
    }
    
    // cancel edit status for pending customer
    function cancelEditStatus(queueId) {
 	   resetPage();
-	   $("#customer_status_form_" + queueId).hide();
-	   $("#customer_status_form_links_" + queueId).show();       
+	   document.getElementById("customer_status_form_" + queueId).style.display = "none";
+	   document.getElementById("customer_status_form_links_" + queueId).style.display = "block";       
    }
    
    // edit notes for pending customer
    function editNote(queueId) {
 	   resetPage();
-	   $("#customer_notes_form_" + queueId).show();
-	   $("#customer_notes_edit_links_" + queueId).hide();       
+	   document.getElementById("customer_notes_form_" + queueId).style.display = "block";
+	   document.getElementById("customer_notes_edit_links_" + queueId).style.display = "none";       
    }
    
    // cancel edit notes for pending customer
    function cancelEditNote(queueId) {
 	   resetPage();
-	   $("#customer_notes_form_" + queueId).hide();
-	   $("#customer_notes_edit_links_" + queueId).show();       
+	   document.getElementById("customer_notes_form_" + queueId).style.display = "none";
+	   document.getElementById("customer_notes_edit_links_" + queueId).style.display = "block";       
    }
    
    function assignExistingCustomer(queueId) {
-	   $("#customer_add_" + queueId).val('assignCustomer');
-	   $("#customer_add_form_" + queueId).submit();
+	   document.getElementById("customer_add_" + queueId).value = 'assignCustomer';
+	   document.getElementById("customer_add_form_" + queueId).submit();
    }
    
    function addNewCustomer(queueId) {
-	   $("#customer_add_" + queueId).val('addCustomer');
-	   $("#customer_add_form_" + queueId).submit();
+	   document.getElementById("customer_add_" + queueId).value = 'addCustomer';
+	   document.getElementById("customer_add_form_" + queueId).submit();
    }
    
    function denyCustomer(queueId) {
-	   $("#customer_add_" + queueId).val('denyCustomer');
-	   $("#customer_add_form_" + queueId).submit();
+	   document.getElementById("customer_add_" + queueId).value = 'denyCustomer';
+	   document.getElementById("customer_add_form_" + queueId).submit();
    }
    
    function resend(customerId) {
@@ -200,26 +144,34 @@
    
    // date picker with max date being current day
    window.onload = function() {
-	  $("#dateStart").datepicker({
-		   onSelect: function(dateText, inst) {
-			   var minDate = document.getElementById('min_date');
-			   minDate.value = dateText;
-		   }, 
-		   maxDate: '0'
-	   });
-	  $("#dateEnd").datepicker({
-		   onSelect: function(dateText, inst) {
-			   var maxDate = document.getElementById('max_date');
-			   maxDate.value = dateText;
-		   }, 
-		   maxDate: '0'
-	   });
+	  var dateStart = document.getElementById('dateStart');
+	  var dateEnd = document.getElementById('dateEnd');
+	  
+	  if (dateStart) {
+		  dateStart.type = 'date';
+		  dateStart.max = new Date().toISOString().split('T')[0];
+		  dateStart.addEventListener('change', function() {
+			  var minDate = document.getElementById('min_date');
+			  if (minDate) minDate.value = this.value;
+		  });
+	  }
+	  
+	  if (dateEnd) {
+		  dateEnd.type = 'date';
+		  dateEnd.max = new Date().toISOString().split('T')[0];
+		  dateEnd.addEventListener('change', function() {
+			  var maxDate = document.getElementById('max_date');
+			  if (maxDate) maxDate.value = this.value;
+		  });
+	  }
    }
 </script>
 
 <!-- Page Header -->
 <?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
+
+<div id="pending-customers-container">
 
 <div class="form_instruction">
 	Manage pending customer registrations. Review and approve or deny customer requests.
@@ -271,7 +223,7 @@
 		<div class="tableCell">
 			<div class="value"><?= htmlspecialchars($queuedCustomer->name) ?></div>
 			<?php if ($queuedCustomer->is_reseller) { ?>
-			<span class="label" style="color: #007bff; font-size: 0.8em;">[Reseller]</span>
+			<span class="label reseller-label">[Reseller]</span>
 			<?php } ?>
 			
 			<form method="POST" id="customer_add_form_<?=$queuedCustomer->id?>" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
@@ -304,7 +256,7 @@
 				?>
 				<div class="marginTop_10">
 					<span class="register-pending-customers-status-verifying">
-						<i class="fa fa-clock-o" aria-hidden="true"></i> Email Validating
+						<img src="/img/contact/icon_form-mail.svg" alt="Email Validating" class="status-icon"> Email Validating
 					</span>
 					<button type="button" class="button secondary marginTop_5" onclick="resend(<?=$queuedCustomer->register_user_id?>)">Resend Verification Email</button>
 				</div>
@@ -314,7 +266,7 @@
 				?>
 				<div class="marginTop_10">
 					<span class="register-pending-customers-status-approved">
-						<i class="fa fa-check-circle" aria-hidden="true"></i> Approved
+						<img src="/img/_global/circ-letter.svg" alt="Approved" class="status-icon"> Approved
 					</span>
 				</div>
 				<?php
@@ -323,7 +275,7 @@
 				?>
 				<div class="marginTop_10">
 					<span class="register-pending-customers-status-denied">
-						<i class="fa fa-times" aria-hidden="true"></i> Denied
+						<img src="/img/_global/icon_error.svg" alt="Denied" class="status-icon"> Denied
 					</span>
 				</div>
 				<?php
@@ -337,33 +289,33 @@
     
 	  <div class="tableCell">
 		  <div class="value"><?= htmlspecialchars($registerCustomer->first_name . ' ' . $registerCustomer->last_name) ?></div>
-		  <div class="value marginTop_5" style="font-size: 0.8em; color: #666;">Login: <?= htmlspecialchars($registerCustomer->code) ?></div>
+		  <div class="value marginTop_5 login-info">Login: <?= htmlspecialchars($registerCustomer->code) ?></div>
 	  </div>
 	  <div class="tableCell">
 		  <div id="customer_status_form_<?=$queuedCustomer->id?>" class="hidden customer_status_form">
 		    <form method="POST" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
 		      <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-			    <select name="status" class="value input" style="width: 100%; font-size: 0.8em; padding: 2px;">
+			    <select name="status" class="value input status-select">
 				    <?php foreach ($possibleStatii as $possibleStatus) { ?>
 				      <option value="<?=$possibleStatus?>" <?=($queuedCustomer->status == $possibleStatus) ? 'selected="selected"' : ""?>><?=$possibleStatus?></option>
 				    <?php } ?>
 			    </select>
 			    <input type="hidden" name="action" value="updateStatus"/>
 			    <input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/>
-			    <div style="margin-top: 3px;">
-			      <button type="submit" class="button" style="font-size: 0.7em; padding: 2px 6px;">Save</button>
-			      <button type="button" class="button secondary" style="font-size: 0.7em; padding: 2px 6px;" onclick="cancelEditStatus(<?=$queuedCustomer->id?>)">Cancel</button>
+			    <div class="button-group-spacing">
+			      <button type="submit" class="button small-button">Save</button>
+			      <button type="button" class="button secondary small-button" onclick="cancelEditStatus(<?=$queuedCustomer->id?>)">Cancel</button>
 			    </div>
 			  </form>
 		  </div>
 		  <div id="customer_status_form_links_<?=$queuedCustomer->id?>" class="customer_status_form_links">
 			  <span class="register-pending-customers-status-<?=strtolower($queuedCustomer->status)?>"><?=$queuedCustomer->status?></span><br/>
-			  <a class="small-text cursor-pointer" onclick="editStatus(<?=$queuedCustomer->id?>)"><i class="fa fa-pencil" aria-hidden="true"></i> Edit Status</a>
+			  <a class="small-text cursor-pointer" onclick="editStatus(<?=$queuedCustomer->id?>)"><img src="/img/icons/edit_dk.svg" alt="Edit Status" class="edit-icon"> Edit Status</a>
 		  </div>
 	  </div>
 	  <div class="tableCell">
 		  <div class="value"><?=date("M j, Y", strtotime($queuedCustomer->date_created))?></div>
-		  <div class="value" style="font-size: 0.8em; color: #666;"><?=date("g:i a", strtotime($queuedCustomer->date_created))?></div>
+		  <div class="value time-info"><?=date("g:i a", strtotime($queuedCustomer->date_created))?></div>
 	  </div>
 	  <div class="tableCell">
 		  <div class="value"><?= htmlspecialchars($queuedCustomer->address) ?></div>
@@ -380,10 +332,10 @@
 	  <div class="tableCell">
 		  <?php if ($queuedCustomer->product_id) { ?>
 		  <div class="value"><?= htmlspecialchars($productItem->name) ?></div>
-		  <div class="value" style="font-size: 0.8em; color: #666;">[<?= htmlspecialchars($productItem->code) ?>]</div>
-		  <div class="value marginTop_5" style="font-size: 0.8em;">Serial: <?= htmlspecialchars($queuedCustomer->serial_number) ?></div>
+		  <div class="value product-code">[<?= htmlspecialchars($productItem->code) ?>]</div>
+		  <div class="value marginTop_5 serial-info">Serial: <?= htmlspecialchars($queuedCustomer->serial_number) ?></div>
 		  <?php } else { ?>
-		  <div class="value" style="color: #999;">No product</div>
+		  <div class="value no-product">No product</div>
 		  <?php } ?>
 	  </div>
 	  <div class="tableCell">
@@ -391,13 +343,13 @@
         <form method="POST" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
           <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
           <div>
-            <textarea name="notes" class="value input" style="width: 100%; font-size: 0.8em; padding: 4px; resize: vertical; display: block; height: 40px;" placeholder="Enter admin notes..."><?=htmlspecialchars($queuedCustomer->notes ?? '')?></textarea>
+            <textarea name="notes" class="value input notes-textarea" placeholder="Enter admin notes..."><?=htmlspecialchars($queuedCustomer->notes ?? '')?></textarea>
           </div>
           <input type="hidden" name="action" value="updateNotes"/>
           <input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/><br/><br/><br/>
-          <div style="margin-top: 3px; white-space: nowrap;">
-            <button type="submit" class="button" style="font-size: 0.7em; padding: 2px 6px; margin-right: 5px;">Save</button>
-            <button type="button" class="button secondary" style="font-size: 0.7em; padding: 2px 6px;" onclick="cancelEditNote(<?=$queuedCustomer->id?>)">Cancel</button>
+          <div class="button-spacing">
+            <button type="submit" class="button save-button">Save</button>
+            <button type="button" class="button secondary small-button" onclick="cancelEditNote(<?=$queuedCustomer->id?>)">Cancel</button>
           </div>
         </form>
 		  </div>
@@ -405,12 +357,12 @@
 		    <?php if ($queuedCustomer->notes) { ?>
 		    <div class="value"><?= htmlspecialchars($queuedCustomer->notes) ?></div>
 		    <?php } else { ?>
-		    <div class="value" style="color: #999; font-style: italic;">No notes</div>
+		    <div class="value no-notes">No notes</div>
 		    <?php } ?>
 		    <?php if ($queuedCustomer->notes) { ?>
-		    <a class="small-text cursor-pointer" onclick="editNote(<?=$queuedCustomer->id?>)"><i class="fa fa-pencil-square" aria-hidden="true"></i> Edit Note</a>
+		    <a class="small-text cursor-pointer" onclick="editNote(<?=$queuedCustomer->id?>)"><img src="/img/icons/edit_on.svg" alt="Edit Note" class="edit-icon"> Edit Note</a>
 		    <?php } else { ?>
-		    <a class="small-text cursor-pointer" onclick="editNote(<?=$queuedCustomer->id?>)"><i class="fa fa-plus-square" aria-hidden="true"></i> Add Note</a>
+		    <a class="small-text cursor-pointer" onclick="editNote(<?=$queuedCustomer->id?>)"><img src="/img/icons/icon_tools_add.svg" alt="Add Note" class="edit-icon"> Add Note</a>
 		    <?php } ?>
 		  </div>
 	  </div>
@@ -418,3 +370,5 @@
   <?php	} ?>
 </section>
 <!--	END Pending Customers Table -->
+
+</div> End pending-customers-container

@@ -53,5 +53,6 @@
 
 	// Page Title and Messaging
 	$page->title = "Currency Manager";
+	$page->setAdminMenuSection("Sales");  // Keep Sales section open
 	$page->instructions = "Select a currency to edit or click Add Currency to create a new one";
 	$page->addBreadcrumb("Sales");

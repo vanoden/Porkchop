@@ -69,7 +69,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 47,
+			"schema"		=> 49,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
@@ -80,7 +80,12 @@
 			),
 			"templates"		=> array(
 				"organizations"		=> $templates['admin'],
+				"organizations_report"	=> $templates['admin'],
 				"admin_organization"		=> $templates['admin'],
+				"admin_organization_users"	=> $templates['admin'],
+				"admin_organization_tags"	=> $templates['admin'],
+				"admin_organization_locations"	=> $templates['admin'],
+				"admin_organization_audit_log"	=> $templates['admin'],
 				"accounts"			=> $templates['admin'],
 				"admin_account"		=> $templates['admin'],
 				"pending_customers"	=> $templates['admin'],
@@ -111,6 +116,9 @@
 		"S4Engine"		=> array(
 			"schema"	=> 2
 		),
+		"Search"		=> array(
+			"schema"	=> 1
+		)
 	);
 
 	// Additional modules

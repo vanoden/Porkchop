@@ -105,6 +105,25 @@
 		}
 
 		/********************************************/
+		/* Return Error unless User has the			*/
+		/* required privilege with required level.	*/
+		/* If an array is passed, only one is 		*/
+		/* required.									*/
+		/********************************************/
+		public function requirePrivilegeLevel($privilege_name, $required_level = \Register\PrivilegeLevel::CUSTOMER) {
+			if (is_array($privilege_name)) {
+				// Ok if ANY privilege is matched
+				foreach ($privilege_name as $privilege) {
+					if ($GLOBALS['_SESSION_']->customer->can_level($privilege, $required_level)) return;
+				}
+				$this->deny();
+			}
+			if (! $GLOBALS['_SESSION_']->customer->can_level($privilege_name, $required_level)) {
+				$this->deny("Permission Denied - Insufficient privilege level");
+			}
+		}
+
+		/********************************************/
 		/* Return Active Anti-CSRF Token			*/
 		/********************************************/
 		public function csrfToken() {

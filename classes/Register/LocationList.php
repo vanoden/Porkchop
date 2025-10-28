@@ -29,7 +29,11 @@
 
             $objects = array();
             while (list($id) = $rs->FetchRow()) {
-                $object = new $this->_modelName($id,array('recursive' => $parameters['recursive']));
+                $objectOptions = array();
+                if (isset($parameters['recursive'])) {
+                    $objectOptions['recursive'] = $parameters['recursive'];
+                }
+                $object = new $this->_modelName($id, $objectOptions);
                 array_push($objects,$object);
                 $this->incrementCount();
             }

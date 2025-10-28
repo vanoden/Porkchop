@@ -53,6 +53,7 @@
 	}
 
 	$page->title("Shipments");
+	$page->setAdminMenuSection("Shipping");  // Keep Shipping section open
 	$page->addBreadcrumb('Shipping');
 	$page->addBreadcrumb('Shipments');
 

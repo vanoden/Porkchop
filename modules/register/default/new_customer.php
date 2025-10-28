@@ -1,8 +1,7 @@
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script src="/js/monitor.js"></script>
 <script src="/js/geography.js"></script>
+<script src="/js/dom-utils.js"></script>
 <script type="text/javascript">
 
 // validate email from user
@@ -14,14 +13,12 @@ function validateEmail(email) {
 
 // validate password and submit if ok to go
 function submitForm() {
-  var emailField = $("#email");
-  if (!validateEmail(emailField.val())) {
+  var emailField = document.getElementById("email");
+  if (!validateEmail(emailField.value)) {
     console.log("email is not valid");
-    // $(emailField).addClass("input-failed");
     return false;
   } else {
     console.log("email is good");
-    // $(emailField).addClass("input-passed");     
   }
 
   if (document.register.password.value.length < 6) {
@@ -80,27 +77,35 @@ function checkProduct() {
 
 // make sure that the user name isn't taken
 function checkUserName() {
-    var loginField = $("#login");
-    var loginMessage = $("#login-message");
-    $.get('/_register/api?method=checkLoginNotTaken&login=' + loginField.val(), function (data, status) {
-      if (data == 1) {
-        loginField.css('border', '2px solid green');
-        loginMessage.html('login is available');
-        loginMessage.css('color', 'green');
-      } else {
-        loginField.css('border', '2px solid red');
-        loginMessage.html('login is not available');
-        loginMessage.css('color', 'red');
-      }
+    var loginField = document.getElementById("login");
+    var loginMessage = document.getElementById("login-message");
+    
+    var url = '/_register/api?method=checkLoginNotTaken&login=' + encodeURIComponent(loginField.value);
+    
+    AJAXUtils.get(url, function(data) {
+        if (data == 1) {
+            loginField.style.border = '2px solid green';
+            loginMessage.innerHTML = 'login is available';
+            loginMessage.style.color = 'green';
+        } else {
+            loginField.style.border = '2px solid red';
+            loginMessage.innerHTML = 'login is not available';
+            loginMessage.style.color = 'red';
+        }
+    }, function(status) {
+        console.error('Error checking login availability:', status);
+        loginField.style.border = '2px solid orange';
+        loginMessage.innerHTML = 'Error checking availability';
+        loginMessage.style.color = 'orange';
     });
 }
 
 // Check password strength
 function checkPasswordStrength() {
-  var customer = document.createObject(Customer);
+  var customer = Object.create(Customer);
   var passwordField = document.getElementById('password');
-  var passwordMessage = document.getElementByid('password-message');
-  if (customer.checkPasswordStrength(myPasswordVar)) {
+  var passwordMessage = document.getElementById('password-message');
+  if (customer.checkPasswordStrength(passwordField.value)) {
     passwordField.classList.add("input-passed");
     passwordMessage.innerHTML = 'strong password';
   }
@@ -110,54 +115,11 @@ function checkPasswordStrength() {
   }
 }
 
-// make sure the serial number is valid
+// Serial number validation removed - no longer checking device availability
 function checkSerial() {
-  var productInput = document.getElementById('product_id');
-  checkProduct();
-  var productID = productInput.options[productInput.selectedIndex].value;
-  var serialInput = document.getElementById('serial_number');
-  var serialNumberMessage = document.getElementById('serial_number_message');
-  var serialNumberMessageOK = document.getElementById('serial_number_message_ok');
-
-  if (serialInput.value.length < 1) return true;
-  var code = serialInput.value.trim();
-  serialInput.value = code;
-
-  // Check if Asset object is available
-  if (typeof Asset === 'undefined') {
-    console.log('Asset object not available, skipping serial number validation');
-    return true;
-  }
-
-  try {
-    var asset = Object.create(Asset);
-
-    if (asset.get(code)) {
-      if (asset.product.id == productID) {
-        serialInput.style.border = 'solid 2px green';
-        serialNumberMessage.style.display = 'none';
-        serialNumberMessageOK.innerHTML = 'Serial number has been found, thank you for providing!';
-        serialNumberMessageOK.style.display = 'block';
-        return true;
-      } else {
-        serialInput.style.border = 'solid 2px red';
-        serialNumberMessage.innerHTML = 'Product not found with that serial number';
-        serialNumberMessage.style.display = 'block';
-        serialNumberMessageOK.style.display = 'none';
-        return false;
-      }
-    } else {
-      serialInput.style.border = 'solid 2px red';
-      serialNumberMessage.innerHTML = 'Serial number not found in our system';
-      serialNumberMessage.style.display = 'block';
-      serialNumberMessageOK.style.display = 'none';
-      return false;
-    }
-  } catch (error) {
-    console.log('Error checking serial number:', error);
-    // If there's an error, just return true to allow the form to continue
-    return true;
-  }
+  // Serial number validation has been removed for security reasons
+  // Users can still enter serial numbers but they won't be validated client-side
+  return true;
 }
 
 function checkRegisterProduct(){
@@ -207,7 +169,6 @@ function getProvinces() {
 		return false;
 	}
 }
-
 </script>
 
 <?php

@@ -57,5 +57,6 @@
 	if ($customerList->error()) $page->addError("Error finding customers: ".$customerList->error());
 
 	$page->title = "Accounts";
+	$page->setAdminMenuSection("Customer");  // Keep Customer section open
 	$page->addBreadCrumb("Customer");
 	$page->addBreadCrumb("Accounts","/_register/accounts");

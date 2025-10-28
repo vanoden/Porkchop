@@ -8,4 +8,5 @@
 	$headers = $headerList->find();
 
 	$page->title('Site HTTP Headers');
+	$page->setAdminMenuSection("Site");  // Keep Site section open
 	$page->addBreadcrumb('Headers', '/_site/headers');

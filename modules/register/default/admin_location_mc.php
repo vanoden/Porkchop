@@ -1,7 +1,7 @@
 <?php
 $page = new \Site\Page();
 $page->requirePrivilege('manage customer locations');
-$location = new \Register\Location($_REQUEST['id']);
+$location = new \Register\Location(isset($_REQUEST['id']) ? $_REQUEST['id'] : 0);
 if (isset($_REQUEST['organization_id']))
 	$organization = new \Register\Organization($_REQUEST['organization_id']);
 if (isset($_REQUEST['user_id']))
@@ -69,15 +69,20 @@ if (isset($_REQUEST['btn_submit'])) {
 				}
 
 				// apply any default billing or shipping set
-				if (isset($_REQUEST['default_billing']) || isset($_REQUEST['default_shipping']))
+				if (isset($_REQUEST['organization_id']))
 					$location->applyDefaultBillingAndShippingAddresses($_REQUEST['organization_id'], $location->id, isset($_REQUEST['default_billing']), isset($_REQUEST['default_shipping']));
 				if ($page->errorCount() < 1) {
 					if (isset($_REQUEST['organization_id']) && !$location->associateOrganization($_REQUEST['organization_id']))
 						$page->addError("Error associating organization: " . $location->error());
 					if (isset($_REQUEST['user_id']) && !$location->associateUser($_REQUEST['user_id']))
 						$page->addError("Error associating user: " . $location->error());
-					if (!$page->errorCount())
+					if (!$page->errorCount()) {
 						$page->success = "Changes saved";
+						// Refresh organization object to get updated default location IDs
+						if (isset($_REQUEST['organization_id'])) {
+							$organization = new \Register\Organization($_REQUEST['organization_id']);
+						}
+					}
 				}
 			}
 		}
@@ -87,7 +92,15 @@ if (isset($_REQUEST['btn_submit'])) {
 $world = new \Geography\World();
 $countries = $world->countries();
 
-if ($_REQUEST['id']) {
+$page->title = "Location Details";
+$page->addBreadcrumb("Customer");
+$page->addBreadcrumb("Organizations", "/_register/organizations");
+if (isset($organization->id)) {
+	$page->addBreadcrumb($organization->name, "/_register/admin_organization?organization_id=".$organization->id);
+}
+$page->addBreadcrumb("Add/Edit Location", "");
+
+if (isset($_REQUEST['id']) && $_REQUEST['id']) {
 	$selected_province = $location->province();
 	$selected_country = $selected_province->country();
 	$provinces = $selected_country->provinces();

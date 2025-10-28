@@ -1,6 +1,7 @@
 <?php
 $page = new \Site\Page();
 $page->title = "Login with Backup Code";
+$page->setAdminMenuSection("Customer");  // Keep Customer section open
 $page->addBreadcrumb("Login", "/_register/login");
 $page->addBreadcrumb("Backup Code", "/_register/backup_code");
 ?>

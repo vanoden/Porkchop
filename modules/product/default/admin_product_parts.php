@@ -4,13 +4,15 @@
 <?php
     $__defImg = $item->getDefaultStorageImage();
     if ($__defImg && $__defImg->id) {
-        $__thumb = "/api/media/downloadMediaImage?height=50&width=50&code=".$__defImg->code;
-        $__title = htmlspecialchars($item->getMetadata('name') ?: $item->name ?: $item->code);
-        echo '<div class="product-container">'
-            . '<img src="'. $__thumb .'" alt="Default" class="product-thumb" />'
-            . '<div class="product-title">'. $__title .'</div>'
-            . '</div>';
+        $thumb = "/api/media/downloadMediaImage?height=50&width=50&code=".$__defImg->code;
+        $title = htmlspecialchars($item->getMetadata('name') ?: $item->name ?: $item->code);
     }
+?>
+<div class="product-container">
+    <img src="<?=$thumb?>" alt="Default" class="product-thumb" />
+    <div class="product-title"><?=$title?></div>
+</div>
+<?php
 ?>
 <div class="tabs">
     <a href="/_spectros/admin_product/<?= $item->code ?>" class="tab <?= $activeTab==='details'?'active':'' ?>">Details</a>
@@ -85,7 +87,7 @@
 					<?php foreach ($products as $part): 
 						if ($part->id == $item->id) continue; // Skip the current item
 					?>
-						<option value="<?= $part->id ?>"><?= $part->code . " - ".$part->getMetadata("short_description")?></option>
+						<option value="<?= $part->id ?>"><?= $part->code ?></option>
 					<?php endforeach; ?>
 				</select>
 			</div>

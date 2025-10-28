@@ -124,6 +124,7 @@
 	$roles = $roleList->find();
 
 	$page->title("Menu Item Details");
+	$page->setAdminMenuSection("Site");  // Keep Navigation section open
 	$page->addBreadcrumb("Menus", "/_navigation/menus");
 	if (isset($parent)) {
 		$page->addBreadcrumb($menu->title, "/_navigation/items/" . $menu->code);

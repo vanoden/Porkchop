@@ -16,21 +16,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $GLOBALS['_SESSION_']->assign($user_id, false);
                 
                 // DEBUG: Log backup code login process
-                app_log("=== BACKUP CODE LOGIN ===", 'debug', __FILE__, __LINE__, 'otplogs');
-                app_log("User ID: " . $user_id, 'debug', __FILE__, __LINE__, 'otplogs');
-                app_log("Session assigned, secret key was cleared - user will need to set up 2FA again", 'debug', __FILE__, __LINE__, 'otplogs');
+                app_log("=== BACKUP CODE LOGIN ===", 'debug', __FILE__, __LINE__);
+                app_log("User ID: " . $user_id, 'debug', __FILE__, __LINE__);
+                app_log("Session assigned, secret key was cleared - user will need to set up 2FA again", 'debug', __FILE__, __LINE__);
                                 
                 // Send backup code used notification email
                 $customer = new \Register\Customer($user_id);
                 $emailResult = $customer->sendBackupCodeUsedNotification();
                 if (!$emailResult) {
-                    app_log("Failed to send backup code notification: " . $customer->error(), 'warn', __FILE__, __LINE__, 'otplogs');
+                    app_log("Failed to send backup code notification: " . $customer->error(), 'warn', __FILE__, __LINE__);
                 } else {
-                    app_log("Backup code notification email sent successfully", 'info', __FILE__, __LINE__, 'otplogs');
+                    app_log("Backup code notification email sent successfully", 'info', __FILE__, __LINE__);
                 }
                 
-                $page->appendSuccess("Backup code accepted. Please set up two-factor authentication again.");
-                header("Location: /_register/otp");
+                // Set OTP as verified since backup code was used
+                $GLOBALS['_SESSION_']->setOTPVerified(true);
+                
+                // Determine redirect target
+                $target = $GLOBALS['_SESSION_']->refer_url ?? '/_register/account';
+                if (empty($target) || $target === '/') {
+                    $target = '/_register/account';
+                }
+                
+                app_log("Backup code login successful, redirecting to: " . $target, 'debug', __FILE__, __LINE__);
+                header("Location: " . $target);
                 exit;
             } else {
                 $page->addError("Invalid or already used backup code");
@@ -40,5 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page->title = "Login with Backup Code";
+$page->setAdminMenuSection("Customer");  // Keep Customer section open
 $page->addBreadcrumb("Login", "/_register/login");
 $page->addBreadcrumb("Backup Code", "/_register/backup_code"); 

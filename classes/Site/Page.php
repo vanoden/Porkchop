@@ -169,6 +169,34 @@
 			}
         }
 
+		/** @method public requirePrivilegeLevel(privilege, required_level)
+		 * Checks if the user has a specific privilege with required level.
+		 * If not, redirects to the login page or permission denied page.
+		 * @param string $privilege The privilege to check for.
+		 * @param int $required_level The required privilege level.
+		 * @return bool True if the user has the required privilege level, otherwise redirects.
+		 */
+        public function requirePrivilegeLevel($privilege, $required_level = \Register\PrivilegeLevel::CUSTOMER) {
+			$this->requireAuth();
+            if ($GLOBALS['_SESSION_']->customer->can_level($privilege, $required_level)) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
+                return true;
+            }
+            elseif (!isset($GLOBALS['_SESSION_']->customer->id)) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
+				header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+			    exit;
+		    }
+            else {
+				$counter = new \Site\Counter("permission_denied");
+				$counter->increment();
+			    header('location: /_register/permission_denied' );
+                exit;
+			}
+        }
+
 		/** @method public requireOrganization()
 		 * Checks if the user belongs to an organization.
 		 * If not, redirects to the organization required page.
@@ -808,6 +836,8 @@
 				    if ($parameter['code']) {
 					    $menu = new \Site\Navigation\Menu ();
 					    if ($menu->get($parameter['code'])) {
+							// Pass the current page object to the menu for admin menu section override
+							$menu->setPage($this);
 							if (!empty($parameter['version']) && $parameter['version'] == 'v2') {
 								$buffer .= $menu->asHTMLV2($parameter);
 							}
@@ -816,7 +846,7 @@
 							}
 					    }
 				    }
-					else {
+				    else {
 					    app_log("navigation menu references without code");
 				    }
 			    }
@@ -1286,6 +1316,28 @@
 				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
 			}
 		    return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
+		}
+
+		/**
+		 * Set which admin menu section should be open for this page
+		 * This overrides the automatic URL-based detection
+		 * 
+		 * @param string $sectionName The name of the admin menu section to open
+		 * @return void
+		 */
+		public function setAdminMenuSection($sectionName) {
+			app_log("Setting admin menu section to: " . $sectionName, 'debug');
+			$this->setMetadata('admin_menu_section', $sectionName);
+		}
+
+		/**
+		 * Get the admin menu section override
+		 * 
+		 * @return string|null The admin menu section to open, or null for auto-detection
+		 */
+		public function getAdminMenuSection() {
+			$section = $this->getMetadata('admin_menu_section');
+			return $section;
 		}
 
 		public function showMessages() {

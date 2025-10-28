@@ -68,6 +68,7 @@
 				    "password_expiration_days"	=> isset($_REQUEST['password_expiration_days']) ? $_REQUEST['password_expiration_days'] : 0,
 					"website_url"				=> isset($_REQUEST['website_url']) ? $_REQUEST['website_url'] : '',
 					"time_based_password"		=> isset($_REQUEST['time_based_password']) ? $_REQUEST['time_based_password'] : 0,
+					"account_number"			=> isset($_REQUEST['account_number']) ? $_REQUEST['account_number'] : '',
 			    );
 			    if (!isset($_REQUEST['is_reseller']) || ! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
 				if (!isset($_REQUEST['is_customer']) || ! $_REQUEST['is_customer']) $parameters['is_customer'] = 0;
@@ -87,7 +88,7 @@
 					    $page->appendSuccess("Organization Updated Successfully");
 				    }
 				    
-				    if ($_REQUEST['new_login']) {
+				    if (isset($_REQUEST['new_login']) && $_REQUEST['new_login']) {
 					    $present_customer = new \Register\Customer();
 
 					    # Make Sure Login is unique
@@ -177,13 +178,13 @@
 		$members = $organization->members('human', $status);
 		if ($organization->error()) {
 			$page->addError("Error finding human members: ".$organization->error());
-			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
+			app_log("Error finding members: ".$organization->error(),'error',__FILE__,__LINE__);
 		}
 
 		$automationMembers = $organization->members('automation', $status);
 		if ($organization->error()) {
 			$page->addError("Error finding automation members: ".$organization->error());
-			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
+			app_log("Error finding members: ".$organization->error(),'error',__FILE__,__LINE__);
 		}
 
 		// Update Existing Organization default billing
@@ -191,7 +192,7 @@
 		    $updateParameters = array();
 		    $updateParameters['default_billing_location_id'] = $_REQUEST['setDefaultBilling'];
 		    $organization->update($updateParameters);
-		    if ($organization->error) {
+		    if ($organization->error()) {
 			    $page->addError("Error updating organization");
 		    } else {
 			    $page->appendSuccess("Organization Updated Successfully");
@@ -203,7 +204,7 @@
 		    $updateParameters = array();
 		    $updateParameters['default_shipping_location_id'] = $_REQUEST['setDefaultShipping'];
 		    $organization->update($updateParameters);
-		    if ($organization->error) {
+		    if ($organization->error()) {
 			    $page->addError("Error updating organization");
 		    } else {
 			    $page->appendSuccess("Organization Updated Successfully");
@@ -227,6 +228,8 @@
 	$statii = $organization->statii();
 
 	$page->title = "Organization Details";
+	$page->setAdminMenuSection("Customer");  // Keep Customer section open
+	$page->addBreadcrumb("Customer");
 	$page->addBreadcrumb("Organizations", "/_register/organizations");
 	if (isset($organization->id)) {
 		$page->addBreadcrumb($organization->name,"/_register/admin_organization?organization_id=".$organization->id);
