@@ -76,6 +76,8 @@
 	###################################################
 	if (! defined('APPLICATION_LOG_HOST')) define('APPLICATION_LOG_HOST','127.0.0.1');
 	if (! defined('APPLICATION_LOG_PORT')) define('APPLICATION_LOG_PORT','514');
+	if (! defined('APPLICATION_LOG_TYPE')) define('APPLICATION_LOG_TYPE','syslog');
+	if (! defined('APPLICATION_LOG')) define('APPLICATION_LOG','');
 	$logger = \Site\Logger::get_instance(array('type' => APPLICATION_LOG_TYPE,'path' => APPLICATION_LOG,'host' => APPLICATION_LOG_HOST,'port' => APPLICATION_LOG_PORT));
 	if ($logger->error()) {
 		error_log("Error initializing logger: ".$logger->error());
