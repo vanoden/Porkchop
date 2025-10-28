@@ -109,7 +109,7 @@
 			)
 		),
 		"S4Engine"		=> array(
-			"schema"	=> 1
+			"schema"	=> 2
 		),
 	);
 
