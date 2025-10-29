@@ -416,8 +416,6 @@
 		 * Update a specified Product Instance
 		 */
 		public function updateInstance() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
 			$instance = new \Product\Instance();
 			if ($instance->error()) $this->app_error("Error initializing asset: ".$instance->error(),__FILE__,__LINE__);
 			if (isset($_REQUEST['product_code']) && strlen($_REQUEST['product_code'])) {
@@ -445,6 +443,14 @@
 				else {
 				 $this->error("No permissions to specify another organization");
 				}
+			}
+
+			if ($_REQUEST['new_product_code'] && strlen($_REQUEST['new_product_code'])) {
+				$product = new \Product\Item();
+				$product->get($_REQUEST['new_product_code']);
+				if ($product->error()) $this->app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
+				if (! $product->id) $this->error("Product not found");
+				$parameters['product_id'] = $product->id;
 			}
 
 			$instance->update($parameters);
@@ -501,7 +507,7 @@
 		}
 
 		/** @method changeInstanceCode()
-		 * Change the code of an existing product instance
+		 * Change the code (serial number) of an existing product instance
 		 * Takes values from $_REQUEST
 		 * Required: code, new_code, reason
 		 * Optional: product_id

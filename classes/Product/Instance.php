@@ -266,26 +266,42 @@
                 }
             }
 
+			$updates = [];
+
 			if (isset($parameters['code']) && $this->validCode($parameters['code'])) {
 				$update_object_query .= ",
 						asset_code = ?";
 				$database->AddParam($parameters['code']);
+				$updates[] = "Code changed to ".$parameters['code'].".";
 			}
 			if (isset($parameters['asset_name'])) {
 				$update_object_query .= ",
 						asset_name = ?";
 				$database->AddParam($parameters['asset_name']);
+				$updates[] = "Name changed to ".$parameters['asset_name'].".";
 			}
 			if (isset($parameters['product_id']) && is_numeric($parameters['product_id'])) {
+				$product = new \Product\Item($parameters['product_id']);
+				if (! $product->exists()) {
+					$this->error("Product not found");
+					return false;
+				}
 				$update_object_query .= ",
 						product_id = ?";
 				$database->AddParam($parameters['product_id']);
+				$updates[] = "Product changed to ".$product->code.".";
 			}
 			if (isset($parameters['organization_id']) && is_numeric($parameters['organization_id'])) {
 				if ($GLOBALS['_SESSION_']->customer->can('manage product instances')) {
+					$organization = new \Register\Organization($parameters['organization_id']);
+					if (! $organization->exists()) {
+						$this->error("Organization not found");
+						return false;
+					}
 					$update_object_query .= ",
 						organization_id = ?";
 					$database->AddParam($parameters['organization_id']);
+					$updates[] = "Organization changed to ".$organization->name.".";
 				}
 				else {
 					$this->error("Insufficient privileges for update");
@@ -334,7 +350,7 @@
 				$auditLog = new \Site\AuditLog\Event();
 				$auditLog->add(array(
 					'instance_id' => $this->id,
-					'description' => 'Updated '.$this->_objectName(),
+					'description' => implode(" ",$updates),
 					'class_name' => get_class($this),
 					'class_method' => 'update'
 				));
