@@ -89,11 +89,58 @@
     });
   }
 
-  // Handle checkbox changes - allow multiple selections
+  // Handle checkbox changes - prevent Administrator from auto-checking lower levels
   function handlePrivilegeLevelChange(privilegeId, changedCheckbox) {
-    // No restrictions - allow multiple privilege levels to be selected
-    // The backend will handle determining the appropriate permission level
+    var checkboxValue = parseInt(changedCheckbox.value);
+    var privilegeRow = changedCheckbox.closest('.tableRow');
+    
+    // If Administrator (63) is being checked, don't auto-check lower levels
+    if (checkboxValue === 63 && changedCheckbox.checked) {
+      // Administrator is being checked - ensure lower levels stay as they are
+      // Don't automatically check them
+      return;
+    }
+    
+    // If Administrator (63) is being unchecked, don't auto-uncheck lower levels
+    if (checkboxValue === 63 && !changedCheckbox.checked) {
+      // Administrator is being unchecked - lower levels stay independent
+      return;
+    }
+    
+    // For other levels, they're independent - no special handling needed
+    // With addition-based arithmetic, each level is independent
   }
+  
+  // Prevent any automatic cascade behavior when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    // Ensure checkboxes are independent - no automatic checking/unchecking
+    var allCheckboxes = document.querySelectorAll('input[name^="privilege_level"]');
+    
+    allCheckboxes.forEach(function(checkbox) {
+      // Store the initial state to prevent unwanted changes
+      checkbox.setAttribute('data-initial-state', checkbox.checked);
+      
+      // Add click handler to prevent cascade
+      checkbox.addEventListener('click', function(e) {
+        // Allow the checkbox to toggle normally
+        // But don't let it affect other checkboxes
+      }, true); // Use capture phase to run before other handlers
+    });
+    
+    // Debug: Log form submission
+    var form = document.querySelector('form[action="/_register/role"]');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        console.log('Form submitting...');
+        var privilegeCheckboxes = document.querySelectorAll('input[name^="privilege_level"]');
+        privilegeCheckboxes.forEach(function(cb) {
+          if (cb.checked) {
+            console.log('Checked: ' + cb.name + ' = ' + cb.value);
+          }
+        });
+      });
+    }
+  });
 </script>
 
 
@@ -134,7 +181,19 @@
       <a href="/_register/privileges" class="register-role-manage-privileges-link">Manage Privileges</a>
     </div>
 
-    <button type="button" onclick="setAllNone()" class="button small">Set All None</button>
+    <?php 
+    // Check if user can modify role privileges
+    $can_modify_privileges = true;
+    if ($role->id && isset($GLOBALS['_SESSION_']->customer)) {
+        $can_modify_privileges = $GLOBALS['_SESSION_']->customer->canModifyRolePrivileges($role);
+    }
+    ?>
+
+    <?php if ($can_modify_privileges): ?>
+      <button type="button" onclick="setAllNone()" class="button small">Set All None</button>
+    <?php else: ?>
+      <div class="note" style="margin-bottom: 10px;">You do not have permission to modify role privileges.</div>
+    <?php endif; ?>
     <div class="tableBody">
 
       <div class="tableRowHeader">
@@ -166,35 +225,53 @@
 
       foreach ($privileges as $privilege) {
         $current_level = $current_privilege_levels[$privilege->id] ?? 0;
+        // For form display, check if each level was explicitly included in the composition
+        // With addition-based arithmetic, we check if we can subtract the level and get a valid remainder
+        // Example: level 63 (administrator only) does NOT include 3 (sub-org) because 63 - 3 = 60 (invalid)
+        // But level 66 (63 + 3) DOES include 3 because 66 - 3 = 63 (valid)
+        $has_sub_org = \Register\PrivilegeLevel::levelIncludesExplicitly($current_level, 3);
+        $has_org_manager = \Register\PrivilegeLevel::levelIncludesExplicitly($current_level, 7);
+        $has_distributor = \Register\PrivilegeLevel::levelIncludesExplicitly($current_level, 15);
+        $has_administrator = \Register\PrivilegeLevel::levelIncludesExplicitly($current_level, 63);
+        
+        // Debug: Only show for specific privilege if needed
+        // if ($privilege->name == 'create email') {
+        //     error_log("Privilege: {$privilege->name}, Level: $current_level, Sub-Org: " . ($has_sub_org ? 'yes' : 'no') . ", Org: " . ($has_org_manager ? 'yes' : 'no') . ", Dist: " . ($has_distributor ? 'yes' : 'no') . ", Admin: " . ($has_administrator ? 'yes' : 'no'));
+        // }
         ?>
         <div class="tableRow">
           <div class="tableCell"><?= $privilege->module ?: 'No Module' ?></div>
-          <div class="tableCell"><?= $privilege->description ?: $privilege->name ?: 'No Description' ?></div>
+          <div class="tableCell">
+            <?= $privilege->description ?: $privilege->name ?: 'No Description' ?>
+            <?php if ($current_level > 0): ?>
+              <span style="font-size: 9px; color: #666;">(Level: <?= $current_level ?>)</span>
+            <?php endif; ?>
+          </div>
            <div class="tableCell role-column-cell">
              <label class="checkbox-label-container">
-               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][]" value="3" <?php if (($current_level & 3) == 3)
-                 echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][]" value="3" <?php if ($has_sub_org)
+                 echo 'checked'; ?> <?php if (!$can_modify_privileges) echo 'disabled'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
                <span class="checkbox-label-text">Sub-Org Manager</span>
              </label>
            </div>
           <div class="tableCell role-column-cell">
             <label class="checkbox-label-container">
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][]" value="7" <?php if (($current_level & 7) == 7)
-                echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][]" value="7" <?php if ($has_org_manager)
+                echo 'checked'; ?> <?php if (!$can_modify_privileges) echo 'disabled'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
               <span class="checkbox-label-text">Org Manager</span>
             </label>
           </div>
           <div class="tableCell role-column-cell">
             <label class="checkbox-label-container">
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][]" value="15" <?php if (($current_level & 15) == 15)
-                echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][]" value="15" <?php if ($has_distributor)
+                echo 'checked'; ?> <?php if (!$can_modify_privileges) echo 'disabled'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
               <span class="checkbox-label-text">Distributor</span>
             </label>
           </div>
           <div class="tableCell role-column-cell">
             <label class="checkbox-label-container">
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][]" value="63" <?php if (($current_level & 63) == 63)
-                echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][]" value="63" <?php if ($has_administrator)
+                echo 'checked'; ?> <?php if (!$can_modify_privileges) echo 'disabled'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
               <span class="checkbox-label-text">Administrator</span>
             </label>
           </div>
