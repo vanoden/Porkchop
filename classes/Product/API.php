@@ -421,7 +421,9 @@
 			if (isset($_REQUEST['product_code']) && strlen($_REQUEST['product_code'])) {
 				$product = new \Product\Item();
 				$product->get($_REQUEST['product_code']);
+				if (! $product->exists()) $this->error("Product not found");
 				$instance->get($_REQUEST['code'],$product->id);
+				if (! $instance->exists()) $this->error("Instance not found");
 			}
 			else {
 				$instance->getSimple($_REQUEST['code']);
@@ -432,8 +434,8 @@
 			$parameters = array();
 			if ($_REQUEST['name'])
 				$parameters['name'] = $_REQUEST['name'];
-		
-			if (isset($_REQUEST['organization'])) {
+
+			if (!empty($_REQUEST['organization'])) {
 				if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 					$organization = new \Register\Organization();
 					$organization->get($_REQUEST['organization_code']);
@@ -1118,7 +1120,11 @@
 						'organization'	=> array(
 							'description' => 'Organization Code',
 							'validation_method' => 'Register::Organization::validCode()'
-						)
+						),
+						'new_product_code'	=> array(
+							'description' => 'New Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
 					)
 				),
 				'findInstances'	=> array(

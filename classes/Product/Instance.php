@@ -21,6 +21,7 @@
 			$this->_metaTableName = "monitor_asset_metadata";
 			$this->_tableMetaFKColumn = "asset_id";
 			$this->_tableMetaKeyColumn = "key";
+			$this->_cacheKeyPrefix = "product.instance";
             $this->_aliasField("asset_code","code");
 			$this->_aliasField("asset_name","name");
 			$this->_auditEvents = true;
@@ -291,7 +292,7 @@
 				$database->AddParam($parameters['product_id']);
 				$updates[] = "Product changed to ".$product->code.".";
 			}
-			if (isset($parameters['organization_id']) && is_numeric($parameters['organization_id'])) {
+			if (!empty($parameters['organization_id']) && is_numeric($parameters['organization_id'])) {
 				if ($GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 					$organization = new \Register\Organization($parameters['organization_id']);
 					if (! $organization->exists()) {
