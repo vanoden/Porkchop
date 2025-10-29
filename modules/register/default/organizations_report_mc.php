@@ -7,9 +7,6 @@
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage customers');
 
-	// Initialize Database Service
-	$database = new \Database\Service();
-
 	// Default parameters
 	$match_length = isset($_REQUEST['match_length']) ? intval($_REQUEST['match_length']) : 10;
 	$min_matches = isset($_REQUEST['min_matches']) ? intval($_REQUEST['min_matches']) : 2;
@@ -27,59 +24,36 @@
 
 	$duplicate_groups = array();
 	$organizations = array();
-
+	
+	// Use OrganizationList class methods to get data
+	$organizationList = new \Register\OrganizationList();
+	
 	if ($match_string) {
 		// Drill down into specific match string
-		$get_organizations_query = "
-			SELECT	id, name, code, status, date_created,
-					(SELECT COUNT(*) FROM users WHERE organization_id = register_organizations.id) as user_count
-			FROM	register_organizations
-			WHERE	status = 'ACTIVE'
-			AND		SUBSTRING(REGEXP_REPLACE(REGEXP_REPLACE(LOWER(name),'&','and'),'[\\s\\.\\-\\;\\:]',''),1,?) = ?
-			ORDER BY name
-		";
-		
-		$rs = $database->Execute($get_organizations_query, array($match_length, $match_string));
-		if ($database->ErrorMsg()) {
-			$page->addError("Error finding organizations: " . $database->ErrorMsg());
-		} else {
-			while ($row = $rs->FetchRow()) {
-				$organizations[] = array(
-					'id' => $row[0],
-					'name' => $row[1],
-					'code' => $row[2],
-					'status' => $row[3],
-					'date_created' => $row[4],
-					'user_count' => $row[5]
-				);
+		$organizations = $organizationList->findByMatchString($match_string, $match_length);
+		if ($organizations === null) {
+			if ($organizationList->error()) {
+				$page->addError("Error finding organizations: " . $organizationList->error());
+			} else {
+				$page->addError("Error finding organizations");
 			}
+			$organizations = array();
 		}
 	} else {
 		// Get list of duplicate groups
-		$get_duplicates_query = "
-			SELECT	COUNT(*) as match_count,
-					SUBSTRING(REGEXP_REPLACE(REGEXP_REPLACE(LOWER(name),'&','and'),'[\\s\\.\\-\\;\\:]',''),1,?) as nickname
-			FROM	register_organizations
-			WHERE	status = 'ACTIVE'
-			GROUP BY nickname
-			HAVING COUNT(*) >= ?
-			ORDER BY match_count DESC, nickname
-		";
-		
-		$rs = $database->Execute($get_duplicates_query, array($match_length, $min_matches));
-		if ($database->ErrorMsg()) {
-			$page->addError("Error finding duplicates: " . $database->ErrorMsg());
-		} else {
-			while ($row = $rs->FetchRow()) {
-				$duplicate_groups[] = array(
-					'match_count' => $row[0],
-					'nickname' => $row[1]
-				);
+		$duplicate_groups = $organizationList->findDuplicateGroups($match_length, $min_matches);
+		if ($duplicate_groups === null) {
+			if ($organizationList->error()) {
+				$page->addError("Error finding duplicates: " . $organizationList->error());
+			} else {
+				$page->addError("Error finding duplicates");
 			}
+			$duplicate_groups = array();
 		}
 	}
 
 	$page->title("Organizations Duplicate Report");
+	$page->setAdminMenuSection("Customer");  // Keep Customer section open
 	$page->instructions = "Find duplicate organizations based on normalized name matching. Adjust the match length and minimum matches to refine results.";
 	$page->addBreadcrumb("Customer");
 	$page->addBreadcrumb("Organizations","/_register/organizations");

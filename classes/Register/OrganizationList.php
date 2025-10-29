@@ -399,4 +399,109 @@
 			}
 			return $counter;
 		}
+
+		/** @method findDuplicateGroups(match_length, min_matches)
+		 * Find groups of duplicate organizations based on normalized name matching
+		 * @param int $match_length Length of normalized string to match (1-50)
+		 * @param int $min_matches Minimum number of matches required (2-100)
+		 * @return array|null Array of duplicate groups with 'match_count' and 'nickname' keys, or null on error
+		 */
+		public function findDuplicateGroups($match_length = 10, $min_matches = 2): ?array {
+			app_log("Register::OrganizationList::findDuplicateGroups()",'trace',__FILE__,__LINE__);
+			
+			$this->clearError();
+			
+			// Validate parameters
+			if ($match_length < 1 || $match_length > 50) {
+				$this->error("Match length must be between 1 and 50");
+				return null;
+			}
+			if ($min_matches < 2 || $min_matches > 100) {
+				$this->error("Minimum matches must be between 2 and 100");
+				return null;
+			}
+			
+			// Initialize Database Service
+			$database = new \Database\Service();
+			
+			$get_duplicates_query = "
+				SELECT	COUNT(*) as match_count,
+						SUBSTRING(REGEXP_REPLACE(REGEXP_REPLACE(LOWER(name),'&','and'),'[\\s\\.\\-\\;\\:]',''),1,?) as nickname
+				FROM	register_organizations
+				WHERE	status = 'ACTIVE'
+				GROUP BY nickname
+				HAVING COUNT(*) >= ?
+				ORDER BY match_count DESC, nickname
+			";
+			
+			$rs = $database->Execute($get_duplicates_query, array($match_length, $min_matches));
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return null;
+			}
+			
+			$duplicate_groups = array();
+			while ($row = $rs->FetchRow()) {
+				$duplicate_groups[] = array(
+					'match_count' => $row[0],
+					'nickname' => $row[1]
+				);
+			}
+			
+			return $duplicate_groups;
+		}
+
+		/** @method findByMatchString(match_string, match_length)
+		 * Find organizations matching a specific normalized name string
+		 * @param string $match_string The normalized string to match against
+		 * @param int $match_length Length of normalized string to match (1-50)
+		 * @return array|null Array of organizations with 'id', 'name', 'code', 'status', 'date_created', 'user_count', or null on error
+		 */
+		public function findByMatchString($match_string, $match_length = 10): ?array {
+			app_log("Register::OrganizationList::findByMatchString()",'trace',__FILE__,__LINE__);
+			
+			$this->clearError();
+			
+			// Validate parameters
+			if (empty($match_string)) {
+				$this->error("Match string is required");
+				return null;
+			}
+			if ($match_length < 1 || $match_length > 50) {
+				$this->error("Match length must be between 1 and 50");
+				return null;
+			}
+			
+			// Initialize Database Service
+			$database = new \Database\Service();
+			
+			$get_organizations_query = "
+				SELECT	id, name, code, status, date_created,
+						(SELECT COUNT(*) FROM users WHERE organization_id = register_organizations.id) as user_count
+				FROM	register_organizations
+				WHERE	status = 'ACTIVE'
+				AND		SUBSTRING(REGEXP_REPLACE(REGEXP_REPLACE(LOWER(name),'&','and'),'[\\s\\.\\-\\;\\:]',''),1,?) = ?
+				ORDER BY name
+			";
+			
+			$rs = $database->Execute($get_organizations_query, array($match_length, $match_string));
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return null;
+			}
+			
+			$organizations = array();
+			while ($row = $rs->FetchRow()) {
+				$organizations[] = array(
+					'id' => $row[0],
+					'name' => $row[1],
+					'code' => $row[2],
+					'status' => $row[3],
+					'date_created' => $row[4],
+					'user_count' => $row[5]
+				);
+			}
+			
+			return $organizations;
+		}
 	}
