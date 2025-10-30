@@ -511,6 +511,8 @@
 	/* @function byte2Matrix (byte)
 	 * Convert byte value into an array
 	 * of bit values
+	 * @param int $byte
+	 * @return array
 	 */
 	function byte2Matrix($byte) {
 		$bits = array();
@@ -522,6 +524,8 @@
 
 	/** @function matrix2Byte(bit array)
 	 * Convert array of bit values into a byte
+	 * @param array $bits
+	 * @return int
 	 */
 	function matrix2Byte($bits) {
 		$byte = 0;
@@ -534,6 +538,9 @@
 
 	/** @function inMatrix(byte, bit position) 
 	 * Check if bit at position is set in byte
+	 * @param int $byte
+	 * @param int $position
+	 * @return bool
 	 */
 	function inMatrix($byte,$position) {
 		$mask = 1 << (7 - $position);
@@ -542,6 +549,10 @@
 
 	/** @function setMatrix(byte, bit position, value) 
 	 * Set bit at position in byte to value
+	 * @param int $byte
+	 * @param int $position
+	 * @param bool $value
+	 * @return int
 	 */
 	function setMatrix($byte,$position,$value) {
 		$mask = 1 << (7 - $position);
@@ -552,4 +563,20 @@
 			$byte = $byte & (~$mask);
 		}
 		return $byte;
+	}
+
+	/** @function matrix2Elements(byte)
+	 * Convert byte value into an array of element numbers
+	 * where bits are set
+	 * @param int $byte
+	 * @return array
+	 */
+	function matrix2Elements($byte) {
+		$elements = array();
+		for ($i = 0; $i < 8; $i++) {
+			if (inMatrix($byte,$i)) {
+				$elements[] = $i;
+			}
+		}
+		return $elements;
 	}
