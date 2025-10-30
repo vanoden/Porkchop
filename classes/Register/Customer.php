@@ -218,6 +218,16 @@
 				$this->error("Insufficient Privileges");
 				return 0;
 			}
+
+			// Prevent self-privilege escalation: Users cannot grant themselves roles that increase their privilege level
+			$current_user = $GLOBALS['_SESSION_']->customer;
+			if ($current_user && $current_user->id == $this->id) {
+				// User is trying to grant a role to themselves
+				if ($this->wouldGrantHigherPrivilege($role_id, $this)) {
+					$this->error("You cannot grant yourself privileges that would increase your privilege level");
+					return 0;
+				}
+			}
 			
 			$add_role_query = "
 				INSERT
@@ -524,6 +534,11 @@
 		public function __call($name, $parameters) {
 			if ($name == "can") {
 				if (count($parameters) == 2) {
+					// Check if second parameter is an object (entity-based access control)
+					if (is_object($parameters[1])) {
+						return $this->_canWithEntity($parameters[0], $parameters[1]);
+					}
+					// Otherwise, treat as privilege level check
 					return $this->_canLevel($parameters[0], $parameters[1]);
 				} elseif (count($parameters) == 1) {
 					return $this->_canLevel($parameters[0], 63); // Default to administrator level
@@ -550,6 +565,56 @@
 			}
 
 			return $this->has_privilege_level($privilege_name, $level_int);
+		}
+
+		/**
+		 * Check if customer can perform action on a specific entity
+		 * @param string $privilege_name The privilege name to check
+		 * @param object $entity The entity object (Register::Customer, Register::Organization, Register::SubOrganization)
+		 * @return bool True if customer has the privilege and is authorized for the entity
+		 */
+		protected function _canWithEntity($privilege_name, $entity): bool {
+			if ($GLOBALS['_SESSION_']->elevated()) return true;
+
+			// If entity is a Customer object, user can only access their own record
+			if ($entity instanceof \Register\Customer) {
+				if ($this->id == $entity->id) {
+					// User is accessing their own customer record - check if they have the privilege at customer level (0)
+					return $this->has_privilege_level($privilege_name, \Register\PrivilegeLevel::CUSTOMER);
+				}
+				return false; // Cannot access other customer records
+			}
+
+			// If entity is an Organization object, check membership and organization level
+			if ($entity instanceof \Register\Organization) {
+				// Check if user is a member of this organization
+				$user_org = $this->organization();
+				if (!$user_org || $user_org->id != $entity->id) {
+					return false; // User is not a member of this organization
+				}
+
+				// User must have organization_manager level or higher for this privilege
+				return $this->has_privilege_level($privilege_name, \Register\PrivilegeLevel::ORGANIZATION_MANAGER);
+			}
+
+			// If entity is a SubOrganization object, check membership and sub-organization level
+			if (class_exists('\Register\SubOrganization') && $entity instanceof \Register\SubOrganization) {
+				// Check if user is a member of this sub-organization
+				// Note: This assumes SubOrganization has a method to check membership
+				// If SubOrganization doesn't exist yet, this will be handled when it's implemented
+				$user_org = $this->organization();
+				if (!$user_org) {
+					return false; // User has no organization
+				}
+
+				// For now, check if user belongs to same organization (sub-organization implementation pending)
+				// When SubOrganization is fully implemented, check sub-organization membership here
+				// User must have sub_organization_manager level or higher for this privilege
+				return $this->has_privilege_level($privilege_name, \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER);
+			}
+
+			// Unknown entity type - require administrator level
+			return $this->has_privilege_level($privilege_name, \Register\PrivilegeLevel::ADMINISTRATOR);
 		}
 
 
@@ -621,26 +686,31 @@
 					return false;
 				}
 			}
-			$check_privilege_query = "
-				SELECT	*
-				FROM	register_users_roles rur,
-						register_roles_privileges rrp
-				WHERE	rur.user_id = ?
-				AND		rrp.role_id = rur.role_id
-				AND		rrp.privilege_id = ?
-			";
-			$database->AddParam($this->id);
-			$database->AddParam($privilege->id);
+		// Check if user has the privilege (any level means they have it, including level 0 for customer)
+		$check_privilege_query = "
+			SELECT	COUNT(*) as count
+			FROM	register_users_roles rur,
+					register_roles_privileges rrp
+			WHERE	rur.user_id = ?
+			AND		rrp.role_id = rur.role_id
+			AND		rrp.privilege_id = ?
+		";
+		$database->AddParam($this->id);
+		$database->AddParam($privilege->id);
 
-			$rs = $database->Execute($check_privilege_query);
-			if (! $rs) {
-				$this->SQLError($database->ErrorMsg());
-				return null;
-			}
-			list($found) = $rs->FetchRow();
-
-			if ($found == "1") return true;
-			else return false;
+		$rs = $database->Execute($check_privilege_query);
+		if (! $rs) {
+			$this->SQLError($database->ErrorMsg());
+			return false;
+		}
+		
+		$row = $rs->FetchRow();
+		if ($row && isset($row[0])) {
+			$count = (int)$row[0];
+			return $count > 0;
+		}
+		
+		return false;
 		}
 
 		/** @method has_privilege_level(privilege_name, required_level)
@@ -697,40 +767,145 @@
 
 		/**
 		 * Check if user's privilege level contains the required level
-		 * Uses bitwise subtraction to determine if a specific level is included
+		 * Uses bitwise AND to determine if a specific level is included
 		 * @param int $user_level The user's combined privilege level
 		 * @param int $required_level The required privilege level
 		 * @return bool True if user has the required level
 		 */
 		private function checkPrivilegeLevel(int $user_level, int $required_level): bool {
-			// Define privilege levels in descending order using constants
-			$levels = [
-				\Register\PrivilegeLevel::ADMINISTRATOR,
-				\Register\PrivilegeLevel::DISTRIBUTOR,
-				\Register\PrivilegeLevel::ORGANIZATION_MANAGER,
-				\Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER,
-				\Register\PrivilegeLevel::CUSTOMER
-			];
-			
-			// If user level is 0, they only have customer level
-			if ($user_level == 0) {
-				return $required_level == 0;
+			// Use the PrivilegeLevel::hasLevel() method which implements correct bitwise checking
+			return \Register\PrivilegeLevel::hasLevel($user_level, $required_level);
+		}
+
+		/**
+		 * Get privilege level name by ID
+		 * @param int $id The privilege level ID
+		 * @return string|null The privilege level name or null if not found
+		 */
+		public function privilegeName(int $id): ?string {
+			return \Register\PrivilegeLevel::privilegeName($id);
+		}
+
+		/**
+		 * Get privilege level ID by name
+		 * @param string $name The privilege level name
+		 * @return int|null The privilege level ID or null if not found
+		 */
+		public function privilegeId(string $name): ?int {
+			return \Register\PrivilegeLevel::privilegeId($name);
+		}
+
+		/**
+		 * Validate privilege level name
+		 * @param string $name The privilege level name to validate
+		 * @return bool True if valid
+		 */
+		public function validPrivilegeName(string $name): bool {
+			return \Register\PrivilegeLevel::validPrivilegeName($name);
+		}
+
+		/**
+		 * Check if customer can modify privileges for a role
+		 * @param \Register\Role $role The role to check permissions for
+		 * @return bool True if customer can modify role privileges, otherwise false
+		 */
+		public function canModifyRolePrivileges($role): bool {
+			$this->clearError();
+
+			// Elevated sessions can do anything
+			if ($GLOBALS['_SESSION_']->elevated()) {
+				return true;
 			}
-			
-			// Check each level by subtracting from user's level
-			$remaining = $user_level;
-			
-			foreach ($levels as $level) {
-				if ($remaining >= $level) {
-					// User has this level
-					if ($level == $required_level) {
-						return true;
-					}
-					$remaining -= $level;
+
+			// Check if user has 'manage privileges' privilege
+			if (!$this->has_privilege('manage privileges')) {
+				return false;
+			}
+
+			// Users with administrator level can modify any role
+			if ($this->has_privilege_level('manage privileges', \Register\PrivilegeLevel::ADMINISTRATOR)) {
+				return true;
+			}
+
+			// Users with organization_manager level can only modify roles they themselves have
+			if ($this->has_privilege_level('manage privileges', \Register\PrivilegeLevel::ORGANIZATION_MANAGER)) {
+				// Check if this user has the role
+				if ($role instanceof \Register\Role && $role->id) {
+					return $this->has_role_id($role->id);
+				}
+				return false;
+			}
+
+			// Other privilege levels cannot modify role privileges
+			return false;
+		}
+
+		/**
+		 * Check if granting a role to a customer would increase their privilege level
+		 * @param int $role_id The role ID to check
+		 * @param \Register\Customer $target_customer The customer receiving the role (optional, defaults to self)
+		 * @return bool True if granting the role would increase privilege level, false otherwise
+		 */
+		private function wouldGrantHigherPrivilege(int $role_id, $target_customer = null): bool {
+			if ($target_customer === null) {
+				$target_customer = $this;
+			}
+
+			// Get the role and its privileges
+			$role = new \Register\Role($role_id);
+			if (!$role->id) {
+				return false; // Invalid role, can't grant higher privilege
+			}
+
+			$role_privileges = $role->privileges();
+
+			// Check each privilege in the role
+			foreach ($role_privileges as $role_privilege) {
+				// Get the target customer's current level for this privilege
+				$current_level = $this->getPrivilegeLevelForUser($target_customer->id, $role_privilege->id);
+
+				// If the role grants a higher level than the user currently has, it would increase privilege
+				if ($role_privilege->level > $current_level) {
+					return true;
 				}
 			}
-			
+
 			return false;
+		}
+
+		/**
+		 * Get the maximum privilege level a user has for a specific privilege
+		 * @param int $user_id The user ID
+		 * @param int $privilege_id The privilege ID
+		 * @return int The maximum privilege level (0 if user has no privilege)
+		 */
+		private function getPrivilegeLevelForUser(int $user_id, int $privilege_id): int {
+			$database = new \Database\Service();
+
+			$get_level_query = "
+				SELECT	MAX(rrp.level) as max_level
+				FROM	register_users_roles rur,
+						register_roles_privileges rrp
+				WHERE	rur.user_id = ?
+				AND		rrp.role_id = rur.role_id
+				AND		rrp.privilege_id = ?
+			";
+
+			$database->AddParam($user_id);
+			$database->AddParam($privilege_id);
+
+			$rs = $database->Execute($get_level_query);
+			if (!$rs || $database->ErrorMsg()) {
+				return 0;
+			}
+
+			$row = $rs->FetchRow();
+			if ($row) {
+				list($max_level) = $row;
+				return $max_level ?? 0;
+			}
+
+			return 0;
 		}
 
 		
