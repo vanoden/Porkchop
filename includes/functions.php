@@ -507,3 +507,49 @@
 			}
 		}
 	}
+
+	/* @function byte2Matrix (byte)
+	 * Convert byte value into an array
+	 * of bit values
+	 */
+	function byte2Matrix($byte) {
+		$bits = array();
+		for ($i = 7; $i >= 0; $i--) {
+			$bits[] = ($byte >> $i) & 1;
+		}
+		return $bits;
+	}
+
+	/** @function matrix2Byte(bit array)
+	 * Convert array of bit values into a byte
+	 */
+	function matrix2Byte($bits) {
+		$byte = 0;
+		for ($i = 0; $i < 8; $i++) {
+			$byte = $byte << 1;
+			$byte = $byte | ($bits[$i] & 1);
+		}
+		return $byte;
+	}
+
+	/** @function inMatrix(byte, bit position) 
+	 * Check if bit at position is set in byte
+	 */
+	function inMatrix($byte,$position) {
+		$mask = 1 << (7 - $position);
+		return ($byte & $mask) ? true : false;
+	}
+
+	/** @function setMatrix(byte, bit position, value) 
+	 * Set bit at position in byte to value
+	 */
+	function setMatrix($byte,$position,$value) {
+		$mask = 1 << (7 - $position);
+		if ($value) {
+			$byte = $byte | $mask;
+		}
+		else {
+			$byte = $byte & (~$mask);
+		}
+		return $byte;
+	}
