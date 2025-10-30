@@ -107,6 +107,10 @@
 			else {
 				print $document->content();
 			}
+			
+			$module = explode('\\',debug_backtrace()[1]['class'])[0];
+			$method = $_REQUEST['method'];
+			app_log("API STATS: $module::$method executed ".$GLOBALS['_page_query_count']." queries in ".$GLOBALS['_page_query_time']." seconds",'trace');
 		}
 	}
 ?>

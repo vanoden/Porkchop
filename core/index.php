@@ -65,6 +65,8 @@
 
 	# Debug Variables
 	$_debug_queries = array();
+	$_page_query_count = 0;
+	$_page_query_time = 0;
 
 	###################################################
 	### Initialize Site Instance					###
@@ -201,3 +203,4 @@
 	$counter->increment();
 
 	print $page->load_template();
+	app_log("PAGE STATS: ".$page->module."/".$page->view." executed ".$_page_query_count." queries in ".$_page_query_time." seconds",'trace',__FILE__,__LINE__);

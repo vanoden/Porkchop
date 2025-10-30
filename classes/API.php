@@ -311,6 +311,9 @@
 			$document->prepare($object);
 			if (isset($GLOBALS['_config']->site->force_content_length) && $GLOBALS['_config']->site->force_content_length == true) {
 				$content = $document->content();
+				$module = $this->module;
+				$method = $_REQUEST['method'];
+				app_log("API STATS: $module/$method executed ".$GLOBALS['_page_query_count']." queries in ".$GLOBALS['_page_query_time']." seconds",'trace',__FILE__,__LINE__);
 				header('Content-Length: '.strlen($content));
 				return $content;
 			}

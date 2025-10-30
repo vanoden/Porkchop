@@ -153,7 +153,25 @@
 
 			// Execute Query
 			try {
+				$exec_start_time = microtime(true);
 				$recordSet = new \Database\RecordSet($this->_connection->Execute($this->_query,$this->_params));
+				$exec_end_time = microtime(true);
+				$exec_elapsed_time = sprintf("%.6f",$exec_end_time - $exec_start_time);
+				$class_name = 'UnknownClass';
+				$function_name = 'unknownFunction';
+				for ($i = 1; $i < 4; $i++) {
+					if (debug_backtrace()[$i]['class'] == 'BaseModel') {
+						continue;
+					}
+					$class_name = debug_backtrace()[$i]['class'];
+					$function_name = debug_backtrace()[$i]['function'];
+					break;
+				}
+				$affected_rows = $this->affected_rows();
+				if (empty($affected_rows)) $affected_rows = $recordSet->RecordCount();
+				app_log("QUERY STATS: {$class_name}::{$function_name} executed in {$exec_elapsed_time} seconds, affected rows: {$affected_rows}",'trace');
+				$GLOBALS['_page_query_count'] ++;
+				$GLOBALS['_page_query_time'] += $exec_elapsed_time;
 			} catch (\mysqli_sql_exception $e) {
 				$this->error($e->getMessage());
 				$recordSet = null;
