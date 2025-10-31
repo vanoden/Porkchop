@@ -48,7 +48,7 @@ if ($can_proceed && $page->errorCount() < 1) {
 		}
 	}
 	// File Update Form Submitted
-	elseif ($request->validText($btn_submit)) {
+	elseif (! empty($btn_submit) && $request->validText($btn_submit)) {
 		$csrfToken = $_POST['csrfToken'] ?? null;
 		if (!$GLOBALS['_SESSION_']->verifyCSRFToken($csrfToken)) {
 			$page->addError("Invalid Request");
