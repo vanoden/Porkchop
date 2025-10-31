@@ -50,6 +50,35 @@
 					$page->addError("Repository not found for product images");
 					print_r("Repository not found for product images");
 				}
+				elseif (isset($_FILES['uploadFile']['error']) && $_FILES['uploadFile']['error'] > 0) {
+					switch($_FILES['uploadFile']['error']) {
+						case 1:
+							$page->addError("The upload file exeeds the server maximum size");
+							break;
+						case 2:
+							$page->addError("The upload file exeeds the form maximum size");
+							break;
+						case 3:
+							$page->addError("The file was only partially uploaded");
+							break;
+						case 4:
+							$page->addError("No file was uploaded");
+							break;
+						case 5:
+							$page->addError("Upload folder missing");
+							break;
+						case 6:
+							$page->addError("Failed to write file to disk");
+							break;
+						case 7:
+							$page->addError("File upload was blocked by server");
+							break;
+						default:
+							$page->addError("Unknown error with file upload");
+							break;
+					}
+					app_log("File upload error: ".print_r($_FILES['uploadFile'],true),"notice");
+				}
 				else {
 					$imageUploaded = $item->uploadImage($_FILES['uploadFile'], $repository->id, 'spectros_product_image', 'Product\Item');
 					if ($imageUploaded) $page->success = "File uploaded";
@@ -69,13 +98,13 @@
 				$page->addError("Invalid image ID");
 			}
 		}
-	
+
 		// Check if item has images
 		$images = $item->images();
 		$defaultImageId = $item->getMetadata('default_image');
 	}
 
-
+	// Set Breadcrumbs and Title
 	$page->addBreadcrumb('Products', '/_spectros/admin_products');
 	$page->addBreadcrumb($item->code, '/_spectros/admin_product/'.$item->code);
 
