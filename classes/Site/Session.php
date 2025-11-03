@@ -696,15 +696,6 @@ use Register\Customer;
 				return false;
 			}
 
-			// audit the update event
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Updated '.$this->_objectName(),
-				'class_name' => get_class($this),
-				'class_method' => 'update'
-			));
-
 			$result = $this->details();
 			
 			// Restore OTP verification status if it was preserved
