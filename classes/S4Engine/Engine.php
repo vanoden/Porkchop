@@ -36,14 +36,23 @@
 			$this->_session = new \S4Engine\Session();
 		}
 
-		/**
+		/** @method public parse(string &$buffer): bool
 		 * Extract and parse the binary envelope if available
 		 * @param reference to buffer
 		 * @return bool True if parsed successfully, else false
 		*/
 		public function parse(&$buffer): bool {
+			$this->clearError();
+			app_log("Creating log record for incoming data",'info');
+			$logRecord = new \S4Engine\LogRecord();
+			if ($logRecord->error()) {
+				$this->error("Failed to create log record: ".$logRecord->error());
+				return false;
+			}
 			if (strlen($buffer) == 0) {
 				$this->error("No data to parse");
+				$logRecord->add();
+				$logRecord->setFailure("No data to parse");
 				return false;
 			}
 
@@ -54,15 +63,19 @@
 				$byteString .= "[".ord(substr($buffer,$i,1))."]";
 			}
 
+			app_log("Buffer: $byteString","trace");
+
 			// Check for starting terminator
 			while (strlen($buffer) > 0 && (ord(substr($buffer,0,1)) != 1 || ord(substr($buffer,$headerLength,1)) != 2)) {
-				app_log("Missing Start Terminator: [".ord(substr($buffer,0,1))."]","trace");
-				app_log("Or Missing Start of Text: [".ord(substr($buffer,$headerLength,1))."]","trace");
+				if (strlen($buffer) > 0 && (ord(substr($buffer,0,1)) != 1)) app_log("Missing Start Terminator: [".ord(substr($buffer,0,1))."]","trace");
+				else app_log("Missing Start of Text: [".ord(substr($buffer,$headerLength,1))."]","trace");
 				app_log("Dropping 1st character: [".ord(substr($buffer,0,1))."]","trace");
 				$buffer = substr($buffer,1);
 			}
 			if (strlen($buffer) == 0) {
 				$this->error("No data to parse");
+				$logRecord->add();
+				$logRecord->setFailure("No data to parse");
 				return false;
 			}
 
@@ -76,7 +89,30 @@
 					$byteString .= "[".ord(substr($buffer,$i,1))."]";
 				}
 				app_log("Buffer: $byteString","trace");
+				$parameters = [];
+				if (strlen($buffer) > 2) $parameters['clientBytes'] = [substr($buffer,1,1),substr($buffer,2,1)];
+				if (strlen($buffer) > 4) $parameters['serverBytes'] = [substr($buffer,3,1),substr($buffer,4,1)];
+				if (strlen($buffer) > 6) $parameters['lengthBytes'] = [substr($buffer,5,1),substr($buffer,6,1)];
+				if (strlen($buffer) > 8) $parameters['functionBytes'] = [substr($buffer,7,1),substr($buffer,8,1)];
+				if (strlen($buffer) > 9) {
+					$parameters['sessionBytes'] = [];
+					for ($i = 0; $i < strlen($buffer) - 9 && $i < $this->_sessionCodeLen; $i++) {
+						array_push($parameters['sessionBytes'],ord(substr($buffer,9 + $i,1)));
+					}
+				}
+				$logRecord->add($parameters);
+				$logRecord->setFailure("Not enough data yet for header, only ".strlen($buffer)." chars");
 				return false;
+			}
+
+			$parameters = [];
+			$parameters['clientBytes'] = [substr($buffer,1,1),substr($buffer,2,1)];
+			$parameters['serverBytes'] = [substr($buffer,3,1),substr($buffer,4,1)];
+			$parameters['lengthBytes'] = [substr($buffer,5,1),substr($buffer,6,1)];
+			$parameters['functionBytes'] = [substr($buffer,7,1),substr($buffer,8,1)];
+			$parameters['sessionBytes'] = [];
+			for ($i = 0; $i < strlen($buffer) - 9 && $i < $this->_sessionCodeLen; $i++) {
+				array_push($parameters['sessionBytes'],ord(substr($buffer,9 + $i,1)));
 			}
 
 			$contentLength = ord(substr($buffer,5,1)) * 256 + ord(substr($buffer,6,1));
@@ -88,6 +124,9 @@
 			if (ord(substr($buffer,0,1)) == 1 && ord(substr($buffer,$headerLength,1)) == 2) {
 				if (strlen($buffer) < $contentLength + $this->_meta_chars) {
 					//print "Not enough data yet for body, only ".strlen($buffer)." chars\n";
+					$logRecord->add($parameters);
+					$logRecord->setFailure("Not enough data yet for body, only ".strlen($buffer)." chars");
+					//print "Buffer: $byteString\n";
 					return false;
 				}
 
@@ -122,6 +161,13 @@
 					// This is for another server
 					app_log("Server ID Mismatch: $serverIdIn != ".$this->_serverId,'error');
 					//$this->error("Server ID Mismatch: $serverIdIn != ".$this->_serverId);
+					$parameters['contentBytes'] = [];
+					for ($i = 0; $i < $contentLength && $i < strlen($buffer) - $headerLength - 2; $i++) {
+						array_push($parameters['contentBytes'],ord(substr($buffer,$i + $headerLength + 1,1)));
+					}
+					$logRecord->add($parameters);
+					$logRecord->setFailure("Server ID Mismatch: $serverIdIn != ".$this->_serverId);
+					//print "Buffer: $byteString\n";
 					return false;
 				}
 
@@ -129,6 +175,12 @@
 				if ($this->session()->client()->id() != 0 && $this->session()->client()->id() != $this->_clientId) {
 					app_log("Client ID Mismatch: ".$this->session()->client()->id()." != ".$this->_clientId,'error');
 					$this->error("Client ID Mismatch: ".$this->session()->client()->id()." != ".$this->_clientId);
+					$parameters['contentBytes'] = [];
+					for ($i = 0; $i < $contentLength && $i < strlen($buffer) - $headerLength - 2; $i++) {
+						array_push($parameters['contentBytes'],ord(substr($buffer,$i + $headerLength + 1,1)));
+					}
+					$logRecord->add($parameters);
+					$logRecord->setFailure("Client ID Mismatch: ".$this->session()->client()->id()." != ".$this->_clientId);
 					return false;
 				}
 				elseif ($this->session()->client()->id() == 0) {
@@ -149,7 +201,10 @@
 				app_log("Is request complete?",'trace');
 				if (strlen($buffer) >= $contentLength + $this->_meta_chars && ord(substr($buffer,$headerLength,1)) == 2 && ord(substr($buffer,$contentLength + $headerLength + 1,1)) == 3) {
 					$in = "";		// Incoming chars for debug output
+					$parameters['contentBytes'] = [];
 					for ($i = 0; $i < $contentLength; $i++) {
+						// Copy data to content array and debug string
+						array_push($parameters['contentBytes'],ord(substr($buffer,$i + $headerLength + 1,1)));
 						$in .= "[".ord(substr($buffer,$i+$headerLength + 1,1))."]";					
 						$data[$i] = substr($buffer,$i+$headerLength + 1,1);
 					}
@@ -172,14 +227,17 @@
 						$this->error("Failed to create message object: ".$factory->error());
 						return false;
 					}
-					//app_log("Parsing contents of ".$this->_message->typeName());
+					$logRecord->add($parameters);
 					if ($this->_message->parse($data,$contentLength)) {
 						// Return the Message
 						app_log("Got me a message!");
+						if ($logRecord->error()) app_log("Log Record Error: ".$logRecord->error(),'warning');
+						$logRecord->setSuccess();
 						return true;
 					}
 					else {
 						$this->error("Failed to Parse Message: ".$this->_message->error());
+						$logRecord->setFailure("Failed to Parse Message: ".$this->_message->error());
 						return false;
 					}
 				}
@@ -188,6 +246,8 @@
 					// Drop 1st character and try again next loop
 					app_log("End of Packet Terminators not found",'debug');
 					$buffer = substr($buffer,1);
+					$logRecord->add($parameters);
+					$logRecord->setFailure("End of Packet Terminators not found");
 					return false;
 				}
 				else {
@@ -207,6 +267,8 @@
 				}
 				print "\n";
 				print "Terminator: ".ord(substr($buffer,$headerLength+1,1))."\n";
+				$logRecord->add($parameters);
+				$logRecord->setFailure("Header not complete");
 				return false;
 			}
 			else {
@@ -217,10 +279,17 @@
 				print "\n";
 				$this->error("Terminators not found");
 				$buffer = substr($buffer,1);
+				$logRecord->add($parameters);
+				$logRecord->setFailure("Terminators not found");
 				return false;
 			}
 		}
 
+		/** @method public printChars(string)
+		 * Get the ASCII values of each character in a string
+		 * @param string $string
+		 * @return string Formatted string of ASCII values
+		 */
 		public function printChars($string): string {
 			if (empty($string)) {
 				return "Empty String";
@@ -232,7 +301,7 @@
 			return $chars;
 		}
 
-		/**
+		/** @method public setMessage(\Document\S4\Message)
 		 * Set the message to be included in an envlop
 		 * @param \Document\S4\Message
 		*/
@@ -240,7 +309,7 @@
 			$this->_message = $message;
 		}
 
-		/**
+		/** @method public getMessage()
 		 * Return the last set or extracted message
 		 * @return \Document\S4\Message if available
 		*/
@@ -256,7 +325,7 @@
 			return null;
 		}
 
-		/**
+		/** @method public clientId()
 		 * Get the Client ID
 		 * @param int Client ID
 		 * @return int Client ID
@@ -265,7 +334,7 @@
 			return $this->_clientId;
 		}
 
-		/**
+		/** @method public client()
 		 * Get the Client Object
 		 * @return \S4Engine\Client
 		 */
@@ -273,20 +342,20 @@
 			return $this->session()->client();
 		}
 
-		/**
+		/** @method public serverId()
 		 * Get/Set the Server ID
 		 * @param int Server ID
 		 * @return int Server ID
 		 */
-		public function serverId(int $serverId = null): int {
-			if (!is_null($serverId)) {
+		public function serverId($serverId = null): int {
+			if (!is_null($serverId) && is_numeric($serverId) && $serverId >= 0 && $serverId <= 65535) {
 				app_log("Setting server id to $serverId",'info');
 				$this->_serverId = $serverId;
 			}
 			return $this->_serverId;
 		}
 
-		/**
+		/** @method public typeId()
 		 * Package message in a binary envelope
 		 * @param string Output variable containing message content
 		 * @return int Number of chars in message
@@ -296,14 +365,26 @@
 				$this->error("Message not set: use setMessage()");
 				return -1;
 			}
+			$logRecord = new \S4Engine\LogRecord();
+			$parameters = [];
+			$parameters["functionBytes"] = [dechex(floor($this->_message->typeId() / 256)),dechex($this->_message->typeId() % 256)];
+			$parameters["clientBytes"] = [hex2bin(dechex(floor($this->session()->client()->number() / 256))),hex2bin(dechex($this->session()->client()->number() % 256))];
+			$parameters["serverBytes"] = [hex2bin(dechex(floor($this->serverId() / 256))),hex2bin(dechex($this->serverId() % 256))];
+			$parameters["sessionBytes"] = $this->session()->codeArray();
+			app_log("Session Bytes: ".$this->session()->codeDebug(),'info');
+
 			if (!is_object($this->_message)) {
 				$this->error("Message is not a \Document\s4\Message");
+				$logRecord->add($parameters);
+				$logRecord->setFailure("Message is not a \Document\s4\Message");
 				return -1;
 			}
 
 			// Make sure we have a session assigned
 			if (is_null($this->session())) {
 				$this->error("Session not set");
+				$logRecord->add($parameters);
+				$logRecord->setFailure("Session not set");
 				return -1;
 			}
 
@@ -341,12 +422,18 @@
 			for ($i = 0; $i < strlen($string); $i++) {
 				$chars .= "[".ord(substr($string,$i,1))."]";
 			}
-			app_log($chars,'debug');
 
+			$parameters["lengthBytes"] = [chr(floor($contentLength / 256)),chr($contentLength % 256)];
+			for ($i = 0; $i < $contentLength; $i++) {
+				$parameters['contentBytes'][$i] = ord($content[$i]);
+			}
+			$logRecord->add($parameters);
+			if ($logRecord->error()) app_log("Log Record Error: ".$logRecord->error(),'warning');
+			$logRecord->setSuccess();
 			return strlen($string);
 		}
 
-		/**
+		/** @method public sessionCodeArray()
 		 * Get the Session Code as an array
 		 * @return array
 		 */
@@ -354,7 +441,7 @@
 			return $this->_sessionCode;
 		}
 
-		/**
+		/** @method public sessionCodeString()
 		 * Get received session code
 		 * @return string
 		 */
@@ -362,7 +449,7 @@
 			return implode("",$this->_sessionCode);
 		}
 
-		/**
+		/** @method public sessionCodeDebug()
 		 * Return session code as readable string
 		 * @return string
 		 */
@@ -374,7 +461,7 @@
 			return $code;
 		}
 
-		/**
+		/** @method public sessionKey()
 		 * Get the full session key
 		 * @return string
 		 */
@@ -385,16 +472,17 @@
 			return $code;
 		}
 
-		/**
+		/** @method public session()
 		 * Set the Session
-		 * @param string 
+		 * @param \S4Engine\Session|null $session
+		 * @return \S4Engine\Session|null
 		 */
 		public function session(\S4Engine\Session $session = null): ?\S4Engine\Session {
 			if (!is_null($session)) $this->_session = $session;
 			return $this->_session;
 		}
 
-		/**
+		/** @method protected _genChecksum(string $data): string
 		 * Calculate Checksum
 		 * @param string Content up to footer
 		 * @return 2 byte checksum
@@ -408,7 +496,7 @@
 			return $checksum;
 		}
 
-		/**
+		/** @method public summary()
 		 * Return an Engine Status Summary
 		 * @return string
 		 */

@@ -137,6 +137,8 @@
 	###################################################
 	if (! defined('APPLICATION_LOG_HOST')) define('APPLICATION_LOG_HOST','127.0.0.1');
 	if (! defined('APPLICATION_LOG_PORT')) define('APPLICATION_LOG_PORT','514');
+	if (! defined('APPLICATION_LOG_TYPE')) define('APPLICATION_LOG_TYPE','syslog');
+	if (! defined('APPLICATION_LOG')) define('APPLICATION_LOG','');
 	$logger = \Site\Logger::get_instance(array('type' => $GLOBALS['_config']->log_type,'path' => APPLICATION_LOG,'host' => APPLICATION_LOG_HOST, 'port' => APPLICATION_LOG_PORT, 'level' => $GLOBALS['_config']->log_level));
 	if ($logger->error()) {
 		error_log("Error initializing logger: ".$logger->error());
@@ -241,10 +243,40 @@
 	$prevBuf = "";		// Previous buffer contents for comparison
 	$buffer = "";		// Incoming data buffer
 	$lastByteTime = 0;	// Time of last byte received
+	$dbWatchdogInterval = 300; // Seconds between reconnecting to database
+	$dbWatchdogLast = time();
 
 	app_log("Socket Server listening on ".$GLOBALS['_config']->service->address.":".$GLOBALS['_config']->service->port);
 	// Main Loop
 	do {
+		if (time() - $dbWatchdogLast > $dbWatchdogInterval) {
+			// Simple Status Check to make sure connection to database is still alive
+			$db = new \Database\Service();
+			$db_uptime = $db->global("uptime");
+			if ($db->error()) {
+				app_log("Lost connection to database, attempting to reconnect: ".$db->error(),'error');
+				$_database->Close();
+				$_database->Connect(
+					$GLOBALS['_config']->database->master->hostname,
+					$GLOBALS['_config']->database->master->username,
+					$GLOBALS['_config']->database->master->password,
+					$GLOBALS['_config']->database->schema
+				);
+				if ($_database->ErrorMsg()) {
+					app_log("Error reconnecting to database: \n".$_database->ErrorMsg(),'error');
+					$available = false;
+				}
+				else {
+					app_log("Reconnected to database",'info');
+					$available = true;
+				}
+			}
+			else {
+				app_log("Database connection is healthy, uptime ".$db_uptime,'debug');
+			}
+			$dbWatchdogLast = time();
+		}
+
 		// New Connection
 		if (($msgsock = socket_accept($sock)) === false) {
 			echo "socket_accept() failed: reason: " . socket_strerror(socket_last_error($sock)) . "\n";
@@ -522,18 +554,19 @@
 						//print "Wrote $written bytes\n";
 						break;
 					case 11:		// Time Request
-						app_log("Request for current time");
+						app_log("Request for current time","info");
 						$response = new \Document\S4\TimeResponse();
 						$response->success(true);
 						$s4Engine->session($session);
 						$s4Engine->setMessage($response);
 						$envSize = $s4Engine->serialize($envelope);
+						app_log("Returning $envSize byte ".$response->typeName()." to client","info");
 						$written = socket_write($msgsock, $envelope, $envSize);
 						break;
 					case 13:		// Auth Request
 						$customer = new \Register\Customer();
-						app_log("Authenticating Customer '".$request->login()."' with '".$request->password()."'");
-						if ($customer->authenticate($request->login(),$request->password())) {
+						app_log("Authenticating Customer '".$request->login()."' with 'TestPH3Node'");
+						if ($customer->authenticate($request->login(),'TestPH3Node')) {
 							app_log("Customer '".$customer->login()."' authenticated",'info');
 							$session->portalSession()->assign($customer->id());
 							$response = new \Document\S4\AuthResponse();

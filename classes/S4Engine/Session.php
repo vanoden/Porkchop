@@ -31,7 +31,7 @@
 		 * @param int|null $id 
 		 * @return int 
 		 */
-		public function id(int $id = null): int {
+		public function id(?int $id = null): int {
 			if ($id) {
 				$this->id = $id;
 			}
@@ -346,7 +346,7 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * @param string $code
 		 * @return string
 		 */
-		public function codeString(string $code = null): string {
+		public function codeString(?string $code = null): string {
 			if (!is_null($code)) {
 				$this->_number = ord(substr($code,0,1)) * 256 + ord(substr($code,1,1));
 			}
@@ -364,11 +364,13 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * @param array $code
 		 * @return array
 		 */
-		public function codeArray(array $code = null): array {
+		public function codeArray(?array $code = null): array {
 			if (!is_null($code)) {
 				$this->_number = ($code[0] * 256 * 256 * 256) + ($code[1] * 256 * 256) + ($code[2] * 256) + ($code[3]);
 			}
+			app_log("Session number is ".$this->_number,'trace');
 			if ($this->_number == 0) {
+				app_log("Returning zero session code",'trace');
 				return array(0,0,0,0);
 			}
 			else {
@@ -379,6 +381,7 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 				$id -= $arr[1] * 256 * 256;
 				$arr[2] = floor($id / 256);
 				$arr[3] = $id % 256;
+				app_log("Returning session code: ".print_r($arr,true),'trace');
 				return $arr;
 			}
 		}
