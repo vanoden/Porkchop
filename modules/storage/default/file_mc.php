@@ -217,3 +217,8 @@ foreach ($object_associations as $assoc) {
 		}
 	}
 }
+if (empty($assoc_string)) {
+	$assoc_string = "None";
+} else {
+	$assoc_string = rtrim($assoc_string, "; ");
+}
