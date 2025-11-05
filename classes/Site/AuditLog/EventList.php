@@ -121,4 +121,32 @@ class EventList extends \BaseListClass {
 		}
 		return $objects;
 	}
+
+	public function batchDeleteAuditEvents($class_name, int $count) {
+		$this->clearError();
+		$this->resetCount();
+
+		// Initialize Database Service
+		$database = new \Database\Service();
+
+		// Dereference Working Class
+		$workingClass = new $this->_modelName;
+
+		// Build Query
+		$delete_events_query = "
+			CALL batchDeleteAuditEvents(?, ?)
+		";
+
+		$database->AddParam($class_name);
+		$database->AddParam($count);
+
+		// Execute Query
+		$result = $database->Execute($delete_events_query);
+		if (!$result) {
+			$this->SQLError($database->ErrorMsg());
+			return false;
+		}
+
+		return true;
+	}
 }

@@ -1229,6 +1229,27 @@
 			$response->print();
 		}
 
+		/** @method batchDeleteAuditEvents
+		 * Batch delete audit events based on criteria
+		 * @param string $class The class name of the audited objects
+		 * @param int $count The maximum number of events to delete
+		 * @return bool Returns true on success, throws an exception on failure
+		 */
+		public function batchDeleteAuditEvents() {
+			$auditList = new \Site\AuditLog\EventList();
+
+			$auditList->batchDeleteAuditEvents(
+				$_REQUEST['class'],
+				isset($_REQUEST['count']) ? intval($_REQUEST['count']) : 100
+			);
+
+			$response = new \APIResponse();
+			if ($auditList->error()) {
+				$response->error($auditList->error());
+			}
+			$response->print();
+		}
+
 		public function _methods() {
 			return array(
 				'findPages'	=> array(
@@ -1973,6 +1994,21 @@
 						),
 					)
 				),
+				'batchDeleteAuditEvents' => array(
+					'description'	=> 'Batch delete audit log events',
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage audit logs',
+					'parameters'	=> array(
+						'class_name' => array(
+							'required' => true,
+							'validation_method'	=> 'Porkchop::validClassName()',
+						),
+						'count' => array(
+							'required' => true,
+							'content-type'	=> 'integer',
+						),
+					)
+				)
 			);		
 		}
 	}
