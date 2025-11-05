@@ -187,7 +187,7 @@
 			// Implement Object Cache
 			$cache = $this->cache();
 			$cachedData = $cache->get();
-			if (!empty($cachedData) && !empty($cachedData->name)) {
+			if (!empty($cachedData) && !empty($cachedData->domain_name)) {
 				foreach ($cachedData as $key => $value) {
 					$this->$key = $value;
 				}
