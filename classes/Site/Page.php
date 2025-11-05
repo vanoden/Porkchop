@@ -725,7 +725,7 @@
 		    if (array_key_exists ( 'object', $parameter )) $object = $parameter ['object'];
 		    if (array_key_exists ( 'property', $parameter )) $property = $parameter ['property'];
 
-		    app_log ( "Object: $object Property: $property", 'debug', __FILE__, __LINE__ );
+		    app_log ( "Object: $object Property: $property", 'trace', __FILE__, __LINE__ );
 		    if ($object == "constant") {
 			    if ($property == "path") {
 				    $buffer .= PATH;
