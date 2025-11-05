@@ -23,7 +23,7 @@
 			)
 		),
 		"Site"			=> array(
-			"schema"	=> 27,
+			"schema"	=> 28,
 			"privileges"	=> array(
 				'send admin in-site message',
 				'edit site pages',
@@ -114,7 +114,7 @@
 			)
 		),
 		"S4Engine"		=> array(
-			"schema"	=> 2
+			"schema"	=> 3
 		),
 		"Search"		=> array(
 			"schema"	=> 1
