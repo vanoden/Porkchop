@@ -154,9 +154,18 @@
 			// Execute Query
 			try {
 				$exec_start_time = microtime(true);
-				$recordSet = new \Database\RecordSet($this->_connection->Execute($this->_query,$this->_params));
+				$query_result = $this->_connection->Execute($this->_query,$this->_params);
 				$exec_end_time = microtime(true);
 				$exec_elapsed_time = sprintf("%.6f",$exec_end_time - $exec_start_time);
+				
+				// Check if query result is valid before creating RecordSet
+				if ($query_result === false) {
+					$this->error("Query execution failed");
+					$recordSet = null;
+				} else {
+					$recordSet = new \Database\RecordSet($query_result);
+				}
+				
 				$class_name = 'UnknownClass';
 				$function_name = 'unknownFunction';
 				for ($i = 1; $i < 4; $i++) {
@@ -171,7 +180,7 @@
 					break;
 				}
 				$affected_rows = $this->affected_rows();
-				if (empty($affected_rows)) $affected_rows = $recordSet->RecordCount();
+				if (empty($affected_rows) && $recordSet !== null) $affected_rows = $recordSet->RecordCount();
 				app_log("QUERY STATS: {$class_name}::{$function_name} executed in {$exec_elapsed_time} seconds, affected rows: {$affected_rows}",'trace');
 				$GLOBALS['_page_query_count'] ++;
 				$GLOBALS['_page_query_time'] += $exec_elapsed_time;

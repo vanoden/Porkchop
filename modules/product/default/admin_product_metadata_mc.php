@@ -25,6 +25,9 @@ if (!isset($item) || !is_object($item)) {
 
 $metadataKeys = $item->getInstanceMetadataKeys();
 
+// Define standard metadata fields that should always be processed from the form
+$standardMetadataFields = ['name', 'description', 'short_description', 'default_dashboard_id'];
+
 // Handle Actions
 if (!empty($_REQUEST['updateMetadata'])) {
     // CSRF Token Check
@@ -32,12 +35,30 @@ if (!empty($_REQUEST['updateMetadata'])) {
     if (!$page->errorCount()) {
         app_log("Admin " . $GLOBALS['_SESSION_']->customer->first_name . " updating metadata for product " . $item->code, 'notice', __FILE__, __LINE__);
 
-        // Update existing metadata fields
-        foreach ($metadataKeys as $meta_field) {
+        // Merge standard fields with existing metadata keys to ensure all form fields are processed
+        $fieldsToProcess = array_unique(array_merge($standardMetadataFields, $metadataKeys));
+
+        // Update metadata fields (both existing and standard form fields)
+        foreach ($fieldsToProcess as $meta_field) {
             if (isset($_REQUEST[$meta_field])) {
                 $value = trim($_REQUEST[$meta_field]);
-                if ($item->validText($value)) {
-                    if ($item->getMetadata($meta_field) != $value) {
+                $isValid = false;
+                
+                // Handle integer fields (like default_dashboard_id)
+                if ($meta_field === 'default_dashboard_id') {
+                    if ($value === '' || $item->validInteger($value)) {
+                        $isValid = true;
+                    }
+                } else {
+                    // For text fields, allow empty values or valid text
+                    if ($item->validText($value) || $value === '') {
+                        $isValid = true;
+                    }
+                }
+                
+                if ($isValid) {
+                    $currentValue = $item->getMetadata($meta_field);
+                    if ($currentValue != $value) {
                         $item->setMetadata($meta_field, $value);
                         if ($item->error()) {
                             $page->addError("Error setting " . $meta_field . ": " . $item->error());
