@@ -214,4 +214,20 @@
 				return false;
 			}
 		}
+
+		/** @method public validClassName(string)
+		 * Validate a class name
+		 * @param string $class_name The class name to validate
+		 * @return bool True if valid class name
+		 */
+		public function validClassName(string $class_name): bool {
+			if (preg_match('/^[A-Za-z_][A-Za-z0-9_\\\\]*$/',$class_name)) {
+				if (class_exists($class_name)) return true;
+				else return false;
+			}
+			else {
+				app_log("Invalid class name: '$class_name'",'info');
+				return false;
+			}
+		}
 	}
