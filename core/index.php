@@ -203,4 +203,12 @@
 	$counter->increment();
 
 	print $page->load_template();
-	app_log("PAGE STATS: ".$page->module."/".$page->view." executed ".$_page_query_count." queries in ".$_page_query_time." seconds",'trace',__FILE__,__LINE__);
+
+	$stats_string = "PAGE STATS: ".$page->module."/".$page->view." executed ".$_page_query_count." queries in ".$_page_query_time." seconds";
+	if (!empty($GLOBALS['_HTTP_CLIENT_STATS_'])) {
+		$stats_string .= ", Made :";
+		$stats_string .= $GLOBALS['_HTTP_CLIENT_STATS_']['requests']." HTTP requests;";
+		$stats_string .= " in ".$GLOBALS['_HTTP_CLIENT_STATS_']['time']." seconds;";
+	}
+
+	app_log($stats_string,'debug',__FILE__,__LINE__);
