@@ -10,6 +10,7 @@ use function Amp\now;
 		private $_cookiejar;
 		private $_timeout = 3; // Default timeout in seconds
 		private $_status = 'UNKNOWN';
+		private $_start_time;
 
 		/** @constructor
 		 * Initializes the HTTP client
@@ -71,7 +72,7 @@ use function Amp\now;
 				return false;
 			}
 			$this->_status = 'CONNECTED';
-			$this->_connected = true;
+			$this->_start_time = microtime(true);
 			return true;
 		}
 
@@ -115,6 +116,7 @@ use function Amp\now;
 			$start_time = time();
 	
 			// Send Request to the Server
+			$this->_start_time = microtime(true);
 			$this->_status = 'SENDING';
 			fwrite($this->_socket,$string);
 			app_log("Message sent at ".(time() - $start_time)." seconds",'trace');
@@ -158,6 +160,10 @@ use function Amp\now;
 				}
 			}
 			fclose($this->_socket);
+			$GLOBALS['_HTTP_CLIENT_STATS_']['requests'] ++;
+			$GLOBALS['_HTTP_CLIENT_STATS_']['time'] += microtime(true) - $this->_start_time;
+			app_log("Connection closed at ".(time() - $start_time)." seconds",'debug');
+
 			if (strlen($content) < 1) {
 				$this->error("No response received");
 				return null;
