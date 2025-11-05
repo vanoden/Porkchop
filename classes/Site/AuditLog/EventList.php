@@ -129,19 +129,16 @@ class EventList extends \BaseListClass {
 		// Initialize Database Service
 		$database = new \Database\Service();
 
-		// Dereference Working Class
-		$workingClass = new $this->_modelName;
-
-		// Build Query
-		$delete_events_query = "
-			CALL batchDeleteAuditEvents(?, ?)
-		";
+		// Prepare Stored Procedure
+		$database->trace(9);
+		$database->debug = 'log';
+		//$database->PrepareSP("batchDeleteAuditEvents");
 
 		$database->AddParam($class_name);
 		$database->AddParam($count);
 
 		// Execute Query
-		$result = $database->Execute($delete_events_query);
+		$result = $database->Execute('CALL batchDeleteAuditEvents(?, ?)');
 		if (!$result) {
 			$this->SQLError($database->ErrorMsg());
 			return false;
