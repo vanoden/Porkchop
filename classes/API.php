@@ -766,7 +766,7 @@
 					if ($parameter->allow_wildcards) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_allow_wildcards">'.addslashes('yes').'</span>'.$cr;
 					if (!empty($parameter->type)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_type">'.addslashes($parameter->type).'</span>'.$cr;
 					if (!empty($parameter->description)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_description">'.addslashes($parameter->description).'</span>'.$cr;
-					if ($parameter->required) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_required" value="'.addslashes($parameter->required).'</span>'.$cr;
+					if ($parameter->required) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_required">'.addslashes($parameter->required).'</span>'.$cr;
 					if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_prompt">'.addslashes($parameter->prompt).'</span>'.$cr;
 					if (!empty($parameter->default)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_default">'.addslashes($parameter->default).'</span>'.$cr;
 					if (!empty($parameter->content_type)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_content_type">'.addslashes($parameter->content_type).'</span>'.$cr;
