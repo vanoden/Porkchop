@@ -5,6 +5,12 @@
   // define existing categories and tags for autocomplete
   var existingCategories = <?= $uniqueTagsData['categoriesJson'] ?>;
   var existingTags = <?= $uniqueTagsData['tagsJson'] ?>;
+  
+  // remove a search tag by id
+  function removeSearchTagById(id) {
+    document.getElementById('removeSearchTagId').value = id;
+    document.getElementById('adminProductTagsForm').submit();
+  }
 </script>
 
 <?= $page->showAdminPageInfo() ?>
@@ -35,7 +41,7 @@
     <a href="/_product/audit_log/<?= $item->code ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
 </div>
 
-<form method="post" action="/_product/admin_product_tags/<?= $item->code ?>">
+<form id="adminProductTagsForm" method="post" action="/_product/admin_product_tags/<?= $item->code ?>">
 <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
 <input type="hidden" name="id" value="<?= $item->id ?>" />
 <input type="hidden" id="removeTagId" name="removeTagId" value="" />

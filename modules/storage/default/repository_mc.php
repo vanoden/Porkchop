@@ -21,19 +21,13 @@ elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 	$repository = new \Storage\Repository();
 	$repository->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
 }
-//elseif ($repository->validType($_REQUEST['type'])) {
-//	// POST/GET Variable with Repository Type
-//	$repository = $factory->create($_REQUEST['type']);
-//	// If factory returns false (unsupported type), fall back to base repository
-//	if (!$repository) $repository = new \Storage\Repository();
-//}
 else {
 	// Default to Local Repository
 	$repository = new \Storage\Repository();
 }
 
-$repository_types = $repository->getSupportedTypes();
 $factory = new \Storage\RepositoryFactory();
+$repository_types = $factory->types();
 
 // Handle Form Submission
 if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
@@ -57,9 +51,9 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 
 		// For new repositories, create the proper repository type before validation
 		if (empty($repository->id) && !empty($_REQUEST['type']) && isset($_REQUEST['type']) && $repository->validType($_REQUEST['type'])) {
-			$repository = new \Storage\Repository();
-			$repository->getInstance($_REQUEST['type']);
-			if ($repository->error()) $page->addError($repository->error());
+			$factory = new \Storage\RepositoryFactory();
+			$repository = $factory->create($_REQUEST['type']);
+			if ($factory->error()) $page->addError($factory->error());
 			// If factory returns false (unsupported type), fall back to base repository
 			if (!$repository) {
 				$page->addError("Repository type '" . (isset($_REQUEST['type']) ? $_REQUEST['type'] : '') . "' is not supported");
@@ -253,11 +247,13 @@ if (is_array($repository_types)) {
 }
 
 // Get Default Privileges for Repository
-if (is_object($repository)) {
+if (!is_object($repository)) {
+	$page->addError("Repository not found or could not be created.");
+	$default_privileges = array();
+} else {
+	// Initialize privileges for both new and existing repositories
 	$default_privileges = $repository->default_privileges();
 	//$override_privileges = $repository->override_privileges();
-} else {
-	$page->addError("Repository not found or could not be created.");
 }
 
 

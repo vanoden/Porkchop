@@ -213,15 +213,9 @@
         var imageSelectUrl = "/_media/image_select";
         console.log("Opening image select window with URL: " + imageSelectUrl);
         
-        // Test if the URL is accessible by trying to fetch it first
-        AJAXUtils.get(imageSelectUrl, function(data) {
-            console.log("URL is accessible, opening popup");
-            childWindow = open(imageSelectUrl, "imageselect", 'resizable=no,width=500,height=500');
-            if (childWindow.opener == null) childWindow.opener = self;
-        }, function(status) {
-            console.error("URL returned status: " + status);
-            alert("Error: Image select page returned status " + status);
-        });
+        // Open the image select popup window
+        childWindow = open(imageSelectUrl, "imageselect", 'resizable=no,width=500,height=500');
+        if (childWindow.opener == null) childWindow.opener = self;
     }
 
 	/** @function endImageSelectWizard(code)
@@ -295,6 +289,16 @@
         var form = document.getElementById('imagesForm');
         if (form) form.submit();
     }
+
+	/** @function removeDefaultImage()
+	 * Remove the current default image
+	 */
+    function removeDefaultImage() {
+        document.getElementById('default_image_id').value = '';
+        document.getElementById('updateImage').value = 'true';
+        var form = document.getElementById('imagesForm');
+        if (form) form.submit();
+    }
 </script>
 
 
@@ -337,6 +341,11 @@
         <div>
             <div class="label">Current Default Image</div>
             <div><?= htmlspecialchars($defaultImage->display_name ?? $defaultImage->name) ?></div>
+            <div style="margin-top: 8px;">
+                <button type="button" class="button button-small" onclick="removeDefaultImage();" style="background: #dc3545;">
+                    <i class="fa fa-times-circle"></i> Remove as Default
+                </button>
+            </div>
         </div>
     </div>
 <?php } ?>

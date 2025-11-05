@@ -89,7 +89,14 @@
 
 		// Update Default Image
 		if (isset($_REQUEST['updateImage']) && $_REQUEST['updateImage'] == 'true') {
-			if ($item->validInteger($_REQUEST['default_image_id'] ?? null)) {
+			// Handle removal of default image (empty value)
+			if (empty($_REQUEST['default_image_id'])) {
+				$item->unsetMetadata('default_image');
+				if ($item->error()) $page->addError("Error removing default image: " . $item->error());
+				else $page->appendSuccess('Default image removed successfully.', 'success');
+			}
+			// Handle setting a new default image
+			elseif ($item->validInteger($_REQUEST['default_image_id'] ?? null)) {
 				$defaultImageId = $_REQUEST['default_image_id'];
 				$item->setMetadataScalar('default_image', $defaultImageId);
 				if ($item->error()) $page->addError("Error setting default image: " . $item->error());

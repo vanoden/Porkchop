@@ -66,7 +66,7 @@
 		}
 	}
     <?php
-    if ($repository->type == 's3') {
+    if (isset($repository->type) && $repository->type == 's3') {
     ?>
         window.addEventListener('load', function() {
             document.getElementById('s3Settings').style.display = 'block';
@@ -166,7 +166,9 @@
     
     <div class="form_footer">
         <input type="submit" name="btn_submit" class="button" value="Update" />
+<?php	if ($repository->id && $repository->code) { ?>
         <input type="button" name="btn_files" class="button" value="Browse" onclick="window.location.href='/_storage/browse?code=<?=$repository->code?>';" />
+<?php	} ?>
         <input type="button" name="btn_back" class="button" value="Back" onclick="window.location.href='/_storage/repositories';" />
     </div>
 </form>

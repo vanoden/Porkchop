@@ -3,7 +3,10 @@
 	$page = $site->page();
 	$page->requirePrivilege('configure site');
 
-    if (!empty($_REQUEST['key']) && $siteConfiguration->validKey($_REQUEST['key'])) {
+    // Create a temporary Configuration object for validation
+    $validationConfig = new \Site\Configuration();
+    
+    if (!empty($_REQUEST['key']) && $validationConfig->validKey($_REQUEST['key'])) {
 		$siteConfiguration = new \Site\Configuration($_REQUEST['key']);
 
         if (isset($_REQUEST['todo']) && !empty($_REQUEST['todo'])) {
