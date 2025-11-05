@@ -70,6 +70,14 @@ class BaseModel extends \BaseClass {
 		}
 	}
 
+	/** @method _getActualClass()
+	 * Get the actual class name of the object
+	 * @return string
+	 */
+	public function _getActualClass(): string {
+		return get_class($this);
+	}
+
 	/** @method __call($name, $parameters)
 	 * Polymorphism for Fun and Profit
 	 * @param string $name
@@ -111,7 +119,7 @@ class BaseModel extends \BaseClass {
 			$callerFunction = $caller["function"] ?? 'unknown';
 			$callerLine = $caller["line"] ?? 0;
 			app_log("$className: No function '$name' found with ".count($parameters)." parameters. Called by " . $callerClass . "::" . $callerFunction . "() Line " . $callerLine, 'warning');
-			$this->error("Invalid method '$name'"); // for ".$this->objectName());
+			$this->error("Invalid method '$name'"); // for ".$this->_getActualClass());
 		}
 	}
 
@@ -170,7 +178,7 @@ class BaseModel extends \BaseClass {
 
 		// unique id is required to perform an update
 		if (!$this->id) {
-			$this->error('ERROR: id is required for ' . $this->_objectName() . ' update.');
+			$this->error('ERROR: id is required for ' . $this->_getActualClass() . ' update.');
 			return false;
 		}
 
@@ -208,14 +216,15 @@ class BaseModel extends \BaseClass {
 		if (isset($cache)) $cache->delete();
 
 		// audit the update event
-		$auditLog = new \Site\AuditLog\Event();
-		$auditLog->add(array(
-			'instance_id' => $this->id,
-			'description' => 'Updated ' . $this->_objectName(),
-			'class_name' => get_class($this),
-			'class_method' => 'update'
-		));
-
+		if ($this->_auditEvents) {
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => $audit_message,
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
+		}
 		return $this->details();
 	}
 
@@ -288,13 +297,15 @@ class BaseModel extends \BaseClass {
 		$this->id = $database->Insert_ID();
 
 		// audit the add event
-		$auditLog = new \Site\AuditLog\Event();
-		$auditLog->add(array(
-			'instance_id' => $this->id,
-			'description' => 'Added new ' . $this->_objectName(),
-			'class_name' => get_class($this),
-			'class_method' => 'add'
-		));
+		if ($this->_auditEvents) {
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new ' . $this->_getActualClass(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+		}
 
 		return $this->update($parameters);
 	}
@@ -551,7 +562,7 @@ class BaseModel extends \BaseClass {
 		$auditLog = new \Site\AuditLog\Event();
 		$auditLog->add(array(
 			'instance_id' => $this->id,
-			'description' => 'Deleted ' . $this->_objectName(),
+			'description' => 'Deleted ' . $this->_getActualClass(),
 			'class_name' => get_class($this),
 			'class_method' => 'delete'
 		));
@@ -596,7 +607,7 @@ class BaseModel extends \BaseClass {
 		$auditLog = new \Site\AuditLog\Event();
 		$auditLog->add(array(
 			'instance_id' => $this->id,
-			'description' => 'Deleted ' . $this->_objectName(),
+			'description' => 'Deleted ' . $this->_getActualClass(),
 			'class_name' => get_class($this),
 			'class_method' => 'deleteByKey'
 		));
@@ -798,6 +809,24 @@ class BaseModel extends \BaseClass {
 		return true;
 	}
 
+	/** @method setCacheElement(key, value)
+	 * Set a value in the cache for this object
+	 * @param string $key
+	 * @param mixed $value
+	 * @return bool True if set
+	 */
+	public function setCacheElement(string $key, $value): bool {
+		$cache = $this->cache();
+		if ($cache) {
+			$cachedObject = $cache->get();
+			if (!is_array($cachedObject)) $cachedObject = array();
+			$cachedObject[$key] = $value;
+			$cache->set($cachedObject);
+			return true;
+		}
+		return false;
+	}
+
 	/** @method cached($cached = null)
 	 * Don't check cache, just see if data came from cache!
 	 * @param bool $cached
@@ -938,7 +967,7 @@ class BaseModel extends \BaseClass {
 		$auditLog = new \Site\AuditLog\Event();
 		$auditLog->add(array(
 			'instance_id' => $this->id,
-			'description' => 'Deleted metadata key $key from ' . $this->_objectName() . ' id ' . $this->id,
+			'description' => 'Deleted metadata key $key from ' . $this->_getActualClass() . ' id ' . $this->id,
 			'class_name' => get_class($this),
 			'class_method' => 'deleteMetadata'
 		));
