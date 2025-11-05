@@ -84,10 +84,13 @@
 		 * @return bool
 		 */
 		public function update($parameters = []): bool {
+			// Reset any previous errors
+			$this->clearError();
+
+			// Initiate Database Service
+			$database = new \Database\Service;
 
 			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
-			$this->clearError();
-			$bind_params = array();
 
 			// Bust Cache
 			$cache_key = "organization[".$this->id."]";
@@ -99,104 +102,111 @@
 				SET		id = id
 			";
 
-			if (isset($parameters['name'])) {
+			$audit_message = "";
+			if (!empty($parameters['name']) && $parameters['name'] != $this->name) {
+				if (! $this->validName($parameters['name'])) {
+					$this->error("Valid name required for Organization::update");
+					return false;
+				}
 				$update_object_query .= ",
 						name = ?";
-				array_push($bind_params,$parameters['name']);
+				$database->AddParam($parameters['name']);
+				$audit_message .= "name updated to '".$parameters['name']."'. ";
 			}
-			if (isset($parameters['status'])) {
+			if (!empty($parameters['status']) && $parameters['status'] != $this->status) {
+				if (! $this->validStatus($parameters['status'])) {
+					$this->error("Valid status required for Organization::update");
+					return false;
+				}
 				$update_object_query .= ",
 						status = ?";
-				array_push($bind_params,$parameters['status']);
+				$database->AddParam($parameters['status']);
+				$audit_message .= "status updated to '".$parameters['status']."'. ";
 			}
-			if (isset($parameters['is_reseller']) && is_numeric($parameters['is_reseller'])) {
+			if (!empty($parameters['is_reseller']) && is_numeric($parameters['is_reseller']) && $parameters['is_reseller'] != $this->is_reseller) {
 				$update_object_query .= ",
 						is_reseller = ?";
-				array_push($bind_params,$parameters['is_reseller']);
+				$database->AddParam($parameters['is_reseller']);
+				$audit_message .= "is_reseller updated to '".$parameters['is_reseller']."'. ";
 			}
-			if (isset($parameters['is_customer']) && is_numeric($parameters['is_customer'])) {
+			if (!empty($parameters['is_customer']) && is_numeric($parameters['is_customer']) && $parameters['is_customer'] != $this->is_customer) {
 				$update_object_query .= ",
 						is_customer = ?";
-				array_push($bind_params,$parameters['is_customer']);
+				$database->AddParam($parameters['is_customer']);
+				$audit_message .= "is_customer updated to '".$parameters['is_customer']."'. ";
 			}
-			if (isset($parameters['is_vendor']) && is_numeric($parameters['is_vendor'])) {
+			if (!empty($parameters['is_vendor']) && is_numeric($parameters['is_vendor']) && $parameters['is_vendor'] != $this->is_vendor) {
 				$update_object_query .= ",
 						is_vendor = ?";
-				array_push($bind_params,$parameters['is_vendor']);
+				$database->AddParam($parameters['is_vendor']);
+				$audit_message .= "is_vendor updated to '".$parameters['is_vendor']."'. ";
 			}
-			if (isset($parameters['assigned_reseller_id']) && is_numeric($parameters['assigned_reseller_id'])) {
+			if (!empty($parameters['assigned_reseller_id']) && is_numeric($parameters['assigned_reseller_id']) && $parameters['assigned_reseller_id'] != $this->assigned_reseller_id) {
 				$update_object_query .= ",
 						assigned_reseller_id = ?";
-				array_push($bind_params,$parameters['assigned_reseller_id']);
+				$database->AddParam($parameters['assigned_reseller_id']);
+				$audit_message .= "assigned_reseller_id updated to '".$parameters['assigned_reseller_id']."'. ";
 			}
-			if (isset($parameters['notes'])) {
+			if (isset($parameters['notes']) && $parameters['notes'] != $this->notes) {
 				$update_object_query .= ",
 						notes = ?";
-				array_push($bind_params,$parameters['notes']);
+				$database->AddParam($parameters['notes']);
+				$audit_message .= "notes updated. ";
 			}
-			if (isset($parameters['password_expiration_days'])) {
+			if (!empty($parameters['password_expiration_days']) && is_numeric($parameters['password_expiration_days']) && $parameters['password_expiration_days'] != $this->password_expiration_days) {
 				$update_object_query .= ",
 						password_expiration_days = ?";
-                array_push($bind_params,$parameters['password_expiration_days']);
+                $database->AddParam($parameters['password_expiration_days']);
+				$audit_message .= "password_expiration_days updated to '".$parameters['password_expiration_days']."'. ";
             }
-            if (isset($parameters['default_billing_location_id'])) {
+            if (!empty($parameters['default_billing_location_id']) && $parameters['default_billing_location_id'] != $this->default_billing_location_id) {
 			    $update_object_query .= ",
 			    default_billing_location_id = ?";
-			    array_push($bind_params,$parameters['default_billing_location_id']);
+			    $database->AddParam($parameters['default_billing_location_id']);
+				$audit_message .= "default_billing_location_id updated to '".$parameters['default_billing_location_id']."'. ";
     		}
-		    if (isset($parameters['default_shipping_location_id'])) {
+		    if (!empty($parameters['default_shipping_location_id']) && $parameters['default_shipping_location_id'] != $this->default_shipping_location_id	) {
 			    $update_object_query .= ",
 			    default_shipping_location_id = ?";
-			    array_push($bind_params,$parameters['default_shipping_location_id']);
+			    $database->AddParam($parameters['default_shipping_location_id']);
+			    $audit_message .= "default_shipping_location_id updated to '".$parameters['default_shipping_location_id']."'. ";
 		    }
-			if (isset($parameters['website_url'])) {
+			if (!empty($parameters['website_url']) && $parameters['website_url'] != $this->website_url) {
 				$update_object_query .= ",
 						website_url = ?";
-				array_push($bind_params,$parameters['website_url']);
+				$database->AddParam($parameters['website_url']);
+				$audit_message .= "website_url updated to '".$parameters['website_url']."'. ";
 			}
-			if (isset($parameters['time_based_password']) && is_numeric($parameters['time_based_password'])) {
+			if (!empty($parameters['time_based_password']) && is_numeric($parameters['time_based_password']) && $parameters['time_based_password'] != $this->time_based_password) {
 				$update_object_query .= ",
 						time_based_password = ?";
-				array_push($bind_params,$parameters['time_based_password']);
+				$database->AddParam($parameters['time_based_password']);
+				$audit_message .= "time_based_password updated to '".$parameters['time_based_password']."'. ";
 			}
-			if (isset($parameters['account_number'])) {
+			if (!empty($parameters['account_number']) && $parameters['account_number'] != $this->account_number) {
 				$update_object_query .= ",
 						account_number = ?";
-				array_push($bind_params,$parameters['account_number']);
+				$database->AddParam($parameters['account_number']);
+				$audit_message .= "account_number updated to '".$parameters['account_number']."'. ";
 			}
 
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-			array_push($bind_params,$this->id);
+			$database->AddParam($this->id);
 			query_log($update_object_query);
-			$rs = $GLOBALS['_database']->Execute(
-				$update_object_query,
-				$bind_params
-			);
+			$rs = $database->Execute($update_object_query);
 
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-
-			// audit any/all the organization changes made
-			if (isset($parameters['notes']) && ($parameters['notes'] != $this->notes)) $this->auditRecord('ORGANIZATION_UPDATED','Organization notes have been updated: '.$parameters['notes']);
-			if (isset($parameters['website_url']) && ($parameters['website_url'] != $this->website_url)) $this->auditRecord('ORGANIZATION_UPDATED','Organization website_url has been updated: '.$parameters['website_url']);
-			if (isset($parameters['status']) && ($parameters['status'] != $this->status)) $this->auditRecord('ORGANIZATION_UPDATED','Organization status has been updated: '.$parameters['status']);
-			if (isset($parameters['name']) && ($parameters['name'] != $this->name)) $this->auditRecord('ORGANIZATION_UPDATED','Organization name has been changed: '.$parameters['name']);
-			if (isset($parameters['is_reseller']) && ($parameters['is_reseller'] != $this->is_reseller)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a reseller has been updated (is_reseller): '.$parameters['is_reseller']);
-			if (isset($parameters['is_customer']) && ($parameters['is_customer'] != $this->is_customer)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a customer has been updated (is_customer): '.$parameters['is_customer']);
-			if (isset($parameters['is_vendor']) && ($parameters['is_vendor'] != $this->is_vendor)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a vendor has been updated (is_vendor): '.$parameters['is_vendor']);
-			if (isset($parameters['time_based_password']) && ($parameters['time_based_password'] != $this->time_based_password)) $this->auditRecord('ORGANIZATION_UPDATED','Organization time based password has been updated (time_based_password): '.$parameters['time_based_password']);
-			if (isset($parameters['assigned_reseller_id']) && ($parameters['assigned_reseller_id'] != $this->assigned_reseller_id)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a reseller has been updated (assigned_reseller_id): '.$parameters['assigned_reseller_id']);
-			if (isset($parameters['account_number']) && ($parameters['account_number'] != $this->account_number)) $this->auditRecord('ORGANIZATION_UPDATED','Organization account number has been updated: '.$parameters['account_number']);
 
 			// audit the update event
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
 				'instance_id' => $this->id,
-				'description' => 'Updated '.$this->_objectName(),
+				'description' => $audit_message,
 				'class_name' => get_class($this),
 				'class_method' => 'update'
 			));	
