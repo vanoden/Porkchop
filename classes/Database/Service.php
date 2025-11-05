@@ -160,6 +160,9 @@
 				$class_name = 'UnknownClass';
 				$function_name = 'unknownFunction';
 				for ($i = 1; $i < 4; $i++) {
+					if (!isset(debug_backtrace()[$i]['class'])) {
+						break;
+					}
 					if (debug_backtrace()[$i]['class'] == 'BaseModel') {
 						continue;
 					}

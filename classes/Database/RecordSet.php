@@ -29,6 +29,7 @@
 
 		public function RecordCount(): int {
 			if (!isset($this->_handle)) return 0;
+			if (!isset($this->_handle->numRows)) return 0;
 			return $this->_handle->numRows();
 		}
 
