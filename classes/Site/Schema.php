@@ -703,6 +703,32 @@
 				$database->CommitTrans();
 			}
 
+			if ($this->version() < 28) {
+				app_log("Upgrading ".$this->module." schema to version 28",'notice',__FILE__,__LINE__);
+
+				$add_procedure_query = "
+					CREATE PROCEDURE `batchDeleteAuditEvents` (IN className VARCHAR(64), IN numRecs INT(11) )
+					BEGIN
+						DELETE FROM `site_audit_events`
+						WHERE `id` IN (
+							SELECT `id` FROM (
+								SELECT `id` FROM `site_audit_events`
+								WHERE `class_name` = className
+								ORDER BY `event_date` ASC
+								LIMIT numRecs
+							) AS subquery
+						);
+					END
+				";
+				if (! $database->Execute($add_procedure_query)) {
+					$this->SQLError("Altering site_audit_events table: ".$database->error());
+					return false;
+				}
+
+				$this->setVersion(28);
+				$database->CommitTrans();
+			}
+
 			return true;
 		}
 	}
