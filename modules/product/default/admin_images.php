@@ -299,6 +299,18 @@
         var form = document.getElementById('imagesForm');
         if (form) form.submit();
     }
+
+	/** @function removeImageFromProduct(imageId)
+	 * Delete/Remove an image from the product
+	 * @param {string} imageId - The ID of the image to delete.
+	 */
+    function removeImageFromProduct(imageId) {
+        if (confirm('Are you sure you want to remove this image from the product? This will disassociate the image but not delete it from the repository.')) {
+            document.getElementById('deleteImage').value = imageId;
+            var form = document.getElementById('imagesForm');
+            if (form) form.submit();
+        }
+    }
 </script>
 
 
@@ -367,11 +379,12 @@
     </div>
 
 	<!-- Display Existing Images, Allow user to select a new default -->
-	<form method="post" action="/_product/admin_images" id="imagesForm">
+	<form method="post" action="/_product/admin_images/<?= $item->code ?>" id="imagesForm">
 	<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
 	<input type="hidden" name="id" value="<?= $item->id ?>" />
 	<input type="hidden" id="default_image_id" name="default_image_id" value="<?= ($defaultImage = $item->getDefaultStorageImage()) ? $defaultImage->name : '' ?>" />
 	<input type="hidden" id="updateImage" name="updateImage" value="" />
+	<input type="hidden" id="deleteImage" name="deleteImage" value="" />
 
 	<div class="container">
 		<div class="current-images-header">
@@ -407,6 +420,9 @@
                                     <i class="fa fa-star-o"></i> Set as Default
                                 </button>
                             <?php } ?>
+                            <button type="button" class="button button-small" onclick="removeImageFromProduct(<?= $image->id ?>); event.stopPropagation();" style="background: #dc3545; margin-left: 8px;">
+                                <i class="fa fa-trash"></i> Delete
+                            </button>
                         </div>
                     </div>
                 </div>
