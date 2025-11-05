@@ -1231,7 +1231,7 @@
 
 		/** @method batchDeleteAuditEvents
 		 * Batch delete audit events based on criteria
-		 * @param string $class The class name of the audited objects
+		 * @param string $class_name The class name of the audited objects
 		 * @param int $count The maximum number of events to delete
 		 * @return bool Returns true on success, throws an exception on failure
 		 */
@@ -1239,7 +1239,7 @@
 			$auditList = new \Site\AuditLog\EventList();
 
 			$auditList->batchDeleteAuditEvents(
-				$_REQUEST['class'],
+				$_REQUEST['class_name'],
 				isset($_REQUEST['count']) ? intval($_REQUEST['count']) : 100
 			);
 
