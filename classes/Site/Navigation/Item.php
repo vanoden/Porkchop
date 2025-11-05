@@ -17,6 +17,7 @@
 		public function __construct($id = null) {
 			$this->_tableName = 'navigation_menu_items';
 			$this->_tableUKColumn = null;
+			$this->_cacheKeyPrefix = 'navigation.item';
 			parent::__construct($id);
 		}
 
@@ -287,6 +288,9 @@
 			// Initialize Database Service
 			$database = new \Database\Service();
 
+			// Clear Cache
+			$this->clearCache();
+
 			// Prepare Query
 			$update_object_query = "
 				UPDATE  navigation_menu_items
@@ -430,6 +434,18 @@
 			// Initialize Database Service
 			$database = new \Database\Service();
 
+			// Initialize Cache
+			$cache = $this->cache();
+			$cachedData = $cache->get();
+			if (!empty($cachedData)) {
+				foreach ($cachedData as $key => $value) {
+					if (property_exists($this,$key)) $this->$key = $value;
+				}
+				$this->cached(true);
+				$this->exists(true);
+				return true;
+			}
+
 			// Prepare Query
 			$get_object_query = "
 				SELECT  *
@@ -462,6 +478,8 @@
 				else $this->external = false;
 				if ($object->ssl) $this->ssl = true;
 				else $this->ssl = false;
+
+				if (!empty($this->_cacheKeyPrefix)) $cache->set($object);
 			}
 			else {
 				$this->id = -1;
