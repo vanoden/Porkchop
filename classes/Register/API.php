@@ -1016,9 +1016,6 @@
             $response->print();
         }
         function expireAgingCustomers() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-			$this->requirePrivilege("manage customers");
-
             $expires = strtotime("-12 month", time());
             $date = date('m/d/Y',$expires);
         
@@ -2093,6 +2090,14 @@
 						)
 					)
 				),
-			);
+                'expireAgingCustomers' => array(
+                    'description' => 'Expire customers who have exceeded their allowed inactivity period',
+                    'authentication_required' => true,
+                    'privilege_required' => 'manage customers',
+                    'return_element' => 'expired_count',
+                    'return_type' => 'integer',
+                    'parameters' => array()
+                ),
+            );
 		}
 	}
