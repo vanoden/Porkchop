@@ -28,7 +28,7 @@ use Register\Customer;
 		public $location_id;					// ID of the location associated with this session
 		public $customer_id;					// ID of the customer associated with this session
 		private $csrfToken;						// Anti-CSRF Token for the session
-		private $otpVerified = null;			// Is One Time Password verified?
+		private bool $otpVerified = false;		// Is One Time Password verified?
 		private $cookie_name;					// Name of the session cookie
 		private $cookie_domain;					// Domain for the session cookie
 		private $cookie_expires;				// Expiration time for the session cookie
@@ -47,8 +47,9 @@ use Register\Customer;
 			parent::__construct($id);
 		}
 
-		/**
-		 * Start a new session
+		/** @method public start()
+		 * @brief Start or Continue a Session
+		 * Find a session based on cookie, or create a new one
 		 * @return void 
 		 */
 		public function start() {
@@ -84,6 +85,7 @@ use Register\Customer;
 			$this->domain_id = $domain->id;
 
 			// Get Site Company (Multi-Tenancy) from Domain
+			// Probably always going to be 1
 			$this->company = new \Company\Company($domain->company_id);
 			if ($this->company->error()) {
 				$this->error("Error finding company: ".$this->company->error());
@@ -103,20 +105,53 @@ use Register\Customer;
 			else $this->cookie_expires = time() + 36000;
 			$this->cookie_path = "/";
 
-			// Store Code from Cookie
+			// Load Code from Cookie
 			if (isset($_COOKIE[$this->cookie_name])) $request_code = $_COOKIE[$this->cookie_name];
 
-			// Was a 'Valid looking' Session Given
+			// Does the provided session code look valid?
 			if (isset($request_code) && $this->validCode($request_code)) {
-				app_log("Getting session ".$request_code,'debug',__FILE__,__LINE__);
-				# Get Existing Session Information
-				$this->get($request_code);
-				if ($this->id) {
+				app_log("Getting session ".$request_code,'trace',__FILE__,__LINE__);
+
+				// See if we have the ID cached for this code
+				$cached_id = $this->getIDFromCodeCache($request_code);
+				if (!empty($cached_id)) {
+					$this->id = $cached_id;
+					if ($this->details()) {
+						app_log("Loaded session ID ".$this->id." from code cache",'trace2',__FILE__,__LINE__);
+					}
+					else {
+						app_log("Failed to load session ID ".$this->id." from code cache",'notice',__FILE__,__LINE__);
+						$this->id = null;
+					}
+				}
+				else {
+					app_log("Session code $request_code not found in code cache",'trace2',__FILE__,__LINE__);
+				}
+
+				// If not cached, load from database
+				if (! $this->id) {
+					# Get Existing Session Information
+					if ($this->get($request_code)) {
+						app_log("Loaded session ".$this->id." from database",'trace2',__FILE__,__LINE__);
+					}
+					else {
+						app_log("Session $request_code not found in database",'notice',__FILE__,__LINE__);
+					}
+				}
+
+				// If Session Loaded, Update Timestamp
+				if (!empty($this->id)) {
 					app_log("Loaded session ".$this->id.", customer ".$this->customer->id,'debug',__FILE__,__LINE__);
 					$this->timestamp($this->id);
 				} else {
 					app_log("Session $request_code not available or expired, deleting cookie for ".$domain->name,'notice',__FILE__,__LINE__);
 					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['SERVER_NAME'],false,true);
+				}
+
+				// Set ID in Code Cache if loaded
+				if (! $cached_id && ! empty($this->id)) {
+					app_log("Setting session ID ".$this->id." in code cache for code $request_code",'trace',__FILE__,__LINE__);
+					$this->setIDInCodeCache();
 				}
 			}
 			elseif (isset($request_code)) {
@@ -213,6 +248,30 @@ use Register\Customer;
 			setcookie("session_code","",time() - 3600);
 
 			return true;
+		}
+
+		/** @method setIDInCodeCache()
+		 * Store Session ID in Code Cache
+		 * @return void
+		 */
+		public function setIDInCodeCache(): void {
+			$code_cache = new \Cache\Item($GLOBALS['_CACHE_'],"session_code[".$this->code."]");
+			$code_cache->set(['id' => $this->id]);
+		}
+
+		/** @method getIDFromCodeCache()
+		 * Get Session ID from Code Cache
+		 * @param code string Session Code
+		 * @return int|null
+		 */
+		public function getIDFromCodeCache($code): ?int {
+			$code_cache = new \Cache\Item($GLOBALS['_CACHE_'],"session_code[".$code."]");
+			if ($code_cache->error()) {
+				app_log("Cache error in Site::Session::getIDFromCodeCache(): ".$code_cache->error(),'error',__FILE__,__LINE__);
+				return null;
+			}
+			$object = $code_cache->get();
+			return $object["id"] ?? null;
 		}
 
 		/** @method elevate()
@@ -322,6 +381,10 @@ use Register\Customer;
 			else {
 				app_log("Could not set session cookie",'error',__FILE__,__LINE__);
 			}
+
+			// Store Session ID in Code Cache
+			$this->setIDInCodeCache();
+
 			return $this->get($new_code);
 		}
 		
@@ -330,36 +393,35 @@ use Register\Customer;
 		 * @return bool 
 		 */
 		function details(): bool {
+			// Clear Previous Errors
 			$this->clearError();
 
-			# Name For Xcache Variable
-			$cache_key = "session[".$this->id."]";
-
 			# Cached Customer Object, Yay!
-			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache = $this->cache();
 			if ($cache->error()) app_log("Cache error in Site::Session::get(): ".$cache->error(),'error',__FILE__,__LINE__);
-			
-			elseif (($this->id) and ($session = $cache->get())) {
-				if ($session->code) {
-					$this->code = $session->code;
-					$this->company = new \Company\Company($session->company_id);
-					$this->customer = new \Register\Customer($session->customer_id);
-					$this->timezone = $session->timezone;
-					$this->browser = $session->browser;
-					$this->first_hit_date = $session->first_hit_date;
-					$this->last_hit_date = $session->last_hit_date;
-					$this->super_elevation_expires = $session->super_elevation_expires;
-					$this->refer_url = $session->refer_url;
-					$this->oauth2_state = $session->oauth2_state;
-					if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
-					if (empty($session->csrfToken)) {
-						$session->csrfToken = $this->generateCSRFToken();
-						$cache->set($session,600);
+			elseif (($this->id) and ($foundObject = $cache->get())) {
+				if (!empty($foundObject) && !empty($foundObject->code)) {
+					$this->code = $foundObject->code;
+					$this->company = new \Company\Company($foundObject->company_id);
+					$this->customer = new \Register\Customer($foundObject->customer_id);
+					$this->timezone = $foundObject->timezone;
+					$this->browser = $foundObject->browser;
+					$this->first_hit_date = $foundObject->first_hit_date;
+					$this->last_hit_date = $foundObject->last_hit_date;
+					$this->super_elevation_expires = $foundObject->super_elevation_expires;
+					$this->refer_url = $foundObject->refer_url;
+					$this->oauth2_state = $foundObject->oauth2_state;
+
+					// Non-database properties
+					if (!empty($foundObject->otpVerified)) $this->otpVerified = $foundObject->otpVerified;
+					if (isset($foundObject->isMobile)) $this->isMobile = $foundObject->isMobile;
+					if (empty($foundObject->csrfToken)) {
+						$foundObject->csrfToken = $this->generateCSRFToken();
+						$cache->set($foundObject,600);
 					}
-					$this->csrfToken = $session->csrfToken;
+					$this->csrfToken = $foundObject->csrfToken;
 					
 					// Handle OTP verification status from separate cache
-					$this->otpVerified = $this->loadOTPVerifiedFromCache();
 					$this->cached(true);
 					return true;
 				}
@@ -394,21 +456,23 @@ use Register\Customer;
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			if ($rs->RecordCount()) {
-				$session = $rs->FetchNextObject(false);
-				if (empty($session->customer_id)) $session->customer_id = 0;
+			if ($object = $rs->FetchNextObject(false)) {
+				app_log("Found session ".$this->id." in database",'trace2',__FILE__,__LINE__);
+				if (empty($object->customer_id)) $object->customer_id = 0;
 
-				$this->code = $session->code;
-				$this->company = new \Company\Company($session->company_id);
-				$this->customer = new \Register\Customer($session->customer_id);
-				$this->timezone = $session->timezone;
-				$this->browser = $session->browser;
-				$this->first_hit_date = $session->first_hit_date;
-				$this->last_hit_date = $session->last_hit_date;
-				$this->super_elevation_expires = $session->super_elevation_expires;
-				$this->refer_url = $session->refer_url;
-				$this->oauth2_state = $session->oauth2_state;
+				// Populate Instance from Database Object
+				$this->code = $object->code;
+				$this->company = new \Company\Company($object->company_id);
+				$this->customer = new \Register\Customer($object->customer_id);
+				$this->timezone = $object->timezone;
+				$this->browser = $object->browser;
+				$this->first_hit_date = $object->first_hit_date;
+				$this->last_hit_date = $object->last_hit_date;
+				$this->super_elevation_expires = $object->super_elevation_expires;
+				$this->refer_url = $object->refer_url;
+				$this->oauth2_state = $object->oauth2_state;
 
+				// Detect Mobile Device
 				require_once THIRD_PARTY.'/psr/simple-cache/src/CacheInterface.php';
 				require_once THIRD_PARTY.'/psr/cache/src/CacheItemInterface.php';
 				require_once THIRD_PARTY.'/mobiledetect/mobiledetectlib/src/MobileDetect.php';
@@ -421,22 +485,27 @@ use Register\Customer;
 				else
 					$this->isMobile = false;
 
-				$session->csrfToken = $this->generateCSRFToken();
-				$this->csrfToken = $session->csrfToken;
+				// Generate CSRF Token if not already set
+				$this->generateCSRFToken();
 				
 				// Initialize OTP verification status based on user requirements
 				if ($GLOBALS['_config']->register->use_otp && $this->customer && $this->customer->id > 0) {
 					// If user requires OTP, default to not verified
 					$this->otpVerified = false;
-					$this->setOTPVerified(false);
 				} else {
 					// If user doesn't require OTP, default to verified
 					$this->otpVerified = true;
-					$this->setOTPVerified(true);
 				}
+				$object->otpVerified = $this->otpVerified;
 
-				if ($session->id) $cache->set($session,600);
+				$cache->set($object,3600);
+
+				// Add to Code Cache
+				$this->setIDInCodeCache();
 				return true;
+			}
+			else {
+				app_log("Session ".$this->id." not found in database",'notice',__FILE__,__LINE__);
 			}
 			return false;
 		}
@@ -596,10 +665,10 @@ use Register\Customer;
 			return $this->timestamp();
 		}
 
-		/**
+		/** @method timestamp()
 		 * Record last time session was touched
+		 * We will not kill the cache here to reduce load
 		 * @return int Unix timestamp
-		 * 
 		 */
 		function timestamp(): bool {
 			// Clear Previous Errors
@@ -638,24 +707,14 @@ use Register\Customer;
 			// Clear any existing errors
 			$this->clearError();
 
-			// Name For Cache Variable
-			$cache_key = "session[".$this->id."]";
-			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
-			
+			// Clear Cache
+			$this->clearCache();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
 			// Preserve OTP verification status before deleting cache
-			$preservedOTPVerified = null;
-			// Preserve OTP verification status from separate cache
-			$otp_cache_key = "session[".$this->id."]-otp-verified";
-			$otp_cache = new \Cache\Item($GLOBALS['_CACHE_'], $otp_cache_key);
-			$preservedOTPVerified = $otp_cache->get();
-			if ($preservedOTPVerified !== null) {
-				app_log("Preserving OTP verification status: " . ($preservedOTPVerified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
-			}
-			
-			if ($cache) {
-				$cache->delete();
-			}
-			app_log("Unset cache key $cache_key",'debug',__FILE__,__LINE__);
+			$preservedOTPVerified = $this->otpVerified;
 
 			# Make Sure User Has Privileges to view other sessions
 			if ($GLOBALS['_SESSION_']->id != $this->id && ! $GLOBALS['_SESSION_']->customer->can('manage sessions')) {
@@ -675,39 +734,26 @@ use Register\Customer;
 				UPDATE	session_sessions
 				SET		id = id";
 
-			$bind_params = array();
 			foreach ($parameters as $parameter => $value) {
 				if ($ok_params[$parameter]) {
 					$update_session_query .= ",
 						`$parameter` = ?";
-					array_push($bind_params,$value);
+					$database->AddParam($value);
 				}
 			}
 
 			$update_session_query .= "
 				WHERE	id = ?
 			";
-			array_push($bind_params,$this->id);
-			query_log($update_session_query,$bind_params,true);
+			$database->AddParam($this->id);
 
-			$rs = $GLOBALS['_database']->Execute($update_session_query,$bind_params);
+			$rs = $database->Execute($update_session_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
-			$result = $this->details();
-			
-			// Restore OTP verification status if it was preserved
-			if ($preservedOTPVerified !== null) {
-				$this->otpVerified = $preservedOTPVerified;
-				app_log("Restored OTP verification status: " . ($preservedOTPVerified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
-				
-				// Update separate cache with restored OTP status
-				$this->setOTPVerified($preservedOTPVerified);
-			}
-
-			return $result;
+			return $this->details();
 		}
 
 		/** @method hits(id)
@@ -853,7 +899,7 @@ use Register\Customer;
 			app_log("Customer ID: " . ($this->customer->id ?? 'null'), 'debug', __FILE__, __LINE__, 'otplogs');
 			app_log("Customer requires OTP: " . ($this->customer->requiresOTP() ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
 			$otpStatus = $this->getOTPVerified();
-		app_log("OTP verified status: " . ($otpStatus === false ? 'false' : ($otpStatus === true ? 'true' : 'null')), 'debug', __FILE__, __LINE__, 'otplogs');
+			app_log("OTP verified status: " . ($otpStatus === false ? 'false' : ($otpStatus === true ? 'true' : 'null')), 'debug', __FILE__, __LINE__, 'otplogs');
 			app_log("Current URI: " . $_SERVER['REQUEST_URI'], 'debug', __FILE__, __LINE__, 'otplogs');
 			
 			if ($GLOBALS['_config']->register->use_otp && isset($this->customer->id) && $this->customer->requiresOTP() && $this->customer->id > 0 && $this->getOTPVerified() === false) {
@@ -954,7 +1000,6 @@ use Register\Customer;
 		 * @return bool True if the token matches, false otherwise
 		 */
 		public function verifyCSRFToken($csrfToken) {
-
 			if (empty($csrfToken)) {
 				app_log("No csrfToken provided",'debug');
 				return false;
@@ -975,14 +1020,18 @@ use Register\Customer;
 		 * @return string The generated CSRF token
 		 */
 		private function generateCSRFToken() {
-
 			$data = bin2hex(openssl_random_pseudo_bytes(32));
 			$token = htmlspecialchars($data, ENT_QUOTES | ENT_HTML401, 'UTF-8');
 			app_log("Generated token '$token'",'debug');
 			return $token;
 		}
-		
+
 		public function getCSRFToken() {
+			if (empty($this->csrfToken)) {
+				$this->csrfToken = $this->generateCSRFToken();
+				$cache = $this->cache();
+				$cache->setElement('csrfToken', $this->csrfToken);
+			}
 			return $this->csrfToken;
 		}
 
@@ -995,10 +1044,9 @@ use Register\Customer;
 			$this->otpVerified = $verified;
 		
 			// Use separate cache key for OTP verification with 2-hour expiration (7200 seconds)
-			$otp_cache_key = "session[".$this->id."]-otp-verified";
-			$otp_cache = new \Cache\Item($GLOBALS['_CACHE_'], $otp_cache_key);
-			$otp_cache->set($verified, 7200);
-			
+			$cache = $this->cache();
+			$cache->setElement('otpVerified', $verified);
+
 			app_log("OTP verification status updated in separate cache: " . ($verified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
 			return true;
 		}
@@ -1008,17 +1056,16 @@ use Register\Customer;
 		 * @return bool|null
 		 */
 		private function loadOTPVerifiedFromCache(): ?bool {
-			$otp_cache_key = "session[".$this->id."]-otp-verified";
-			$otp_cache = new \Cache\Item($GLOBALS['_CACHE_'], $otp_cache_key);
-			$verified = $otp_cache->get();
-			
-			if ($verified !== null) {
-				app_log("OTP verification status loaded from separate cache: " . ($verified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
-			} else {
-				app_log("No OTP verification status found in separate cache", 'debug', __FILE__, __LINE__, 'otplogs');
+			$cache = $this->cache();
+			$foundObject = $cache->get();
+			if ($foundObject !== null && isset($foundObject->otpVerified)) {
+				$this->otpVerified = $foundObject->otpVerified;
+				app_log("OTP verification status loaded from session cache: " . ($this->otpVerified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
+				return $this->otpVerified;
 			}
-			
-			return $verified;
+			else {
+				return false;
+			}
 		}
 
 		/**
@@ -1026,10 +1073,6 @@ use Register\Customer;
 		 * @return bool|null
 		 */
 		public function getOTPVerified(): ?bool {
-			// If not set in memory, try to load from separate cache
-			if ($this->otpVerified === null) {
-				$this->otpVerified = $this->loadOTPVerifiedFromCache();
-			}
 			return $this->otpVerified;
 		}
 
@@ -1047,12 +1090,8 @@ use Register\Customer;
 		 * @return bool
 		 */
 		public function clearOTPVerified(): bool {
-			$this->otpVerified = null;
-			
-			// Clear from separate cache
-			$otp_cache_key = "session[".$this->id."]-otp-verified";
-			$otp_cache = new \Cache\Item($GLOBALS['_CACHE_'], $otp_cache_key);
-			$otp_cache->delete();
+			$cache = $this->cache();
+			$cache->setElement('otpVerified', false);
 			
 			app_log("OTP verification status cleared from cache", 'debug', __FILE__, __LINE__, 'otplogs');
 			return true;
