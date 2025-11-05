@@ -175,7 +175,7 @@
 			$cache_item->delete();
 
 			$ok_params = array(
-				"code"			=> '/^\w[\w\-\.\_]*$/',
+				"code"			=> '/^\w[\s\w\-\.\_]*$/',
 				"status"		=> '/^\w+$/',
 				"type"			=> "/.+/",
 				"name"			=> '/^[\w\-\.\_\s]+$/',
@@ -236,7 +236,7 @@
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
 				'instance_id' => $this->id,
-				'description' => 'Changes: '.$change_description,
+				'description' => $change_description,
 				'class_name' => 'Product\Item',
 				'class_method' => 'update'
 			));	
