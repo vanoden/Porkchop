@@ -133,7 +133,7 @@
                 $find_ids_query .= "
 				AND     p.status IN ('".implode("','",$parameters['status'])."')";
 			}
-			elseif (!empty($parameters['status']) && $validationclass->validClass($parameters['status'])) {
+			elseif (!empty($parameters['status']) && $validationclass->validStatus($parameters['status'])) {
                 $find_ids_query .= "
 				AND		p.status = ?";
 				$database->AddParam(strtoupper($parameters["status"]));
