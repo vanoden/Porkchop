@@ -1549,8 +1549,8 @@
 				return false;
 			}
 
-			// Update all existing records to administrator level (63)
-			$update_existing_query = "UPDATE `register_roles_privileges` SET `level` = 63";
+			// Update all existing records to administrator level (1)
+			$update_existing_query = "UPDATE `register_roles_privileges` SET `level` = 1";
 			if (! $database->Execute($update_existing_query)) {
 				$this->SQLError("Error updating existing privilege levels in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
 				app_log($this->error(), 'error');
@@ -1559,6 +1559,51 @@
 			}
 
 			$this->setVersion(49);
+			$database->CommitTrans();
+		}
+
+		if ($this->version() < 50) {
+			app_log("Upgrading schema to version 50 - Adding register_user_statistics", 'notice', __FILE__, __LINE__);
+
+			# Start Transaction
+			if (!$database->BeginTrans())
+				app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+			$create_table_query = "
+				CREATE TABLE IF NOT EXISTS `register_user_statistics` (
+					`user_id` int(11) NOT NULL,
+					`last_login_date` datetime DEFAULT NULL,
+					`last_hit_date` datetime DEFAULT NULL,
+					`first_login_date` datetime DEFAULT NULL,
+					`session_count` int(11) NOT NULL DEFAULT 0,
+					`password_change_count` int(11) NOT NULL DEFAULT 0,
+					`failed_login_count` int(11) NOT NULL DEFAULT 0,
+					`last_failed_login_date` datetime DEFAULT NULL,
+					`last_password_change_date` datetime DEFAULT NULL,
+					PRIMARY KEY (`user_id`),
+					FOREIGN KEY `fk_user_stats_user` (`user_id`) REFERENCES `register_users` (`id`)
+				)
+			";
+
+			if (! $database->Execute($create_table_query)) {
+				$this->SQLError("Error creating register_user_statistics table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+				app_log($this->error(), 'error');
+				$database->RollbackTrans();
+				return false;
+			}
+
+			$alter_table_query = "
+				ALTER TABLE `register_roles_privileges` MODIFY COLUMN `level` tinyint UNSIGNED NOT NULL DEFAULT 0
+			";
+
+			if (! $database->Execute($alter_table_query)) {
+				$this->SQLError("Error altering register_roles_privileges table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+				app_log($this->error(), 'error');
+				$database->RollbackTrans();
+				return false;
+			}
+
+			$this->setVersion(50);
 			$database->CommitTrans();
 		}
 

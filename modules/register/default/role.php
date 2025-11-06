@@ -43,7 +43,8 @@
 <script>
   // Toggle all checkboxes for a specific privilege level
   function setAllPrivilegeLevel(value) {
-    var checkboxElements = document.querySelectorAll('input[name^="privilege_level"][value="' + value + '"]');
+    var checkboxElements = document.querySelectorAll('input[name^="privilege_level"][name$="][' + value + ']');
+
     var button = event.target;
 
     // Check if all are checked
@@ -69,10 +70,11 @@
   }
 
   // Convenience functions for each privilege level
-  function setAllSubOrg() { setAllPrivilegeLevel(3); }
-  function setAllOrgManager() { setAllPrivilegeLevel(7); }
-  function setAllDistributor() { setAllPrivilegeLevel(15); }
-  function setAllAdministrator() { setAllPrivilegeLevel(63); }
+  function setAllCustomer() { setAllPrivilegeLevel(0); }
+  function setAllSubOrg() { setAllPrivilegeLevel(2); }
+  function setAllOrgManager() { setAllPrivilegeLevel(3); }
+  function setAllDistributor() { setAllPrivilegeLevel(5); }
+  function setAllAdministrator() { setAllPrivilegeLevel(7); }
 
   // Set all privilege levels to none
   function setAllNone() {
@@ -94,15 +96,15 @@
     var checkboxValue = parseInt(changedCheckbox.value);
     var privilegeRow = changedCheckbox.closest('.tableRow');
     
-    // If Administrator (63) is being checked, don't auto-check lower levels
-    if (checkboxValue === 63 && changedCheckbox.checked) {
+    // If Administrator (7) is being checked, don't auto-check lower levels
+    if (checkboxValue === 7 && changedCheckbox.checked) {
       // Administrator is being checked - ensure lower levels stay as they are
       // Don't automatically check them
       return;
     }
     
-    // If Administrator (63) is being unchecked, don't auto-uncheck lower levels
-    if (checkboxValue === 63 && !changedCheckbox.checked) {
+    // If Administrator (7) is being unchecked, don't auto-uncheck lower levels
+    if (checkboxValue === 7 && !changedCheckbox.checked) {
       // Administrator is being unchecked - lower levels stay independent
       return;
     }
@@ -197,19 +199,27 @@
     <div class="tableBody">
 
       <div class="tableRowHeader">
-        <div class="tableCell width-20per">Privilege Module</div>
+        <div class="tableCell width-16per">Module</div>
         <div class="tableCell width-40per">Description</div>
-        <div class="tableCell">
-          <button type="button" onclick="setAllSubOrg()" class="button small">Set All</button>
+        <div class="tableCell width-16per text-center role-column-cell">
+          <span style="display: block;">Customer</span>
+          <input type="checkbox" onclick="setAllCustomer()"/>
         </div>
-        <div class="tableCell">
-          <button type="button" onclick="setAllOrgManager()" class="button small">Set All</button>
+        <div class="tableCell width-16per">
+          <span style="display: block;">Sub-Org Mgr</span>
+          <input type="checkbox" onclick="setAllSubOrg()"/>
         </div>
-        <div class="tableCell">
-          <button type="button" onclick="setAllDistributor()" class="button small">Set All</button>
+        <div class="tableCell width-16per">
+          <span>Org Mgr</span>
+          <input type="checkbox" onclick="setAllOrgManager()"/>
         </div>
-        <div class="tableCell">
-          <button type="button" onclick="setAllAdministrator()" class="button small">Set All</button>
+        <div class="tableCell width-16per">
+          <span>Distributor</span>
+          <input type="checkbox" onclick="setAllDistributor()"/>
+        </div>
+        <div class="tableCell width-16per">
+          <span>Administrator</span>
+          <input type="checkbox" onclick="setAllAdministrator()"/>
         </div>
       </div>
 
@@ -224,55 +234,35 @@
       }
 
       foreach ($privileges as $privilege) {
-        $current_level = $current_privilege_levels[$privilege->id] ?? 0;
-        // For form display, check if each level was explicitly included in the composition
-        // With addition-based arithmetic, we check if we can subtract the level and get a valid remainder
-        // Example: level 63 (administrator only) does NOT include 3 (sub-org) because 63 - 3 = 60 (invalid)
-        // But level 66 (63 + 3) DOES include 3 because 66 - 3 = 63 (valid)
-        $has_sub_org = \Register\PrivilegeLevel::levelIncludesExplicitly($current_level, 3);
-        $has_org_manager = \Register\PrivilegeLevel::levelIncludesExplicitly($current_level, 7);
-        $has_distributor = \Register\PrivilegeLevel::levelIncludesExplicitly($current_level, 15);
-        $has_administrator = \Register\PrivilegeLevel::levelIncludesExplicitly($current_level, 63);
-        
-        // Debug: Only show for specific privilege if needed
-        // if ($privilege->name == 'create email') {
-        //     error_log("Privilege: {$privilege->name}, Level: $current_level, Sub-Org: " . ($has_sub_org ? 'yes' : 'no') . ", Org: " . ($has_org_manager ? 'yes' : 'no') . ", Dist: " . ($has_distributor ? 'yes' : 'no') . ", Admin: " . ($has_administrator ? 'yes' : 'no'));
-        // }
         ?>
         <div class="tableRow">
           <div class="tableCell"><?= $privilege->module ?: 'No Module' ?></div>
           <div class="tableCell">
             <?= $privilege->description ?: $privilege->name ?: 'No Description' ?>
-            <?php if ($current_level > 0): ?>
-              <span style="font-size: 9px; color: #666;">(Level: <?= $current_level ?>)</span>
-            <?php endif; ?>
           </div>
            <div class="tableCell role-column-cell">
              <label class="checkbox-label-container">
-               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][]" value="3" <?php if ($has_sub_org)
-                 echo 'checked'; ?> <?php if (!$can_modify_privileges) echo 'disabled'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
-               <span class="checkbox-label-text">Sub-Org Manager</span>
+               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][0]" value="1" <?php if ($role->has_privilege($privilege->id, 0)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+             </label>
+           </div>
+           <div class="tableCell role-column-cell">
+             <label class="checkbox-label-container">
+               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][2]" value="1" <?php if ($role->has_privilege($privilege->id, 2)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
              </label>
            </div>
           <div class="tableCell role-column-cell">
             <label class="checkbox-label-container">
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][]" value="7" <?php if ($has_org_manager)
-                echo 'checked'; ?> <?php if (!$can_modify_privileges) echo 'disabled'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
-              <span class="checkbox-label-text">Org Manager</span>
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][3]" value="1" <?php if ($role->has_privilege($privilege->id, 3)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
             </label>
           </div>
           <div class="tableCell role-column-cell">
             <label class="checkbox-label-container">
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][]" value="15" <?php if ($has_distributor)
-                echo 'checked'; ?> <?php if (!$can_modify_privileges) echo 'disabled'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
-              <span class="checkbox-label-text">Distributor</span>
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][5]" value="1" <?php if ($role->has_privilege($privilege->id, 5)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
             </label>
           </div>
           <div class="tableCell role-column-cell">
             <label class="checkbox-label-container">
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][]" value="63" <?php if ($has_administrator)
-                echo 'checked'; ?> <?php if (!$can_modify_privileges) echo 'disabled'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
-              <span class="checkbox-label-text">Administrator</span>
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][7]" value="1" <?php if ($role->has_privilege($privilege->id, 7)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
             </label>
           </div>
         </div>

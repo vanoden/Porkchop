@@ -80,78 +80,36 @@
                 // Check if user can modify role privileges
                 if (!$GLOBALS['_SESSION_']->customer->canModifyRolePrivileges($role)) {
                     $page->addError("You do not have permission to modify role privileges");
-                } else {
-		            foreach ($privileges as $privilege) {
-		                // Get selected privilege levels from checkboxes
-		                // Check both $_POST and $_REQUEST in case of form submission issues
-		                $selected_levels = array();
-		                if (isset($_POST['privilege_level'][$privilege->id])) {
-		                    $selected_levels = $_POST['privilege_level'][$privilege->id];
-		                } elseif (isset($_REQUEST['privilege_level'][$privilege->id])) {
-		                    $selected_levels = $_REQUEST['privilege_level'][$privilege->id];
-		                }
-		                
-		                // Ensure it's an array
-		                if (!is_array($selected_levels)) {
-		                    $selected_levels = array();
-		                }
-		                
-		                $current_level = $role->getPrivilegeLevel($privilege->id);
-		                
-		                // Debug: Show what was submitted for each privilege (only if levels were selected)
-		                if (!empty($selected_levels)) {
-		                    $page->appendSuccess("DEBUG: Privilege '{$privilege->name}' (ID: {$privilege->id}): Selected levels: " . json_encode($selected_levels) . ", Current level: " . ($current_level ?? 'null'));
-		                }
-		                
-		                // If no levels are selected, remove the privilege
-		                if (empty($selected_levels)) {
-		                    if ($current_level !== null && $role->dropPrivilege($privilege->id)) {
-		                        $page->appendSuccess("Removed privilege '".$privilege->name."'");
-		                    }
-		                } else {
-		                    // Calculate the combined privilege level using addition
-		                    // This allows multiple privilege levels to be combined (e.g., 22 = 15 + 7)
-		                    $new_level = 0;
-		                    foreach ($selected_levels as $level) {
-		                        $new_level += (int)$level;
-		                    }
-		                    
-		                    // Debug: Show calculated level
-		                    if (!empty($selected_levels)) {
-		                        $page->appendSuccess("DEBUG: Privilege '{$privilege->name}': Calculated new level: $new_level (from: " . implode(' + ', $selected_levels) . ")");
-		                    }
-		                    
-		                    if ($current_level === null) {
-		                        // Add new privilege
-		                        if ($role->addPrivilege($privilege->id, $new_level)) {
-		                            $level_names = array();
-		                            foreach ($selected_levels as $level) {
-		                                $level_names[] = \Register\PrivilegeLevel::privilegeName((int)$level);
-		                            }
-		                            $page->appendSuccess("Added privilege '".$privilege->name."' with levels: ".implode(', ', $level_names));
-		                        } else {
-		                            $page->addError("Failed to add privilege '{$privilege->name}': " . $role->error());
-		                        }
-		                    } elseif ($current_level != $new_level) {
-		                        // Update existing privilege level
-		                        if ($role->addPrivilege($privilege->id, $new_level)) {
-		                            $old_level_name = \Register\PrivilegeLevel::privilegeName($current_level);
-		                            $new_level_names = array();
-		                            foreach ($selected_levels as $level) {
-		                                $new_level_names[] = \Register\PrivilegeLevel::privilegeName((int)$level);
-		                            }
-		                            $page->appendSuccess("Updated privilege '".$privilege->name."' level from '".$old_level_name."' to '".implode(', ', $new_level_names)."'");
-		                        } else {
-		                            $page->addError("Failed to update privilege '{$privilege->name}': " . $role->error());
-		                        }
-		                    }
-		                }
-			    }
                 }
-            }
-	    }
+				else {
+		            foreach ($privileges as $privilege) {
+						$new_level = $role->getPrivilegeLevel($privilege->id);
+						$levels = array(0,2,3,5,7);
+						foreach ($levels as $level) {
+							// Remove if unselected
+							if ($role->has_privilege($privilege->id,$level) && ! $_REQUEST['privilege_level'][$privilege->id][$level]) {
+								//$current_level = setMatrix($current_level, $level, false);
+								$page->appendSuccess("Removed privilege &quot;".$privilege->name."&quot; level ".$level." from role &quot;".$role->name."&quot;.");
+								$new_level = setMatrix($new_level, $level, false);
+							}
+							// Add if selected
+							elseif (! $role->has_privilege($privilege->id,$level) && $_REQUEST['privilege_level'][$privilege->id][$level]) {
+								//$current_level = setMatrix($current_level, $level, true);
+								$page->appendSuccess("Added privilege &quot;".$privilege->name."&quot; level ".$level." to role &quot;".$role->name."&quot;.");
+								$new_level = setMatrix($new_level, $level, true);
+							}
+	                    }
+						// Update privilege level if changed
+						if ($new_level != $role->getPrivilegeLevel($privilege->id)) {
+							$role->setPrivilegeLevel($privilege->id, $new_level);
+						}
+					}
+				}
+			}
+		}
 
 		// See if all privileges checked
+	    $privileges = $privilegeList->find(array('_sort' => 'module'));
 		foreach ($privileges as $privilege) {
 			if (! $role->has_privilege($privilege->id)) {
 				$allChecked = false;

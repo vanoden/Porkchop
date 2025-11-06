@@ -70,7 +70,7 @@ class Event Extends \BaseModel {
 			return false;
 		}
 		if (empty($GLOBALS['_SESSION_']->customer->id)) {
-			if ($params['customer_id']) $customer_id = $params['customer_id'];
+			if (!empty($params['customer_id'])) $customer_id = $params['customer_id'];
 			elseif ($_SERVER['SCRIPT_FILENAME'] == BASE."/core/install.php") {
 				// Allow install.php to run without a customer ID
 				return true;

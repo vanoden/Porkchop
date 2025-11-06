@@ -5,6 +5,7 @@
 		public bool $elevated = false;
 		public int $unreadMessages = 0;
 		protected string $password = '';
+		private \Register\User\Statistics|null $_statistics = null;
 
 		/**
 		 * Constructor
@@ -104,40 +105,14 @@
 		 * Record last hit date
 		 */
 		public function recordHit() {
-			$this->clearError();
-			$database = new \Database\Service();
-
-			// Prepare Query
-			$update_customer_query = "
-				UPDATE	register_users
-				SET		last_hit_date = now()
-				WHERE	id = ?
-			";
-			$database->AddParam($this->id);
-			$database->Execute($update_customer_query);
-			if ($database->ErrorMsg()) {
-				$this->SQLError($database->ErrorMsg());
-			}
+			$this->statistics()->recordHit();
 		}
 
 		/** @method clearAuthFailures()
 		 * Clear Auth Failures
 		 */
 		public function clearAuthFailures() {
-			$this->clearError();
-			$this->clearCache();
-
-			$database = new \Database\Service();
-			$update_customer_query = "
-				UPDATE	register_users
-				SET		auth_failures = 0
-				WHERE	id = ?
-			";
-			$database->AddParam($this->id);
-			$database->Execute($update_customer_query);
-			if ($database->ErrorMsg()) {
-				$this->SQLError($database->ErrorMsg());
-			}
+			$this->statistics()->resetFailedLogins();
 		}
 
 		/** @method organization(organization)
@@ -161,44 +136,6 @@
 				return $organization;
 			}
 			return null;
-		}
-
-		/** @method increment_auth_failures()
-		 * Count auth failures
-		 */
-		public function increment_auth_failures() {
-			// Clear Errors
-			$this->clearError();
-
-			// Check if ID is set
-			if (! isset($this->id)) return false;
-
-			// Initialize Database Service
-			$database = new \Database\Service();
-
-			// Prepare Query
-			$update_customer_query = "
-				UPDATE	register_users
-				SET		auth_failures = auth_failures + 1
-				WHERE	id = ?";
-
-			// Add Parameters
-			$database->AddParam($this->id);
-
-			// Execute Query
-			$database->Execute($update_customer_query);
-
-			// Check for Errors
-			if ($database->ErrorMsg()) {
-				$this->SQLError($database->ErrorMsg());
-				return false;
-			}
-
-			// Bust Cache
-			$cache_key = "customer[" . $this->id . "]";
-			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
-			$cache->delete();
-			return $this->details();
 		}
 
 		/** @method add_role(role_id)
@@ -341,6 +278,7 @@
 			list($id,$auth_method,$status,$password_age) = $rs->fields();
 			if (! $id) {
 				app_log("Auth denied because no account found matching '$login'",'notice',__FILE__,__LINE__);
+				$this->statistics()->recordFailedLogin();
 				$failure = new \Register\AuthFailure();
 				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'NOACCOUNT',$_SERVER['PHP_SELF']));
 				return false;
@@ -366,6 +304,7 @@
 				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
 				$this->clearAuthFailures();
 				$this->auditRecord("AUTHENTICATION_SUCCESS","Authenticated successfully");
+				$this->statistics()->recordLogin();
 
 				// update last_hit_date	for user login
 				$this->recordHit();
@@ -376,7 +315,7 @@
 				app_log("'$login' failed to authenticate",'notice',__FILE__,__LINE__);
 				$failure = new \Register\AuthFailure();
 				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'WRONGPASS',$_SERVER['PHP_SELF']));
-				$this->increment_auth_failures();
+				$this->statistics()->recordFailedLogin();
 				if ($this->auth_failures() >= 6) {
 					app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
 					$this->block();
@@ -403,6 +342,7 @@
 			
 			if ($authenticationService->changePassword($this->code,$password)) {
 				$this->resetAuthFailures();
+				$this->statistics()->recordPasswordChange();
 				$this->auditRecord('PASSWORD_CHANGED','Password changed');
 				return true;
 			}
@@ -448,18 +388,7 @@
 		 * @return int 
 		 */
 		public function auth_failures() {
-			$get_failures_query = "
-				SELECT	auth_failures
-				FROM	register_users
-				WHERE	id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute($get_failures_query,array($this->id));
-			if (! $rs) {
-				$this->error("SQL Error in Register::Customer::auth_failures(): ".$GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			list($count) = $rs->FetchRow();
-			return $count;
+			return $this->statistics()->failed_login_count;
 		}
 
 		/** @method resetAuthFailures()
@@ -467,7 +396,7 @@
 		 * @return bool True if successful, otherwise false
 		 */
 		public function resetAuthFailures() {
-			return $this->update(array("auth_failures" => 0));
+			return $this->statistics()->resetFailedLogins();
 		}
 
 		/** @method products(product)
@@ -541,7 +470,7 @@
 					// Otherwise, treat as privilege level check
 					return $this->_canLevel($parameters[0], $parameters[1]);
 				} elseif (count($parameters) == 1) {
-					return $this->_canLevel($parameters[0], 63); // Default to administrator level
+					return $this->_canLevel($parameters[0], \Register\PrivilegeLevel::ADMINISTRATOR); // Default to administrator level
 				}
 			}
 			
@@ -564,7 +493,7 @@
 				return false;
 			}
 
-			return $this->has_privilege_level($privilege_name, $level_int);
+			return $this->has_privilege($privilege_name, $level_int);
 		}
 
 		/**
@@ -580,7 +509,7 @@
 			if ($entity instanceof \Register\Customer) {
 				if ($this->id == $entity->id) {
 					// User is accessing their own customer record - check if they have the privilege at customer level (0)
-					return $this->has_privilege_level($privilege_name, \Register\PrivilegeLevel::CUSTOMER);
+					return $this->has_privilege($privilege_name, \Register\PrivilegeLevel::CUSTOMER);
 				}
 				return false; // Cannot access other customer records
 			}
@@ -594,7 +523,7 @@
 				}
 
 				// User must have organization_manager level or higher for this privilege
-				return $this->has_privilege_level($privilege_name, \Register\PrivilegeLevel::ORGANIZATION_MANAGER);
+				return $this->has_privilege($privilege_name, \Register\PrivilegeLevel::ORGANIZATION_MANAGER);
 			}
 
 			// If entity is a SubOrganization object, check membership and sub-organization level
@@ -610,11 +539,11 @@
 				// For now, check if user belongs to same organization (sub-organization implementation pending)
 				// When SubOrganization is fully implemented, check sub-organization membership here
 				// User must have sub_organization_manager level or higher for this privilege
-				return $this->has_privilege_level($privilege_name, \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER);
+				return $this->has_privilege($privilege_name, \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER);
 			}
 
 			// Unknown entity type - require administrator level
-			return $this->has_privilege_level($privilege_name, \Register\PrivilegeLevel::ADMINISTRATOR);
+			return $this->has_privilege($privilege_name, \Register\PrivilegeLevel::ADMINISTRATOR);
 		}
 
 
@@ -673,11 +602,11 @@
 		 * @param string Privilege Name
 		 * @return bool True if customer has privilege, otherwise false
 		 */
-		public function has_privilege($privilege_name) {
+		public function has_privilege($privilege_name, ?int $required_level = \Register\PrivilegeLevel::ADMINISTRATOR) {
 			$this->clearError();
 			$database = new \Database\Service();
 			$privilege = new \Register\Privilege();
-			
+
 			if (! $privilege->get($privilege_name)) {
 				if ($privilege_name != "manage privileges" && $GLOBALS['_SESSION_']->customer->can("manage privileges")) {
 					$privilege->add(array('name' => $privilege_name));
@@ -686,56 +615,9 @@
 					return false;
 				}
 			}
-		// Check if user has the privilege (any level means they have it, including level 0 for customer)
-		$check_privilege_query = "
-			SELECT	COUNT(*) as count
-			FROM	register_users_roles rur,
-					register_roles_privileges rrp
-			WHERE	rur.user_id = ?
-			AND		rrp.role_id = rur.role_id
-			AND		rrp.privilege_id = ?
-		";
-		$database->AddParam($this->id);
-		$database->AddParam($privilege->id);
 
-		$rs = $database->Execute($check_privilege_query);
-		if (! $rs) {
-			$this->SQLError($database->ErrorMsg());
-			return false;
-		}
-		
-		$row = $rs->FetchRow();
-		if ($row && isset($row[0])) {
-			$count = (int)$row[0];
-			return $count > 0;
-		}
-		
-		return false;
-		}
-
-		/** @method has_privilege_level(privilege_name, required_level)
-		 * Check if customer has specified privilege with required level
-		 * @param string $privilege_name Privilege Name
-		 * @param int $required_level Required privilege level
-		 * @return bool True if customer has privilege with sufficient level, otherwise false
-		 */
-		public function has_privilege_level($privilege_name, int $required_level = \Register\PrivilegeLevel::CUSTOMER) {
-			$this->clearError();
-			$database = new \Database\Service();
-			$privilege = new \Register\Privilege();
-			
-			if (! $privilege->get($privilege_name)) {
-				if ($privilege_name != "manage privileges" && $GLOBALS['_SESSION_']->customer->can("manage privileges")) {
-					$privilege->add(array('name' => $privilege_name));
-				}
-				else {
-					return false;
-				}
-			}
-			
-			// Use the level column
 			$check_privilege_query = "
-				SELECT	MAX(rrp.level) as max_level
+				SELECT	rrp.level
 				FROM	register_users_roles rur,
 						register_roles_privileges rrp
 				WHERE	rur.user_id = ?
@@ -750,19 +632,17 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			
-			$row = $rs->FetchRow();
-			if ($row) {
-				list($user_level) = $row;
-				// Handle null user_level from MAX() query when no records match
-				if ($user_level === null) {
-					return false;
+
+			while (list($level) = $rs->FetchRow()) {
+				// Is the required level present in user's privilege level?
+				app_log("Checking privilege level $level for required level $required_level",'debug',__FILE__,__LINE__);
+				// Use bitwise check for privilege levels
+				if (inMatrix($level,$required_level)) {
+					app_log("Privilege '$privilege_name' granted at level $level",'debug',__FILE__,__LINE__);
+					return true;
 				}
-				return $this->checkPrivilegeLevel($user_level, $required_level);
 			}
-			else {
-				return false;
-			}
+			return false;
 		}
 
 		/**
@@ -817,18 +697,13 @@
 				return true;
 			}
 
-			// Check if user has 'manage privileges' privilege
-			if (!$this->has_privilege('manage privileges')) {
-				return false;
-			}
-
 			// Users with administrator level can modify any role
-			if ($this->has_privilege_level('manage privileges', \Register\PrivilegeLevel::ADMINISTRATOR)) {
+			if ($this->has_privilege('manage privileges', \Register\PrivilegeLevel::ADMINISTRATOR)) {
 				return true;
 			}
 
 			// Users with organization_manager level can only modify roles they themselves have
-			if ($this->has_privilege_level('manage privileges', \Register\PrivilegeLevel::ORGANIZATION_MANAGER)) {
+			if ($this->has_privilege('manage privileges', \Register\PrivilegeLevel::ORGANIZATION_MANAGER)) {
 				// Check if this user has the role
 				if ($role instanceof \Register\Role && $role->id) {
 					return $this->has_role_id($role->id);
@@ -998,6 +873,7 @@
 				$this->error("Error getting session: ".$sessionList->error());
 				return null;
 			}
+
 			if (count($sessions) > 0) $session = $sessions[0];
 			else return null;
 			return $session->last_hit_date;
@@ -1291,6 +1167,17 @@
 			else {
 				return $sessions;
 			}
+		}
+
+		/** @method public statistics()
+		 * Get the statistics object for the customer
+		 * @return \Register\User\Statistics Statistics object
+		 */
+		public function statistics(): \Register\User\Statistics {
+			if ($this->_statistics instanceof \Register\User\Statistics) {
+				return $this->_statistics;
+			}
+			return new \Register\User\Statistics($this->id);
 		}
 
 		/** @method requiresOTP()
@@ -1822,5 +1709,14 @@
 				}
 			}
 			return $codes;
+		}
+
+		/** @method getStatistics()
+		 * Get user statistics
+		 * @return array
+		 */
+		public function getStatistics(): array {
+			$statistics = new \Register\User\Statistics($this->id);
+			return $statistics->toArray();
 		}
     }

@@ -28,7 +28,6 @@ class Person Extends \BaseModel {
 	public ?string $notes = "";
 	public ?int $default_billing_location_id = null;
 	public ?int $default_shipping_location_id = null;
-	public ?string $last_hit_date = "";
 	public ?string $profile = "";
     protected string $secret_key = "";
 
