@@ -44,11 +44,9 @@
 				$configuration->get('website_images');
 				if (empty($configuration->value)) {
 					$page->addError("No repository configured for product images");
-					print_r("No repository configured for product images");
 				}
 				elseif (!$repository->get($configuration->value)) {
 					$page->addError("Repository not found for product images");
-					print_r("Repository not found for product images");
 				}
 				elseif (isset($_FILES['uploadFile']['error']) && $_FILES['uploadFile']['error'] > 0) {
 					switch($_FILES['uploadFile']['error']) {
@@ -80,9 +78,52 @@
 					app_log("File upload error: ".print_r($_FILES['uploadFile'],true),"notice");
 				}
 				else {
-					$imageUploaded = $item->uploadImage($_FILES['uploadFile'], $repository->id, 'spectros_product_image', 'Product\Item');
+					// Use the actual class name for consistency
+					$imageUploaded = $item->uploadImage($_FILES['uploadFile'], $repository->id, 'spectros_product_image', get_class($item));
 					if ($imageUploaded) $page->success = "File uploaded";
 					else $page->addError("Error uploading file: " . $item->error());
+				}
+			}
+		}
+
+		// Delete Image from Product
+		if (!empty($_REQUEST['deleteImage'])) {
+			if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'] ?? '')) {
+				$page->addError("Invalid Token");
+			} else {
+				$imageId = $_REQUEST['deleteImage'];
+				if ($item->validInteger($imageId)) {
+					// Verify the image exists and is associated with this product
+					$image = new \Storage\File($imageId);
+					if ($image->id) {
+						// Try both object_type values in case there's a mismatch
+						$result = $item->dropImage($imageId, get_class($item));
+						if (!$result) {
+							// Try with 'Product\Item' for legacy images
+							$result = $item->dropImage($imageId, 'Product\Item');
+						}
+						
+						if ($item->error()) {
+							$page->addError("Error removing image: " . $item->error());
+						} elseif ($result) {
+							$page->appendSuccess('Image removed from product successfully.');
+							// Also remove from default if it was the default image
+							$currentDefaultId = $item->getMetadata('default_image');
+							if ($currentDefaultId == $imageId) {
+								$item->unsetMetadata('default_image');
+							}
+							// Reload item to ensure fresh data
+							if ($item->code) {
+								$item->get($item->code);
+							}
+						} else {
+							$page->addError("Failed to remove image association");
+						}
+					} else {
+						$page->addError("Image not found");
+					}
+				} else {
+					$page->addError("Invalid image ID format");
 				}
 			}
 		}
@@ -106,8 +147,12 @@
 			}
 		}
 
-		// Check if item has images
-		$images = $item->images();
+		// Check if item has images - try both object_type values to handle legacy data
+		$images = $item->images(); // Use default (actual class name)
+		if (empty($images)) {
+			// Fallback to 'Product\Item' for legacy images
+			$images = $item->images('Product\Item');
+		}
 		$defaultImageId = $item->getMetadata('default_image');
 	}
 
