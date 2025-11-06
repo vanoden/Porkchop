@@ -151,7 +151,7 @@
 			$this->id = $database->Insert_ID();
 
 			// audit the add event
-			$this->recordAuditEvent($this->id, 'Added new contact record to '.$person->login());
+			$this->recordMyAuditEvent($this->id, 'Added new contact record to '.$person->login());
 
 			return $this->update($parameters);
 		}
@@ -233,7 +233,7 @@
 			}
 
 			// audit the update event
-			$this->recordAuditEvent($this->id, 'Updated contact record: '.implode("; ", $audit_messages));
+			$this->recordMyAuditEvent($this->id, 'Updated contact record: '.implode("; ", $audit_messages));
 					
 			return $this->details();
 		}

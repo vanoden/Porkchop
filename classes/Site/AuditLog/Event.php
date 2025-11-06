@@ -70,14 +70,20 @@ class Event Extends \BaseModel {
 			return false;
 		}
 		if (empty($GLOBALS['_SESSION_']->customer->id)) {
-			if ($_SERVER['SCRIPT_FILENAME'] == BASE."/core/install.php") {
+			if ($params['customer_id']) $customer_id = $params['customer_id'];
+			elseif ($_SERVER['SCRIPT_FILENAME'] == BASE."/core/install.php") {
 				// Allow install.php to run without a customer ID
 				return true;
 			}
-			app_log("Rejected audit event - No customer ID. Params: " . print_r($params, true));
-			app_log(print_r($params, true));
-			$this->warn("No customer ID found in session.  Cannot log event.");
-			return true;
+			else {
+				app_log("Rejected audit event - No customer ID. Params: " . print_r($params, true));
+				app_log(print_r($params, true));
+				$this->warn("No customer ID found in session.  Cannot log event.");
+				return true;
+			}
+		}
+		else {
+			$customer_id = $GLOBALS['_SESSION_']->customer->id;
 		}
 
 		$this->instance_id = $params['instance_id'];
@@ -85,7 +91,7 @@ class Event Extends \BaseModel {
 		$this->class_method = !empty($params['class_method']) ? $params['class_method'] : $this->getCallingMethod();
 		if (!empty($params['description'])) $this->description = $params['description'];
 		$this->event_date = date('Y-m-d H:i:s');
-		$this->user_id = !empty($GLOBALS['_SESSION_']->customer->id) ? $GLOBALS['_SESSION_']->customer->id : 0;
+		$this->user_id = !empty($customer_id) ? $customer_id : 0;
 
 		$query = "
 			INSERT INTO site_audit_events

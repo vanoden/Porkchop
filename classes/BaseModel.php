@@ -1600,6 +1600,36 @@ class BaseModel extends \BaseClass {
 		return $result;
 	}
 
+	/** @method recordMyAuditEvent(id, description, class_name, class_method)
+	 * Record an audit event for this object using its own ID
+	 * @param string $description The description of the event
+	 * @param string $class_name (Optional) The class name of the object
+	 * @param string $class_method (Optional) The class method where the event occurred
+	 * @return bool True if successful
+	 */
+	public function recordMyAuditEvent(int $id, string $description, string $class_name = '', string $class_method = ''): bool {
+		$this->clearError();
+
+		if (empty($class_name)) $class_name = $this->_getActualClass();
+		if (empty($class_method)) {
+			$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+			if (isset($backtrace[1]['function'])) {
+				$class_method = $backtrace[1]['function'];
+			} else {
+				$class_method = 'unknown';
+			}
+		}
+		$auditLog = new \Site\AuditLog\Event();
+		$result = $auditLog->add(array(
+			'customer_id' => $id,
+			'instance_id' => $id,
+			'description' => $description,
+			'class_name' => $class_name,
+			'class_method' => $class_method
+		));
+		return $result;
+	}
+
 	/** @method public validClassName(string)
 	 * Validate a class name
 	 * @param string $class_name The class name to validate
