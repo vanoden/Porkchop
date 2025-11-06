@@ -83,11 +83,13 @@ class Person Extends \BaseModel {
 	 * @return bool
 	 */
     public function add($parameters = []) {
-
+        // Clear any previous errors
 		$this->clearError();
 
+        // Login Is Also Code
         if (!isset($parameters['login']) && isset($parameters['code'])) $parameters['login'] = $parameters['code'];
 
+        // Validate Login
         if (!$this->validLogin($parameters['login'])) {
             $this->error("Invalid Login");
             return false;
@@ -101,6 +103,9 @@ class Person Extends \BaseModel {
         if (!isset($parameters['secret_key'])) $parameters['secret_key'] = '';
 
 		sanitize($parameters['login']);
+
+        // Initialize Database Service
+        $database = new \Database\Service();
 
         // Add to Database
         $add_user_query = "
@@ -129,30 +134,23 @@ class Person Extends \BaseModel {
 				)
 		";
 
-        $GLOBALS['_database']->Execute($add_user_query, array(
-            $parameters['date_expires'],
-            $parameters['status'],
-            $parameters['login'],
-            $parameters['timezone'],
-            $parameters['validation_key'],
-            $parameters['secret_key']
-        ));
-        if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->SQLError($GLOBALS['_database']->ErrorMsg());
+        // Bind Parameters
+        $database->AddParam($parameters['date_expires']);
+        $database->AddParam($parameters['status']);
+        $database->AddParam($parameters['login']);
+        $database->AddParam($parameters['timezone']);
+        $database->AddParam($parameters['validation_key']);
+        $database->AddParam($parameters['secret_key']);
+        $database->Execute($add_user_query);
+        if ($database->ErrorMsg()) {
+            $this->SQLError($database->ErrorMsg());
             return false;
         }
-        $this->id = $GLOBALS['_database']->Insert_ID();
+        $this->id = $database->Insert_ID();
 
 		// audit the add event
-		$auditLog = new \Site\AuditLog\Event();
-		$auditLog->add(array(
-			'instance_id' => $this->id,
-			'description' => 'Added new '.$this->_objectName(),
-			'class_name' => get_class($this),
-			'class_method' => 'add'
-		));
+        $this->recordAuditEvent($this->id,'Added new person: ' . $parameters['login']);
 
-        app_log("Added customer " . $parameters['login'] . " [" . $this->id . "]", 'debug', __FILE__, __LINE__);
         return $this->update($parameters);
     }
 
@@ -165,29 +163,32 @@ class Person Extends \BaseModel {
 		// Clear any previous errors
 		$this->clearError();
 
+        // Must have ID
         if (!$this->id) {
             $this->error("User ID Required for Update");
             return false;
         }
 
-        $auditEvent = new \Site\AuditLog\Event();
+        // Initialize Database Service
+        $database = new \Database\Service();
 
-        // Loop through and apply changes
+        // Prepare Query
         $update_customer_query = "
 				UPDATE	register_users
 				SET		id = id
 			";
 
-		$bind_params = array();
-		if (isset($parameters['first_name']) && $parameters['first_name'] != $this->first_name) {
+		$audit_messages = [];
+
+		if (!empty($parameters['first_name']) && $parameters['first_name'] != $this->first_name) {
 			if (! preg_match('/^[\w\-\.\_\s]*$/',$parameters['first_name'])) {
 				$this->error("Invalid name");
 				return false;
 			}
 			$update_customer_query .= ",
 			first_name = ?";
-			array_push($bind_params,$parameters['first_name']);
-			$auditEvent->appendDescription("First Name changed to ".$parameters['first_name']);
+			$database->AddParam($parameters['first_name']);
+			$audit_messages[] = "First Name changed to ".$parameters['first_name'];
 		}
 		if (isset($parameters['last_name']) && $parameters['last_name'] != $this->last_name) {
 			if (! preg_match('/^[\w\-\.\_\s]*$/',$parameters['last_name'])) {
@@ -196,8 +197,8 @@ class Person Extends \BaseModel {
 			}
 			$update_customer_query .= ",
 			last_name = ?";
-			array_push($bind_params,$parameters['last_name']);
-			$auditEvent->appendDescription("Last Name changed to ".$parameters['last_name']);
+			$database->AddParam($parameters['last_name']);
+			$audit_messages[] = "Last Name changed to ".$parameters['last_name'];
 		}
 		if (isset($parameters['login']) and !empty($parameters['login']) && $parameters['login'] != $this->code) {
 			if (!$this->validLogin($parameters['login'])) {
@@ -212,26 +213,26 @@ class Person Extends \BaseModel {
 			}
 			$update_customer_query .= ",
 			login = ?";
-			array_push($bind_params,$parameters['login']);
-			$auditEvent->appendDescription("Login changed to ".$parameters['login']);
+            $database->AddParam($parameters['login']);
+			$audit_messages[] = "Login changed to ".$parameters['login'];
 		}
 		if (isset($parameters['organization_id']) and ! empty($parameters['organization_id']) && $parameters['organization_id'] != $this->organization_id) {
 			$update_customer_query .= ",
 			organization_id = ?";
-			array_push($bind_params,$parameters['organization_id']);
-			$auditEvent->appendDescription("Organization changed to ".$parameters['organization_id']);
+			$database->AddParam($parameters['organization_id']);
+			$audit_messages[] = "Organization changed to ".$parameters['organization_id'];
 		}
 		if (isset($parameters['auth_failures']) and is_numeric($parameters['auth_failures']) && $parameters['auth_failures'] != $this->auth_failures) {
 			$update_customer_query .= ",
 			auth_failures = ?";
-			array_push($bind_params,$parameters['auth_failures']);
-			$auditEvent->appendDescription("Auth Failures changed to ".$parameters['auth_failures']);
+			$database->AddParam($parameters['auth_failures']);
+			$audit_messages[] = "Auth Failures changed to ".$parameters['auth_failures'];
 		}
 		if (isset($parameters['status']) && $parameters['status'] != $this->status) {
 			$update_customer_query .= ",
 			status = ?";
-			array_push($bind_params,$parameters['status']);
-			$auditEvent->appendDescription("Status changed to ".$parameters['status']);
+			$database->AddParam($parameters['status']);
+			$audit_messages[] = "Status changed to ".$parameters['status'];
 		}
 		if (isset($parameters['timezone']) && $parameters['timezone'] != $this->timezone) {
 			if (! in_array($parameters['timezone'], \DateTimeZone::listIdentifiers())) {
@@ -240,22 +241,22 @@ class Person Extends \BaseModel {
 			}
 			$update_customer_query .= ",
 			timezone = ?";
-			array_push($bind_params,$parameters['timezone']);
-			$auditEvent->appendDescription("Timezone changed to ".$parameters['timezone']);
+			$database->AddParam($parameters['timezone']);
+			$audit_messages[] = "Timezone changed to ".$parameters['timezone'];
 		}
 
 		if (isset($parameters['validation_key'])) {
 			$update_customer_query .= ",
 			validation_key = ?";
-			array_push($bind_params,$parameters['validation_key']);
-			$auditEvent->appendDescription("Validation Key changed");
+			$database->AddParam($parameters['validation_key']);
+			$audit_messages[] = "Validation Key changed";
 		}
 
 		if (isset($parameters['profile']) && $parameters['profile'] != $this->profile) {
 			$update_customer_query .= ",
 			profile = ?";
-			array_push($bind_params,$parameters['profile']);
-			$auditEvent->appendDescription("Profile changed to ".$parameters['profile']);
+			$database->AddParam($parameters['profile']);
+			$audit_messages[] = "Profile changed to ".$parameters['profile'];
 		}
 
         if (isset($parameters['automation']) && is_bool($parameters['automation']) && $parameters['automation'] != $this->automation) {
@@ -267,7 +268,7 @@ class Person Extends \BaseModel {
                 $update_customer_query .= ",
 						automation = 0";
             }
-			$auditEvent->appendDescription("Automation changed to ".$parameters['automation']);
+			$audit_messages[] = "Automation changed to ".$parameters['automation'];
         }
 
         if (isset($parameters['time_based_password']) && $parameters['time_based_password'] != $this->time_based_password) {
@@ -278,23 +279,33 @@ class Person Extends \BaseModel {
                 $update_customer_query .= ",
                 time_based_password = 0";
             }
+            $audit_messages[] = "Time Based Password changed to ".$parameters['time_based_password'];
         }
 
 		if (isset($parameters['secret_key']) && $parameters['secret_key'] != $this->secret_key) {
 			$update_customer_query .= ",
 			secret_key = ?";
-			array_push($bind_params,$parameters['secret_key']);
-			$auditEvent->appendDescription("Secret Key updated");
+            $database->AddParam($parameters['secret_key']);
+            $audit_messages[] = "Secret Key changed";
 		}
+
+        if (empty($audit_messages)) {
+            app_log("No changes to update for user ".$this->id,'debug');
+            return true;
+        }
 
 		$update_customer_query .= "
 			WHERE	id = ?
 		";
 
-		array_push($bind_params,$this->id);
-        $GLOBALS['_database']->Execute($update_customer_query,$bind_params);
-        if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->SQLError($GLOBALS['_database']->ErrorMsg());
+		$database->AddParam($this->id);
+
+        // Execute Query
+        $database->Execute($update_customer_query);
+
+        // Check for Errors
+        if ($database->ErrorMsg()) {
+            $this->SQLError($database->ErrorMsg());
             return false;
         }
 
@@ -304,12 +315,7 @@ class Person Extends \BaseModel {
         $cache->delete();
 
         // audit the update event
-		app_log("Log customer updates?");
-        $auditEvent->addIfDescription(array(
-            'instance_id' => $this->id,
-            'class_name' => get_class($this),
-            'class_method' => 'update'
-        ));	
+		$this->recordAuditEvent($this->id, implode("; ", $audit_messages));
 
         // Get Updated Information
         return $this->details();
@@ -329,23 +335,31 @@ class Person Extends \BaseModel {
 	 * @return bool|\Register\Person
 	 */
     function verify_email($validation_key) {
+        // Clear any previous errors
+        $this->clearError();
 
+        // Must have ID and Key
         if (!$this->id) return false;
         if (!$validation_key) return false;
 
+        // Initialize Database Service
+        $database = new \Database\Service();
+
+        // Prepare Database Query
         $check_key_query = "
 				SELECT	id,validation_key
 				FROM	register_users
 				WHERE	id = ?
 			";
-        $rs = $GLOBALS['_database']->Execute($check_key_query, array(
-            $this->id
-        ));
-        if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->SQLError($GLOBALS['_database']->ErrorMsg());
+
+        // Bind Parameters
+        $database->AddParam($this->id);
+        $rs = $database->Execute($check_key_query);
+        if ($database->ErrorMsg()) {
+            $this->SQLError($database->ErrorMsg());
             return false;
         }
-        list($id, $unverified_key) = $rs->fields;
+        list($id, $unverified_key) = $rs->FetchRow();
         if (!$id) {
             app_log("Key doesn't match");
             $this->error("Invalid Login or Validation Key");
@@ -366,17 +380,22 @@ class Person Extends \BaseModel {
 				SET		validation_key = null
 				WHERE	id = ?
 			";
-        $rs = $GLOBALS['_database']->Execute($validate_email_query, array(
-            $this->id
-        ));
-        if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->SQLError($GLOBALS['_database']->ErrorMsg());
+        $database->resetParams();
+        $database->AddParam($this->id);
+        $rs = $database->Execute($validate_email_query);
+        if ($database->ErrorMsg()) {
+            $this->SQLError($database->ErrorMsg());
             return false;
         }
         $this->id = $id;
         return $this->details();
     }
-    
+
+    /** @method public addContact(parameters)
+     * Add a contact method for this person
+     * @param array $parameters Contact parameters
+     * @return \Register\Contact|null The created contact or null on error
+     */
     public function addContact($parameters = array()) {
         $parameters['person_id'] = $this->id;
         $contact = new Contact();
@@ -387,23 +406,43 @@ class Person Extends \BaseModel {
         }
         return $contact;
     }
-    
+
+    /** @method public updateContact(parameters)
+     * Update a contact method for this person
+     * @param int $id Contact ID
+     * @param array $parameters Contact parameters
+     * @return bool True on success, false on error
+     */
     public function updateContact($id, $parameters = array()) {
         $contact = new Contact($id);
         return $contact->update($parameters);
     }
-    
+
+    /** @method public deleteContact(id)
+     * Delete a contact method for this person
+     * @param int $id Contact ID
+     * @return bool True on success, false on error
+     */
     public function deleteContact($id) {
         $contact = new Contact($id);
         return $contact->delete();
     }
-    
+
+    /** @method public contacts(parameters)
+     * Get contact methods for this person
+     * @param array $parameters Contact search parameters
+     * @return array Array of \Register\Contact objects
+     */
     public function contacts($parameters = array()) {
         $contactlist = new ContactList();
         $parameters['person_id'] = $this->id;
         return $contactlist->find($parameters);
     }
-    
+
+    /** @method public phone()
+     * Get primary phone contact for this person
+     * @return \Register\Contact|null The phone contact or null if not found
+     */
     public function phone() {
         if (!$this->id) return new \Register\Contact();
         $contactlist = new ContactList();
@@ -418,7 +457,11 @@ class Person Extends \BaseModel {
             return null;
         }
     }
-    
+
+    /** @method public email()
+     * Get primary email contact for this person
+     * @return \Register\Contact|null The email contact or null if not found
+     */
     public function email() {
         if (!$this->id) return new \Register\Contact();
         $contactlist = new ContactList();
@@ -433,7 +476,12 @@ class Person Extends \BaseModel {
             return null;
         }
     }
-    
+
+    /** @method notify(message)
+     * Send a notification message to all contacts marked for notification
+     * @param \Email\Message $message The message to send
+     * @return bool True on success, false on error
+     */
     public function notify($message) {
         // Make Sure We have identifed a person
         if (!preg_match('/^\d+$/', $this->id)) {
@@ -483,11 +531,19 @@ class Person Extends \BaseModel {
         return true;
     }
 
+    /** @method block()
+     * Block this person from logging in
+     * @return bool True on success, false on error
+     */
 	public function block() {
 		app_log("Blocking customer '".$this->code."'",'INFO');
 		return $this->update(array('status' => 'BLOCKED'));
 	}
 
+    /** @method delete()
+     * Mark this person as deleted
+     * @return bool True on success, false on error
+     */
     public function delete(): bool {
         app_log("Changing person " . $this->id . " to status DELETED", 'debug', __FILE__, __LINE__);
 
@@ -501,27 +557,49 @@ class Person Extends \BaseModel {
         ));
 		return true;
     }
-    
+
+    /** @method public parents()
+     * Get parent persons for this person
+     * @return array Array of \Register\Person objects
+     */
     public function parents() {
         $relationship = new \Register\Relationship();
         return $relationship->parents($this->id);
     }
-    
+
+    /** @method public children()
+     * Get child persons for this person
+     * @return array Array of \Register\Person objects
+     */
     public function children() {
         $relationship = new \Register\Relationship();
         return $relationship->children($this->id);
     }
-    
+
+    /** @method public locations()
+     * Get locations associated with this person
+     * @return array Array of \Register\Location objects
+     */
     public function locations() {
+        // Clear any previous errors
+        $this->clearError();
+
+        // Initialize Database Service
+        $database = new \Database\Service();
+
+        // Prepare Query
         $get_locations_query = "
 				SELECT	location_id
 				FROM	register_users_locations
 				WHERE	user_id = ?";
-        $rs = $GLOBALS['_database']->Execute($get_locations_query, array(
-            $this->id
-        ));
+
+        // Bind Parameters
+        $database->AddParam($this->id);
+
+        // Execute Query
+        $rs = $database->Execute($get_locations_query);
         if (!$rs) {
-            $this->SQLError($GLOBALS['_database']->ErrorMsg());
+            $this->SQLError($database->ErrorMsg());
             return null;
         }
         $locations = array();
@@ -532,30 +610,58 @@ class Person Extends \BaseModel {
         return $locations;
     }
 
+    /** @method public human()
+     * Check if this person is a human (not automation)
+     * @return bool True if human
+     */
     public function human() {
         if ($this->automation) return false;
         return true;
     }
 
+    /** @method public automation()
+     * Check if this person is automation
+     * @return bool True if automation
+     */
 	public function automation() {
 		if ($this->automation) return true;
 		return false;
 	}
 
+    /** @method public validLogin(login)
+     * Validate a login name
+     * @param string $login The login name to validate
+     * @return bool True if valid login name
+     */
 	public function validLogin($login) {
 		if (preg_match("/^[\w\-\_@\.\+\s]{2,100}\$/", $login)) return true;
 		else return false;
 	}
 
+    /** @method public validFirstName(string)
+     * Validate a first name
+     * @param string $string The first name to validate
+     * @return bool True if valid first name
+     */
     public function validFirstName($string) {
         if (preg_match("/^[\w\-\.\_\s]{1,100}\$/", $string)) return true;
         else return false;
     }
 
+    /** @method public validLastName(string)
+     * Validate a last name
+     * @param string $string The last name to validate
+     * @return bool True if valid last name
+     */
     public function validLastName($string) {
         return $this->validFirstName($string);
     }
 
+    /** @method public settings(key)
+     * Get a setting value for this person
+     * @param string $key The setting key
+     * @return mixed The setting value or null if not found
+     */
 	public function settings($key) {
 	
 		// Only Show If metadata key is in _settings array
@@ -565,6 +671,10 @@ class Person Extends \BaseModel {
 		return $this->_settings[$key];
 	}
 
+    /** @method public password_expired()
+     * Check if this person's password has expired
+     * @return bool True if password has expired
+     */
 	public function password_expired() {
 		if (isset($this->organization()->password_expiration_days) && !empty($this->organization()->password_expiration_days)) {
 			$passwordAllowedAgeSeconds = $this->organization()->password_expiration_days * 86400;
@@ -579,18 +689,34 @@ class Person Extends \BaseModel {
 		return false;
 	}
 
+    /** @method public abbrev_name()
+     * Get the abbreviated name for this person
+     * @return string The abbreviated name
+     */
 	public function abbrev_name() {
 		return substr($this->first_name,0,1)." ".$this->last_name;
 	}
 
+    /** @method public initials()
+     * Get the initials for this person
+     * @return string The initials
+     */
 	public function initials() {
 		return substr($this->first_name,0,1).substr($this->last_name,0,1);
 	}
 
+    /** @method public icon()
+     * Get the icon object for this person
+     * @return \Register\PersonIcon The icon object
+     */
 	public function icon() {
 		return new \Register\PersonIcon($this->id);
 	}
 
+    /** @method otp_secret_key()
+     * Returns the OTP secret key for the person
+     * @return string
+     */
 	public function otp_secret_key() {
 		return $this->secret_key;
 	}
