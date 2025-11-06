@@ -47,13 +47,7 @@
 			$this->id = $database->Insert_ID();
 
 			// audit the add event
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Added new '.$this->_objectName(),
-				'class_name' => get_class($this),
-				'class_method' => 'add'
-			));
+			$this->recordAuditEvent($this->id, 'Added new '.$this->_objectName());
 
 			return $this->update($parameters);
 		}
@@ -75,22 +69,32 @@
 				SET         id = id
 			";
 
-			if (!empty($parameters['name'])) {
+			$audit_messages = [];
+
+			if (!empty($parameters['name']) && $parameters['name'] != $this->name) {
 				$update_object_query .= ",
 				name = ?";
 				$database->AddParam($parameters['name']);
+				$audit_messages[] = "name changed from '" . $this->name . "' to '" . $parameters['name'] . "'";
 			}
 
-			if (!empty($parameters['module'])) {
+			if (!empty($parameters['module']) && $parameters['module'] != $this->module) {
 				$update_object_query .= ",
 				module = ?";
 				$database->AddParam($parameters['module']);
+				$audit_messages[] = "module changed from '" . $this->module . "' to '" . $parameters['module'] . "'";
 			}
 
-			if (!empty($parameters['description'])) {
+			if (!empty($parameters['description']) && $parameters['description'] != $this->description) {
 				$update_object_query .= ",
 				description = ?";
-				$database->AddParam($parameters['privilege']);
+				$database->AddParam($parameters['description']);
+				$audit_messages[] = "description changed from '" . $this->description . "' to '" . $parameters['description'] . "'";
+			}
+
+			if (count($audit_messages) == 0) {
+				app_log("No changes detected, skipping update",'debug',__FILE__,__LINE__);
+				return true;
 			}
 
 			$update_object_query .= "
@@ -106,13 +110,7 @@
 			}
 
 			// audit the update event
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Updated '.$this->_objectName(),
-				'class_name' => get_class($this),
-				'class_method' => 'update'
-			));	
+			$this->recordAuditEvent($this->id, implode("; ", $audit_messages));
 
 			return $this->details();
 		}
@@ -151,13 +149,7 @@
 			}
 
 			// audit the delete event
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Deleted '.$this->_objectName(),
-				'class_name' => get_class($this),
-				'class_method' => 'delete'
-			));
+			$this->recordAuditEvent($this->id, 'Deleted '.$this->_objectName());
 
 			return true;
 		}
@@ -167,6 +159,13 @@
 		 * @return null|array 
 		 */
 		public function peers() {
+			// Clear Errors
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$get_object_query = "
 				SELECT	rur.user_id
 				FROM	register_users_roles rur,
@@ -174,9 +173,10 @@
 				WHERE	rrp.privilege_id = ?
 				AND		rrp.role_id = rur.role_id
 			";
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
+
+			$rs = $database->Execute($get_object_query,array($this->id));
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			$people = array();
