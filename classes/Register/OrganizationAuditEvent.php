@@ -9,10 +9,11 @@
 		public $event_class;
 		public $event_notes;
 
-	    public function __construct(int $id = null) {
+	    public function __construct(?int $id = null) {
 			$this->_tableName = "register_organization_audit";
 			$this->_tableUKColumn = null;
 			$this->_addFields(array("organization_id", "admin_id", "event_date", "event_class", "event_notes"));
+			$this->_auditEvents = false;
             parent::__construct($id);
 		}
 

@@ -216,15 +216,8 @@ class BaseModel extends \BaseClass {
 		if (isset($cache)) $cache->delete();
 
 		// audit the update event
-		if ($this->_auditEvents) {
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => $audit_message,
-				'class_name' => get_class($this),
-				'class_method' => 'update'
-			));
-		}
+		if ($this->_auditEvents && strlen($audit_message) > 0) $this->recordAuditEvent($this->id, $audit_message);
+
 		return $this->details();
 	}
 
@@ -297,15 +290,7 @@ class BaseModel extends \BaseClass {
 		$this->id = $database->Insert_ID();
 
 		// audit the add event
-		if ($this->_auditEvents) {
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Added new ' . $this->_getActualClass(),
-				'class_name' => get_class($this),
-				'class_method' => 'add'
-			));
-		}
+		if ($this->_auditEvents) $this->recordAuditEvent($this->id, 'Added new ' . $this->_getActualClass());
 
 		return $this->update($parameters);
 	}
@@ -559,13 +544,7 @@ class BaseModel extends \BaseClass {
 		}
 
 		// audit the delete event
-		$auditLog = new \Site\AuditLog\Event();
-		$auditLog->add(array(
-			'instance_id' => $this->id,
-			'description' => 'Deleted ' . $this->_getActualClass(),
-			'class_name' => get_class($this),
-			'class_method' => 'delete'
-		));
+		if ($this->_auditEvents) $this->recordAuditEvent($this->id, 'Deleted ' . $this->_getActualClass());
 
 		return true;
 	}
@@ -604,13 +583,7 @@ class BaseModel extends \BaseClass {
 		}
 
 		// audit the update event
-		$auditLog = new \Site\AuditLog\Event();
-		$auditLog->add(array(
-			'instance_id' => $this->id,
-			'description' => 'Deleted ' . $this->_getActualClass(),
-			'class_name' => get_class($this),
-			'class_method' => 'deleteByKey'
-		));
+		if ($this->_auditEvents) $this->recordAuditEvent($this->id, 'Deleted ' . $this->_getActualClass());
 
 		return true;
 	}
@@ -964,13 +937,7 @@ class BaseModel extends \BaseClass {
 		}
 
 		// audit the delete event
-		$auditLog = new \Site\AuditLog\Event();
-		$auditLog->add(array(
-			'instance_id' => $this->id,
-			'description' => 'Deleted metadata key $key from ' . $this->_getActualClass() . ' id ' . $this->id,
-			'class_name' => get_class($this),
-			'class_method' => 'deleteMetadata'
-		));
+		if ($this->_auditEvents) $this->recordAuditEvent($this->id, 'Deleted metadata key ' . $key . ' from ' . $this->_getActualClass());
 
 		return true;
 	}
@@ -1601,6 +1568,36 @@ class BaseModel extends \BaseClass {
 		}
 
 		return true;
+	}
+
+	/** @method recordAuditEvent(id, description, class_name, class_method)
+	 * Record an audit event for this object
+	 * @param int $id The ID of the object
+	 * @param string $description The description of the event
+	 * @param string $class_name (Optional) The class name of the object
+	 * @param string $class_method (Optional) The class method where the event occurred
+	 * @return bool True if successful
+	 */
+	public function recordAuditEvent(int $id, string $description, string $class_name = '', string $class_method = ''): bool {
+		$this->clearError();
+
+		if (empty($class_name)) $class_name = $this->_getActualClass();
+		if (empty($class_method)) {
+			$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+			if (isset($backtrace[1]['function'])) {
+				$class_method = $backtrace[1]['function'];
+			} else {
+				$class_method = 'unknown';
+			}
+		}
+		$auditLog = new \Site\AuditLog\Event();
+		$result = $auditLog->add(array(
+			'instance_id' => $id,
+			'description' => $description,
+			'class_name' => $class_name,
+			'class_method' => $class_method
+		));
+		return $result;
 	}
 
 	/** @method validMetadataKey(string)
