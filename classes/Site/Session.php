@@ -217,6 +217,9 @@ use Register\Customer;
 		 * @return bool 
 		 */
 		public function end() {
+			// Store Real Code for Cookie Cleanup
+			$real_code = $this->code;
+
 			// Clear Previous Errors
 			$this->clearError();
 
@@ -243,8 +246,17 @@ use Register\Customer;
 				return false;
 			}
 
+			// Delete Cache
+			app_log("Clearing session cache for session ".$this->id,'trace');
+			$this->clearCache();
+
+			// Remove from Code Cache
+			app_log("Removing session_code cache for session $real_code",'trace');
+			$code_cache = new \Cache\Item($GLOBALS['_CACHE_'],"session_code[".$real_code."]");
+			$code_cache->delete();
+
 			// Delete Cookie
-			app_log("Deleting session_code cookie '".$GLOBALS['_SESSION_']->code."' for ".$GLOBALS['_SESSION_']->domain()->name,'notice');
+			app_log("Deleting session_code cookie $real_code for ".$GLOBALS['_SESSION_']->domain()->name,'trace');
 			setcookie("session_code","",time() - 3600);
 
 			return true;
