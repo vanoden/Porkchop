@@ -191,6 +191,7 @@
 				foreach ($cachedData as $key => $value) {
 					$this->$key = $value;
 				}
+				$this->name = $cachedData->domain_name;
 				$this->cached(true);
 				$this->exists(true);
 				return true;
