@@ -103,6 +103,12 @@
 				$this->error("Valid person_id required for addContact method");
 				return false;
 			}
+			$person = new \Register\Person($parameters['person_id']);
+			if ($person->error() || ! $person->id) {
+				$this->error("Valid person_id required for addContact method");
+				return false;
+			}
+
 			if (! $this->validType($parameters['type'])) {
 				$this->error("Valid type required for addContact method");
 				return false;
@@ -128,7 +134,7 @@
 				)
 			";
 
-			$database->AddParam($parameters['person_id']);
+			$database->AddParam($person->id);
 			$database->AddParam($parameters['type']);
 			$database->AddParam($parameters['value']);
 			$database->AddParam(isset($parameters['description']) ? $parameters['description'] : '');
@@ -145,13 +151,7 @@
 			$this->id = $database->Insert_ID();
 
 			// audit the add event
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Added new '.$this->_objectName(),
-				'class_name' => get_class($this),
-				'class_method' => 'add'
-			));
+			$this->recordAuditEvent($this->id, 'Added new contact record to '.$person->login());
 
 			return $this->update($parameters);
 		}
@@ -165,8 +165,10 @@
 			}
 
 			$update_contact_query = " UPDATE register_contacts SET id = id";
-				
-			if ($parameters['type']) {
+
+			$audit_messages = [];
+
+			if (!empty($parameters['type']) && $parameters['type'] != $this->type) {
 				if (! $this->validType($parameters['type'])) {
 					$this->error("Invalid contact type");
 					return false;
@@ -174,39 +176,50 @@
 				$update_contact_query .= ",
 						type = ?";
 				$database->AddParam($parameters['type']);
+				$audit_messages[] = "Type changed from '".$this->type."' to '".$parameters['type']."'";
 			}
-			if (isset($parameters['description'])) {
+			if (isset($parameters['description']) && $parameters['description'] != $this->description) {
 				$update_contact_query .= ",
 						description = ?";
 				$database->AddParam($parameters['description']);
+				$audit_messages[] = "Description changed";
 			}
-			if (isset($parameters['notify'])){
+			if (isset($parameters['notify']) && $parameters['notify'] != $this->notify) {
 				$update_contact_query .= ",
 						notify = ?";
 				if ($parameters['notify']) $database->AddParam(1);
 				else $database->AddParam(0);
+				$audit_messages[] = "Notify changed to ".($parameters['notify'] ? 'yes' : 'no');
 			}
-			if (isset($parameters['public'])){
+			if (isset($parameters['public']) && $parameters['public'] != $this->public) {
 				$update_contact_query .= ",
 						public = ?";
 				if ($parameters['public']) $database->AddParam(1);
 				else $database->AddParam(0);
+				$audit_messages[] = "Public changed to ".($parameters['public'] ? 'yes' : 'no');
 			}
-			if (isset($parameters['value'])) {
+			if (isset($parameters['value']) && $parameters['value'] != $this->value) {
 				if ($this->validValue($parameters['type'],$parameters['value'])) {
 					$update_contact_query .= ",
 							value = ?";
 					$database->AddParam($parameters['value']);
+					$audit_messages[] = "Value changed";
 				}
 				else {
 					$this->error("Invalid contact value");
 					return false;
 				}
 			}
-			if (isset($parameters['notes'])) {
+			if (isset($parameters['notes']) && $parameters['notes'] != $this->notes) {
 				$update_contact_query .= ",
 						notes = ?";
 				$database->AddParam($parameters['notes']);
+				$audit_messages[] = "Notes changed";
+			}
+
+			if (empty($audit_messages)) {
+				// Nothing to update
+				return $this->details();
 			}
 
 			$update_contact_query .= "
@@ -220,18 +233,19 @@
 			}
 
 			// audit the update event
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Updated '.$this->_objectName(),
-				'class_name' => get_class($this),
-				'class_method' => 'update'
-			));	
+			$this->recordAuditEvent($this->id, 'Updated contact record: '.implode("; ", $audit_messages));
 					
 			return $this->details();
 		}
 		
 		public function detailsByUserByTypeByDesc($person_id, $type='email', $desc='Work Email') {
+			// Clear any existing error
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
             $get_object_query = "
 				SELECT	id
 				FROM	register_contacts
@@ -239,12 +253,15 @@
 				AND		type = ?
 				AND		description = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($person_id, $type, $desc)
-			);
+
+			// Bind Parameters
+			$database->AddParam($person_id);
+			$database->AddParam($type);
+			$database->AddParam($desc);
+			
+			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -329,35 +346,10 @@
 			return false;
 		}
 
-		public function auditRecord($type,$notes,$user_id = null,$admin_id = null) {
-
-			$audit = new \Register\UserAuditEvent();
-			if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
-			if (!isset($user_id) && isset($GLOBALS['_SESSION_']->customer->id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
-
-			// New Registration by customer
-			if (empty($admin_id)) $admin_id = $this->id;
-
-			if ($audit->validClass($type) == false) {
-				$this->error("Invalid audit class: ".$type);
-				return false;
-			}
-
-			$audit->add(array(
-				'user_id'		=> $user_id,
-				'admin_id'		=> $admin_id,
-				'event_date'	=> date('Y-m-d H:i:s'),
-				'event_class'	=> $type,
-				'event_notes'	=> $notes
-			));
-			
-			if ($audit->error()) {
-				$this->error($audit->error());
-				return false;
-			}
-			return true;
-		}
-
+		/** @method public getPerson()
+		 * Load the person object for this contact
+		 * @return bool True on success
+		 */
 		public function getPerson(): bool {
 			$this->clearError();
 			if (empty($this->id)) {
@@ -366,6 +358,7 @@
 			}
 			// Initialize Database Service
 			$database = new \Database\Service();
+
 			// Get person_id for this contact
 			$get_person_id_query = "
 				SELECT person_id
