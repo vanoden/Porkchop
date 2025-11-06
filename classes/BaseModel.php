@@ -765,7 +765,7 @@ class BaseModel extends \BaseClass {
 			app_log("No ID defined for " . get_class($this),'debug');
 			return null;
 		} else {
-			app_log("No cache key defined for " . get_class($this),'debug');
+			app_log("No cache key defined for " . get_class($this),'trace');
 			return null;
 		}
 	}
