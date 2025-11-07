@@ -64,14 +64,27 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				if (isset($_REQUEST['role'][$role->id])) {
 					// Role is checked - add it if not already assigned
 					if (!$customer->has_role($role->name)) {
-						$customer->add_role($role->id);
-						app_log("Added role: " . $role->name, 'debug', __FILE__, __LINE__);
+						if (! $customer->add_role($role->id)) {
+							app_log("Error adding role: " . $customer->error(), 'error', __FILE__, __LINE__);
+							$page->addError("Error adding role &quot;".$role->name."&quot; to customer &quot;".$customer->full_name()."&quot;: ".$customer->error());
+						}
+						else {
+							app_log("Added role: " . $role->name, 'debug', __FILE__, __LINE__);
+							$page->appendSuccess("Added role &quot;".$role->name."&quot; to customer &quot;".$customer->full_name()."&quot;.");
+						}
 					}
 				} else {
 					// Role is not checked - remove it if assigned
 					if ($customer->has_role($role->name)) {
-						$customer->drop_role($role->id);
-						app_log("Removed role: " . $role->name, 'debug', __FILE__, __LINE__);
+						if (! $customer->drop_role($role->id)) {
+							app_log("Error removing role: " . $customer->error(), 'error', __FILE__, __LINE__);
+							$page->addError("Error removing role &quot;".$role->name."&quot; from customer &quot;".$customer->full_name()."&quot;: ".$customer->error());
+							continue;
+						}
+						else {
+							app_log("Removed role: " . $role->name, 'debug', __FILE__, __LINE__);
+							$page->appendSuccess("Removed role &quot;".$role->name."&quot; from customer &quot;".$customer->full_name()."&quot;.");
+						}
 					}
 				}
 			}
