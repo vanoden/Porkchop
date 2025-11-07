@@ -568,16 +568,18 @@
 
 			// Build Query
 			$set_privilege_query = "
-				UPDATE	register_roles_privileges
-				SET		level = ?
-				WHERE	role_id = ?
-				AND		privilege_id = ?
+				INSERT INTO	register_roles_privileges
+				(			role_id, privilege_id, level)
+				VALUES		(?,?,?)
+				ON DUPLICATE KEY
+				UPDATE		level = ?
 			";
 
 			// Add Parameters
-			$database->AddParam($level);
 			$database->AddParam($this->id);
 			$database->AddParam($privilege_id);
+			$database->AddParam($level);
+			$database->AddParam($level);
 
 			// Execute Query
 			if ($database->Execute($set_privilege_query)) {
