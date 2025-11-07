@@ -502,48 +502,9 @@
 		 * @param object $entity The entity object (Register::Customer, Register::Organization, Register::SubOrganization)
 		 * @return bool True if customer has the privilege and is authorized for the entity
 		 */
-		protected function _canWithEntity($privilege_name, $entity): bool {
+		protected function _canWithEntity($privilege_name, \Register\PrivilegeLevel$entity): bool {
 			if ($GLOBALS['_SESSION_']->elevated()) return true;
-
-			// If entity is a Customer object, user can only access their own record
-			if ($entity instanceof \Register\Customer) {
-				if ($this->id == $entity->id) {
-					// User is accessing their own customer record - check if they have the privilege at customer level (0)
-					return $this->has_privilege($privilege_name, \Register\PrivilegeLevel::CUSTOMER);
-				}
-				return false; // Cannot access other customer records
-			}
-
-			// If entity is an Organization object, check membership and organization level
-			if ($entity instanceof \Register\Organization) {
-				// Check if user is a member of this organization
-				$user_org = $this->organization();
-				if (!$user_org || $user_org->id != $entity->id) {
-					return false; // User is not a member of this organization
-				}
-
-				// User must have organization_manager level or higher for this privilege
-				return $this->has_privilege($privilege_name, \Register\PrivilegeLevel::ORGANIZATION_MANAGER);
-			}
-
-			// If entity is a SubOrganization object, check membership and sub-organization level
-			if (class_exists('\Register\SubOrganization') && $entity instanceof \Register\SubOrganization) {
-				// Check if user is a member of this sub-organization
-				// Note: This assumes SubOrganization has a method to check membership
-				// If SubOrganization doesn't exist yet, this will be handled when it's implemented
-				$user_org = $this->organization();
-				if (!$user_org) {
-					return false; // User has no organization
-				}
-
-				// For now, check if user belongs to same organization (sub-organization implementation pending)
-				// When SubOrganization is fully implemented, check sub-organization membership here
-				// User must have sub_organization_manager level or higher for this privilege
-				return $this->has_privilege($privilege_name, \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER);
-			}
-
-			// Unknown entity type - require administrator level
-			return $this->has_privilege($privilege_name, \Register\PrivilegeLevel::ADMINISTRATOR);
+			return $this->has_privilege($privilege_name, $entity->requiredPrivilegeLevel());
 		}
 
 
@@ -635,10 +596,8 @@
 
 			while (list($level) = $rs->FetchRow()) {
 				// Is the required level present in user's privilege level?
-				app_log("Checking privilege level $level for required level $required_level",'debug',__FILE__,__LINE__);
 				// Use bitwise check for privilege levels
 				if (inMatrix($level,$required_level)) {
-					app_log("Privilege '$privilege_name' granted at level $level",'debug',__FILE__,__LINE__);
 					return true;
 				}
 			}

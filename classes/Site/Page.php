@@ -142,15 +142,16 @@
 			}
 	    }
 
-		/** @method public requirePrivilege(privilege name)
+		/** @method public requirePrivilege(privilege name, level)
 		 * Checks if the user has a specific privilege.
 		 * If not, redirects to the login page or permission denied page.
 		 * @param string $privilege The privilege to check for.
+		 * @param int $level The required privilege level. Optional - Defaults to ADMINISTRATOR.
 		 * @return bool True if the user has the required privilege, otherwise redirects.
 		 */
-        public function requirePrivilege($privilege) {
+        public function requirePrivilege($privilege, $level = \Register\PrivilegeLevel::ADMINISTRATOR) {
 			$this->requireAuth();
-            if ($GLOBALS['_SESSION_']->customer->can($privilege)) {
+            if ($GLOBALS['_SESSION_']->customer->can($privilege, $level)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
                 return true;
