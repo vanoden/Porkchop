@@ -628,15 +628,11 @@
 				//print_r("Privilege ID: ".var_export($privilege->id,true)." User Level: ".var_export($level,true)." Required Level: ".var_export($required_level,true)."\n");
 				// Is the required level present in user's privilege level?
 				// Use bitwise check for privilege levels
-				//print_r("<br>\nLevel MTRX: ");
-				//print_r(matrix2Elements($level),false);
-				//print_r("<br>\n");
 				if (inMatrix($level,$required_level)) {
 					//print_r("Matched!\n");
 					return true;
 				}
 			}
-			exit;
 			return false;
 		}
 
