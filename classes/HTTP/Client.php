@@ -65,12 +65,15 @@ use function Amp\now;
 
 			if ($ssl) $service = "ssl://".$host.":".$port;
 			else $service = "tcp://".$host.":".$port;
+
+			app_log("Connecting to $service",'debug');
 			$this->_socket = stream_socket_client($service, $errno, $errstr, $this->_timeout);
 
 			if (!$this->_socket) {
 				$this->error("Unable to connect to host: ".$errstr);
 				return false;
 			}
+			app_log("Connected to $service",'debug');
 			$this->_status = 'CONNECTED';
 			$this->_start_time = microtime(true);
 			return true;
