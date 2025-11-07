@@ -84,6 +84,7 @@
 				else {
 		            foreach ($privileges as $privilege) {
 						$new_level = $role->getPrivilegeLevel($privilege->id);
+						$old_level = $new_level;
 						$levels = array(0,2,3,5,7);
 						foreach ($levels as $level) {
 							// Remove if unselected
@@ -100,7 +101,7 @@
 							}
 	                    }
 						// Update privilege level if changed
-						if ($new_level != $role->getPrivilegeLevel($privilege->id)) {
+						if ($new_level != $old_level) {
 							$role->setPrivilegeLevel($privilege->id, $new_level);
 						}
 					}
