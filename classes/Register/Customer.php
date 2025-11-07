@@ -141,9 +141,22 @@
 		/** @method add_role(role_id)
 		 * Add a Role to the Customer
 		 * @param string $role_id The ID of the role to add
+		 * @return bool True if successful, otherwise false
 		 */
-		function add_role ($role_id) {
-		
+		function add_role ($role_id): bool {
+			// Clear any previous errors
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			$role = new \Register\Role($role_id);
+			if (! $role->id) {
+				$this->error("Role not found");
+				return false;
+			}
+
+			// Security Check - Ensure user has privilege to assign roles
 			if ($GLOBALS['_SESSION_']->elevated()) {
 				app_log("Elevated Session adding role");
 			}
@@ -153,19 +166,20 @@
 			else {
 				app_log("Non admin failed to update roles",'notice',__FILE__,__LINE__);
 				$this->error("Insufficient Privileges");
-				return 0;
+				return false;
 			}
 
 			// Prevent self-privilege escalation: Users cannot grant themselves roles that increase their privilege level
 			$current_user = $GLOBALS['_SESSION_']->customer;
 			if ($current_user && $current_user->id == $this->id) {
-				// User is trying to grant a role to themselves
-				if ($this->wouldGrantHigherPrivilege($role_id, $this)) {
+				// User is trying to grant a role to themselves (Ok if the have ADMINISTRATOR level 'manage customers' privilege)
+				if (! $current_user->has_privilege('manage customers',\Register\PrivilegeLevel::ADMINISTRATOR) && $this->wouldGrantHigherPrivilege($role_id, $this)) {
 					$this->error("You cannot grant yourself privileges that would increase your privilege level");
-					return 0;
+					return false;
 				}
 			}
-			
+
+			// Prepare SQL Query
 			$add_role_query = "
 				INSERT
 				INTO	register_users_roles
@@ -177,13 +191,15 @@
 				ON DUPLICATE KEY UPDATE user_id = user_id
 			";
 
-			$GLOBALS['_database']->Execute(
-				$add_role_query,
-				array($this->id,$role_id)
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return 0;
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($role_id);
+
+			// Execute Query
+			$database->Execute($add_role_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
 			}
 
 			# Bust Cache
@@ -191,8 +207,8 @@
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
 			$cache->delete();
 
-			$this->auditRecord('ROLE_ADDED','Role has been added: '.$role_id);
-			return 1;
+			$this->recordAuditEvent($this->id,'Role '.$role->name.' assigned');
+			return true;
 		}
 
 		/** @method drop_role(role_id)
@@ -200,24 +216,38 @@
 		 * @param string $role_id The ID of the role to remove
 		 */
 		function drop_role($role_id) {
+			// Clear any previous errors
+			$this->clearError();
+
+			$role = new \Register\Role($role_id);
+			if (! $role->id) {
+				$this->error("Role not found");
+				return false;
+			}
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare SQL Query
 			$drop_role_query = "
 				DELETE
 				FROM	register_users_roles
 				WHERE	user_id = ?
 				AND		role_id = ?
 			";
-			
-			//error_log("Update Customer: $drop_role_query");
-			$GLOBALS['_database']->Execute(
-				$drop_role_query,
-				array($this->id,$role_id)
-			);
-			
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($role_id);
+
+			// Execute Query
+			$database->Execute($drop_role_query);
+
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			$this->auditRecord('ROLE_DROPPED','Role '.$role_id.' dropped');
+			$this->recordAuditEvent($this->id,'Role '.$role->name.' removed');
 			return true;
 		}
 
@@ -502,7 +532,7 @@
 		 * @param object $entity The entity object (Register::Customer, Register::Organization, Register::SubOrganization)
 		 * @return bool True if customer has the privilege and is authorized for the entity
 		 */
-		protected function _canWithEntity($privilege_name, \Register\PrivilegeLevel$entity): bool {
+		protected function _canWithEntity($privilege_name, \Register\PrivilegeLevel $entity): bool {
 			if ($GLOBALS['_SESSION_']->elevated()) return true;
 			return $this->has_privilege($privilege_name, $entity->requiredPrivilegeLevel());
 		}
@@ -595,12 +625,18 @@
 			}
 
 			while (list($level) = $rs->FetchRow()) {
+				//print_r("Privilege ID: ".var_export($privilege->id,true)." User Level: ".var_export($level,true)." Required Level: ".var_export($required_level,true)."\n");
 				// Is the required level present in user's privilege level?
 				// Use bitwise check for privilege levels
+				//print_r("<br>\nLevel MTRX: ");
+				//print_r(matrix2Elements($level),false);
+				//print_r("<br>\n");
 				if (inMatrix($level,$required_level)) {
+					//print_r("Matched!\n");
 					return true;
 				}
 			}
+			exit;
 			return false;
 		}
 
