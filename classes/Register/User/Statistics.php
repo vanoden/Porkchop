@@ -23,6 +23,7 @@
 		public function __construct(int $id = 0) {
 			if ($id > 0) {
 				$this->user_id = $id;
+				$this->initRecord();
 				$this->get();
 			}
 		}
@@ -139,6 +140,43 @@
 
 			// Execute Update
 			$result = $database->Execute($update_object_query);
+			if (! $result) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			return true;
+		}
+
+		public function initRecord(): bool {
+			// Clear Previous Errors
+			$this->clearError();
+
+			// Require User ID
+			if (!is_numeric($this->user_id) || $this->user_id <= 0) {
+				$this->error("User ID required to initialize statistics");
+				return false;
+			}
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Insert Query
+			$insert_object_query = "
+				INSERT INTO	register_user_statistics
+				(	user_id,
+					last_login_date
+				) VALUES (
+					?, sysdate()
+				)
+				ON DUPLICATE KEY UPDATE last_login_date = sysdate()
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->user_id);
+
+			// Execute Insert
+			$result = $database->Execute($insert_object_query);
 			if (! $result) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
