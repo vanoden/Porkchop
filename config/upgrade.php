@@ -91,7 +91,17 @@
 				"pending_customers"	=> $templates['admin'],
 				"roles"				=> $templates['admin'],
 				"role"				=> $templates['admin'],
-				"admin_location"	=> $templates['admin']
+				"admin_location"	=> $templates['admin'],
+				"admin_account_contacts"	=> $templates['admin'],
+				"admin_account_password"	=> $templates['admin'],
+				"admin_account_roles"		=> $templates['admin'],
+				"admin_account_auth_failures"	=> $templates['admin'],
+				"admin_account_terms"		=> $templates['admin'],
+				"admin_account_locations"	=> $templates['admin'],
+				"admin_account_images"		=> $templates['admin'],
+				"admin_account_backup_codes"	=> $templates['admin'],
+				"admin_account_search_tags"	=> $templates['admin'],
+				"ent_accounts"			=> $templates['support']
 			),
 		),
 		"Contact"		=> array(
