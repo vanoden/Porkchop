@@ -5,7 +5,7 @@ use function Amp\now;
 
 	class Client Extends \BaseClass {
 		private $_socket;
-		private $_connected = false;
+		private bool $_connected = false;
 		private $_response;
 		private $_cookiejar;
 		private $_timeout = 3; // Default timeout in seconds
@@ -75,6 +75,7 @@ use function Amp\now;
 			}
 			app_log("Connected to $service",'debug');
 			$this->_status = 'CONNECTED';
+			$this->_connected = true;
 			$this->_start_time = microtime(true);
 			return true;
 		}
