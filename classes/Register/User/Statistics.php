@@ -23,8 +23,12 @@
 		public function __construct(int $id = 0) {
 			if ($id > 0) {
 				$this->user_id = $id;
-				$this->initRecord();
-				$this->get();
+				if (!$this->initRecord()) {
+					$this->get();
+				}
+				else {
+					$this->error("Unable to initialize statistics for user ID {$this->user_id}. ".$this->error());
+				}
 			}
 		}
 
