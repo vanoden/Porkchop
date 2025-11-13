@@ -1,6 +1,6 @@
 <?php
 	$modules["Product"] = array(
-		"schema"	=> 16,
+		"schema"	=> 17,
 		"privileges"	=> array(
 			"edit product prices",
 			"manage products",
