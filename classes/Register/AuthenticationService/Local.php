@@ -25,7 +25,7 @@
 					return false;
 				}
 				list($x,$y) = $rs->FetchRow();
-				app_log("Pass: $x vs $y",'debug');
+				app_log("Pass: $x vs $y",'trace');
 
 			    $get_user_query = "
 				    SELECT	id
@@ -137,5 +137,20 @@
 				return false;
 			}
 			return true;
+		}
+
+		/** @method public validLogin(login)
+		 * Validate the format of a login name
+		 * @param string $login Login name
+		 * @return bool True if valid, false otherwise
+		 */
+		public function validLogin($login) {
+			// Valid login: Alphanumeric, underscores, dots, hyphens; 3-30 characters
+			if (preg_match('/^[a-zA-Z0-9_.-]{3,30}$/', $login)) {
+				return true;
+			} else {
+				$this->error("Invalid login format");
+				return false;
+			}
 		}
 	}
