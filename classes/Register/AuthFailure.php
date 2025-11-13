@@ -80,15 +80,23 @@
 		 * @return bool 
 		 */
 		public function details(): bool {
+			// Initialize Database Service
+			$database = new \Database\Service;
+
+			// Prepare Query
 			$get_details_query = "
 				SELECT	*
 				FROM	register_auth_failures
 				WHERE	id = ?
 			";
 
-			$rs = $GLOBALS['_database']->Execute($get_details_query,array($this->id));
+			// Bind Parameters
+			$database->AddParams(array($this->id));
+
+			// Execute Query
+			$rs = $database->Execute($get_details_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
