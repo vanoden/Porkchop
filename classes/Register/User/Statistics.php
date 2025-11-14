@@ -23,7 +23,7 @@
 		public function __construct(int $id = 0) {
 			if ($id > 0) {
 				$this->user_id = $id;
-				if (!$this->initRecord()) {
+				if ($this->initRecord()) {
 					$this->get();
 				}
 				else {
@@ -63,11 +63,11 @@
 			}
 			if ($row = $rs->FetchRow()) {
 				$this->user_id = $row['user_id'];
-				$this->last_login_date = $this->convertMySQLDateTimeToDateTime($row['last_login_date']);
-				$this->last_hit_date = $this->convertMySQLDateTimeToDateTime($row['last_hit_date']);
-				$this->first_login_date = $this->convertMySQLDateTimeToDateTime($row['first_login_date']);
-				$this->last_failed_login_date = $this->convertMySQLDateTimeToDateTime($row['last_failed_login_date']);
-				$this->last_password_change_date = $this->convertMySQLDateTimeToDateTime($row['last_password_change_date']);
+				$this->last_login_date = convertMySQLDateTimeToDateTime($row['last_login_date']);
+				$this->last_hit_date = convertMySQLDateTimeToDateTime($row['last_hit_date']);
+				$this->first_login_date = convertMySQLDateTimeToDateTime($row['first_login_date']);
+				$this->last_failed_login_date = convertMySQLDateTimeToDateTime($row['last_failed_login_date']);
+				$this->last_password_change_date = convertMySQLDateTimeToDateTime($row['last_password_change_date']);
 				$this->session_count = (int)$row['session_count'];
 				$this->password_change_count = (int)$row['password_change_count'];
 				$this->failed_login_count = (int)$row['failed_login_count'];
@@ -99,28 +99,58 @@
 
 			if (!empty($parameters['last_login_date']) && $parameters['last_login_date'] > $this->last_login_date) {
 				$update_object_query .= ", last_login_date = ?";
-				$this->last_login_date = $parameters['last_login_date'];
-				$database->AddParam($this->convertDateTimeToMySQLDateTime($this->last_login_date));
+				if (is_string($parameters['last_login_date'])) {
+					$this->last_login_date = convertMySQLDateTimeToDateTime($parameters['last_login_date']);
+					$database->AddParam($parameters['last_login_date']);
+				}
+				else {
+					$this->last_login_date = $parameters['last_login_date'];
+					$database->AddParam(convertDateTimeToMySQLDateTime($parameters['last_login_date']));
+				}
 			}
 			if (!empty($parameters['last_hit_date']) && $parameters['last_hit_date'] > $this->last_hit_date) {
 				$update_object_query .= ", last_hit_date = ?";
-				$this->last_hit_date = $parameters['last_hit_date'];
-				$database->AddParam($this->convertDateTimeToMySQLDateTime($this->last_hit_date));
+				if (is_string($parameters['last_hit_date'])) {
+					$this->last_hit_date = convertMySQLDateTimeToDateTime($parameters['last_hit_date']);
+					$database->AddParam($parameters['last_hit_date']);
+				}
+				else {
+					$this->last_hit_date = $parameters['last_hit_date'];
+					$database->AddParam(convertDateTimeToMySQLDateTime($parameters['last_hit_date']));
+				}
 			}
 			if (!empty($parameters['first_login_date']) && $parameters['first_login_date'] > $this->first_login_date) {
 				$update_object_query .= ", first_login_date = ?";
-				$this->first_login_date = $parameters['first_login_date'];
-				$database->AddParam($this->convertDateTimeToMySQLDateTime($this->first_login_date));
+				if (is_string($parameters['first_login_date'])) {
+					$this->first_login_date = convertMySQLDateTimeToDateTime($parameters['first_login_date']);
+					$database->AddParam($parameters['first_login_date']);
+				}
+				else {
+					$this->first_login_date = $parameters['first_login_date'];
+					$database->AddParam(convertDateTimeToMySQLDateTime($parameters['first_login_date']));
+				}
 			}
 			if (!empty($parameters['last_failed_login_date']) && $parameters['last_failed_login_date'] > $this->last_failed_login_date) {
 				$update_object_query .= ", last_failed_login_date = ?";
-				$this->last_failed_login_date = $parameters['last_failed_login_date'];
-				$database->AddParam($this->convertDateTimeToMySQLDateTime($this->last_failed_login_date));
+				if (is_string($parameters['last_failed_login_date'])) {
+					$this->last_failed_login_date = convertMySQLDateTimeToDateTime($parameters['last_failed_login_date']);
+					$database->AddParam($parameters['last_failed_login_date']);
+				}
+				else {
+					$this->last_failed_login_date = $parameters['last_failed_login_date'];
+					$database->AddParam(convertDateTimeToMySQLDateTime($parameters['last_failed_login_date']));
+				}
 			}
 			if (!empty($parameters['last_password_change_date']) && $parameters['last_password_change_date'] > $this->last_password_change_date) {
 				$update_object_query .= ", last_password_change_date = ?";
-				$this->last_password_change_date = $parameters['last_password_change_date'];
-				$database->AddParam($this->convertDateTimeToMySQLDateTime($this->last_password_change_date));
+				if (is_string($parameters['last_password_change_date'])) {
+					$this->last_password_change_date = convertMySQLDateTimeToDateTime($parameters['last_password_change_date']);
+					$database->AddParam($parameters['last_password_change_date']);
+				}
+				else {
+					$this->last_password_change_date = $parameters['last_password_change_date'];
+					$database->AddParam(convertDateTimeToMySQLDateTime($parameters['last_password_change_date']));
+				}
 			}
 			if (!empty($parameters['session_count'])) {
 				$update_object_query .= ", session_count = ?";
@@ -140,6 +170,7 @@
 			$update_object_query .= "
 				WHERE	user_id = ?
 			";
+
 			$database->AddParam($this->user_id);
 
 			// Execute Update
@@ -343,19 +374,5 @@
 				'password_change_count' => $this->password_change_count,
 				'failed_login_count' => $this->failed_login_count,
 			];
-		}
-
-		public function convertMySQLDateTimeToDateTime(?string $mysqlDateTime): ?\DateTime {
-			if (empty($mysqlDateTime) || $mysqlDateTime === '0000-00-00 00:00:00') {
-				return null;
-			}
-			return new \DateTime($mysqlDateTime);
-		}
-
-		public function convertDateTimeToMySQLDateTime(?\DateTime $dateTime): ?string {
-			if (empty($dateTime)) {
-				return null;
-			}
-			return $dateTime->format('Y-m-d H:i:s');
 		}
 	}

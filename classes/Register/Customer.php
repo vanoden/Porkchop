@@ -1710,4 +1710,195 @@
 			$statistics = new \Register\User\Statistics($this->id);
 			return $statistics->toArray();
 		}
-    }
+
+		/** @method public purgeAgingSessions()
+		 * Purge aging sessions for this user
+		 * @return int Number of sessions purged
+		 */
+		public function purgeAgingSessions(): int {
+			// Clear previous errors
+			$this->clearError();
+
+			// If no user ID, return false
+			if (! $this->id) {
+				$this->error("User ID not set");
+				return 0;
+			}
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			$start_time = microtime(true);
+
+			// Get Statistics from Database
+			$session_stats = $this->getStatsFromSessions();
+			if ($this->error()) {
+				print_r("Error getting session statistics: " . $this->error() . "\n");
+				return 0;
+			}
+			if (empty($session_stats)) {
+				$this->error("No session statistics found for user");
+				return 0;
+			}
+			print_r("Session Stats: <br>\n");
+			print_r($session_stats);
+			print_r("<br>\nElapsed: " . (microtime(true) - $start_time) . " seconds<br>\n");
+
+			// Get Stored Statistics
+			$stored_stats = $this->statistics();
+			print_r("Stored Stats: <br>\n");
+			print_r($stored_stats->toArray());
+			print_r("<br>\nElapsed: " . (microtime(true) - $start_time) . " seconds<br>\n");
+
+			if (empty($stored_stats)) {
+				$stored_stats = new \Register\User\Statistics($this->id);
+				$stored_stats->update(array(
+					'last_hit_date' => $session_stats['last_hit_date'] ?? null,
+					'session_count' => $session_stats['session_count'] ?? 0,
+					'first_login_date' => $session_stats['first_login_date'] ?? null,
+					'last_failed_login_date' => $session_stats['last_failed_login_date'] ?? null,
+					'failed_login_count' => $session_stats['failed_login_count'] ?? 0,
+				));
+				if ($stored_stats->error()) {
+					$this->error("Error updating stored statistics: " . $stored_stats->error());
+					return 0;
+				}
+			}
+			else {
+				$parameters = [];
+				if (!empty($session_stats['last_failed_login_date'])) {
+					if (empty($stored_stats->last_failed_login_date) || $stored_stats->last_failed_login_date < $session_stats['last_failed_login_date']) {
+						$parameters['last_failed_login_date'] = $session_stats['last_failed_login_date'];
+					}
+				}
+				if (!empty($session_stats['last_hit_date'])) {
+					if (empty($stored_stats->last_hit_date) || $stored_stats->last_hit_date < $session_stats['last_hit_date']) {
+						$parameters['last_hit_date'] = $session_stats['last_hit_date'];
+					}
+				}
+				if (!empty($session_stats['first_login_date'])) {
+					if (empty($stored_stats->first_login_date) || $stored_stats->first_login_date > $session_stats['first_login_date']) {
+						$parameters['first_login_date'] = $session_stats['first_login_date'];
+					}
+				}
+				if (!empty($session_stats['session_count']) && $stored_stats->session_count < $session_stats['session_count']) {
+					$parameters['session_count'] = $session_stats['session_count'];
+				}
+				if (!empty($session_stats['failed_login_count']) && $stored_stats->failed_login_count < $session_stats['failed_login_count']) {
+					$parameters['failed_login_count'] = $session_stats['failed_login_count'];
+				}
+				if (!empty($parameters)) {
+					print_r("<br>\nParameters: <br>\n");
+					print_r($parameters);
+					print_r($stored_stats);
+					if ($stored_stats->update($parameters)) {
+						print_r("Stored statistics updated successfully\n");
+					} elseif ($stored_stats->error()) {
+						print_r("Error updating stored statistics\n");
+						$this->error("Error updating stored statistics: " . $stored_stats->error());
+						return 0;
+					}
+					else {
+						$this->error("Unknown error updating stored statistics");
+						print_r("Unknown error updating stored statistics\n");
+						return 0;
+					}
+				}
+				print_r("Woohoo!");
+				return 0;
+			}
+			print_r("Total time: " . (microtime(true) - $start_time) . " seconds\n");
+exit;
+			print_r("Deleting old sessions: <br>\n");
+			$delete_query = "
+				CALL purge_aging_sessions_for_user(?)
+			";
+			$database->AddParam($this->id);
+			$database->Execute($delete_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return 0;
+			}
+			print_r("Total time: " . (microtime(true) - $start_time) . " seconds\n");
+			return 0;
+		}
+
+		/** @method getStatsFromSessions()
+		 * Get user statistics from session data
+		 * @return array
+		 */
+		public function getStatsFromSessions(): array {
+			// Clear Previous Errors
+			$this->clearError();
+
+			// Prepare Database Service
+			$database = new \Database\Service();
+
+			// Require User ID
+			if (!is_numeric($this->id) || $this->id <= 0) {
+				$this->error("User ID required to collect session statistics");
+				return [];
+			}
+
+			// Initialize Response Array
+			$results = [];
+
+			// Collect statistics from user sessions
+			$session_query = "
+				SELECT	COUNT(*) AS session_count,
+						MAX(last_hit_date) AS last_hit_date
+				FROM	session_sessions
+				WHERE	user_id = ?
+			";
+
+			$database->AddParam($this->id);
+			$rs = $database->Execute($session_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return [];
+			}
+			if ($row = $rs->FetchRow()) {
+				$results["session_count"] = (int)$row['session_count'];
+				$results["last_hit_date"] = $row['last_hit_date'];
+			}
+
+			$first_session_query = "
+				SELECT	MAX(hit_date)
+				FROM	session_hits
+				WHERE	script = '/_register/login'
+				AND		session_id = (
+					SELECT	id
+					FROM	session_sessions
+					WHERE	user_id = ?
+					ORDER BY last_hit_date
+					LIMIT 1
+				)
+			";
+
+			$database->resetParams();
+			$database->AddParam($this->id);
+			$rs = $database->Execute($first_session_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return [];
+			}
+			if ($row = $rs->FetchRow()) {
+				$results["first_login_date"] = $row[0];
+			}
+
+			// Get last login failure from register_auth_failures
+			$failureList = new \Register\AuthFailureList();
+			$last_failure = $failureList->last(["login" => $this->code]);
+			if ($failureList->error()) {
+				$this->error($failureList->error());
+				return [];
+			}
+			$results["last_failed_login_date"] = $last_failure->date;
+
+			// Get the number of login failures since the last successful login
+			$failureList->find(["login" => $this->code]);
+			$results['failed_login_count'] = $failureList->count();
+
+			return $results;
+		}
+	}
