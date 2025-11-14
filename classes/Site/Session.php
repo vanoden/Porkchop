@@ -35,7 +35,6 @@ use Register\Customer;
 		private $cookie_path;					// Path for the session cookie
 		private $elevated = false;				// Is the session elevated?
 		private $oauth2_state = null;			// OAuth2 state for the session
-		private $last_statistics_update = 0;	// Timestamp of last statistics update to throttle updates
 		
 		/**
 		 * Constructor
@@ -682,26 +681,18 @@ use Register\Customer;
 		 * Record last time session was touched
 		 * We will not kill the cache here to reduce load
 		 * We will NOT update session_sessions.last_hit_date on every touch to reduce database load
-		 * Instead, we update register_user_statistics.last_hit_date periodically (every 5 minutes)
+		 * Instead, we update register_user_statistics.last_hit_date when needed
 		 * @return int Unix timestamp
 		 */
 		function timestamp(): bool {
 			// Clear Previous Errors
 			$this->clearError();
 
-			// Update user statistics last_hit_date periodically (every 5 minutes = 300 seconds)
-			// This reduces database load while still tracking user activity
-			$now = time();
-			$update_interval = 300; // 5 minutes
-			
-			if (($now - $this->last_statistics_update) >= $update_interval) {
-				// Only update if we have a customer associated with the session
-				if (!empty($this->customer_id) && $this->customer_id > 0) {
-					$customer = new \Register\Customer($this->customer_id);
-					if ($customer->id) {
-						$customer->statistics()->recordHit();
-						$this->last_statistics_update = $now;
-					}
+			// Update user statistics last_hit_date if we have a customer associated with the session
+			if (!empty($this->customer_id) && $this->customer_id > 0) {
+				$customer = new \Register\Customer($this->customer_id);
+				if ($customer->id) {
+					$customer->statistics()->recordHit();
 				}
 			}
 
