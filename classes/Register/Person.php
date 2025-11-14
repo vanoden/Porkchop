@@ -221,12 +221,6 @@ class Person Extends \BaseModel {
 			$database->AddParam($parameters['organization_id']);
 			$audit_messages[] = "Organization changed to ".$parameters['organization_id'];
 		}
-		if (isset($parameters['auth_failures']) and is_numeric($parameters['auth_failures']) && $parameters['auth_failures'] != $this->auth_failures) {
-			$update_customer_query .= ",
-			auth_failures = ?";
-			$database->AddParam($parameters['auth_failures']);
-			$audit_messages[] = "Auth Failures changed to ".$parameters['auth_failures'];
-		}
 		if (isset($parameters['status']) && $parameters['status'] != $this->status) {
 			$update_customer_query .= ",
 			status = ?";

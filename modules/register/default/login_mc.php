@@ -185,8 +185,9 @@
 							$GLOBALS['_SESSION_']->touch();
 							$GLOBALS['_SESSION_']->setOTPVerified(false);
 
-							// Optionally update customer status/auth_failures
-							$customer->update(array("status" => "ACTIVE", "auth_failures" => 0));
+							// Update customer status and reset auth failures in statistics
+							$customer->update(array("status" => "ACTIVE"));
+							$customer->statistics()->resetFailedLogins();
 
 							// Redirect to OTP verification page
 							header("Location: $target");

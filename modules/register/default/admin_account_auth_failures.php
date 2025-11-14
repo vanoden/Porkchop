@@ -37,7 +37,7 @@
 
   <section id="form-message">
     <ul class="connectBorder infoText">
-      <li>Auth Failures Since Last Success: <?= $customer->auth_failures ?></li>
+      <li>Auth Failures Since Last Success: <?= $customer->auth_failures() ?></li>
     </ul>
   </section>
 

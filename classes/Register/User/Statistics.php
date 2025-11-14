@@ -42,6 +42,25 @@
 				return false;
 			}
 
+			// Check cache first
+			$cache_key = "user_statistics[".$this->user_id."]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+			$cached_data = $cache->get();
+			
+			if (!empty($cached_data) && is_array($cached_data)) {
+				// Load from cache
+				$this->user_id = $cached_data['user_id'];
+				$this->last_login_date = $cached_data['last_login_date'] ? new \DateTime($cached_data['last_login_date']) : null;
+				$this->last_hit_date = $cached_data['last_hit_date'] ? new \DateTime($cached_data['last_hit_date']) : null;
+				$this->first_login_date = $cached_data['first_login_date'] ? new \DateTime($cached_data['first_login_date']) : null;
+				$this->last_failed_login_date = $cached_data['last_failed_login_date'] ? new \DateTime($cached_data['last_failed_login_date']) : null;
+				$this->last_password_change_date = $cached_data['last_password_change_date'] ? new \DateTime($cached_data['last_password_change_date']) : null;
+				$this->session_count = (int)($cached_data['session_count'] ?? 0);
+				$this->password_change_count = (int)($cached_data['password_change_count'] ?? 0);
+				$this->failed_login_count = (int)($cached_data['failed_login_count'] ?? 0);
+				return true;
+			}
+
 			// Initialize Database Service
 			$database = new \Database\Service();
 
@@ -71,6 +90,21 @@
 				$this->session_count = (int)$row['session_count'];
 				$this->password_change_count = (int)$row['password_change_count'];
 				$this->failed_login_count = (int)$row['failed_login_count'];
+				
+				// Store in cache (cache for 1 hour = 3600 seconds)
+				$cache_data = [
+					'user_id' => $this->user_id,
+					'last_login_date' => $this->last_login_date ? $this->last_login_date->format('c') : null,
+					'last_hit_date' => $this->last_hit_date ? $this->last_hit_date->format('c') : null,
+					'first_login_date' => $this->first_login_date ? $this->first_login_date->format('c') : null,
+					'last_failed_login_date' => $this->last_failed_login_date ? $this->last_failed_login_date->format('c') : null,
+					'last_password_change_date' => $this->last_password_change_date ? $this->last_password_change_date->format('c') : null,
+					'session_count' => $this->session_count,
+					'password_change_count' => $this->password_change_count,
+					'failed_login_count' => $this->failed_login_count,
+				];
+				$cache->set($cache_data, 3600);
+				
 				return true;
 			}
 			else {
@@ -122,17 +156,17 @@
 				$this->last_password_change_date = $parameters['last_password_change_date'];
 				$database->AddParam($this->convertDateTimeToMySQLDateTime($this->last_password_change_date));
 			}
-			if (!empty($parameters['session_count'])) {
+			if (isset($parameters['session_count'])) {
 				$update_object_query .= ", session_count = ?";
 				$this->session_count = (int)$parameters['session_count'];
 				$database->AddParam($this->session_count);
 			}
-			if (!empty($parameters['password_change_count'])) {
+			if (isset($parameters['password_change_count'])) {
 				$update_object_query .= ", password_change_count = ?";
 				$this->password_change_count = (int)$parameters['password_change_count'];
 				$database->AddParam($this->password_change_count);
 			}
-			if (!empty($parameters['failed_login_count'])) {
+			if (isset($parameters['failed_login_count'])) {
 				$update_object_query .= ", failed_login_count = ?";
 				$this->failed_login_count = (int)$parameters['failed_login_count'];
 				$database->AddParam($this->failed_login_count);
@@ -148,6 +182,11 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+
+			// Clear cache after update so next get() will reload fresh data
+			$cache_key = "user_statistics[".$this->user_id."]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+			$cache->delete();
 
 			return true;
 		}
@@ -185,6 +224,11 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+
+			// Clear cache after init so next get() will reload fresh data
+			$cache_key = "user_statistics[".$this->user_id."]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+			$cache->delete();
 
 			return true;
 		}
