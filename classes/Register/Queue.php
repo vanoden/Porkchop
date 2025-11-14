@@ -219,19 +219,30 @@
 
 					// Notify Admins of Action
 					$template = new \Content\Template\Shell($GLOBALS['_config']->support->unassigned_action->template);
+					
+					// Get additional data for template
+					$ticketCustomer = $ticket->customer();
+					$ticketProduct = $ticket->product();
+					$actionRequestedBy = $action->requestedBy();
+					
 					$template->addParams(array(
 						'TICKET.NUMBER'	=> $ticket->ticketNumber(),
 						'TICKET.LINK'	=> $ticket->internalLink(),
+						'TICKET.PRODUCT'	=> $ticketProduct->code ?? '',
+						'TICKET.SERIAL_NUMBER'	=> $ticket->serial_number ?? '',
 						'ACTION.LINK'	=> $action->internalLink(),
 						'ACTION.TYPE'	=> $action->type,
 						'ACTION.DESCRIPTION'	=> $action->description,
+						'CUSTOMER.NAME'	=> $ticketCustomer->full_name(),
+						'EVENT.PERSON'	=> $actionRequestedBy->full_name(),
+						'NOW'	=> date('m/d/Y'),
 						'COMPANY.NAME'	=> $GLOBALS['_SESSION_']->company->name ?? ''
 					));
 					$message = new \Email\Message();
 					$message->html(true);
 					$message->from($GLOBALS['_config']->support->unassigned_action->from);
 					$message->subject($GLOBALS['_config']->support->unassigned_action->subject);
-					$message->body($template->content());
+					$message->body($template->output());
 					$privilege = new \Register\Privilege();
 					if ($privilege->get('get support notifications')) {
 						app_log("Notifying Support Team");

@@ -162,7 +162,7 @@
 				$this->password_change_count = (int)$parameters['password_change_count'];
 				$database->AddParam($this->password_change_count);
 			}
-			if (!empty($parameters['failed_login_count'])) {
+			if (isset($parameters['failed_login_count'])) {
 				$update_object_query .= ", failed_login_count = ?";
 				$this->failed_login_count = (int)$parameters['failed_login_count'];
 				$database->AddParam($this->failed_login_count);

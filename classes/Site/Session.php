@@ -139,10 +139,10 @@ use Register\Customer;
 					}
 				}
 
-				// If Session Loaded, Update Timestamp
+				// If Session Loaded, Update Timestamp (throttled - only updates statistics periodically)
 				if (!empty($this->id)) {
 					app_log("Loaded session ".$this->id.", customer ".$this->customer->id,'debug',__FILE__,__LINE__);
-					$this->timestamp($this->id);
+					$this->timestamp();
 				} else {
 					app_log("Session $request_code not available or expired, deleting cookie for ".$domain->name,'notice',__FILE__,__LINE__);
 					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['SERVER_NAME'],false,true);
@@ -680,33 +680,24 @@ use Register\Customer;
 		/** @method timestamp()
 		 * Record last time session was touched
 		 * We will not kill the cache here to reduce load
+		 * We will NOT update session_sessions.last_hit_date on every touch to reduce database load
+		 * Instead, we update register_user_statistics.last_hit_date when needed
 		 * @return int Unix timestamp
 		 */
 		function timestamp(): bool {
 			// Clear Previous Errors
 			$this->clearError();
 
-			// Initialize Database Service
-			$database = new \Database\Service();
-
-			// Prepare Query to Update Last Hit Date
-			$update_session_query = "
-				UPDATE	session_sessions
-				SET		last_hit_date = sysdate()
-				WHERE	id = ?
-			";
-
-			// Bind Parameters
-			$database->AddParam($this->id);
-
-			// Execute Query
-			$rs = $database->Execute(
-				$update_session_query,
-			);
-			if (! $rs) {
-				$this->SQLError($database->ErrorMsg());
-				return false;
+			// Update user statistics last_hit_date if we have a customer associated with the session
+			if (!empty($this->customer_id) && $this->customer_id > 0) {
+				$customer = new \Register\Customer($this->customer_id);
+				if ($customer->id) {
+					$customer->statistics()->recordHit();
+				}
 			}
+
+			// Do NOT update session_sessions.last_hit_date on every touch
+			// Sessions will expire naturally after their timeout period
 			return true;
 		}
 

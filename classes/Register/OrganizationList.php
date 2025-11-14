@@ -426,7 +426,11 @@
 			
 			$get_duplicates_query = "
 				SELECT	COUNT(*) as match_count,
-						SUBSTRING(REGEXP_REPLACE(REGEXP_REPLACE(LOWER(name),'&','and'),'[\\s\\.\\-\\;\\:]',''),1,?) as nickname
+						SUBSTRING(
+							REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+								REPLACE(LOWER(name),'&','and'),
+							' ',''),'.',''),'-',''),';',''),':',''),CHAR(9),''),
+							1,?) as nickname
 				FROM	register_organizations
 				WHERE	status = 'ACTIVE'
 				GROUP BY nickname
@@ -480,7 +484,11 @@
 						(SELECT COUNT(*) FROM users WHERE organization_id = register_organizations.id) as user_count
 				FROM	register_organizations
 				WHERE	status = 'ACTIVE'
-				AND		SUBSTRING(REGEXP_REPLACE(REGEXP_REPLACE(LOWER(name),'&','and'),'[\\s\\.\\-\\;\\:]',''),1,?) = ?
+				AND		SUBSTRING(
+							REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+								REPLACE(LOWER(name),'&','and'),
+							' ',''),'.',''),'-',''),';',''),':',''),CHAR(9),''),
+						1,?) = ?
 				ORDER BY name
 			";
 			
