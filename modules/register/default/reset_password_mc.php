@@ -23,8 +23,8 @@
 			$GLOBALS['_SESSION_']->superElevate();
 			// Grab Customer Instance
 			$customer = new \Register\Customer($customer_id);
-			if ($customer->error) {
-				app_log("Error getting customer: ".$customer->error,'error',__FILE__,__LINE__);
+			if ($customer->error()) {
+				app_log("Error getting customer: ".$customer->error(),'error',__FILE__,__LINE__);
 				$page->addError("Token error");
 			}
 			elseif(! $customer->id) {
@@ -80,7 +80,7 @@
 					if (in_array($customer->status,array('EXPIRED','BLOCKED'))) $customer->update(array('status' => 'ACTIVE'));
 
 					if ($customer->error()) {
-						app_log("Error updating customer: ".$customer->error,'error',__FILE__,__LINE__);
+						app_log("Error updating customer: ".$customer->error(),'error',__FILE__,__LINE__);
 						$page->addError("Error updating customer password.  Our admins have been notified.  Please try again later");
 					}
 					else {
