@@ -15,13 +15,16 @@
 			 * OP's MySQL Server version is 8.0.12. From MySQL Documentation, PASSWORD function has been deprecated for version > 5.7.5:
 			 *   replacement that gives the same answer in version 8: CONCAT('*', UPPER(SHA1(UNHEX(SHA1('mypass')))))
 			 */
-			$db_service = new \Database\Service();
-			if ($db_service->supports_password()) {
+			$database = new \Database\Service();
+			if ($database->supports_password()) {
 				$check_password_query = "
 					SELECT	`password`,password(?) FROM register_users WHERE login = ?";
-				$rs = $GLOBALS['_database']->Execute($check_password_query,array($password,$login));
+				$database->resetParams();
+				$database->AddParam($password);
+				$database->AddParam($login);
+				$rs = $database->Execute($check_password_query);
 				if (! $rs) {
-					$this->SQLError($GLOBALS['_database']->ErrorMsg());
+					$this->SQLError($database->ErrorMsg());
 					return false;
 				}
 				list($x,$y) = $rs->FetchRow();
@@ -37,9 +40,12 @@
 			else {
 				$check_password_query = "
 					SELECT	`password`,CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?))))) FROM register_users WHERE login = ?";
-				$rs = $GLOBALS['_database']->Execute($check_password_query,array($password,$login));
+				$database->resetParams();
+				$database->AddParam($password);
+				$database->AddParam($login);
+				$rs = $database->Execute($check_password_query,array($password,$login));
 				if (! $rs) {
-					$this->SQLError($GLOBALS['_database']->ErrorMsg());
+					$this->SQLError($database->ErrorMsg());
 					return false;
 				}
 				list($x,$y) = $rs->FetchRow();
@@ -52,14 +58,13 @@
 				    AND		password = CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?)))));
 			    ";
             }
-			$bind_params = array($login,$password);
+		$database->resetParams();
+		$database->AddParam($login);
+		$database->AddParam($password);
 
-			query_log($get_user_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute(
-				$get_user_query,$bind_params
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$rs = $database->Execute($get_user_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
