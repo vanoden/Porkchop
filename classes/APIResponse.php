@@ -54,7 +54,7 @@
 				header_remove('X-Powered-By');
 			}
 
-			$comm = new \Monitor\Communication();
+			$comm = new \Site\APICommunication();
 
 			$data = new \stdClass();
 
