@@ -63,10 +63,15 @@
 		$GLOBALS['_config']->console = false;
 	}
 
+	// Parse Command Line Arguments
 	foreach ($argv as $arg) {
+		// Key=Value Arguments
 		if (preg_match('/^\-\-([\w\-\.]+)\=(.+)/',$arg,$matches)) {
+			// IP Address To Listen On
 			if ($matches[1] == 'address') $GLOBALS['_config']->service->address = $matches[2];
+			// Port To Listen On
 			elseif ($matches[1] == 'port') $GLOBALS['_config']->service->port = $matches[2];
+			// Log Level
 			elseif ($matches[1] == 'log-level') {
 				if (preg_match('/^(\d+)$/',$matches[2])) {
 					switch($matches[2]) {
@@ -113,11 +118,13 @@
 					exit;
 				}
 			}
+			// Unrecognized Option
 			else {
 				print "Option '".$matches[1]."' not recognized\n";
 				exit;
 			}
 		}
+		// Flag Arguments
 		elseif (preg_match('/^\-\-([\w\-\.]+)/',$arg,$matches)) {
 			if ($matches[1] == 'console') $GLOBALS['_config']->log_type = 'screen';
 			else {
@@ -364,9 +371,9 @@
 					app_log("FOUND CLIENT:  TYPE: ".$request->typeName()." SERVER: ".$s4Engine->serverId()." CLIENTID: ".$client->id()." CLIENTNUM: ".$client->number(),'info');
 
 					// Get the session
-					app_log("Looking for session for client ".$client->id().", session code ".$s4Engine->sessionCodeDebug(),'info');
+					app_log("Looking for session for client ".$client->id().", session code ".$s4Engine->session()->codeDebug(),'info');
 					$session = new \S4Engine\Session();
-					if ($session->getSession($client->id(),$s4Engine->sessionCodeArray())) {
+					if ($session->getSession($client->id(),$s4Engine->session()->codeArray())) {
 						// Populate Global Variable for Application
 						$_SESSION_ = $session->portalSession();
 

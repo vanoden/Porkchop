@@ -4,11 +4,11 @@
 	class LogRecord Extends \BaseModel {
 		public $module = "s4engine";
 		public int $_id = 0;
-		public $_functionBytes = [0x00, 0x00];
-		public $_clientBytes = [0x00, 0x00];
-		public $_serverBytes = [0x00, 0x00];
-		public $_lengthBytes = [0x00, 0x00];
-		public $_sessionBytes = [0x00, 0x00, 0x00, 0x00];
+		public $_functionBytes = [0, 0x00];
+		public $_clientBytes = [0, 0];
+		public $_serverBytes = [0, 0];
+		public $_lengthBytes = [0, 0];
+		public $_sessionBytes = [0, 0, 0, 0];
 		public $_contentBytes = [];
 		public $_timeCreated;
 		public $_remoteAddress = "";
@@ -56,36 +56,51 @@
 				) VALUES (?,?,?,?,?,?,?,?,sysdate())
 			";
 
-			if (empty($parameters['functionBytes'])) $parameters['functionBytes'] = [0x00, 0x00];
-			if (empty($parameters['clientBytes'])) $parameters['clientBytes'] = [0x00, 0x00];
-			if (empty($parameters['serverBytes'])) $parameters['serverBytes'] = [0x00, 0x00];
-			if (empty($parameters['lengthBytes'])) $parameters['lengthBytes'] = [0x00, 0x00];
-			if (empty($parameters['sessionBytes'])) $parameters['sessionBytes'] = [0x00, 0x00, 0x00, 0x00];
+			if (empty($parameters['functionBytes'])) $parameters['functionBytes'] = [0, 0];
+			if (empty($parameters['clientBytes'])) $parameters['clientBytes'] = [0, 0];
+			if (empty($parameters['serverBytes'])) $parameters['serverBytes'] = [0, 0];
+			if (empty($parameters['lengthBytes'])) $parameters['lengthBytes'] = [0, 0];
+			if (empty($parameters['sessionBytes'])) $parameters['sessionBytes'] = [0, 0, 0, 0];
 			if (empty($parameters['contentBytes'])) $parameters['contentBytes'] = [];
-			if (empty($parameters['checksum'])) $parameters['checksum'] = [0x00, 0x00];
+			if (empty($parameters['checksum'])) $parameters['checksum'] = [0, 0];
 			if (empty($parameters['remoteAddress'])) $parameters['remoteAddress'] = $_SERVER['REMOTE_ADDR'];
 
-			$parameters['clientBytes'][0] = dechex(ord($parameters['clientBytes'][0]));
-			$parameters['clientBytes'][1] = dechex(ord($parameters['clientBytes'][1]));
-			app_log("Client Bytes: ".implode(",",$parameters['clientBytes']),'info');
-			$parameters['serverBytes'][0] = dechex(ord($parameters['serverBytes'][0]));
-			$parameters['serverBytes'][1] = dechex(ord($parameters['serverBytes'][1]));
-			app_log("Server Bytes: ".implode(",",$parameters['serverBytes']),'info');
-			app_log("Session Bytes: ".implode(",",$parameters['sessionBytes']),'info');
-			for ($i = 0; $i < 4; $i++) {
-				#$parameters['sessionBytes'][$i] = dechex(ord($parameters['sessionBytes'][$i]));
-				$parameters['sessionBytes'][$i] = hex2bin(dechex($parameters['sessionBytes'][$i]));
-			}
-			app_log("Session Bytes (after): ".implode(",",$parameters['sessionBytes']),'info');
+			app_log("Function Bytes (before): ".implode(",",$parameters['functionBytes']),'info');
+			$parameters['functionBytes'] = pack('C2', $parameters['functionBytes'][0], $parameters['functionBytes'][1]);
+			app_log("Function Bytes (after): ".$parameters['functionBytes'],'info');
+			
+			app_log("Client Bytes (before): ".implode(",",$parameters['clientBytes']),'info');
+			$parameters['clientBytes'] = pack('C2', $parameters['clientBytes'][0], $parameters['clientBytes'][1]);
+			app_log("Client Bytes (after): ".$parameters['clientBytes'],'info');
+
+			app_log("Server Bytes (before): ".implode(",",$parameters['serverBytes']),'info');
+			$parameters['serverBytes'] = pack('C2', $parameters['serverBytes'][0], $parameters['serverBytes'][1]);
+			app_log("Server Bytes (after): ".$parameters['serverBytes'],'info');
+
+			app_log("Session Bytes (before): ".implode(",",$parameters['sessionBytes']),'info');
+			$parameters['sessionBytes'] = pack('C4', $parameters['sessionBytes'][0], $parameters['sessionBytes'][1], $parameters['sessionBytes'][2], $parameters['sessionBytes'][3]);
+			app_log("Session Bytes (after): ".$parameters['sessionBytes'],'info');
+
+			app_log("Length Bytes (before): ".implode(",",$parameters['lengthBytes']),'info');
+			$parameters['lengthBytes'] = pack('C2', $parameters['lengthBytes'][0], $parameters['lengthBytes'][1]);
+			app_log("Length Bytes (after): ".$parameters['lengthBytes'],'info');
+
+			app_log("Content Bytes (before): ".implode(",",$parameters['contentBytes']),'info');
+			$parameters['contentBytes'] = self::ints2bytes($parameters['contentBytes']);
+			app_log("Content Bytes (after): ".$parameters['contentBytes'],'info');
+
+			app_log("Checksum Bytes (before): ".implode(",",$parameters['checksum']),'info');
+			$parameters['checksum'] = pack('C2', $parameters['checksum'][0], $parameters['checksum'][1]);
+			app_log("Checksum Bytes (after): ".$parameters['checksum'],'info');
 
 			// Add Parameters
-			$database->AddParamBinary($parameters['functionBytes']);
-			$database->AddParamBinary($parameters['clientBytes']);
-			$database->AddParamBinary($parameters['serverBytes']);
-			$database->AddParamBinary($parameters['lengthBytes']);
+			$database->AddParam($parameters['functionBytes']);
+			$database->AddParam($parameters['clientBytes']);
+			$database->AddParam($parameters['serverBytes']);
+			$database->AddParam($parameters['lengthBytes']);
 			$database->AddParam($parameters['sessionBytes']);
-			$database->AddParamBinary($parameters['contentBytes']);
-			$database->AddParamBinary($parameters['checksum']);
+			$database->AddParam($parameters['contentBytes']);
+			$database->AddParam($parameters['checksum']);
 			$database->AddParam($parameters['remoteAddress']);
 
 			// Execute Query
@@ -192,7 +207,7 @@
 				$this->_clientBytes = $object->client_id;
 				$this->_serverBytes = $object->server_id;
 				$this->_lengthBytes = $object->length_bytes;
-				$this->_sessionBytes = array_values(unpack("C*", $object->session_code));
+				$this->_sessionBytes = $object->session_code;
 				$this->_lengthBytes = $object->content_length;
 				$this->_contentBytes = $object->content_bytes;
 				$this->_timeCreated = $object->time_created;
@@ -200,6 +215,7 @@
 				$this->error($object->error);
 				$this->_successful = ($object->success == 1);
 				if (empty($this->_contentBytes)) $this->_contentBytes = [];
+				app_log("Session Bytes (loaded): ".print_r($this->_sessionBytes,true),'info');
 				return true;
 			} else {
 				$this->error("S4Engine::Log record not found");
@@ -393,5 +409,38 @@
 		 */
 		public function remoteAddress() {
 			return $this->_remoteAddress;
+		}
+
+		/** @method public ints2bytes($intArray)
+		 * Convert an array of integers (0-255) to a byte string
+		 * @param array $intArray
+		 * @return string String of Bytes
+		 */
+		public static function ints2bytes($intArray, $length = null): string {
+			$byteString = "";;
+			foreach ($intArray as $intValue) {
+				$byteString .= chr($intValue);
+			}
+			if ($length !== null) {
+				$byteString = substr($byteString, 0, $length);
+			}
+			return $byteString;
+		}
+
+		/** @method public bytes2ints($byteArray)
+		 * Convert an array of bytes to an array of integers (0-255)
+		 * @param string $byteArray
+		 * @return array
+		 */
+		public static function bytes2ints($byteArray, $length = null) {
+			$intArray = [];
+			for ($i = 0; $i < strlen($byteArray); $i++) {
+				$byteValue = substr($byteArray,$i,1);
+				$intArray[] = ord($byteValue);
+			}
+			if ($length !== null) {
+				$intArray = array_slice($intArray, 0, $length);
+			}
+			return $intArray;
 		}
 	}
