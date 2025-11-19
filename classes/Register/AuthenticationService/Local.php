@@ -16,6 +16,7 @@
 			 *   replacement that gives the same answer in version 8: CONCAT('*', UPPER(SHA1(UNHEX(SHA1('mypass')))))
 			 */
 			$database = new \Database\Service();
+			// Old MySQL Password Function
 			if ($database->supports_password()) {
 				$check_password_query = "
 					SELECT	`password`,password(?) FROM register_users WHERE login = ?";
@@ -37,13 +38,14 @@
 				    AND		password = password(?)
 			    ";
 			}
+			// New SHA1 Password Function
 			else {
 				$check_password_query = "
 					SELECT	`password`,CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?))))) FROM register_users WHERE login = ?";
 				$database->resetParams();
 				$database->AddParam($password);
 				$database->AddParam($login);
-				$rs = $database->Execute($check_password_query,array($password,$login));
+				$rs = $database->Execute($check_password_query);
 				if (! $rs) {
 					$this->SQLError($database->ErrorMsg());
 					return false;
@@ -58,9 +60,9 @@
 				    AND		password = CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?)))));
 			    ";
             }
-		$database->resetParams();
-		$database->AddParam($login);
-		$database->AddParam($password);
+			$database->resetParams();
+			$database->AddParam($login);
+			$database->AddParam($password);
 
 			$rs = $database->Execute($get_user_query);
 			if ($database->ErrorMsg()) {
@@ -122,7 +124,9 @@
 					SELECT	`password`,CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?)))))
 					FROM	register_users
 					WHERE	login = ?";
-				$rs = $database->Execute($check_password_query,array($password,$login));
+				$database->AddParam($password);
+				$database->AddParam($login);
+				$rs = $database->Execute($check_password_query);
 				if (! $rs) {
 					$this->SQLError($database->ErrorMsg());
 					return false;
@@ -137,7 +141,10 @@
 					WHERE	id = ?
 				";
 			}
-			$rs = $database->Execute($update_password_query,array($password,$customer->id));
+			$database->resetParams();
+			$database->AddParam($password);
+			$database->AddParam($customer->id);
+			$rs = $database->Execute($update_password_query);
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
