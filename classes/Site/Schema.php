@@ -729,6 +729,30 @@
 				$database->CommitTrans();
 			}
 
+			if ($this->version() < 29) {
+				app_log("Upgrading ".$this->module." schema to version 29",'notice',__FILE__,__LINE__);
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS monitor_communications (
+						session_id	int(11) NOT NULL,
+						`timestamp` int(11) NOT NULL,
+						request		text,
+						response	text,
+						PRIMARY KEY `pk_monitor_session` (`session_id`),
+						FOREIGN KEY `fk_monitor_session` (`session_id`) REFERENCES `session_sessions` (`id`),
+						INDEX `idx_timestamp` (`timestamp`,`session_id`)
+					)
+				";
+
+				if (!$database->Execute($create_table_query)) {
+					$this->SQLError("Creating monitor_communications table: " . $database->ErrorMsg());
+					return false;
+				}
+
+				$this->setVersion(29);
+				$database->CommitTrans();
+			}
+
 			return true;
 		}
 	}

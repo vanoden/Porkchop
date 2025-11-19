@@ -24,7 +24,7 @@
 			$this->page = $site->page();
 			$this->module = $this->page->module();
 			$this->response = new \HTTP\Response();
-			$this->_communication = new \Monitor\Communication();
+			$this->_communication = new \Site\APICommunication();
 		}
 
 		/********************************************/
@@ -131,7 +131,7 @@
 			$response->success(true);
 			$response->addElement('token',$GLOBALS['_SESSION_']->getCSRFToken());
 
-			$comm = new \Monitor\Communication();
+			$comm = new \Site\APICommunication();
 			$comm->update(json_encode($response));
 	
 			$response->print();
