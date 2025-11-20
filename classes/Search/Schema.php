@@ -43,5 +43,6 @@
 				$this->setVersion(1);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			return true;
 		}
 	}
