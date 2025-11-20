@@ -8,12 +8,6 @@
 	</ul>
 </section>
 <?php	} else { ?>
-<section id="form-message">
-	<ul class="connectBorder infoText">
-		<li>This site is for authorized use by employees and customers of <r7 object="company" property="name"/>. No other use is permitted.</li>
-	</ul>
-</section>
-
 <?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">
 	<ul class="connectBorder errorText">

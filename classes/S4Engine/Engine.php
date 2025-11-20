@@ -22,7 +22,8 @@
 		protected ?\S4Engine\Session $_session = null;	// Session Object
 		protected int $_serverId = 0;			// Server ID
 		protected int $_clientId = 0;			// Client ID
-		protected int $_typeId = 0;				// Type of Message
+		protected int $_typeId = 0;				// Type of Messages
+		protected int $_sessionId = 0;			// Session ID
 		protected $_message;					// Message contained in envelope
 		protected $_checksum;					// 2 Byte Checksum
 		protected int $_meta_chars = 18;		// Number of header, footer and delimiter chars for completion checking, 14 + $_sessionCodeLen
@@ -89,32 +90,26 @@
 					$byteString .= "[".ord(substr($buffer,$i,1))."]";
 				}
 				app_log("Buffer: $byteString","trace");
+
+				// Log Incomplete Request
 				$parameters = [];
-				if (strlen($buffer) > 2) $parameters['clientBytes'] = [substr($buffer,1,1),substr($buffer,2,1)];
-				if (strlen($buffer) > 4) $parameters['serverBytes'] = [substr($buffer,3,1),substr($buffer,4,1)];
-				if (strlen($buffer) > 6) $parameters['lengthBytes'] = [substr($buffer,5,1),substr($buffer,6,1)];
-				if (strlen($buffer) > 8) $parameters['functionBytes'] = [substr($buffer,7,1),substr($buffer,8,1)];
-				if (strlen($buffer) > 9) {
-					$parameters['sessionBytes'] = [];
-					for ($i = 0; $i < strlen($buffer) - 9 && $i < $this->_sessionCodeLen; $i++) {
-						array_push($parameters['sessionBytes'],ord(substr($buffer,9 + $i,1)));
-					}
-				}
+				if (strlen($buffer) > 2) $parameters['clientBytes'] = [ord(substr($buffer,1,1)),ord(substr($buffer,2,1))];
+				if (strlen($buffer) > 4) $parameters['serverBytes'] = [ord(substr($buffer,3,1)),ord(substr($buffer,4,1))];
+				if (strlen($buffer) > 6) $parameters['lengthBytes'] = [ord(substr($buffer,5,1)),ord(substr($buffer,6,1))];
+				if (strlen($buffer) > 8) $parameters['functionBytes'] = [ord(substr($buffer,7,1)),ord(substr($buffer,8,1))];
+				if (strlen($buffer) > 9) $parameters['sessionBytes'] = [ord(substr($buffer,9,1)),ord(substr($buffer,10,1)),ord(substr($buffer,11,1)),ord(substr($buffer,12,1))];
 				$logRecord->add($parameters);
 				$logRecord->setFailure("Not enough data yet for header, only ".strlen($buffer)." chars");
 				return false;
 			}
 
+			// Initialize Log Parameters
 			$parameters = [];
-			$parameters['clientBytes'] = [substr($buffer,1,1),substr($buffer,2,1)];
-			$parameters['serverBytes'] = [substr($buffer,3,1),substr($buffer,4,1)];
-			$parameters['lengthBytes'] = [substr($buffer,5,1),substr($buffer,6,1)];
-			$parameters['functionBytes'] = [substr($buffer,7,1),substr($buffer,8,1)];
-			$parameters['sessionBytes'] = [];
-			for ($i = 0; $i < strlen($buffer) - 9 && $i < $this->_sessionCodeLen; $i++) {
-				array_push($parameters['sessionBytes'],ord(substr($buffer,9 + $i,1)));
-			}
-
+			$parameters['clientBytes'] = [ord(substr($buffer,1,1)),ord(substr($buffer,2,1))];
+			$parameters['serverBytes'] = [ord(substr($buffer,3,1)),ord(substr($buffer,4,1))];
+			$parameters['lengthBytes'] = [ord(substr($buffer,5,1)),ord(substr($buffer,6,1))];
+			$parameters['functionBytes'] = [ord(substr($buffer,7,1)),ord(substr($buffer,8,1))];
+			$parameters['sessionBytes'] = [ord(substr($buffer,9,1)),ord(substr($buffer,10,1)),ord(substr($buffer,11,1)),ord(substr($buffer,12,1))];
 			$contentLength = ord(substr($buffer,5,1)) * 256 + ord(substr($buffer,6,1));
 			app_log("Expecting ".$contentLength." chars of data",'trace');
 
@@ -133,10 +128,7 @@
 				app_log("SOH: ".ord(substr($buffer,0,1))." SOT: ".ord(substr($buffer,$headerLength + 1,1))." CID: [" . ord(substr($buffer,1,1)) . "][" . ord(substr($buffer,2,1)) . "] SID: [" . ord(substr($buffer,3,1)) . "][" . ord(substr($buffer,4,1)) . "]",'trace');
 				$this->_clientId = ord(substr($buffer,1,1)) * 256 + ord(substr($buffer,2,1));
 				$this->_typeId = ord(substr($buffer,7,1)) * 256 + ord(substr($buffer,8,1));
-				$this->_sessionCode = [];
-				for ($i = 0; $i < $this->_sessionCodeLen; $i++) {
-					array_push($this->_sessionCode,ord(substr($buffer,$i + 9,1)));
-				}
+				$this->_sessionId = ord(substr($buffer,9,1)) * 256 * 256 * 256 + ord(substr($buffer,10,1)) * 256 * 256 + ord(substr($buffer,11,1)) * 256 + ord(substr($buffer,12,1));
 
 				// Initialize Client Object
 				$client = new \S4Engine\Client();
@@ -189,7 +181,7 @@
 					$this->session()->client()->id($this->_clientId);
 					$this->session()->startTime(time());
 					$this->session()->endTime(time()+86400);
-					$this->session()->codeArray($this->_sessionCode);
+					$this->session()->id($this->_sessionId);
 				}
 
 				app_log("Incoming: Client ID: ".$this->_clientId." Server ID: ".$serverIdIn." Length: ".$contentLength." Type: ".$this->_typeId." Session: ".$this->session()->codeDebug(),"debug");
@@ -261,11 +253,7 @@
 				print "Server ID: ".ord(substr($buffer,3,1)) * 256 + ord(substr($buffer,4,1))."\n";
 				print "Length: ".ord(substr($buffer,5,1)) * 256 + ord(substr($buffer,6,1))."\n";
 				print "Type: ".ord(substr($buffer,7,1)) * 256 + ord(substr($buffer,8,1))."\n";
-				print "Session: ";
-				for ($i = 0; $i < $this->_sessionCodeLen; $i++) {
-					print substr($buffer,9 + $i,1);
-				}
-				print "\n";
+				print "Session: ".ord(substr($buffer,9,1)).ord(substr($buffer,10,1)).ord(substr($buffer,11,1)).ord(substr($buffer,12,1))."\n";
 				print "Terminator: ".ord(substr($buffer,$headerLength+1,1))."\n";
 				$logRecord->add($parameters);
 				$logRecord->setFailure("Header not complete");
@@ -367,9 +355,9 @@
 			}
 			$logRecord = new \S4Engine\LogRecord();
 			$parameters = [];
-			$parameters["functionBytes"] = [dechex(floor($this->_message->typeId() / 256)),dechex($this->_message->typeId() % 256)];
-			$parameters["clientBytes"] = [hex2bin(dechex(floor($this->session()->client()->number() / 256))),hex2bin(dechex($this->session()->client()->number() % 256))];
-			$parameters["serverBytes"] = [hex2bin(dechex(floor($this->serverId() / 256))),hex2bin(dechex($this->serverId() % 256))];
+			$parameters["functionBytes"] = [(floor($this->_message->typeId() / 256)),($this->_message->typeId() % 256)];
+			$parameters["clientBytes"] = [(floor($this->session()->client()->number() / 256)),($this->session()->client()->number() % 256)];
+			$parameters["serverBytes"] = [(floor($this->serverId() / 256)),($this->serverId() % 256)];
 			$parameters["sessionBytes"] = $this->session()->codeArray();
 			app_log("Session Bytes: ".$this->session()->codeDebug(),'info');
 
@@ -433,52 +421,15 @@
 			return strlen($string);
 		}
 
-		/** @method public sessionCodeArray()
-		 * Get the Session Code as an array
-		 * @return array
-		 */
-		public function sessionCodeArray() {
-			return $this->_sessionCode;
-		}
-
-		/** @method public sessionCodeString()
-		 * Get received session code
-		 * @return string
-		 */
-		public function sessionCodeString(): string {
-			return implode("",$this->_sessionCode);
-		}
-
-		/** @method public sessionCodeDebug()
-		 * Return session code as readable string
-		 * @return string
-		 */
-		public function sessionCodeDebug(): string {
-			$code = "";
-			for ($i = 0; $i < $this->_sessionCodeLen; $i++) {
-				$code .= "[".ord($this->_sessionCode[$i])."]";
-			}
-			return $code;
-		}
-
-		/** @method public sessionKey()
-		 * Get the full session key
-		 * @return string
-		 */
-		public function sessionKey(): string {
-			print "this->_clientId: ".$this->_clientId."\n";
-			$sessionNum = $this->_sessionCode[0] * 256 * 256 * 256 + $this->_sessionCode[1] * 256 * 256 + $this->_sessionCode[2] * 256 + $this->_sessionCode[3];
-			$code = sprintf("%04x%08x",$this->_clientId,$sessionNum);
-			return $code;
-		}
-
 		/** @method public session()
 		 * Set the Session
 		 * @param \S4Engine\Session|null $session
 		 * @return \S4Engine\Session|null
 		 */
-		public function session(\S4Engine\Session $session = null): ?\S4Engine\Session {
-			if (!is_null($session)) $this->_session = $session;
+		public function session(?\S4Engine\Session $session = null): ?\S4Engine\Session {
+			if (!is_null($session)) {
+				$this->_session = $session;
+			}
 			return $this->_session;
 		}
 
@@ -505,7 +456,7 @@
 			$summary .= "Client ID: ".$this->_clientId."\n";
 			$summary .= "Server ID: ".$this->_serverId."\n";
 			$summary .= "Type ID: ".$this->_typeId."\n";
-			$summary .= "Session Code: ".$this->sessionCodeDebug()."\n";
+			$summary .= "Session Code: ".$this->session()->codeDebug()."\n";
 			return $summary;
 		}
 	}

@@ -1015,6 +1015,11 @@
             # Send Response
             $response->print();
         }
+
+        /** @method expireAgingCustomers()
+         * @brief Expires customers who have not logged in for 12 months
+         * @return void
+         */
         function expireAgingCustomers() {
             $expires = strtotime("-12 month", time());
             $date = date('m/d/Y',$expires);
@@ -1484,6 +1489,32 @@
             $response->success(true);
             $response->addElement('backup_codes', $newCodes);
             $response->print();
+        }
+
+        /** @method purgeUserSessions(start date)
+         * @brief Purge user sessions prior to a given date
+         * @return void
+         */
+        public function purgeUserSessions() {
+            $this->requirePrivilege("manage customers");
+
+            $_REQUEST['date_start'] = get_mysql_date($_REQUEST['date_start']);
+            if (empty($_REQUEST['date_start'])) $_REQUEST['date_start'] = date('Y-m-d',strtotime('-6 months'));
+
+            // Find User
+            if ($_REQUEST['customer_id']) {
+                $customer = new \Register\Customer($_REQUEST['customer_id']);
+                if ($customer->error()) $this->error("Error loading customer: ".$customer->error());
+                if (! $customer->exists()) $this->notFound("Customer not found");
+            }
+            elseif ($_REQUEST['login']) {
+                $customer = new \Register\Customer();
+                if (! $customer->get($_REQUEST['login'])) $this->notFound("Customer not found");
+                if ($customer->error()) $this->error("Error loading customer: ".$customer->error());
+            }
+
+            $customer->purgeAgingSessions();
+
         }
 
 		public function _methods() {
@@ -2098,6 +2129,32 @@
                     'return_type' => 'integer',
                     'parameters' => array()
                 ),
+                'purgeUserSessions' => array(
+                    'description' => 'Purge user sessions prior to a given date',
+                    'authentication_required' => true,
+                    'privilege_required' => 'manage customers',
+                    'return_element' => 'success',
+                    'return_type' => 'boolean',
+                    'parameters' => array(
+                        'date_start' => array(
+                            'required' => false,
+                            'type' => 'date',
+                            'description' => 'Purge sessions prior to this date (YYYY-MM-DD). Defaults to 6 months ago if not provided.',
+                            'validation_method' => 'Porkchop::validDate()'
+                        ),
+                        'customer_id' => array(
+                            'required' => false,
+                            'type' => 'integer',
+                            'description' => 'ID of the customer whose sessions should be purged. If not provided, sessions for all customers will be purged.'
+                        ),
+                        'login' => array(
+                            'required' => false,
+                            'type' => 'string',
+                            'description' => 'Login of the customer whose sessions should be purged. If not provided, sessions for all customers will be purged.',
+                            'validation_method' => 'Register::Customer::validLogin()'
+                        )
+                    )
+                )
             );
 		}
 	}

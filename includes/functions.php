@@ -580,3 +580,17 @@
 		}
 		return $elements;
 	}
+
+	function convertMySQLDateTimeToDateTime(?string $mysqlDateTime): ?\DateTime {
+		if (empty($mysqlDateTime) || $mysqlDateTime === '0000-00-00 00:00:00') {
+			return null;
+		}
+		return new \DateTime($mysqlDateTime);
+	}
+
+	function convertDateTimeToMySQLDateTime(?\DateTime $dateTime): ?string {
+		if (empty($dateTime)) {
+			return null;
+		}
+		return $dateTime->format('Y-m-d H:i:s');
+	}

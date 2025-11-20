@@ -72,8 +72,13 @@
 			}
 			return true;
 		}
-		
-		public function expire($date_threshold) {
+
+		/** @method public expire(date_threshold)
+		 * @brief Expires customers who have not logged in since the date threshold
+		 * @param string date_threshold Date in format 'YYYY-MM-DD' or any format accepted by get_mysql_date()
+		 * @return int|null Number of customers expired, or null on error
+		 */
+		public function expire($date_threshold): ?int {
 			if (get_mysql_date($date_threshold))
 				$date = get_mysql_date($date_threshold);
 			else {
@@ -81,6 +86,7 @@
 				return null;
 			}
 
+			/** Check for last hit date in user statistics */
 			$bind_params = array();
 			$find_people_query = "
 				SELECT	u.id,
@@ -129,6 +135,9 @@
 			$validationclass = new \Register\Customer();
 
 			$database = new \Database\Service();
+
+			$database->trace(9);
+			$database->debug = 'screen';
 
 			$find_person_query = "
 				SELECT	id
@@ -204,7 +213,7 @@
 					if ($validationclass->validStatus($parameters['status'])) {
 						$find_person_query .= "
 						AND		status = ?";
-						array_push($bind_params,$parameters['status']);
+						$database->AddParam($parameters['status']);
 					}
 					else {
 						$this->error("Invalid status");
