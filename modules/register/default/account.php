@@ -313,7 +313,9 @@
 
 			<?php if (!$readOnly) { ?>
 				<!-- Two-Factor Authentication Section -->
-				<?php if ($GLOBALS['_config']->register->use_otp) { ?>
+				<?php
+					$configurations = new \Site\Configuration(); 
+					if ($configurations->getValueBool("use_otp")) { ?>
 					<section class="form-group two-factor pageSect_full">
 						<h5>Time Based Password [Google Authenticator]</h5>
 						<div class="checkbox-group">

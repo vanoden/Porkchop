@@ -78,7 +78,9 @@
       </div>
 	</div>
 	<div class="tableRow">
-      <?php if ($GLOBALS['_config']->register->use_otp) { ?>
+      <?php 
+		$configuration = new \Site\Configuration();
+	  	if ($configuration->getValueBool("use_otp")) { ?>
         <div class="tableCell width-50per">Time Based Password [Authenticator App]
           <input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?> <?php 
             $roles = $customer->roles();

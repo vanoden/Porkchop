@@ -501,7 +501,8 @@ use Register\Customer;
 				$this->generateCSRFToken();
 				
 				// Initialize OTP verification status based on user requirements
-				if ($GLOBALS['_config']->register->use_otp && $this->customer && $this->customer->id > 0) {
+				$configuration = new \Site\Configuration();
+				if ($configuration->getValueBool("use_otp") && $this->customer && $this->customer->id > 0) {
 					// If user requires OTP, default to not verified
 					$this->otpVerified = false;
 				} else {
@@ -897,15 +898,16 @@ use Register\Customer;
 		 * @return bool True if authenticated, false otherwise
 		 */
 		public function authenticated(): bool {
+			$configuration = new \Site\Configuration();
 			app_log("=== AUTHENTICATED() METHOD CALL ===", 'debug', __FILE__, __LINE__, 'otplogs');
-			app_log("OTP Enabled: " . ($GLOBALS['_config']->register->use_otp ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
+			app_log("OTP Enabled: " . ($configuration->getValueBool("use_otp") ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
 			app_log("Customer ID: " . ($this->customer->id ?? 'null'), 'debug', __FILE__, __LINE__, 'otplogs');
 			app_log("Customer requires OTP: " . ($this->customer->requiresOTP() ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
 			$otpStatus = $this->getOTPVerified();
 			app_log("OTP verified status: " . ($otpStatus === false ? 'false' : ($otpStatus === true ? 'true' : 'null')), 'debug', __FILE__, __LINE__, 'otplogs');
 			app_log("Current URI: " . $_SERVER['REQUEST_URI'], 'debug', __FILE__, __LINE__, 'otplogs');
 			
-			if ($GLOBALS['_config']->register->use_otp && isset($this->customer->id) && $this->customer->requiresOTP() && $this->customer->id > 0 && $this->getOTPVerified() === false) {
+			if ($configuration->getValueBool("use_otp") && isset($this->customer->id) && $this->customer->requiresOTP() && $this->customer->id > 0 && $this->getOTPVerified() === false) {
 				// If OTP is required and not verified, redirect to OTP page
 				// But don't redirect if we're already on the OTP page to prevent loops
 				if (!preg_match('/\/_register\/otp/', $_SERVER['REQUEST_URI'])) {

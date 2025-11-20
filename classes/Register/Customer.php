@@ -1181,7 +1181,8 @@
 			app_log("DEBUG: requiresOTP() called for customer ID: ".$this->id, 'debug', __FILE__, __LINE__);
 
 			// If use_otp false, return false immediately
-			if (!$GLOBALS['_config']->register->use_otp) {
+			$configuration = new \Site\Configuration();
+			if (!$configuration->getValueBool("use_otp")) {
 				return false;
 			}
 		
