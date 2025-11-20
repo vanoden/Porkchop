@@ -23,6 +23,7 @@ modules/spectros
 modules/brand
 modules/local
 modules/alert
+modules/fumeconnect
 templates
 tmp
 node_modules/
