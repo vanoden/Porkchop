@@ -127,7 +127,7 @@
 			$class = new $schemaClass();
 			$class_version = $class->version();
 			if (! $class->upgrade()) {
-				$site->install_fail("Failed to upgrade $class: ".$class->error());
+				$site->install_fail("Failed to upgrade $schemaClass: ".$class->error());
 			}
 			$class_version = $class->version();
 		} catch (Exception $e) {
