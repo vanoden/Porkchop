@@ -149,27 +149,10 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			// Check if any rows were actually updated
-			//if ($database->Affected_Rows() == 0) {
-            //    // @TODO during register process it audits the original password itself being changed
-			//	$this->error("No rows were updated");
-			//	return false;
-			//}
 
 			app_log("Password updated for customer ".$customer->id,'info',__FILE__,__LINE__);
 			$customer->recordAuditEvent($customer->id, 'Password changed');
-
-			// Update user statistics
-			$stored_stats = new \Register\User\Statistics($customer->id);
-			$parameters = array(
-				'last_password_change_date' => new \DateTime(),
-				'password_change_count' => $stored_stats->password_change_count + 1
-			);
-			// Update stored statistics
-			if (!$stored_stats->update($parameters)) {
-				app_log("Error updating user statistics for customer ".$customer->id.": ".$stored_stats->error(),'error',__FILE__,__LINE__);
-			}
-
+            
 			return true;
 		}
 

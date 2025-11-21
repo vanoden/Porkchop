@@ -46,7 +46,7 @@
 
 			// Add Parameters
 			if ($this->validTarget($target)) {
-				$this->AddParam($target);
+				$database->AddParam($target);
 			}
 			else {
 				$this->error("Invalid Target");
@@ -153,7 +153,8 @@
 			$database = new \Database\Service();
 
 			// Prepare Query
-			if (!empty($view_order)) {
+			// Check if view_order is set (including 0, but not null)
+			if (isset($view_order) && $view_order !== null && $view_order !== '') {
 				$get_object_query = "
 					SELECT  id
 					FROM	navigation_menu_items
@@ -162,7 +163,7 @@
 					AND		menu_id = ?
 				";
 
-				$database->AddParams($parent_id,$view_order,$menu_id);
+				$database->AddParams(array($parent_id,$view_order,$menu_id));
 			}
 			else {
 				$get_object_query = "
@@ -171,7 +172,7 @@
 					WHERE	parent_id = ?
 					AND		menu_id = ?
 				";
-				$database->AddParams($parent_id,$menu_id);
+				$database->AddParams(array($parent_id,$menu_id));
 			}
 
 			// Execute Query
@@ -333,20 +334,28 @@
 				}
 			}
 			if (isset($parameters['parent_id'])) {
-				$parent = new Item($parameters['parent_id']);
-				if (! $parent->id) {
-					$this->error("Parent not found");
-					return false;
-				}
-				elseif ($parent->id == $this->id) {
-					$this->error("Parent cannot be the same as this item");
-					return false;
+				// parent_id of 0 means no parent (root level item)
+				if ($parameters['parent_id'] == 0 || $parameters['parent_id'] === '0' || empty($parameters['parent_id'])) {
+					$update_object_query .= ",
+						parent_id = 0
+					";
 				}
 				else {
-					$update_object_query .= ",
-						parent_id = ?
-					";
-					$database->AddParam($parameters['parent_id']);
+					$parent = new Item($parameters['parent_id']);
+					if (! $parent->id) {
+						$this->error("Parent not found");
+						return false;
+					}
+					elseif ($parent->id == $this->id) {
+						$this->error("Parent cannot be the same as this item");
+						return false;
+					}
+					else {
+						$update_object_query .= ",
+							parent_id = ?
+						";
+						$database->AddParam($parameters['parent_id']);
+					}
 				}
 			}
 			if (!empty($parameters['alt'])) {
@@ -383,18 +392,23 @@
 				}
 			}
 			if (isset($parameters['required_role_id'])) {
-				if ($parameters['required_role_id'] == "")
+				if ($parameters['required_role_id'] == "" || $parameters['required_role_id'] == 0 || $parameters['required_role_id'] === null) {
 					$update_object_query .= ",
 					required_role_id = NULL";
+				}
 				elseif (is_numeric($parameters['required_role_id'])) {
 					$role = new \Register\Role($parameters['required_role_id']);
 					if (! $role->exists()) {
-						$this->error("Required Role not found");
-						return false;
+						// Role doesn't exist - set to NULL instead of failing (useful during imports)
+						// This allows the import to succeed even if roles haven't been imported yet
+						$update_object_query .= ",
+						required_role_id = NULL";
 					}
-					$update_object_query .= ",
-						required_role_id = ?";
-					$database->AddParam($parameters['required_role_id']);
+					else {
+						$update_object_query .= ",
+							required_role_id = ?";
+						$database->AddParam($parameters['required_role_id']);
+					}
 				}
 				else {
 					$this->error("Invalid required role id");

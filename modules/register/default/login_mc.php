@@ -113,7 +113,8 @@
 				if ( !$GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 					$page->addError("Invalid Request");
 					$failure = new \Register\AuthFailure();
-					$failure->add($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'CSRFTOKEN',$_SERVER['PHP_SELF']);
+					$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
+					$failure->add(array($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'CSRFTOKEN',$endpoint));
 				}
 				else {
 					if ($customer->isBlocked()) {
@@ -121,7 +122,8 @@
 						$counter = new \Site\Counter("auth_failed");
 						$counter->increment();
 						$failure = new \Register\AuthFailure();
-						$failure->add($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'INACTIVE',$_SERVER['PHP_SELF']);
+						$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
+						$failure->add(array($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'INACTIVE',$endpoint));
 						app_log("EXIT 1",'notice');
 						return;
 					}
@@ -165,6 +167,9 @@
 					}
 					elseif (!$customer->isActive()) {
 						$page->addError("This account is ".$customer->status);
+						$failure = new \Register\AuthFailure();
+						$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
+						$failure->add(array($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'INACTIVE',$endpoint));
 					} else {
 
 						// populate the final target after the user logs in

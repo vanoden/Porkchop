@@ -90,17 +90,16 @@ class Event Extends \BaseModel {
 		$this->class_name = !empty($params['class_name']) ? $params['class_name'] : $this->getCallingClass();
 		$this->class_method = !empty($params['class_method']) ? $params['class_method'] : $this->getCallingMethod();
 		if (!empty($params['description'])) $this->description = $params['description'];
-		$this->event_date = date('Y-m-d H:i:s');
 		$this->user_id = !empty($customer_id) ? $customer_id : 0;
 
+		// Use sysdate() for event_date as per specification
 		$query = "
 			INSERT INTO site_audit_events
 			(event_date, user_id, instance_id, class_name, class_method, description)
-			VALUES (?, ?, ?, ?, ?, ?)
+			VALUES (sysdate(), ?, ?, ?, ?, ?)
 		";
 
 		$database->AddParams(array(
-			$this->event_date,
 			$this->user_id,
 			$this->instance_id,
 			$this->class_name,

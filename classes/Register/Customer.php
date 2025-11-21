@@ -21,14 +21,31 @@
 		 * @param array $parameters 
 		 * @return bool 
 		 */
-		public function add($parameters = []) {
-			if (parent::add($parameters)) {
-				$this->auditRecord('REGISTRATION_SUBMITTED','Customer added', $this->id);
-				$this->changePassword($parameters['password']);
-				return true;
+	public function add($parameters = []) {
+		if (parent::add($parameters)) {
+			// Initialize register_user_statistics record with appropriate fields
+			$this->statistics()->initRecord();
+			
+			// Determine if this is admin account creation or new registration
+			// For admin account creation, user_id should be the admin creating it (from session)
+			// For new registration, user_id and instance_id both match the mysql insert id
+			$audit_user_id = null;
+			if (!empty($GLOBALS['_SESSION_']->customer->id) && $GLOBALS['_SESSION_']->customer->id != $this->id) {
+				// Admin account creation - use admin's ID from session
+				$audit_user_id = $GLOBALS['_SESSION_']->customer->id;
+			} else {
+				// New registration - user_id and instance_id match the mysql insert id
+				$audit_user_id = $this->id;
 			}
-			else return false;
+			
+			// Record audit event
+			// instance_id always matches the mysql insert id of the new record
+			$this->auditRecord('REGISTRATION_SUBMITTED','Customer added', $audit_user_id);
+			$this->changePassword($parameters['password']);
+			return true;
 		}
+		else return false;
+	}
 
 		/** @method update(parameters)
 		 * Update a customer record
@@ -278,12 +295,21 @@
 		function authenticate ($login, $password): bool {
 			$this->clearError();
 
-			// Validate Input
-			if (! $this->validLogin($login)) {
-				$failure = new \Register\AuthFailure();
-				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'INVALIDLOGIN',$_SERVER['PHP_SELF']));
-				return false;
+			// Get IP address and user agent for logging
+			$ip_address = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+			if (isset($GLOBALS['_REQUEST_']->client_ip)) {
+				$ip_address = $GLOBALS['_REQUEST_']->client_ip;
 			}
+			$user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+			$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
+
+		// Validate Input
+		if (! $this->validLogin($login)) {
+			// Log authentication failure
+			$failure = new \Register\AuthFailure();
+			$failure->add(array($ip_address,$login,'UNKNOWN',$endpoint,$user_agent));
+			return false;
+		}
 
 			// Initialize Database Service
 			$database = new \Database\Service();
@@ -308,9 +334,9 @@
 			list($id,$auth_method,$status,$password_age) = $rs->fields();
 			if (! $id) {
 				app_log("Auth denied because no account found matching '$login'",'notice',__FILE__,__LINE__);
-				$this->statistics()->recordFailedLogin();
+				// Log authentication failure
 				$failure = new \Register\AuthFailure();
-				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'NOACCOUNT',$_SERVER['PHP_SELF']));
+				$failure->add(array($ip_address,$login,'NOACCOUNT',$endpoint,$user_agent));
 				return false;
 			}
 			if (!empty($auth_method)) $this->auth_method = $auth_method;
@@ -319,9 +345,11 @@
 			$this->get($login);		
 			if ($this->password_expired()) {
 				$this->error("Your password is expired.  Please use Recover Password to restore.");
+				// Log authentication failure
 				$failure = new \Register\AuthFailure();
-				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'PASSEXPIRED',$_SERVER['PHP_SELF']));
-				$this->auditRecord("AUTHENTICATION_FAILURE","Password expired");
+				$failure->add(array($ip_address,$login,'PASSEXPIRED',$endpoint,$user_agent));
+				// Update statistics: increment failed_login_count and set last_failed_login_date
+				$this->statistics()->recordFailedLogin();
 				return false;
 			}
 
@@ -332,24 +360,23 @@
 			// Authenticate using service
 			if ($authenticationService->authenticate($login,$password)) {
 				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
+				// Successful authentication - update statistics only, no separate log entry
+				// recordLogin() updates: last_login_date, last_hit_date, failed_login_count=0, 
+				// first_login_date (if not set), and increments session_count
 				$this->clearAuthFailures();
-				$this->auditRecord("AUTHENTICATION_SUCCESS","Authenticated successfully");
 				$this->statistics()->recordLogin();
-
-				// update last_hit_date	for user login
-				$this->recordHit();
 				
 				return true;
 			}
 			else {
 				app_log("'$login' failed to authenticate",'notice',__FILE__,__LINE__);
+				// Log authentication failure
 				$failure = new \Register\AuthFailure();
-				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'WRONGPASS',$_SERVER['PHP_SELF']));
+				$failure->add(array($ip_address,$login,'WRONGPASS',$endpoint,$user_agent));
 				$this->statistics()->recordFailedLogin();
 				if ($this->auth_failures() >= 6) {
 					app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
 					$this->block();
-					$this->auditRecord("AUTHENTICATION_FAILURE","Blocked after ".$this->auth_failures()." failures");
 				}
 				return false;
 			}
@@ -1110,37 +1137,39 @@
 			return true;
 		}
 
-		/** @method auditRecord(type, notes, customer_id)
-		 * Audit Record
-		 * @param string $type
-		 * @param string $notes
-		 * @param int $customer_id, used only for empty session
-		 * @return bool
-		 */
-		public function auditRecord($type, $notes, $customer_id = null) {
-			$audit = new \Register\UserAuditEvent();
-			if (!empty($GLOBALS['_SESSION_']->customer->id)) $customer_id = $GLOBALS['_SESSION_']->customer->id;
-			if (!empty($this->id) && empty($customer_id)) $customer_id = $this->id;
-
-			if ($audit->validClass($type) == false) {
-				app_log("Invalid audit class: ".$type,'error');
-				return false;
+	/** @method auditRecord(type, notes, customer_id)
+	 * Audit Record - Migrated to use site_audit_events table
+	 * @param string $type Event type/class (for backward compatibility)
+	 * @param string $notes Description of the event
+	 * @param int $customer_id User ID making the change (from session if not provided)
+	 * @return bool
+	 */
+	public function auditRecord($type, $notes, $customer_id = null) {
+		// Get user_id from session if not provided
+		if (empty($customer_id)) {
+			if (!empty($GLOBALS['_SESSION_']->customer->id)) {
+				$customer_id = $GLOBALS['_SESSION_']->customer->id;
+			} elseif (!empty($this->id)) {
+				$customer_id = $this->id;
 			}
-
-			$audit->add(array(
-				'user_id'		=> $this->id,
-				'admin_id'		=> $customer_id,
-				'event_date'	=> date('Y-m-d H:i:s'),
-				'event_class'	=> $type,
-				'event_notes'	=> $notes
-			));
-			
-			if ($audit->error()) {
-				app_log($audit->error(),'error');
-				return false;
-			}
-			return true;
 		}
+
+		// Use site_audit_events table (replaces register_user_audit)
+		$audit = new \Site\AuditLog\Event();
+		$result = $audit->add(array(
+			'instance_id' => $this->id,
+			'description' => $type . ': ' . $notes,
+			'class_name' => $this->_getActualClass(),
+			'class_method' => 'auditRecord',
+			'customer_id' => $customer_id
+		));
+		
+		if ($audit->error()) {
+			app_log($audit->error(),'error');
+			return false;
+		}
+		return $result;
+	}
 
 		/** @method sessions(parameters)
 		 * Get a list of sessions for the customer
@@ -1279,12 +1308,16 @@
 			$transport->hostname($GLOBALS['_config']->email->hostname);
 			$transport->token($GLOBALS['_config']->email->token);
 
+			app_log("Attempting to deliver OTP recovery email to: " . $email_address, 'debug', __FILE__, __LINE__, 'otplogs');
 			if ($transport->deliver($message)) {
+				app_log("OTP recovery email delivered successfully to: " . $email_address, 'info', __FILE__, __LINE__, 'otplogs');
 				$this->auditRecord('OTP_RECOVERY_REQUESTED', 'OTP recovery email sent to: ' . $email_address);
 				return true;
 			}
 			else {
-				$this->error("Error sending recovery email: " . ($transport->error() ?: "Unknown error"));
+				$errorMsg = $transport->error() ?: "Unknown error";
+				app_log("Failed to deliver OTP recovery email to: " . $email_address . ". Error: " . $errorMsg, 'error', __FILE__, __LINE__, 'otplogs');
+				$this->error("Error sending recovery email: " . $errorMsg);
 				return false;
 			}
 		}
