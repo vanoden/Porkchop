@@ -23,7 +23,7 @@
 			)
 		),
 		"Site"			=> array(
-			"schema"	=> 29,
+			"schema"	=> 30,
 			"privileges"	=> array(
 				'send admin in-site message',
 				'edit site pages',
@@ -69,7 +69,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 50,
+			"schema"		=> 51,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
@@ -101,6 +101,7 @@
 				"admin_account_images"		=> $templates['admin'],
 				"admin_account_backup_codes"	=> $templates['admin'],
 				"admin_account_search_tags"	=> $templates['admin'],
+				"admin_account_audit_log"	=> $templates['admin'],
 				"ent_accounts"			=> $templates['support']
 			),
 		),

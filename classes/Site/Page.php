@@ -10,9 +10,9 @@
 	    public bool $ssl_required = false;
 		public string $method = "";
 	    public string $uri = "";
-	    public string $title = "";
-	    public $metadata;
-	    public string $template = "";
+    public string $title = "";
+    public $metadata;
+    public string $template = "";
 	    public ?string $success = null;
 		public string $instructions = "";
 		public ?int $tou_id = null;
@@ -616,7 +616,7 @@
 		 * or null if no suitable template exists.
 		 * @return string|null Returns the template filename if found, otherwise null.
 		 */
-		public function template() {
+        public function template() {
 			$template = $this->getMetadata('template');
 			if (preg_match('/(\w[\w\_\-\.]*\.html)/',$template,$matches)) return $matches[1];
 			elseif (file_exists(HTML . "/" . $this->module() . "." . $this->view() . ".html")) return $this->module() . "." . $this->view() . ".html";

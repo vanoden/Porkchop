@@ -10,6 +10,7 @@ class Event Extends \BaseModel {
 	public $class_name = null;			// Class name of the object being audited
 	public $class_method = null;		// Method name of the object being audited
 	public $description = null;			// Description of the event
+	public ?string $ip_address = null;	// Client IP address for the event
 
 	/**
 	 * Constructor
@@ -18,7 +19,7 @@ class Event Extends \BaseModel {
 	 */
 	public function __construct($id = 0) {
 		$this->_tableName = 'site_audit_events';
-		$this->_addFields(array('id', 'event_date', 'user_id', 'instance_id', 'class_name', 'class_method', 'description'));
+		$this->_addFields(array('id', 'event_date', 'user_id', 'instance_id', 'class_name', 'class_method', 'description', 'ip_address'));
 		parent::__construct($id);
 	}
 
@@ -90,13 +91,19 @@ class Event Extends \BaseModel {
 		$this->class_name = !empty($params['class_name']) ? $params['class_name'] : $this->getCallingClass();
 		$this->class_method = !empty($params['class_method']) ? $params['class_method'] : $this->getCallingMethod();
 		if (!empty($params['description'])) $this->description = $params['description'];
+		if (!empty($params['ip_address'])) {
+			$this->ip_address = $params['ip_address'];
+		} else {
+			$detectedIp = $this->getClientIp();
+			if ($detectedIp !== '') $this->ip_address = $detectedIp;
+		}
 		$this->user_id = !empty($customer_id) ? $customer_id : 0;
 
 		// Use sysdate() for event_date as per specification
 		$query = "
 			INSERT INTO site_audit_events
-			(event_date, user_id, instance_id, class_name, class_method, description)
-			VALUES (sysdate(), ?, ?, ?, ?, ?)
+			(event_date, user_id, instance_id, class_name, class_method, description, ip_address)
+			VALUES (sysdate(), ?, ?, ?, ?, ?, ?)
 		";
 
 		$database->AddParams(array(
@@ -104,7 +111,8 @@ class Event Extends \BaseModel {
 			$this->instance_id,
 			$this->class_name,
 			$this->class_method,
-			$this->description
+			$this->description,
+			$this->ip_address
 		));
 
 		$rs = $database->Execute($query);
@@ -141,6 +149,28 @@ class Event Extends \BaseModel {
 			return null;
 		}
 		return isset($backtrace[1]['function']) ? $backtrace[1]['function'] : null;
+	}
+
+	/**
+	 * Determine the client's IP address using the expected server variables.
+	 * @return string
+	 */
+	private function getClientIp(): string {
+		$ipAddress = $_SERVER['HTTP_X_FORWARDED_FOR']
+			?? $_SERVER['REMOTE_ADDR']
+			?? $_SERVER['HTTP_CLIENT_IP']
+			?? '';
+
+		if (strpos($ipAddress, ',') !== false) {
+			$parts = explode(',', $ipAddress);
+			$ipAddress = trim($parts[0]);
+		}
+		$ipAddress = trim($ipAddress);
+
+		if ($ipAddress === '' || !filter_var($ipAddress, FILTER_VALIDATE_IP)) {
+			return '';
+		}
+		return $ipAddress;
 	}
 
 	public function appendDescription($description) {

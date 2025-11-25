@@ -204,7 +204,7 @@
 			print ".install_page { width: 100%; height: 100%; background-color: #fff; padding: 20px; }\n";
 			print ".install_page h1 { color: #333; }\n";
 			print ".install_page p { margin: 10px 0; }\n";
-			print ".install_page div.logger { background-color: #eaeaea; padding: 10px; border-radius: 5px; border: 1px solid #333; overflow: auto; max-height: 700px; }\n";
+			print ".install_page div.logger { background-color: #eaeaea; padding: 10px; border-radius: 5px; border: 1px solid #333; }\n";
 			print ".install_page div.logger h2 { margin-top: 0; }\n";
 			print ".install_page div.logger p { margin: 5px 0; }\n";
 			print ".install_page div.logger div.logger_line { padding: 3px; border-bottom: 1px solid #ccc; }\n";
