@@ -22,6 +22,9 @@
 		protected $_serialNumber = "";
 		protected $_modelNumber = "";
 		protected $_success = false;
+		protected ?string $_login = null;
+		protected ?string $_password = null;
+		protected ?int $_errorType = null;
 
 		/**
 		 * Definition for parse method
@@ -43,6 +46,23 @@
 		 */
 		public function fromByteArray(array $array): void {
 			$this->clearError();
+			if (!$this->parse($array)) {
+				$this->error("Failed to parse message");
+			}
+		}
+
+		/**  @method public fromBytes(string $bytes): void
+		 * Populate the message from a string of bytes
+		 * @param string $bytes String of bytes
+		 * @return void
+		 */
+		public function fromBytes($bytes): void {
+			if (is_array($bytes)) {
+				$this->fromByteArray($bytes);
+				return;
+			}
+			$this->clearError();
+			$array = str_split($bytes);
 			if (!$this->parse($array)) {
 				$this->error("Failed to parse message");
 			}
@@ -337,5 +357,26 @@
 		}
 		public function password(string $string = null): string {
 			return "";
+		}
+
+		/** @method readable()
+		 * Get a human readable representation of this message
+		 * @return string
+		 */
+		public function readable(): string {
+			return "";
+		}
+
+		/** @method errorType()
+		 * Get/Set the error type of this message
+		 * @param int $typeId|null
+		 * @return int|null
+		 */
+		public function errorType(?int $typeId = null): ?int {
+			if ($typeId !== null) {
+				app_log("Setting error type to $typeId",'info');
+				$this->_errorType = $typeId;
+			}
+			return $this->_errorType;
 		}
 	}

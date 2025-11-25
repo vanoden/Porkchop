@@ -4,11 +4,11 @@
 	class LogRecord Extends \BaseModel {
 		public $module = "s4engine";
 		public int $_id = 0;
-		public $_functionBytes = [0, 0x00];
-		public $_clientBytes = [0, 0];
-		public $_serverBytes = [0, 0];
-		public $_lengthBytes = [0, 0];
-		public $_sessionBytes = [0, 0, 0, 0];
+		public $_functionBytes = [0x00, 0x00];
+		public $_clientBytes = [0x00, 0x00];
+		public $_serverBytes = [0x00, 0x00];
+		public $_lengthBytes = [0x00, 0x00];
+		public $_sessionBytes = [0x00, 0x00, 0x00, 0x00];
 		public $_contentBytes = [];
 		public $_timeCreated;
 		public $_remoteAddress = "";
@@ -56,51 +56,29 @@
 				) VALUES (?,?,?,?,?,?,?,?,sysdate())
 			";
 
-			if (empty($parameters['functionBytes'])) $parameters['functionBytes'] = [0, 0];
-			if (empty($parameters['clientBytes'])) $parameters['clientBytes'] = [0, 0];
-			if (empty($parameters['serverBytes'])) $parameters['serverBytes'] = [0, 0];
-			if (empty($parameters['lengthBytes'])) $parameters['lengthBytes'] = [0, 0];
-			if (empty($parameters['sessionBytes'])) $parameters['sessionBytes'] = [0, 0, 0, 0];
-			if (empty($parameters['contentBytes'])) $parameters['contentBytes'] = [];
-			if (empty($parameters['checksum'])) $parameters['checksum'] = [0, 0];
 			if (empty($parameters['remoteAddress'])) $parameters['remoteAddress'] = $_SERVER['REMOTE_ADDR'];
 
-			app_log("Function Bytes (before): ".implode(",",$parameters['functionBytes']),'info');
-			$parameters['functionBytes'] = pack('C2', $parameters['functionBytes'][0], $parameters['functionBytes'][1]);
-			app_log("Function Bytes (after): ".$parameters['functionBytes'],'info');
-			
-			app_log("Client Bytes (before): ".implode(",",$parameters['clientBytes']),'info');
-			$parameters['clientBytes'] = pack('C2', $parameters['clientBytes'][0], $parameters['clientBytes'][1]);
-			app_log("Client Bytes (after): ".$parameters['clientBytes'],'info');
-
-			app_log("Server Bytes (before): ".implode(",",$parameters['serverBytes']),'info');
-			$parameters['serverBytes'] = pack('C2', $parameters['serverBytes'][0], $parameters['serverBytes'][1]);
-			app_log("Server Bytes (after): ".$parameters['serverBytes'],'info');
-
-			app_log("Session Bytes (before): ".implode(",",$parameters['sessionBytes']),'info');
-			$parameters['sessionBytes'] = pack('C4', $parameters['sessionBytes'][0], $parameters['sessionBytes'][1], $parameters['sessionBytes'][2], $parameters['sessionBytes'][3]);
-			app_log("Session Bytes (after): ".$parameters['sessionBytes'],'info');
-
-			app_log("Length Bytes (before): ".implode(",",$parameters['lengthBytes']),'info');
-			$parameters['lengthBytes'] = pack('C2', $parameters['lengthBytes'][0], $parameters['lengthBytes'][1]);
-			app_log("Length Bytes (after): ".$parameters['lengthBytes'],'info');
-
-			app_log("Content Bytes (before): ".implode(",",$parameters['contentBytes']),'info');
-			$parameters['contentBytes'] = self::ints2bytes($parameters['contentBytes']);
-			app_log("Content Bytes (after): ".$parameters['contentBytes'],'info');
-
-			app_log("Checksum Bytes (before): ".implode(",",$parameters['checksum']),'info');
-			$parameters['checksum'] = pack('C2', $parameters['checksum'][0], $parameters['checksum'][1]);
-			app_log("Checksum Bytes (after): ".$parameters['checksum'],'info');
+			app_log("Function Bytes (before): ".ord($parameters['functionBytes'][0]).",".ord($parameters['functionBytes'][1]),'info');
+			app_log("Client Bytes (before): ".ord($parameters['clientBytes'][0]).",".ord($parameters['clientBytes'][1]),'info');
+			app_log("Server Bytes (before): ".ord($parameters['serverBytes'][0]).",".ord($parameters['serverBytes'][1]),'info');
+			app_log("Session Bytes (before): ".ord($parameters['sessionBytes'][0]).",".ord($parameters['sessionBytes'][1]).",".ord($parameters['sessionBytes'][2]).",".ord($parameters['sessionBytes'][3]),'info');
+			app_log("Length Bytes (before): ".ord($parameters['lengthBytes'][0]).",".ord($parameters['lengthBytes'][1]),'info');
+			$length = ord($parameters['lengthBytes'][0])*256 + ord($parameters['lengthBytes'][1]);
+			$content = [];
+			for ($i = 0; $i < $length; $i++) {
+				$content[] = ord($parameters['contentBytes'][$i]);
+			}
+			app_log("Content Bytes (before): ".implode(",",$content),'info');
+			app_log("Checksum Bytes (before): ".ord($parameters['checksum'][0]).",".ord($parameters['checksum'][1]).",'info");
 
 			// Add Parameters
-			$database->AddParam($parameters['functionBytes']);
-			$database->AddParam($parameters['clientBytes']);
-			$database->AddParam($parameters['serverBytes']);
-			$database->AddParam($parameters['lengthBytes']);
-			$database->AddParam($parameters['sessionBytes']);
-			$database->AddParam($parameters['contentBytes']);
-			$database->AddParam($parameters['checksum']);
+			$database->AddParamBinary($parameters['functionBytes'],2);
+			$database->AddParamBinary($parameters['clientBytes'],2);
+			$database->AddParamBinary($parameters['serverBytes'],2);
+			$database->AddParamBinary($parameters['lengthBytes'],2);
+			$database->AddParamBinary($parameters['sessionBytes'],4);
+			$database->AddParamBinary($parameters['contentBytes'],ord($parameters['lengthBytes'][0])*256 + ord($parameters['lengthBytes'][1]));
+			$database->AddParamBinary($parameters['checksum'],2);
 			$database->AddParam($parameters['remoteAddress']);
 
 			// Execute Query
@@ -115,6 +93,51 @@
 			return true;
 		}
 
+		public function store(): bool {
+			// Clear Previous Error
+			$this->clearError();
+
+			// Intialize Database Service
+			$database = new \Database\Service();
+
+			// Update Record
+			$update_record_query = "
+				INSERT
+				INTO	s4engine_log
+				(	function_id,
+					client_id,
+					server_id,
+					content_length,
+					session_code,
+					body,
+					remote_address,
+					time_created
+				)
+				VALUES (?,?,?,?,?,?,?,sysdate())
+			";
+
+			// Add Parameters
+			$database->AddParamBinary($this->_functionBytes,2);
+			$database->AddParamBinary($this->_clientBytes,2);
+			$database->AddParamBinary($this->_serverBytes,2);
+			$database->AddParamBinary($this->_lengthBytes,2);
+			$database->AddParamBinary($this->_sessionBytes,4);
+			$length = ord($this->_lengthBytes[0])*256 + ord($this->_lengthBytes[1]);
+			$database->AddParamBinary($this->_contentBytes,$length);
+			$database->AddParam($_SERVER['REMOTE_ADDR']);
+
+			// Execute Query
+			$database->trace(9);
+			$database->debug = 'log';
+			if (! $database->Execute($update_record_query)) {
+				$this->SQLError("Updating S4Engine::Log record: ".$database->Error());
+				return false;
+			}
+
+			$this->_id = $database->Insert_ID();
+
+			return true;
+		}
 		public function setFailure($errorMessage): bool {
 			// Clear Previous Error
 			$this->clearError();
@@ -149,7 +172,7 @@
 
 			// Intialize Database Service
 			$database = new \Database\Service();
-
+app_log("Setting log record ".$this->_id." to success",'info');
 			// Update Record
 			$update_record_query = "
 				UPDATE s4engine_log
@@ -201,7 +224,8 @@
 				return false;
 			}
 
-			if ($object = $rs->FetchNextObject(false)) {
+			$object = $rs->FetchNextObject(false);
+			if ($object) {
 				$this->_id = $object->id;
 				$this->_functionBytes = $object->function_id;
 				$this->_clientBytes = $object->client_id;
@@ -209,13 +233,27 @@
 				$this->_lengthBytes = $object->length_bytes;
 				$this->_sessionBytes = $object->session_code;
 				$this->_lengthBytes = $object->content_length;
-				$this->_contentBytes = $object->content_bytes;
+				$this->_contentBytes = $object->body;
 				$this->_timeCreated = $object->time_created;
 				$this->_remoteAddress = $object->remote_address;
 				$this->error($object->error);
 				$this->_successful = ($object->success == 1);
 				if (empty($this->_contentBytes)) $this->_contentBytes = [];
-				app_log("Session Bytes (loaded): ".print_r($this->_sessionBytes,true),'info');
+
+				# Display Session as String of Integers
+				$asInts = "";
+				for ($i = 0; $i < 4; $i++) {
+					$asInts.= "[".ord($this->_sessionBytes[$i])."]";
+				}
+				app_log("Session ".$object->id." Bytes (loaded): $asInts",'info');
+
+				# Display Content as String of Integers
+				$length = ord($this->_lengthBytes[0])*256 + ord($this->_lengthBytes[1]);
+				$asInts = "";
+				for ($i = 0; $i < $length; $i ++) {
+					$asInts .= "[".ord($this->_contentBytes[$i])."]";
+				}
+				app_log("Content ".$object->id." Bytes (loaded): $asInts",'info');
 				return true;
 			} else {
 				$this->error("S4Engine::Log record not found");
@@ -247,6 +285,9 @@
 				case 16: return "CalVerifyPost"; break;
 				case 17: return "UnparseableContent"; break;
 				case 18: return "MessagePost"; break;
+				case 19: return "Unauthorized"; break;
+				case 20: return "SensorRequest"; break;
+				case 21: return "SensorResponse"; break;
 				default:     return "Unknown Function (".$this->functionID().")"; break;
 			}
 		}
@@ -287,7 +328,10 @@
 		 * Get the raw function bytes as an array
 		 * @return array
 		 */
-		public function functionBytes() {
+		public function functionBytes($bytes = null): array {
+			if ($bytes !== null) {
+				$this->_functionBytes = $bytes;
+			}
 			return array(ord($this->_functionBytes[0]), ord($this->_functionBytes[1]));
 		}
 
@@ -303,7 +347,10 @@
 		 * Get the raw client bytes as an array
 		 * @return array
 		 */
-		public function clientBytes() {
+		public function clientBytes($bytes = null): array {
+			if ($bytes !== null) {
+				$this->_clientBytes = $bytes;
+			}
 			return array(ord($this->_clientBytes[0]), ord($this->_clientBytes[1]));
 		}
 
@@ -319,7 +366,10 @@
 		 * Get the raw server bytes as an array
 		 * @return array
 		 */
-		public function serverBytes() {
+		public function serverBytes($bytes = null): array {
+			if ($bytes !== null) {
+				$this->_serverBytes = $bytes;
+			}
 			return array(ord($this->_serverBytes[0]), ord($this->_serverBytes[1]));
 		}
 
@@ -327,7 +377,10 @@
 		 * Get the decimal content length from the length bytes
 		 * @return int
 		 */
-		public function contentLength() {
+		public function contentLength($length = null) {
+			if ($length !== null) {
+				$this->_lengthBytes = [chr(floor($length / 256)), chr($length % 256)];
+			}
 			return ord($this->_lengthBytes[0])*256 + ord($this->_lengthBytes[1]);
 		}
 
@@ -335,20 +388,42 @@
 		 * Get the raw length bytes as an array
 		 * @return array
 		 */
-		public function lengthBytes() {
+		public function lengthBytes($bytes = null): array {
+			if ($bytes !== null) {
+				$this->_lengthBytes = $bytes;
+			}
 			return array(ord($this->_lengthBytes[0]), ord($this->_lengthBytes[1]));
 		}
 
 		/** @method public function contentBytes()
-		 * Get the raw content bytes as an array
+		 * Get/Set the raw content bytes as an array
 		 * @return array
 		 */
-		public function contentBytes() {
-			$bytes = [];
-			for ($i = 0; $i < count($this->_contentBytes); $i++) {
-				$bytes[] = ord($this->_contentBytes[$i]);
+		public function contentBytes($bytes = null, $length = null): array {
+			if ($bytes !== null) {
+				$this->_contentBytes = $bytes;
+				$this->contentLength($length);
 			}
-			return $bytes;
+			$byteArray = [];
+			for ($i = 0; $i < $this->contentLength(); $i++) {
+				$byteArray[] = $this->_contentBytes[$i];
+			}
+			return $byteArray;
+		}
+
+		/** @method public contentDebug()
+		 * Get the content bytes in a debug format (decimal bytes)
+		 * @return string
+		 */
+		public function contentDebug() {
+			$code = "";
+			app_log("Content Bytes (debug): ".print_r($this->_contentBytes,true),'info');
+			#if (!is_array($this->_contentBytes)) return "----";
+			$length = $this->contentLength();
+			for ($i = 0; $i < $length; $i++) {
+				$code .= "[".ord($this->_contentBytes[$i])."]";
+			}
+			return $code;
 		}
 
 		/** @method public function sessionCode()
@@ -368,7 +443,15 @@
 		 * Get the raw session bytes as an array
 		 * @return array
 		 */
-		public function sessionBytes() {
+		public function sessionBytes($bytes = null): array {
+			if ($bytes !== null) {
+				$this->_sessionBytes = $bytes;
+				print "Heres the sessionBytes: ";
+				for ($i = 0; $i < 4; $i++) {
+					print "[".ord($this->_sessionBytes[$i])."]";
+				}
+				print "\n";
+			}
 			if (!is_array($this->_sessionBytes)) return [];
 			$bytes = [];
 			for ($i = 0; $i < count($this->_sessionBytes); $i++) {
@@ -384,10 +467,9 @@
 		public function sessionCodeDebug() {
 			$code = "";
 			app_log("Session Bytes (debug): ".print_r($this->_sessionBytes,true),'info');
-			if (!is_array($this->_sessionBytes)) return "----";
-			for ($i = 0; $i < count($this->_sessionBytes); $i++) {
-				if ($i > 0) $code .= ".";
-				$code .= ord($this->_sessionBytes[$i]);
+			#if (!is_array($this->_sessionBytes)) return "----";
+			for ($i = 0; $i < 4; $i++) {
+				$code .= "[".ord($this->_sessionBytes[$i])."]";
 			}
 			return $code;
 		}
@@ -399,7 +481,7 @@
 		public function message() {
 			$docFactory = new \Document\S4Factory();
 			$message = $docFactory->get($this->functionID());
-			$message->fromByteArray($this->_contentBytes);
+			$message->fromBytes($this->_contentBytes);
 			return $message;
 		}
 

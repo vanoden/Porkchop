@@ -24,8 +24,8 @@
 		 * @param array $array 
 		 * @return bool 
 		 */
-		public function parse(array $array): bool {
-			if (count($array) != 18) {
+		public function parse(array $array, $length = 0): bool {
+			if ($length != 18) {
 				print "Invalid Reading Post: ".count($array)." of 14 chars\n";
 				$this->error("Invalid Reading Post: ".count($array)." of 14 chars");
 				return false;

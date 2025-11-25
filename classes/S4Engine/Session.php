@@ -192,6 +192,8 @@
 				$this->_endTime = strtotime($object->time_end);
 				$this->_clientId = $object->client_id;
 				$this->_portalSessionId = $object->portal_id;
+				print("Found session details:\n");
+				print($this->summary()."\n");
 			}
 			else {
 				$this->_number = 0;
@@ -201,6 +203,35 @@
 				$this->_portalSessionId = 0;
 			}
 			return true;
+		}
+
+		/** @method getSessionByNumber(number)
+		 * Get the Session by Number
+		 * @param int $sessionNumber
+		 * @return bool
+		 */
+		public function getSessionByNumber(int $sessionNumber): bool {
+			$this->clearError();
+			$database = new \Database\Service();
+			$get_object_query = "
+				SELECT	id
+				FROM	s4engine_sessions
+				WHERE	number = ?
+			";
+			$database->AddParam($sessionNumber);
+			$rs = $database->Execute($get_object_query);
+			if (! $rs) {
+				$this->error("Error getting session: ".$database->error());
+				return false;
+			}
+			$object = $rs->FetchNextObject();
+			if (!empty($object->id)) {
+				$this->id = $object->id;
+				return $this->details();
+			}
+			else {
+				return false;
+			}
 		}
 
 		/**
@@ -273,7 +304,7 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * Get the Client Object for the session
 		 * @return \S4Engine\Client
 		 */
-		public function client(\S4Engine\Client $client = null): ?\S4Engine\Client {
+		public function client(?\S4Engine\Client $client = null): ?\S4Engine\Client {
 			if (!is_null($client)) {
 				app_log("Setting client for session ".$this->id().": ".$client->id(),'info');
 				$this->_clientId = $client->id();
@@ -311,10 +342,21 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * Get/Set the client for the session
 		 * @param \S4Engine\Client $client
 		 */
-		public function clientId(int $clientId): int {
-			app_log("Setting client for session ".$this->id().": ".$clientId,'info');
-			$this->_clientId = $clientId;
+		public function clientId(?int $clientId = null): int {
+			if (!is_null($clientId)) {
+				app_log("Setting client for session ".$this->id().": ".$clientId,'info');
+				$this->_clientId = $clientId;
+			}
 			return $this->_clientId;
+		}
+
+		/** @method clientNumber(): int
+		 * Get Client Number for the Session
+		 * @return int
+		 */
+		public function clientNumber(): int {
+			$client = new \S4Engine\Client($this->_clientId);
+			return $client->number();
 		}
 
 		/**
@@ -381,9 +423,26 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 				$id -= $arr[1] * 256 * 256;
 				$arr[2] = floor($id / 256);
 				$arr[3] = $id % 256;
-				app_log("Returning session code: ".print_r($arr,true),'trace');
+				#app_log("Returning session code: ".print_r($arr,true),'trace');
 				return $arr;
 			}
+		}
+
+		/** @method codeBytes()
+		 * Code as String of byte values
+		 * @return string
+		 */
+		public function codeBytes(): string {
+			app_log("Generating code bytes for session number ".$this->_number,'trace');
+			$bytes = chr($this->_number % 256);
+			print_r("Byte 0: ".($this->_number % 256)."\n");
+			$bytes .= chr(floor($this->_number / 256) % 256);
+			print_r("Byte 1: ".(floor($this->_number / 256) % 256)."\n");
+			$bytes .= chr(floor($this->_number / (256*256)) % 256);
+			print_r("Byte 2: ".(floor($this->_number / (256*256)) % 256)."\n");
+			$bytes .= chr(floor($this->_number / (256*256*256)) % 256);
+			print_r("Byte 3: ".(floor($this->_number / (256*256*256)) % 256)."\n");
+			return $bytes;
 		}
 
 		/**
