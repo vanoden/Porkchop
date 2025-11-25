@@ -15,6 +15,7 @@
     <a href="/_register/admin_account_images?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='images'?'active':'' ?>">User Images</a>
     <a href="/_register/admin_account_backup_codes?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='backup_codes'?'active':'' ?>">Backup Codes</a>
     <a href="/_register/admin_account_search_tags?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='search_tags'?'active':'' ?>">Search Tags</a>
+    <a href="/_register/admin_account_audit_log?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
 </div>
 
 <form id="admin-account-form" name="register" action="<?= PATH ?>/_register/admin_account_auth_failures?customer_id=<?= $customer_id ?>" method="POST">
@@ -59,7 +60,7 @@
       <?php } } ?>
     </div>
     <input type="submit" name="btnResetFailures" value="Reset Failures" />
-    <input type="button" name="btnAuditLog" value="Audit Log" onclick="location.href='/_register/audit_log?user_id=<?= $customer->id ?>';" />
+    <input type="button" name="btnAuditLog" value="Audit Log" onclick="location.href='/_register/admin_account_audit_log?customer_id=<?= $customer->id ?>';" />
   </div>
 
   <!-- entire page button submit -->

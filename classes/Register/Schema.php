@@ -1607,6 +1607,30 @@
 			$database->CommitTrans();
 		}
 
+		if ($this->version() < 51) {
+			app_log("Upgrading schema to version 51", 'notice', __FILE__, __LINE__);
+			
+			# Start Transaction
+			if (!$database->BeginTrans())
+				app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+			
+			$alter_table_query = "
+				ALTER TABLE register_auth_failures
+				ADD COLUMN `user_agent` varchar(500) DEFAULT NULL AFTER `ip_address`
+			";
+
+			$database->Execute($alter_table_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError("Error altering register_auth_failures table in Register::Schema::upgrade(): " . $database->ErrorMsg());
+				app_log($this->error(), 'error', __FILE__, __LINE__);
+				$database->RollbackTrans();
+				return null;
+			}
+
+			$this->setVersion(51);
+			$database->CommitTrans();
+		}
+
 		return true;
 	}
 }

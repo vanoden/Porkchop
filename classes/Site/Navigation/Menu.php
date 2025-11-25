@@ -41,15 +41,15 @@ class Menu Extends \BaseModel {
 				WHERE	code = ?
 			";
 
-			// Add Parameters
-			if (! $this->validCode($code)) {
-				$this->error("Invalid Code");
-				return false;
-			}
-			$this->AddParam($code);
+		// Add Parameters
+		if (! $this->validCode($code)) {
+			$this->error("Invalid Code");
+			return false;
+		}
+		$database->AddParam($code);
 
-			// Execute the Query
-			$rs = $database->Execute($get_object_query);
+		// Execute the Query
+		$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
 				return null;

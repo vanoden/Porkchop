@@ -132,14 +132,11 @@
 
 			if (isset($parameters['role'])) app_log("Don't use role as a filter for customers, use Register::Role::Members",'warning');
 
-			$validationclass = new \Register\Customer();
+		$validationclass = new \Register\Customer();
 
-			$database = new \Database\Service();
+		$database = new \Database\Service();
 
-			$database->trace(9);
-			$database->debug = 'screen';
-
-			$find_person_query = "
+		$find_person_query = "
 				SELECT	id
 				FROM	register_users
 				WHERE	id = id";

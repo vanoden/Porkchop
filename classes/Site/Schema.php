@@ -753,6 +753,22 @@
 				$database->CommitTrans();
 			}
 
+			if ($this->version() < 30) {
+				app_log("Upgrading ".$this->module." schema to version 30",'notice',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `site_audit_events`
+					ADD COLUMN `ip_address` varchar(45) DEFAULT NULL AFTER `description`
+				";
+				if (! $database->Execute($alter_table_query)) {
+					$this->SQLError("Altering site_audit_events table: ".$database->error());
+					return false;
+				}
+
+				$this->setVersion(30);
+				$database->CommitTrans();
+			}
+
 			return true;
 		}
 	}

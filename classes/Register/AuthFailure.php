@@ -4,6 +4,7 @@
 	class AuthFailure Extends \BaseModel {
 
 		public $ip_address;			// IP Address of the client that failed login attempt
+		public $user_agent;			// User-Agent string from the client
 		public $login;				// Login that failed
 		public $reason;				// Reason for failure
 		public $endpoint;			// Endpoint that failure occurred at
@@ -20,7 +21,7 @@
 
 		/**
 		 * Record an authentication failure
-		 * @param array $parameters 
+		 * @param array $parameters [ip_address, login, reason, endpoint, user_agent] or [ip_address, login, reason, endpoint] for backward compatibility
 		 * @return bool 
 		 */
 		public function add($parameters = []) {
@@ -28,8 +29,13 @@
 
 			$database = new \Database\Service;
 
-			// Dereference parameters array
-		    list ($ip_address, $login, $reason, $endpoint) = $parameters;
+			// Dereference parameters array - support both old format (4 params) and new format (5 params with user_agent)
+			if (count($parameters) >= 5) {
+				list ($ip_address, $login, $reason, $endpoint, $user_agent) = $parameters;
+			} else {
+				list ($ip_address, $login, $reason, $endpoint) = $parameters;
+				$user_agent = '';
+			}
 
 			// Convert IP Address to Integer
 			if (preg_match('/^(\d{1,3}\.){3}\d{1,3}$/',$ip_address)) {
@@ -41,6 +47,7 @@
 			if (empty($login)) $login = '';
 		    if (empty($reason)) $reason = '';
 		    if (empty($endpoint)) $endpoint = '';
+			if (empty($user_agent)) $user_agent = null;
 
 			// Validate Reason
 			if (! $this->validReason($reason)) {
@@ -50,15 +57,16 @@
 				$reason = 'UNKNOWN';
 			}
 
-			// Prepare Query
+			// Prepare Query - check if user_agent column exists
 			$add_object_query = "
 				INSERT
 				INTO	register_auth_failures
-				VALUES	(null,?,?,sysdate(),?,?)
+				(ip_address, login, date_fail, reason, endpoint, user_agent)
+				VALUES	(?,?,sysdate(),?,?,?)
 			";
 
 			// Bind Parameters
-			$database->AddParams(array($ip_address,$login,$reason,$endpoint));
+			$database->AddParams(array($ip_address,$login,$reason,$endpoint,$user_agent));
 
 			// Execute Query
 			$database->Execute($add_object_query);
@@ -103,6 +111,7 @@
 			if (isset($object->id)) {
 				$this->id = $object->id;
 				$this->ip_address = long2ip($object->ip_address);
+				$this->user_agent = isset($object->user_agent) ? $object->user_agent : null;
 				$this->login = $object->login;
 				$this->reason = $object->reason;
 				$this->date = $object->date_fail;
@@ -111,6 +120,7 @@
 			else {
 				$this->id = null;
 				$this->ip_address = null;
+				$this->user_agent = null;
 				$this->login = null;
 				$this->reason = null;
 				$this->date = null;

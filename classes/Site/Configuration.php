@@ -74,6 +74,13 @@
 					$this->readOnly = true;
 					return true;
 				}
+				// Also check register config section
+				elseif (isset($GLOBALS['_config']->register->{$key})) {
+					$this->key = $key;
+					$this->value = $GLOBALS['_config']->register->{$key};
+					$this->readOnly = true;
+					return true;
+				}
 				else {
 					$this->key = $key;
 					$this->value = null;
