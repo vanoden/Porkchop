@@ -126,6 +126,7 @@
 			}
 
 			if (isset($parameters['registrar'])) {
+				# Yeah, should be registrar not register, but the DB field is named 'register'
 				$update_object_query .= ",
 						register = ?";
 				$database->AddParam($parameters['registrar']);
@@ -189,6 +190,18 @@
 			$cachedData = $cache->get();
 			if (!empty($cachedData) && !empty($cachedData->domain_name)) {
 				foreach ($cachedData as $key => $value) {
+					if (!property_exists($this, $key)) {
+						print("Property $key does not exist in ".get_class($this)."\n");
+						$inc = 0;
+						while (true) {
+							$bt = debug_backtrace();
+							$caller = $bt[$inc];
+							print "Called from ".$caller['file']." on line ".$caller['line']."\n";
+							$inc ++;
+							if (!isset($bt[$inc])) break;
+						}
+						continue;
+					}
 					$this->$key = $value;
 				}
 				$this->name = $cachedData->domain_name;
@@ -214,15 +227,19 @@
 			}
 			$object = $rs->FetchNextObject(false);
 			if (isset($object->id)) {
+				$object->domain = $object->domain_name;
+				$object->domain_name = null;
+				$object->registrar = $object->register;
+				$object->register = null;
 				$this->status = $object->status;
 				$this->comments = $object->comments;
-				$this->name = $object->domain_name;
+				$this->name = $object->domain;
 				$this->date_registered = $object->date_registered;
 				$this->date_created = $object->date_created;
 				$this->date_expires = $object->date_expires;
 				$this->registration_period = $object->registration_period;
 				$this->location_id = $object->location_id;
-				$this->registrar = $object->register;
+				$this->registrar = $object->registrar;
 				$this->company_id = $object->company_id;
 				$cache->set($object);
 				$this->cached(false);
