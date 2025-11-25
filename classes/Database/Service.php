@@ -86,25 +86,17 @@
 		 * @param array bytes to write
 		 * @return void
 		 */
-		public function AddParamBinary($value) {
+		public function AddParamBinary($value,$length) {
 			$binary = "";
-			foreach ($value as $byte) {
-				if (ctype_xdigit($byte)) {
-					app_log("AddParamBinary hex byte: ".$byte,'info');
-					if (strlen($byte) % 2 != 0) $byte = "0".$byte;
-					$byte = hexdec($byte);
+			for ($i = 0; $i < $length; $i++) {
+				if (isset($value[$i])) {
+					$binary .= $value[$i];
+				} else {
+					$binary .= chr(0);
 				}
-				else {
-					app_log("AddParamBinary dec byte: ".$byte,'info');
-					$byte = intval($byte);
-				}
-				if ($byte < 0) $byte = 0;
-				if ($byte > 255) $byte = 255;
-				$binary .= chr($byte);
 			}
 			$this->AddParam($binary);
 		}
-
 
 		/** @method AddParams(values)
 		 * Apply an array of Bind Parameters to the Query
