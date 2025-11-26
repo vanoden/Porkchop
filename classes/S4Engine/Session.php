@@ -1,6 +1,8 @@
 <?php
 	namespace S4Engine;
 
+use Site\Session as SiteSession;
+
 	/**
 	 * Session Object
 	 */
@@ -10,6 +12,9 @@
 		public int $_endTime = 0;						// End Time as Unix Timestamp
 		public int $_clientId = 0;						// Client ID
 		public int $_portalSessionId = 0;				// Portal Session ID
+
+		// Map Actual Session Fields for Compatibility
+		public ?string $timezone = 'UTC';
 
 		/**
 		 * Constructor
@@ -192,8 +197,14 @@
 				$this->_endTime = strtotime($object->time_end);
 				$this->_clientId = $object->client_id;
 				$this->_portalSessionId = $object->portal_id;
-				print("Found session details:\n");
-				print($this->summary()."\n");
+
+				// Fetch Values from Associated Portal Session
+				$portalSession = new \Site\Session();
+				$portalSession->id($this->_portalSessionId);
+				$portalSession->details();
+				if ($portalSession->exists()) {
+					$this->timezone = $portalSession->timezone();
+				}
 			}
 			else {
 				$this->_number = 0;
@@ -311,6 +322,18 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 			}
 			$client = new \S4Engine\Client($this->_clientId);
 			return $client;
+		}
+
+		/**
+		 * Get the Customer Object for the session
+		 * @return \Register\Customer
+		 */
+		public function customer(): ?\Register\Customer {
+			$session = $this->portalSession();
+			if ($session->customer()->id() > 0) {
+				return $session->customer();
+			}
+			return null;
 		}
 
 		/**
@@ -512,7 +535,7 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * @param int $time
 		 * @return int Start Time
 		 */
-		public function startTime(int $time = null): int {
+		public function startTime(?int $time = null): int {
 			if ($time) {
 				$this->_startTime = $time;
 			}
@@ -524,10 +547,31 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * @param int $time
 		 * @return int End Time
 		 */
-		public function endTime(int $time = null): int {
+		public function endTime(?int $time = null): int {
 			if ($time) {
 				$this->_endTime = $time;
 			}
 			return $this->_endTime;
+		}
+
+		/** @method localtime(timestamp)
+		 * Get local time fields for a given timestamp
+		 * @param int $timestamp Unix timestamp, defaults to current time
+		 * @return array Associative array with keys: timestamp, year, month, day, hour, minute, second, timezone
+		 */
+		public function localtime($timestamp = 0) {
+			if ($timestamp == 0) $timestamp = time();
+			$datetime = new \DateTime('@'.$timestamp,new \DateTimeZone('UTC'));
+			$datetime->setTimezone(new \DateTimeZone($this->timezone));
+			return array(
+				'timestamp'		=> $timestamp,
+				'year'			=> $datetime->format('Y'),
+				'month'			=> $datetime->format('m'),
+				'day'			=> $datetime->format('d'),
+				'hour'			=> $datetime->format('H'),
+				'minute'		=> $datetime->format('i'),
+				'second'		=> $datetime->format('s'),
+				'timezone'		=> $this->timezone
+			);
 		}
 	}

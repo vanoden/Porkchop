@@ -410,7 +410,10 @@ use Register\Customer;
 
 			# Cached Customer Object, Yay!
 			$cache = $this->cache();
-			if ($cache->error()) app_log("Cache error in Site::Session::get(): ".$cache->error(),'error',__FILE__,__LINE__);
+			if ($cache === null) {
+				// Do Nothing, caching disabled
+			}
+			elseif ($cache->error()) app_log("Cache error in Site::Session::get(): ".$cache->error(),'error',__FILE__,__LINE__);
 			elseif (($this->id) and ($foundObject = $cache->get())) {
 				if (!empty($foundObject) && !empty($foundObject->code)) {
 					$this->code = $foundObject->code;

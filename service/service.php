@@ -362,6 +362,7 @@
 				// See if we have a session for this client
 				elseif ($s4Engine->sessionId() > 0) {
 					$session = $s4Engine->session();
+					$_SESSION_ = $session;
 					if ($session->id() > 0) {
 						$client = $session->client();
 						print_r($session);

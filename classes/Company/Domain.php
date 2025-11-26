@@ -22,6 +22,7 @@
 			$this->_tableName = 'company_domains';
 			$this->_tableUKColumn = 'domain_name';
 			$this->_cacheKeyPrefix = 'company.domain';
+			$this->_aliasField('name','domain_name');
     		parent::__construct($id);
 		}
 
