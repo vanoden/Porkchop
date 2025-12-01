@@ -19,7 +19,7 @@
 
 			// Build Query
 			$find_objects_query = "
-				SELECT	`".$workingClass->_tableIdColumn()."`
+				SELECT	*
 				FROM	`".$workingClass->_tableName()."`
 				WHERE	`".$workingClass->_tableIdColumn()."` = `".$workingClass->_tableIdColumn()."`";
 
@@ -54,9 +54,16 @@
 
 			// Build Results
 			$objects = array();
-			while (list($id) = $rs->FetchRow()) {
-				$object = new $this->_modelName($id);
-				array_push($objects,$object);
+			while ($object = $rs->FetchNextObject(false)) {
+				// Populate Locally...no caching for hits!
+				$hit = new \Site\Hit();
+				$hit->id = $object->id;
+				$hit->hit_date = $object->hit_date;
+				$hit->remote_ip = $object->remote_ip;
+				$hit->secure = $object->secure;
+				$hit->script = $object->script;
+				$hit->query_string = $object->query_string;
+				$objects[] = $hit;
 				$this->incrementCount();
 			}
 			return $objects;
