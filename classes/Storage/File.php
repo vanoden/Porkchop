@@ -104,7 +104,6 @@ class File extends \BaseModel {
 		$database->AddParam($parameters['path']);
 
 		// Execute Query
-		$database->trace(9);
 		$database->Execute($add_object_query);
 
 		// Check for Errors
@@ -347,7 +346,7 @@ class File extends \BaseModel {
 				AND		path = ?";
 			$database->AddParam($path);
 		}
-		$database->trace(9);
+
 		// Execute Query
 		$rs = $database->Execute($get_file_query);
 
