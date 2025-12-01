@@ -149,7 +149,7 @@
 
 			$rs = $database->Execute($get_event_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			list($session_id) = $rs->FetchRow();
