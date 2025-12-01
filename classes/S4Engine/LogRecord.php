@@ -481,6 +481,10 @@ app_log("Setting log record ".$this->_id." to success",'info');
 		public function message() {
 			$docFactory = new \Document\S4Factory();
 			$message = $docFactory->get($this->functionID());
+			if (! $message) {
+				$this->error("Failed to get message type ".$this->functionID());
+				return null;
+			}
 			$message->fromBytes($this->_contentBytes);
 			return $message;
 		}
