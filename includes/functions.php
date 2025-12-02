@@ -99,7 +99,7 @@
 		}
 
 		# Unix Timestamp
-		if (preg_match('/^\d{10}$/',$date)) {
+		if (preg_match('/^\d{9,10}$/',$date)) {
 			# Unix Timestamp
 			return date('Y-m-d H:i:s',$date);
 		}
