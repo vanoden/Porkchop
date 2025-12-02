@@ -212,7 +212,7 @@
 					if ($current->$parameter != $parameters[$parameter]) {
 						$changed_value++;
 						if ($parameter == 'visibility') {
-							$this->visibility = $parameters['visibility'];
+							#$this->visibility = $parameters['visibility'];
 							$change_description .= "Changed visibility to ".implode(", ", $this->visibilitiesStrings())."; ";
 						} else {
 							$change_description .= "Changed $parameter from ".$current->$parameter." to ".$parameters[$parameter]."; ";
@@ -946,10 +946,14 @@
 		 * @return bool True if successful, false otherwise
 		 */
 		public function setVisibility(\productVisibilityRealm $realm, bool $visible): bool {
+			app_log("Setting product visibility for realm ".$realm->name." to ".($visible ? "visible" : "hidden"),'info',__FILE__,__LINE__);
 			if ($visible === $this->getVisibility($realm)) {
+				app_log("Product visibility for realm ".$realm->name." already set to ".($visible ? "visible" : "hidden"),'info',__FILE__,__LINE__);
 				return true;
 			}
-			$this->visibility = $visible ? ($this->visibility | $realm->value) : ($this->visibility & (~$realm->value));
+			app_log("Current visibility matrix for realm ".$realm->value.": ".$this->visibility,'info',__FILE__,__LINE__);
+			$this->visibility = setMatrix($this->visibility, $realm->value, $visible);
+			app_log("Setting product visibility to ".$this->visibility,'info',__FILE__,__LINE__);
 			return $this->update(array('visibility' => $this->visibility));
 		}
 
@@ -959,7 +963,7 @@
 		 * @return bool True if visible, false otherwise
 		 */
 		public function getVisibility(\productVisibilityRealm $realm): bool {
-			return ($this->visibility & $realm->value) > 0;
+			return inMatrix($this->visibility, $realm->value);
 		}
 
 		/** @method visibilities()

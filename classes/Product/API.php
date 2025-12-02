@@ -132,12 +132,12 @@
 		 * @return void
 		 */
 		public function setVisibility() {
-			$this->requirePrivilege("manage products");
 			$product = new \Product\Item();
 			$product->get($_REQUEST['code']);
 			if ($product->error()) $this->error("Error finding product: ".$product->error());
 			if (! $product->exists()) $this->error("Product not found");
-			$realm = constant(productVisibilityRealm::class . '::' . $_REQUEST['realm']);
+			app_log("Setting visibility for product '".$_REQUEST['code']."' in realm '".$_REQUEST['realm']."' to '".$_REQUEST['visibility']."'",'info',__FILE__,__LINE__);
+			$realm = constant(\productVisibilityRealm::class . '::' . $_REQUEST['realm']);
 			if ($realm === null) {
 				$this->error("Invalid realm specified");
 			}
@@ -155,6 +155,9 @@
 			}
 
 			$response = new \APIResponse();
+			$response->addElement('visible', $visible);
+			$response->addElement('realm', $_REQUEST['realm']);
+			$response->addElement('byte', $product->visibility);
 			$response->print();
 		}
 
@@ -168,7 +171,7 @@
 			$product->get($_REQUEST['code']);
 			if ($product->error()) $this->error("Error finding product: ".$product->error());
 			if (! $product->exists()) $this->error("Product '".$_REQUEST['code']."' not found");
-			$realm = constant(productVisibilityRealm::class . '::' . $_REQUEST['realm']);
+			$realm = constant(\productVisibilityRealm::class . '::' . $_REQUEST['realm']);
 			if ($realm === null) {
 				$this->error("Invalid realm specified");
 			}
