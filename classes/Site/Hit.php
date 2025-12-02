@@ -14,10 +14,7 @@
     		parent::__construct($id);
 		}
 
-		function add($parameters = []) {
-			// Clear any existing errors
-			$this->clearErrors();
-
+		function add($parameters = []): ?true {
 			// Validate required parameters
 			if (! $parameters['session_id']) {
 				$this->error("session_id required");
