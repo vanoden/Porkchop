@@ -125,6 +125,62 @@
 			$response->print();
 		}
 
+		/** @method setVisibility()
+		 * Set the visibility of a Product Item in a specific realm
+		 * @param productVisibilityRealm $realm The visibility realm
+		 * @param bool $visible True to make visible, false to hide
+		 * @return void
+		 */
+		public function setVisibility() {
+			$this->requirePrivilege("manage products");
+			$product = new \Product\Item();
+			$product->get($_REQUEST['code']);
+			if ($product->error()) $this->error("Error finding product: ".$product->error());
+			if (! $product->exists()) $this->error("Product not found");
+			$realm = constant(productVisibilityRealm::class . '::' . $_REQUEST['realm']);
+			if ($realm === null) {
+				$this->error("Invalid realm specified");
+			}
+			if (preg_match('/^(true|1|yes|on)$/i',$_REQUEST['visibility'])) {
+				$visible = true;
+			}
+			elseif (preg_match('/^(false|0|no|off)$/i',$_REQUEST['visibility'])) {
+				$visible = false;
+			}
+			else {
+				$this->error("Invalid visible value specified");
+			}
+			if (! $product->setVisibility($realm, $visible)) {
+				$this->error("Error setting visibility: ".$product->error());
+			}
+
+			$response = new \APIResponse();
+			$response->print();
+		}
+
+		/** @method getVisibility()
+		 * Get the visibility of a Product Item in a specific realm
+		 * @param productVisibilityRealm $realm The visibility realm
+		 * @return bool True if visible, false otherwise
+		 */
+		public function getVisibility() {
+			$product = new \Product\Item();
+			$product->get($_REQUEST['code']);
+			if ($product->error()) $this->error("Error finding product: ".$product->error());
+			if (! $product->exists()) $this->error("Product '".$_REQUEST['code']."' not found");
+			$realm = constant(productVisibilityRealm::class . '::' . $_REQUEST['realm']);
+			if ($realm === null) {
+				$this->error("Invalid realm specified");
+			}
+			$visible = $product->getVisibility($realm);
+
+			$response = new \APIResponse();
+			$response->addElement('visible', $visible);
+			$response->addElement('realm', $_REQUEST['realm']);
+			$response->addElement('byte', $product->visibility);
+			$response->print();
+		}
+
         /** @method addPrice()
 		 * Add a price to a Product Item
 		 */
@@ -892,6 +948,56 @@
 							'description' => 'Product Code',
 							'validation_method' => 'Product::Item::validCode()'
 						),
+					)
+				),
+				'getVisibility' => array(
+					'description'		=> 'Get the visibility settings for a product in a given realm',
+					'authentication_required' => false,
+					'parameters'		=> array(
+						'code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'realm'	=> array(
+							'required' => true,
+							'description' => 'Visibility Realm',
+							'options' => [
+								'MARKETING',
+								'SALES',
+								'SUPPORT',
+								'ADMINISTRATION'
+							]
+						)
+					)
+				),
+				'setVisibility' => array(
+					'description'		=> 'Set the visibility settings for a product in a given realm',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required' => 'manage products',
+					'parameters'		=> array(
+						'code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'realm'	=> array(
+							'required' => true,
+							'description' => 'Visibility Realm',
+							'options' => [
+								'MARKETING',
+								'SALES',
+								'SUPPORT',
+								'ADMINISTRATION'
+							]
+						),
+						'visibility'	=> array(
+							'required' => true,
+							'description' => 'Visibility Setting',
+							'content-type' => 'boolean',
+							'options' => ['true','false']
+						)
 					)
 				),
 				'addItemImage'	=> array(
