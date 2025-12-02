@@ -625,7 +625,7 @@ class File extends \BaseModel {
 		// Initialize Repository
 		$repository = $this->repository();
 		if ($repository->error()) $this->error($repository->error());
-		
+
 		// See If Cache Configured
 		if (empty($GLOBALS['_config']->storage->cache_path) || !is_dir($GLOBALS['_config']->storage->cache_path)) {
 			// Cache not configured, load from repository
@@ -636,9 +636,16 @@ class File extends \BaseModel {
 		// Check Cache
 		$cachePath = $GLOBALS['_config']->storage->cache_path . "/" . $this->code;
 		if (file_exists($cachePath)) {
-			// File Found in Cache!
-			app_log("Loading file from cache: " . $cachePath, 'debug');
-			return file_get_contents($cachePath);
+			if (filesize($cachePath) > 0) {
+				// File Found in Cache!
+				app_log("Loading file from cache: " . $cachePath, 'debug');
+				return file_get_contents($cachePath);
+			}
+			else {
+				// Cached File is Zero Bytes, Remove It
+				app_log("Cached file is zero bytes, removing: " . $cachePath, 'debug');
+				unlink($cachePath);
+			}
 		}
 
 		// File Not Found in Cache, Load from Repository and Cache It
