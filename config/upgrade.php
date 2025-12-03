@@ -102,6 +102,7 @@
 				"admin_account_backup_codes"	=> $templates['admin'],
 				"admin_account_search_tags"	=> $templates['admin'],
 				"admin_account_audit_log"	=> $templates['admin'],
+				"admin_account_register_audit"	=> $templates['admin'],
 				"ent_accounts"			=> $templates['support']
 			),
 		),

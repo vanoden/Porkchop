@@ -33,7 +33,9 @@
 			} else {
                 // assign a super elevated user session for password reset
 				$GLOBALS['_SESSION_']->assign($customer->id, true);
-				app_log("Customer ".$customer->id." logged in by token",'notice',__FILE__,__LINE__);
+				// Ensure CSRF token is generated for the session
+				$GLOBALS['_SESSION_']->getCSRFToken();
+				app_log("Customer ".$customer->id." logged in by token, CSRF token generated",'debug',__FILE__,__LINE__);
 			}
 		} else {
 			$page->addError("Sorry, your recovery token was not recognized or has expired");
@@ -41,9 +43,16 @@
 		}
 	}
 	elseif (isset($_REQUEST["password"])) {
-		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+		// Check CSRF token - use $_REQUEST to handle both GET and POST
+		$csrfToken = isset($_REQUEST['csrfToken']) ? $_REQUEST['csrfToken'] : '';
+		if (empty($csrfToken)) {
 			$page->addError("Invalid Request");
-			app_log("csrfToken missing or invalid",'info');
+			app_log("csrfToken missing from request",'error',__FILE__,__LINE__);
+			return;
+		}
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($csrfToken)) {
+			$page->addError("Invalid Request");
+			app_log("csrfToken invalid or doesn't match session token",'error',__FILE__,__LINE__);
 			return;
 		} elseif (! $GLOBALS['_SESSION_']->superElevated()) {
 			// Check current password

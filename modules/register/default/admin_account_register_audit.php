@@ -2,7 +2,7 @@
 <?= $page->showAdminPageInfo() ?>
 <!-- End Page Header -->
 
-<?php $activeTab = 'audit'; ?>
+<?php $activeTab = 'register_audit'; ?>
 
 <div class="tabs">
     <a href="/_register/admin_account?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='login'?'active':'' ?>">Login / Registration</a>
@@ -19,43 +19,29 @@
     <a href="/_register/admin_account_register_audit?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='register_audit'?'active':'' ?>">Register Audit</a>
 </div>
 
-<div class="form_instruction">View audit log entries recorded for this account.</div>
+<div class="form_instruction">View authentication failure records from register_auth_failures for this account.</div>
 
 <script>
-  function goToAuditPage(offset) {
+  function goToRegisterAuditPage(offset) {
     document.getElementById('start').value = offset;
-    document.getElementById('auditLogForm').submit();
+    document.getElementById('registerAuditForm').submit();
   }
-  function changeAuditPageSize(size) {
+  function changeRegisterAuditPageSize(size) {
     document.getElementById('page_size').value = size;
     document.getElementById('start').value = 0;
-    document.getElementById('auditLogForm').submit();
-  }
-  function changeAuditClass(value) {
-    document.getElementById('start').value = 0;
-    document.getElementById('auditLogForm').submit();
+    document.getElementById('registerAuditForm').submit();
   }
 </script>
 
-<form id="auditLogForm" method="get" action="<?= PATH ?>/_register/admin_account_audit_log">
+<form id="registerAuditForm" method="get" action="<?= PATH ?>/_register/admin_account_register_audit">
   <input type="hidden" name="customer_id" value="<?= $customer_id ?>" />
   <input type="hidden" id="start" name="start" value="<?= $start_offset ?>" />
   <input type="hidden" id="page_size" name="page_size" value="<?= $page_size ?>" />
 
   <div class="audit-top-controls">
-    <div class="audit-class-filter">
-      <label>Class:
-        <select name="class_name" onchange="changeAuditClass(this.value);">
-          <option value="">All</option>
-          <?php foreach ($classList as $class_name) { ?>
-            <option value="<?= $class_name ?>" <?= isset($current_class) && $current_class === $class_name ? 'selected' : '' ?>><?= $class_name ?></option>
-          <?php } ?>
-        </select>
-      </label>
-    </div>
     <div class="audit-page-size">
       <label>Records per page:
-        <select name="page_size_select" onchange="changeAuditPageSize(this.value);">
+        <select name="page_size_select" onchange="changeRegisterAuditPageSize(this.value);">
           <?php foreach ($page_size_options as $option) { ?>
             <option value="<?= $option ?>" <?= $page_size == $option ? 'selected' : '' ?>><?= $option ?></option>
           <?php } ?>
@@ -66,45 +52,37 @@
 
   <div class="tableBody">
     <div class="tableRowHeader">
-        <div class="tableCell width-15per">Event Date</div>
-        <div class="tableCell width-20per">Acted By</div>
-        <div class="tableCell width-15per">Class</div>
-        <div class="tableCell width-15per">Method</div>
-        <div class="tableCell width-35per">Description</div>
+        <div class="tableCell width-15per">Date</div>
+        <div class="tableCell width-20per">IP Address</div>
+        <div class="tableCell width-15per">Login</div>
+        <div class="tableCell width-15per">Reason</div>
+        <div class="tableCell width-35per">Endpoint</div>
     </div>
-    <?php if (!empty($auditRecords)) {
-        $actors = [];
-        foreach ($auditRecords as $record) {
-            $actor = null;
-            if (!empty($record->user_id)) {
-                if (!isset($actors[$record->user_id])) {
-                    $actors[$record->user_id] = new \Register\Customer($record->user_id);
-                }
-                $actor = $actors[$record->user_id];
-            }
+    <?php if (!empty($authFailureRecords)) {
+        foreach ($authFailureRecords as $record) {
     ?>
     <div class="tableRow">
-        <div class="tableCell"><?= shortDate($record->event_date) ?></div>
-        <div class="tableCell"><?= $actor ? $actor->code : 'System' ?></div>
-        <div class="tableCell"><?= htmlspecialchars($record->class_name ?? '') ?></div>
-        <div class="tableCell"><?= htmlspecialchars($record->class_method ?? '') ?></div>
-        <div class="tableCell"><?= htmlspecialchars($record->description ?? '') ?></div>
+        <div class="tableCell"><?= shortDate($record->date) ?></div>
+        <div class="tableCell"><?= htmlspecialchars($record->ip_address ?? '') ?></div>
+        <div class="tableCell"><?= htmlspecialchars($record->login ?? '') ?></div>
+        <div class="tableCell"><?= htmlspecialchars($record->reason ?? '') ?></div>
+        <div class="tableCell"><?= htmlspecialchars($record->endpoint ?? '') ?></div>
     </div>
     <?php }
     } else { ?>
     <div class="tableRow">
-        <div class="tableCell width-100per">No audit log records found for this account.</div>
+        <div class="tableCell width-100per">No authentication failure records found for this account.</div>
     </div>
     <?php } ?>
   </div>
 
   <div class="pager_bar">
     <div class="pager_controls">
-      <a href="javascript:void(0)" class="pager pagerFirst" onclick="goToAuditPage(0)">&lt;&lt;</a>
-      <a href="javascript:void(0)" class="pager pagerPrevious" onclick="goToAuditPage(<?= $prev_offset ?>)">&lt;</a>
+      <a href="javascript:void(0)" class="pager pagerFirst" onclick="goToRegisterAuditPage(0)">&lt;&lt;</a>
+      <a href="javascript:void(0)" class="pager pagerPrevious" onclick="goToRegisterAuditPage(<?= $prev_offset ?>)">&lt;</a>
       <span>Page <?= $current_page ?> of <?= $total_pages ?></span>
-      <a href="javascript:void(0)" class="pager pagerNext" onclick="goToAuditPage(<?= $next_offset ?>)">&gt;</a>
-      <a href="javascript:void(0)" class="pager pagerLast" onclick="goToAuditPage(<?= $last_offset ?>)">&gt;&gt;</a>
+      <a href="javascript:void(0)" class="pager pagerNext" onclick="goToRegisterAuditPage(<?= $next_offset ?>)">&gt;</a>
+      <a href="javascript:void(0)" class="pager pagerLast" onclick="goToRegisterAuditPage(<?= $last_offset ?>)">&gt;&gt;</a>
     </div>
   </div>
   <div class="audit-bottom-range">
