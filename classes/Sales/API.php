@@ -404,7 +404,7 @@
 		public function findOrderEvents() {
 			if (! $GLOBALS['_SESSION_']->authenticated()) $this->error("Authentication required");
 
-			$eventList = new \Sales\Order\EventList();
+			$eventList = new \Sales\Document\EventList();
 
 			$parameters = array();
 			if (empty($_REQUEST['order_code'])) $this->error("Order code required");

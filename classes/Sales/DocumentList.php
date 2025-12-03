@@ -23,8 +23,7 @@
 			$find_objects_query = "
 				SELECT	`".$workingClass->_tableIDColumn()."`
 				FROM	`".$workingClass->_tableName()."`
-				WHERE	`".$workingClass->_tableIDColumn()."` = `".$workingClass->_tableIDColumn()."`
-				AND		`order_type` = ?
+				WHERE	`type` = ?
 			";
 
 			// Add Parameters
@@ -103,8 +102,6 @@
 			// Limit Clause
 			$find_objects_query .= $this->limitClause($controls);
 
-			$database->debug = 'screen';
-			$database->trace(9);
 			// Execute Query
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {

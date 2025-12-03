@@ -80,6 +80,13 @@ function checkUserName() {
     var loginField = document.getElementById("login");
     var loginMessage = document.getElementById("login-message");
     
+    // Don't check if the field is empty
+    if (!loginField.value || loginField.value.trim() === '') {
+        loginField.style.border = '';
+        loginMessage.innerHTML = '';
+        return;
+    }
+    
     var url = '/_register/api?method=checkLoginNotTaken&login=' + encodeURIComponent(loginField.value);
     
     AJAXUtils.get(url, function(data) {
