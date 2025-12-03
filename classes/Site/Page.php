@@ -85,6 +85,24 @@
 		    if (isset ( $GLOBALS ['_config']->style [$this->module()] )) $this->style = $GLOBALS['_config']->style[$this->module()];
 	    }
 
+		/** @method private buildTargetURL()
+		 * Builds the target URL from the parsed request to preserve path segments (like RMA codes).
+		 * This ensures that URL path parameters are not lost during authentication redirects.
+		 * @return string The target URL
+		 */
+		private function buildTargetURL(): string {
+			// Build target URL from parsed request to preserve path segments (like RMA codes)
+			$target = '/_'.$GLOBALS['_REQUEST_']->module.'/'.$GLOBALS['_REQUEST_']->view;
+			if (!empty($GLOBALS['_REQUEST_']->query_vars)) {
+				$target .= '/'.$GLOBALS['_REQUEST_']->query_vars;
+			}
+			// Preserve query string if present
+			if (!empty($_SERVER['QUERY_STRING'])) {
+				$target .= '?'.$_SERVER['QUERY_STRING'];
+			}
+			return $target;
+		}
+
 		/** @method requireAuth()
 		 * Check if the user is authenticated.  If not, redirect to the login page.
 		 */
@@ -94,7 +112,10 @@
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
 				app_log("User not authenticated, redirecting to login page",'info');
-			    header('location: /_register/login?target='.urlencode($_SERVER['REQUEST_URI']));
+				
+				$target = $this->buildTargetURL();
+				app_log("Redirect target: ".$target,'debug',__FILE__,__LINE__);
+			    header('location: /_register/login?target='.urlencode($target));
                 exit;
 				return false;	// Never gets here ;-)
 		    }
@@ -109,7 +130,9 @@
 		    if (! $GLOBALS ['_SESSION_']->customer->is_super_elevated()) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				$target = $this->buildTargetURL();
+				app_log("Redirect target: ".$target,'debug',__FILE__,__LINE__);
+			    header('location: /_register/login?target=' . urlencode($target));
                 exit;
 		    }
 	    }
@@ -128,7 +151,9 @@
 			elseif (! $GLOBALS ['_SESSION_']->customer->id) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				$target = $this->buildTargetURL();
+				app_log("Redirect target: ".$target,'debug',__FILE__,__LINE__);
+			    header('location: /_register/login?target=' . urlencode($target));
 			    exit;
 		    }
 			elseif (! $GLOBALS ['_SESSION_']->customer->has_role($role)) {
@@ -159,7 +184,9 @@
             elseif (!isset($GLOBALS['_SESSION_']->customer->id)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-				header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				$target = $this->buildTargetURL();
+				app_log("Redirect target: ".$target,'debug',__FILE__,__LINE__);
+				header('location: /_register/login?target=' . urlencode($target));
 			    exit;
 		    }
             else {
@@ -187,7 +214,9 @@
             elseif (!isset($GLOBALS['_SESSION_']->customer->id)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-				header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				$target = $this->buildTargetURL();
+				app_log("Redirect target: ".$target,'debug',__FILE__,__LINE__);
+				header('location: /_register/login?target=' . urlencode($target));
 			    exit;
 		    }
             else {

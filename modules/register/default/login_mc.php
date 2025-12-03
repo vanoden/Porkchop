@@ -48,18 +48,18 @@
 	elseif (isset($_POST['login_target'])) {
 		# This is how the SHOULD come in from FORM submit
 		$target = $_POST['login_target'];
-		if (!preg_match('/[-\.\/\?\=\&a-zA-Z0-9]+$/',$target)) $target = '';
+		if (!preg_match('/[-\.\/\?\=\&_a-zA-Z0-9]+$/',$target)) $target = '';
 		if (!isset($GLOBALS['_config']->register->auth_target)) app_log("auth_target not configured",'warning');
-		else app_log("login_target = ".$GLOBALS['_config']->register->auth_target);
+		else app_log("login_target = ".$target,'debug',__FILE__,__LINE__);
 	}
 	elseif(isset($_REQUEST['target'])) {
 
 		# Translate target
 		$target = urldecode($_REQUEST['target']);
 		
-		# Validate URL characters
- 		if (!preg_match('/[-\.\/\?\=\&a-zA-Z0-9]+$/',$target)) $target = '';
-		app_log("target = ".$GLOBALS['_config']->register->auth_target);
+		# Validate URL characters (include underscore for module/view names and path segments like RMA codes)
+		if (!preg_match('/[-\.\/\?\=\&_a-zA-Z0-9]+$/',$target)) $target = '';
+		app_log("target = ".$target,'debug',__FILE__,__LINE__);
 	}
 	elseif($GLOBALS['_config']->register->auth_target) {
 		$target = $GLOBALS['_config']->register->auth_target;
