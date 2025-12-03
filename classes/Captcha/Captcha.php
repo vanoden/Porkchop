@@ -52,31 +52,46 @@
 
         /**
          * get the client IP address
-         * via sanitized HAProxy HTTP_X_FORWARDED_FOR if possible
+         * Checks multiple server variables in order of priority
+         * Prioritizes HAProxy HTTP_X_FORWARDED_FOR header when available
+         * Handles comma-separated values (takes first IP)
+         * Validates IP address before returning
          *
-         * @return Ambigous <string, integer>
+         * @return string Client IP address
          */
         public function getClientIP() {
-	        $ipaddress = false;
-	        if (isset ( $_SERVER ['HTTP_X_FORWARDED_FOR'] )) {
-		        $ipaddress = $_SERVER ['HTTP_X_FORWARDED_FOR'];
-	        } elseif (isset ( $_SERVER ['HTTP_X_FORWARDED'] )) {
-		        $ipaddress = $_SERVER ['HTTP_X_FORWARDED'];
-	        } elseif (isset ( $_SERVER ['HTTP_FORWARDED_FOR'] )) {
-		        $ipaddress = $_SERVER ['HTTP_FORWARDED_FOR'];
-	        } elseif (isset ( $_SERVER ['HTTP_FORWARDED'] )) {
-		        $ipaddress = $_SERVER ['HTTP_FORWARDED'];
-	        } elseif (isset ( $_SERVER ['REMOTE_ADDR'] )) {
-		        $ipaddress = $_SERVER ['REMOTE_ADDR'];
-	        } elseif (isset ( $_SERVER ['HTTP_CLIENT_IP'] )) {
-		        $ipaddress = $_SERVER ['HTTP_CLIENT_IP'];
+	        $ipAddress = '';
+	        
+	        // Check server variables in order of priority
+	        if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+		        $ipAddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+	        } elseif (isset($_SERVER['HTTP_X_FORWARDED']) && !empty($_SERVER['HTTP_X_FORWARDED'])) {
+		        $ipAddress = $_SERVER['HTTP_X_FORWARDED'];
+	        } elseif (isset($_SERVER['HTTP_FORWARDED_FOR']) && !empty($_SERVER['HTTP_FORWARDED_FOR'])) {
+		        $ipAddress = $_SERVER['HTTP_FORWARDED_FOR'];
+	        } elseif (isset($_SERVER['HTTP_FORWARDED']) && !empty($_SERVER['HTTP_FORWARDED'])) {
+		        $ipAddress = $_SERVER['HTTP_FORWARDED'];
+	        } elseif (isset($_SERVER['REMOTE_ADDR']) && !empty($_SERVER['REMOTE_ADDR'])) {
+		        $ipAddress = $_SERVER['REMOTE_ADDR'];
+	        } elseif (isset($_SERVER['HTTP_CLIENT_IP']) && !empty($_SERVER['HTTP_CLIENT_IP'])) {
+		        $ipAddress = $_SERVER['HTTP_CLIENT_IP'];
 	        }
 	        
-	        // if comma separated value from load balancing, the grab the first entry
-	        if (strpos ( $ipaddress, ',' ) !== false) {
-		        $ipaddressInfo = preg_split ( '/,/', $ipaddress );
-		        if (is_array ( $ipaddressInfo )) $ipaddress = array_shift ( $ipaddressInfo );
+	        // If we found an IP address, process it
+	        if (!empty($ipAddress)) {
+		        // Handle comma-separated values from load balancers (take first IP)
+		        if (strpos($ipAddress, ',') !== false) {
+			        $parts = explode(',', $ipAddress);
+			        $ipAddress = trim($parts[0]);
+		        }
+		        
+		        // Validate the IP address
+		        $ipAddress = trim($ipAddress);
+		        if (!empty($ipAddress) && filter_var($ipAddress, FILTER_VALIDATE_IP)) {
+			        return $ipAddress;
+		        }
 	        }
-	        return $ipaddress;
+	        
+	        return '';
         }
 	}

@@ -153,24 +153,12 @@ class Event Extends \BaseModel {
 
 	/**
 	 * Determine the client's IP address using the expected server variables.
+	 * Uses the standardized BaseClass method that prioritizes HAProxy HTTP_X_FORWARDED_FOR header.
 	 * @return string
 	 */
 	private function getClientIp(): string {
-		$ipAddress = $_SERVER['HTTP_X_FORWARDED_FOR']
-			?? $_SERVER['REMOTE_ADDR']
-			?? $_SERVER['HTTP_CLIENT_IP']
-			?? '';
-
-		if (strpos($ipAddress, ',') !== false) {
-			$parts = explode(',', $ipAddress);
-			$ipAddress = trim($parts[0]);
-		}
-		$ipAddress = trim($ipAddress);
-
-		if ($ipAddress === '' || !filter_var($ipAddress, FILTER_VALIDATE_IP)) {
-			return '';
-		}
-		return $ipAddress;
+		// Use the standardized method from BaseClass
+		return $this->getIpAddress();
 	}
 
 	public function appendDescription($description) {

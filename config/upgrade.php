@@ -89,6 +89,7 @@
 				"accounts"			=> $templates['admin'],
 				"admin_account"		=> $templates['admin'],
 				"pending_customers"	=> $templates['admin'],
+				"privileges"		=> $templates['admin'],
 				"roles"				=> $templates['admin'],
 				"role"				=> $templates['admin'],
 				"admin_location"	=> $templates['admin'],
