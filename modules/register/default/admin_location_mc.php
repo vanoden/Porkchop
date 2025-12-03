@@ -100,6 +100,7 @@ if (isset($organization->id)) {
 }
 $page->addBreadcrumb("Add/Edit Location", "");
 
+$provinces = array();
 if (isset($_REQUEST['id']) && $_REQUEST['id']) {
 	$selected_province = $location->province();
 	$selected_country = $selected_province->country();
