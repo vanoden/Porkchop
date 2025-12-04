@@ -18,7 +18,7 @@
 
 			$request->method('POST');
 			$request->addParam('token',$this->token());
-			$request->addParam('to',$email->to());
+			$request->addParam('to',preg_replace('/\+/', '%2B', $email->to()));
 			$request->addParam('from',$email->from());
 			$request->addParam('subject',$email->subject());
 			$request->addParam('body',urlencode($email->body()));
@@ -32,53 +32,53 @@
 				$this->error("Cannot connect to host: ".$client->error());
 				return false;
 			}
-		$response = $client->post($request);
-		if ($client->error()) {
-			$this->error("Cannot send request: ".$client->error());
-			app_log("Email transport error: ".$client->error(),'error',__FILE__,__LINE__);
-			return false;
-		}
-		if (is_null($response)) {
-			$this->error("No response received from email proxy server");
-			app_log("Email transport error: No response received from proxy server",'error',__FILE__,__LINE__);
-			$this->_result = "Failed";
-			return false;
-		}
-		app_log("Email response: ".print_r($response,true),'trace');
-		$responseCode = $response->code();
-		if ($responseCode == 200) {
-			$content = $response->content();
-			app_log("Email proxy response content: ".$content,'debug',__FILE__,__LINE__);
-			if (preg_match('/^ERROR\:\s(.*)$/',$content,$matches)) {
-				$this->error($matches[1]);
-				$this->_result = "Failed";
-				app_log("Email proxy returned error: ".$matches[1],'error',__FILE__,__LINE__);
+			$response = $client->post($request);
+			if ($client->error()) {
+				$this->error("Cannot send request: ".$client->error());
+				app_log("Email transport error: ".$client->error(),'error',__FILE__,__LINE__);
 				return false;
 			}
-			elseif (preg_match('/Mailer\sError/',$content)) {
-				$this->error($content);
+			if (is_null($response)) {
+				$this->error("No response received from email proxy server");
+				app_log("Email transport error: No response received from proxy server",'error',__FILE__,__LINE__);
 				$this->_result = "Failed";
-				app_log("Email proxy returned mailer error: ".$content,'error',__FILE__,__LINE__);
 				return false;
 			}
-			// Check for explicit success indicators
-			if (preg_match('/success|sent|ok/i',$content)) {
+			app_log("Email response: ".print_r($response,true),'trace');
+			$responseCode = $response->code();
+			if ($responseCode == 200) {
+				$content = $response->content();
+				app_log("Email proxy response content: ".$content,'debug',__FILE__,__LINE__);
+				if (preg_match('/^ERROR\:\s(.*)$/',$content,$matches)) {
+					$this->error($matches[1]);
+					$this->_result = "Failed";
+					app_log("Email proxy returned error: ".$matches[1],'error',__FILE__,__LINE__);
+					return false;
+				}
+				elseif (preg_match('/Mailer\sError/',$content)) {
+					$this->error($content);
+					$this->_result = "Failed";
+					app_log("Email proxy returned mailer error: ".$content,'error',__FILE__,__LINE__);
+					return false;
+				}
+				// Check for explicit success indicators
+				if (preg_match('/success|sent|ok/i',$content)) {
+					$this->_result = "Sent";
+					app_log("Email successfully sent via proxy",'info',__FILE__,__LINE__);
+					return true;
+				}
+				// If no error patterns match but also no success pattern, log warning but assume success
+				// (some proxy servers may return empty or generic 200 responses)
+				app_log("Email proxy returned 200 with content that doesn't match expected patterns: ".$content,'notice',__FILE__,__LINE__);
 				$this->_result = "Sent";
-				app_log("Email successfully sent via proxy",'info',__FILE__,__LINE__);
 				return true;
 			}
-			// If no error patterns match but also no success pattern, log warning but assume success
-			// (some proxy servers may return empty or generic 200 responses)
-			app_log("Email proxy returned 200 with content that doesn't match expected patterns: ".$content,'notice',__FILE__,__LINE__);
-			$this->_result = "Sent";
-			return true;
-		}
-		else {
-			$this->_result = "Failed";
-			$errorMsg = $responseCode.": ".$response->status();
-			$this->error($errorMsg);
-			app_log("Email proxy returned error code: ".$errorMsg,'error',__FILE__,__LINE__);
-			return false;
-		}
+			else {
+				$this->_result = "Failed";
+				$errorMsg = $responseCode.": ".$response->status();
+				$this->error($errorMsg);
+				app_log("Email proxy returned error code: ".$errorMsg,'error',__FILE__,__LINE__);
+				return false;
+			}
 		}
 	}
