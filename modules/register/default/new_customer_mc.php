@@ -259,64 +259,16 @@
 		}
 	}
 
-	// Email Verification Form Submitted
-	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "verify") {
-		app_log("Verifying customer ".$_REQUEST['login']." with key ".$_REQUEST['access'],'notice');
-
-		// Initialize Customer Object
-		$isVerifedAccount = false;
-		$customer = new \Register\Customer();
-		if ($customer->get($_REQUEST['login'])) {
-			app_log("Found customer ".$customer->id);
-			if ($customer->verify_email($_REQUEST['access'])) {
-			
-				// update the queued organization to "PENDING" because the email has been verifed
-				app_log("Validation key confirmed, updating queue record");
-				$queuedCustomer = new \Register\Queue(); 
-				$queuedCustomer->getByQueuedLogin($customer->id);
-				
-				if ($queuedCustomer->status == "VERIFYING") $queuedCustomer->update (array('status'=>'PENDING'));
-
-				// create the notify support reminder email for the new verified customer
-				app_log("Generating notification email");
-				$url = $_config->site->hostname . '/_register/pending_customers';
-				if ($_config->site->https) $url = "https://$url";
-				else $url = "http://$url";
-
-				$template = new \Content\Template\Shell($_config->register->registration_notification->template);
-				$template->addParams(array(
-						'ORGANIZATION.NAME'		=> $queuedCustomer->organization() ? $queuedCustomer->organization()->name : 'Unknown Organization',
-						'CUSTOMER.FIRST_NAME'	=> $customer->first_name,
-						'CUSTOMER.LAST_NAME'	=> $customer->last_name,
-						'EMAIL'					=> $customer->notify_email(),
-						'CUSTOMER.LOGIN'		=> $customer->code,
-						'SITE.LINK'				=> 'http://'.$_config->site->hostname.'/_register/pending_customers',
-						'COMPANY.NAME'			=> $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
-					)
-				);
-
-				$message = new \Email\Message($_config->register->registration_notification);
-				$message->body($template->output());
-
-				app_log("Sending Admin Confirm new customer reminder",'debug');
-				$slackClient = new \Slack\Client();
-				$slackClient->send($_config->register->registration_notification->channel,$template->render());
-				//$role = new \Register\Role();
-				//$role->get('register manager');
-				//$role->notify($message);
-				//if ($role->error()) app_log("Error sending admin confirm new customer reminder: ".$role->error());
-
-				$isVerifedAccount = true;				
-			}
-			else {
-				app_log("Key not matched",'notice');
-				$page->addError("Invalid key");
-			}
-		}
-		else {
-			app_log("Login not matched",'notice');
-			$page->addError("Invalid key");
-		}
+	// Email Verification - only process if NOT an AJAX request (AJAX handled by API)
+	// Set flag to indicate we should show verification UI
+	$showVerificationUI = false;
+	$verificationLogin = null;
+	$verificationAccess = null;
+	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "verify" && !isset($_REQUEST['ajax'])) {
+		// For non-AJAX requests, just pass the parameters to the view
+		$showVerificationUI = true;
+		$verificationLogin = $_REQUEST['login'] ?? null;
+		$verificationAccess = $_REQUEST['access'] ?? null;
 	}
 
 	// Load Data to Populate Form Inputs

@@ -1,5 +1,7 @@
 
 <script>
+    // CSRF token for form submissions
+    var csrfToken = '<?=$GLOBALS['_SESSION_']->getCSRFToken()?>';
 
     // check if the organization already exists for button states
     function checkExisting(id, orgName) {
@@ -139,7 +141,7 @@
    }
    
    function resend(customerId) {
-	  window.location.href = "/_register/pending_customers?verifyAgain="+customerId;
+	  window.location.href = "/_register/pending_customers?verifyAgain="+customerId+"&csrfToken="+encodeURIComponent(csrfToken);
    }
    
    // date picker with max date being current day

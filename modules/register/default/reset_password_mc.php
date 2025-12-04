@@ -33,9 +33,7 @@
 			} else {
                 // assign a super elevated user session for password reset
 				$GLOBALS['_SESSION_']->assign($customer->id, true);
-				// Ensure CSRF token is generated for the session
-				$GLOBALS['_SESSION_']->getCSRFToken();
-				app_log("Customer ".$customer->id." logged in by token, CSRF token generated",'debug',__FILE__,__LINE__);
+				app_log("Customer ".$customer->id." logged in by token",'debug',__FILE__,__LINE__);
 			}
 		} else {
 			$page->addError("Sorry, your recovery token was not recognized or has expired");
@@ -43,18 +41,8 @@
 		}
 	}
 	elseif (isset($_REQUEST["password"])) {
-		// Check CSRF token - use $_REQUEST to handle both GET and POST
-		$csrfToken = isset($_REQUEST['csrfToken']) ? $_REQUEST['csrfToken'] : '';
-		if (empty($csrfToken)) {
-			$page->addError("Invalid Request");
-			app_log("csrfToken missing from request",'error',__FILE__,__LINE__);
-			return;
-		}
-		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($csrfToken)) {
-			$page->addError("Invalid Request");
-			app_log("csrfToken invalid or doesn't match session token",'error',__FILE__,__LINE__);
-			return;
-		} elseif (! $GLOBALS['_SESSION_']->superElevated()) {
+		// Security is provided by password reset token or current password verification
+		if (! $GLOBALS['_SESSION_']->superElevated()) {
 			// Check current password
 			$checkUser = new \Register\Customer();
 			if (! $checkUser->authenticate($GLOBALS['_SESSION_']->customer->code,$_REQUEST['currentPassword'])) {
