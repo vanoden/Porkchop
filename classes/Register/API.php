@@ -739,6 +739,69 @@
         }
 
         ###################################################
+        ### Verify Users Email Address with Queue Update ###
+        ###################################################
+        function verifyEmailWithQueue() {
+            # Initiate Response
+            $response = new \APIResponse();
+            
+            if (empty($_REQUEST['login'])) $this->error("login required");
+            if (empty($_REQUEST['access'])) $this->error("access key required");
+            
+            app_log("Verifying customer ".$_REQUEST['login']." with key ".$_REQUEST['access'],'notice');
+            
+            // Initialize Customer Object
+            $customer = new \Register\Customer();
+            if ($customer->get($_REQUEST['login'])) {
+                app_log("Found customer ".$customer->id);
+                if ($customer->verify_email($_REQUEST['access'])) {
+                    // update the queued organization to "PENDING" because the email has been verified
+                    app_log("Validation key confirmed, updating queue record");
+                    $queuedCustomer = new \Register\Queue(); 
+                    $queuedCustomer->getByQueuedLogin($customer->id);
+                    
+                    if ($queuedCustomer->status == "VERIFYING") $queuedCustomer->update(array('status'=>'PENDING'));
+                    
+                    // create the notify support reminder email for the new verified customer
+                    app_log("Generating notification email");
+                    $url = $GLOBALS['_config']->site->hostname . '/_register/pending_customers';
+                    if ($GLOBALS['_config']->site->https) $url = "https://$url";
+                    else $url = "http://$url";
+                    
+                    $template = new \Content\Template\Shell($GLOBALS['_config']->register->registration_notification->template);
+                    $template->addParams(array(
+                        'ORGANIZATION.NAME'		=> $queuedCustomer->organization() ? $queuedCustomer->organization()->name : 'Unknown Organization',
+                        'CUSTOMER.FIRST_NAME'	=> $customer->first_name,
+                        'CUSTOMER.LAST_NAME'	=> $customer->last_name,
+                        'EMAIL'					=> $customer->notify_email(),
+                        'CUSTOMER.LOGIN'		=> $customer->code,
+                        'SITE.LINK'				=> 'http://'.$GLOBALS['_config']->site->hostname.'/_register/pending_customers',
+                        'COMPANY.NAME'			=> $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
+                    ));
+                    
+                    $message = new \Email\Message($GLOBALS['_config']->register->registration_notification);
+                    $message->body($template->output());
+                    
+                    app_log("Sending Admin Confirm new customer reminder",'debug');
+                    $slackClient = new \Slack\Client();
+                    $slackClient->send($GLOBALS['_config']->register->registration_notification->channel,$template->render());
+                    
+                    $response->success(true);
+                    $response->addElement('verified', true);
+                } else {
+                    app_log("Key not matched",'notice');
+                    $this->error("Invalid key");
+                }
+            } else {
+                app_log("Login not matched",'notice');
+                $this->error("Invalid key");
+            }
+            
+            # Send Response
+            $response->print();
+        }
+
+        ###################################################
         ### Verify Users Email Address					###
         ###################################################
         function notifyContact() {
@@ -2228,6 +2291,26 @@
                             'type' => 'string',
                             'description' => 'Login of the customer whose sessions should be purged. If not provided, sessions for all customers will be purged.',
                             'validation_method' => 'Register::Customer::validLogin()'
+                        )
+                    )
+                ),
+                'verifyEmailWithQueue' => array(
+                    'description' => 'Verify user email address and update queue status',
+                    'authentication_required' => false,
+                    'token_required' => false,
+                    'return_element' => 'verified',
+                    'return_type' => 'boolean',
+                    'parameters' => array(
+                        'login' => array(
+                            'required' => true,
+                            'type' => 'string',
+                            'description' => 'Customer login',
+                            'validation_method' => 'Register::Customer::validLogin()'
+                        ),
+                        'access' => array(
+                            'required' => true,
+                            'type' => 'string',
+                            'description' => 'Email verification access key'
                         )
                     )
                 )

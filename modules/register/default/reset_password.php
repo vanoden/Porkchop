@@ -1,3 +1,24 @@
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', function() {
+	var form = document.querySelector('form[name="loginForm"]');
+	if (form) {
+		var submitButton = form.querySelector('input[type="submit"][name="btn_submit"]');
+		if (submitButton) {
+			form.addEventListener('submit', function(e) {
+				if (submitButton.disabled) {
+					e.preventDefault();
+					return false;
+				}
+				submitButton.disabled = true;
+				submitButton.value = 'Updating Password...';
+				submitButton.style.opacity = '0.6';
+				submitButton.style.cursor = 'not-allowed';
+			});
+		}
+	}
+});
+</script>
+
 <section>
     <h1 class="pageSect_full">Password Reset</h1>
 </section>
@@ -22,7 +43,6 @@
 <?php return; } ?>
 <section id="reg_form" class="body">
 	<form name="loginForm" method="post" action="<?=PATH?>/_register/reset_password">
-	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 <?php
 	if (! $GLOBALS['_SESSION_']->superElevated()) { ?>
 	<h3>Enter current password</h3>

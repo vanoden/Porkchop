@@ -29,7 +29,7 @@ function submitForm() {
   if (document.register.password.value != document.register.password_2.value) {
     alert("Your passwords don't match.");
     return false;
-  }
+  }  
   return true;
 }
 
@@ -176,37 +176,268 @@ function getProvinces() {
 		return false;
 	}
 }
+
+// Prevent double submission by adding form submit listener
+document.addEventListener('DOMContentLoaded', function() {
+	var form = document.querySelector('form[name="register"]');
+	if (form) {
+		var isSubmitting = false;
+		form.addEventListener('submit', function(e) {
+			var submitButton = form.querySelector('input[type="submit"]');
+			
+			// Prevent double submission
+			if (isSubmitting || (submitButton && submitButton.disabled)) {
+				e.preventDefault();
+				return false;
+			}
+			
+			// Set loading state
+			isSubmitting = true;
+			if (submitButton) {
+				submitButton.disabled = true;
+				submitButton.value = 'Sending...';
+				submitButton.style.opacity = '0.6';
+				submitButton.style.cursor = 'not-allowed';
+			}
+		});
+	}
+});
 </script>
 
 <?php
-  if (isset($isVerifedAccount)) {
-    if ($isVerifedAccount) {
-      ?>
-        <section>
-          <ul class="connectBorder progressText">
-            <li>Your account has been verified.</li>
-          </ul>
-        <section>
-        <section>
-          <p>You may login to your account <a href="/_register/login">here</a></p>
-          <i><strong>Note:</strong> Our account administrators will soon fully approve your account to use our platform.</i>
-        <section>
-      <?php        
-    } else {
-      ?>
-        <section id="form-message">
-			<ul class="connectBorder errorText"><?=$page->errorString()?></ul>
-		</section>
-		<h2>Your account could not be verified</h2>
-        <h5>Please check your <strong>spam / other</strong> mail folders in case you still need to find the correct verification link.</h5>
-        <form name="register" action="/_register/new_customer" method="POST">
-            <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-            <input type="hidden" name="method" value="resend">
-            <input type="hidden" name="login" value="<?=$_REQUEST['login'];?>">
-            <input type="submit" class="button register-new-customer-resend-button" value="Resend Email">
-        </form>
-      <?php
+  // Check if we should show verification UI
+  if (isset($showVerificationUI) && $showVerificationUI && $verificationLogin && $verificationAccess) {
+    ?>
+    <style>
+    .verification-container {
+        grid-column: 2/-2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin: 2rem 0;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
     }
+    
+    #verification-loading {
+        text-align: center;
+        padding: 2rem;
+        width: 100%;
+    }
+    
+    .loading-spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    #verification-success {
+        width: 100%;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    #verification-success section {
+        text-align: center;
+        margin: 1rem 0;
+        width: 100%;
+        max-width: 600px;
+    }
+    
+    #verification-success ul {
+        text-align: center;
+    }
+    
+    #verification-success p,
+    #verification-success i {
+        text-align: center;
+        display: block;
+        margin: 0.5rem 0;
+    }
+    
+    .verification-error-container {
+        grid-column: 2/-2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin: 2rem 0;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .verification-error-container h2 {
+        text-align: center;
+        margin: 1rem 0;
+    }
+    
+    .verification-error-container h5 {
+        text-align: center;
+        margin: 1rem 0;
+    }
+    
+    .verification-error-container form {
+        margin-top: 1.5rem;
+        text-align: center;
+    }
+    </style>
+    
+    <div id="verification-container" class="verification-container">
+        <div id="verification-loading">
+            <div class="loading-spinner"></div>
+            <p>Verifying your email address...</p>
+            <p style="color: #666; font-size: 0.9em; margin-top: 1rem;">Please wait while we verify your account. (This may take several minutes)</p>
+            <p style="color: #999; font-size: 0.85em; margin-top: 0.5rem; font-style: italic;">Please don't close the window.</p>
+        </div>
+        <div id="verification-success" style="display: none;">
+            <section style="text-align: center; margin: 1rem 0;">
+                <ul class="connectBorder progressText" style="text-align: center;">
+                    <li>Your account has been verified.</li>
+                </ul>
+            </section>
+            <section style="text-align: center; margin: 1rem 0; display: flex; flex-direction: column; align-items: center;">
+                <p style="text-align: center; margin: 0.5rem 0; display: block; width: 100%;">You may login to your account <a href="/_register/login">here</a></p>
+                <i style="text-align: center; display: block; margin: 0.5rem 0; width: 100%;"><strong>Note:</strong> Our account administrators will soon fully approve your account to use our platform.</i>
+            </section>
+        </div>
+        <div id="verification-error" style="display: none;">
+            <section id="form-message">
+                <ul class="connectBorder errorText" id="verification-error-message"></ul>
+            </section>
+            
+            <div class="verification-error-container">
+                <h2>Your account could not be verified</h2>
+                <h5>Please check your <strong>spam / other</strong> mail folders in case you still need to find the correct verification link.</h5>
+                <form name="register" action="/_register/new_customer" method="POST">
+                    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+                    <input type="hidden" name="method" value="resend">
+                    <input type="hidden" name="login" value="<?=htmlspecialchars($verificationLogin)?>">
+                    <input type="submit" class="button register-new-customer-resend-button" value="Resend Email">
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    (function() {
+        var login = <?=json_encode($verificationLogin)?>;
+        var access = <?=json_encode($verificationAccess)?>;
+        var loadingDiv = document.getElementById('verification-loading');
+        var successDiv = document.getElementById('verification-success');
+        var errorDiv = document.getElementById('verification-error');
+        var errorMessage = document.getElementById('verification-error-message');
+        
+        // Function to parse XML response
+        function parseXMLResponse(xmlText) {
+            var parser = new DOMParser();
+            var xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+            var result = {
+                success: false,
+                error: null
+            };
+            
+            var successNode = xmlDoc.getElementsByTagName('success')[0];
+            if (successNode) {
+                var successValue = successNode.textContent || successNode.text;
+                result.success = (successValue === '1' || successValue === 1);
+            }
+            
+            var errorNode = xmlDoc.getElementsByTagName('error')[0];
+            if (errorNode) {
+                result.error = errorNode.textContent || errorNode.text;
+            }
+            
+            return result;
+        }
+        
+        // Make AJAX call to verify email - request JSON format for easier parsing
+        var params = 'method=verifyEmailWithQueue&login=' + encodeURIComponent(login) + '&access=' + encodeURIComponent(access) + '&_format=json';
+        
+        // Function to handle API response
+        function handleResponse(response, error) {
+            loadingDiv.style.display = 'none';
+            
+            // Check for error or failure (success === 0, success === false, or no success property)
+            var isSuccess = false;
+            var errorText = 'Invalid key';
+            
+            if (error) {
+                errorText = error;
+            } else if (response) {
+                // Check if success is explicitly 1 or true
+                isSuccess = (response.success === 1 || response.success === true);
+                // Extract error message if present
+                if (response.error) {
+                    errorText = response.error;
+                }
+            }
+            
+            if (isSuccess) {
+                // Show success
+                successDiv.style.display = 'block';
+            } else {
+                // Show error with resend button
+                errorMessage.innerHTML = '<li>' + errorText + '</li>';
+                errorDiv.style.display = 'block';
+            }
+        }
+        
+        // Use XMLHttpRequest directly to ensure proper handling
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/_register/api', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                var response = null;
+                var error = null;
+                
+                // Check HTTP status code - 200 OK means request was received
+                if (xhr.status === 200) {
+                    // Try to parse as JSON first
+                    try {
+                        response = JSON.parse(xhr.responseText);
+                    } catch(e) {
+                        // If JSON parsing fails, try XML
+                        try {
+                            var xmlResult = parseXMLResponse(xhr.responseText);
+                            response = {
+                                success: xmlResult.success ? 1 : 0,
+                                error: xmlResult.error
+                            };
+                        } catch(xmlError) {
+                            // If both fail, show generic error
+                            error = 'Error verifying account. Please try again.';
+                        }
+                    }
+                } else {
+                    // Non-200 status code
+                    error = 'Error verifying account. Please try again.';
+                }
+                
+                handleResponse(response, error);
+            }
+        };
+        xhr.onerror = function() {
+            handleResponse(null, 'Network error. Please try again.');
+        };
+        xhr.send(params);
+    })();
+    </script>
+    <?php
   } else {
   ?>
 
