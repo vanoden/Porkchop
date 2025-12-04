@@ -8,10 +8,18 @@
 		$repository = $repositoryBase->getByCode($_REQUEST['repository_code']);
 	}
 
+	if (!empty($_REQUEST['path'])) {
+		$path = $_REQUEST['path'];
+	}
+	else {
+		$path = '/';
+	}
+
 	# Get Images to Display
 	$imageList = new \Media\ImageList();
 	$images = $imageList->find(array(
 		'repository_id' => !empty($repository) ? $repository->id : null,
+		'path' => $path,
 		'limit' => 100,
 		'order_by' => 'edited',
 		'order_direction' => 'DESC'

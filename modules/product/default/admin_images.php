@@ -210,11 +210,13 @@
 	 * Popup New Image Selection Window to user can add existing images to product
 	 */
     function initImageSelectWizard() {
-        var imageSelectUrl = "/_media/image_select";
+		var repositoryCode = "<?=$repository->code?>";
+		var path = "/spectros_product_image";
+        var imageSelectUrl = "/_media/image_select?repository_code="+repositoryCode+"&path="+path;
         console.log("Opening image select window with URL: " + imageSelectUrl);
         
         // Open the image select popup window
-        childWindow = open(imageSelectUrl, "imageselect", 'resizable=no,width=500,height=500');
+        childWindow = open(imageSelectUrl, "imageselect", 'resizable=no,width=500,height=500,location=no,menubar=no,scrollbars=yes,status=no,toolbar=no');
         if (childWindow.opener == null) childWindow.opener = self;
     }
 
