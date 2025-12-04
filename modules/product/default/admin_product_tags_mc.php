@@ -50,8 +50,8 @@
 				$searchTag->validName($_REQUEST['newSearchTag']) && 
 				$searchTag->validName($_REQUEST['newSearchTagCategory'])) {
 
-				// Check if the tag already exists
-				$existingTag = $searchTagList->find(array('class' => 'Product::Item', 'value' => $_REQUEST['newSearchTag']));
+				// Check if the tag already exists (by both category and value)
+				$existingTag = $searchTagList->find(array('class' => 'Product::Item', 'category' => $_REQUEST['newSearchTagCategory'], 'value' => $_REQUEST['newSearchTag']));
 
 				if (empty($existingTag)) {
 					// Create a new tag
