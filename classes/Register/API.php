@@ -89,15 +89,17 @@
 				$emptyOrg->id = null;
 				$emptyOrg->name = '';
 				$emptyOrg->code = '';
-				$me->organization = $emptyOrg;
+				$responseObj = $me->_clone();
+				$responseObj->organization = $emptyOrg;
 			}
 			else {
 				$me = $GLOBALS['_SESSION_']->customer;
 				if (!empty($me)) {
 					$me->unreadMessages = $siteMessagesUnread;
 					$org = $me->organization();
+					$responseObj = $me->_clone();
 					if ($org && $org->id) {
-						$me->organization = $org;
+						$responseObj->organization = $org;
 					}
 					else {
 						// Set empty organization object if none exists
@@ -105,7 +107,7 @@
 						$emptyOrg->id = null;
 						$emptyOrg->name = '';
 						$emptyOrg->code = '';
-						$me->organization = $emptyOrg;
+						$responseObj->organization = $emptyOrg;
 					}
 				}
 				else {
@@ -116,13 +118,18 @@
 					$emptyOrg->id = null;
 					$emptyOrg->name = '';
 					$emptyOrg->code = '';
-					$me->organization = $emptyOrg;
+					$responseObj = $me->_clone();
+					$responseObj->organization = $emptyOrg;
 				}
 			}
 
+			$responseObj->client_ip = $GLOBALS['_REQUEST_']->client_ip ?? '';
+			unset($responseObj->password);
+			unset($responseObj->secret_key);
+
             $response = new \APIResponse();
 			$response->success(true);
-            $response->addElement('customer',$me);
+            $response->addElement('customer',$responseObj);
 
             # Send Response
             $response->print();

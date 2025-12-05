@@ -21,31 +21,31 @@
 		 * @param array $parameters 
 		 * @return bool 
 		 */
-	public function add($parameters = []) {
-		if (parent::add($parameters)) {
-			// Initialize register_user_statistics record with appropriate fields
-			$this->statistics()->initRecord();
-			
-			// Determine if this is admin account creation or new registration
-			// For admin account creation, user_id should be the admin creating it (from session)
-			// For new registration, user_id and instance_id both match the mysql insert id
-			$audit_user_id = null;
-			if (!empty($GLOBALS['_SESSION_']->customer->id) && $GLOBALS['_SESSION_']->customer->id != $this->id) {
-				// Admin account creation - use admin's ID from session
-				$audit_user_id = $GLOBALS['_SESSION_']->customer->id;
-			} else {
-				// New registration - user_id and instance_id match the mysql insert id
-				$audit_user_id = $this->id;
+		public function add($parameters = []) {
+			if (parent::add($parameters)) {
+				// Initialize register_user_statistics record with appropriate fields
+				$this->statistics()->initRecord();
+				
+				// Determine if this is admin account creation or new registration
+				// For admin account creation, user_id should be the admin creating it (from session)
+				// For new registration, user_id and instance_id both match the mysql insert id
+				$audit_user_id = null;
+				if (!empty($GLOBALS['_SESSION_']->customer->id) && $GLOBALS['_SESSION_']->customer->id != $this->id) {
+					// Admin account creation - use admin's ID from session
+					$audit_user_id = $GLOBALS['_SESSION_']->customer->id;
+				} else {
+					// New registration - user_id and instance_id match the mysql insert id
+					$audit_user_id = $this->id;
+				}
+				
+				// Record audit event
+				// instance_id always matches the mysql insert id of the new record
+				$this->auditRecord('REGISTRATION_SUBMITTED','Customer added', $audit_user_id);
+				$this->changePassword($parameters['password']);
+				return true;
 			}
-			
-			// Record audit event
-			// instance_id always matches the mysql insert id of the new record
-			$this->auditRecord('REGISTRATION_SUBMITTED','Customer added', $audit_user_id);
-			$this->changePassword($parameters['password']);
-			return true;
+			else return false;
 		}
-		else return false;
-	}
 
 		/** @method update(parameters)
 		 * Update a customer record
