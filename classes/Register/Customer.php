@@ -296,20 +296,23 @@
 			$this->clearError();
 
 			// Get IP address and user agent for logging
-			$ip_address = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
-			if (isset($GLOBALS['_REQUEST_']->client_ip)) {
-				$ip_address = $GLOBALS['_REQUEST_']->client_ip;
-			}
+			$request = new \HTTP\Request();
+			$request->deconstruct();
+			$ip_address = $request->client_ip;
+
+			// Get User Agent
 			$user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+
+			// Identify EndPoint
 			$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
 
-		// Validate Input
-		if (! $this->validLogin($login)) {
-			// Log authentication failure
-			$failure = new \Register\AuthFailure();
-			$failure->add(array($ip_address,$login,'UNKNOWN',$endpoint,$user_agent));
-			return false;
-		}
+			// Validate Input
+			if (! $this->validLogin($login)) {
+				// Log authentication failure
+				$failure = new \Register\AuthFailure();
+				$failure->add(array($ip_address,$login,'UNKNOWN',$endpoint,$user_agent));
+				return false;
+			}
 
 			// Initialize Database Service
 			$database = new \Database\Service();
