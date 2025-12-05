@@ -198,6 +198,11 @@ if (empty($statusFiltered)) {
 	$_REQUEST['PENDING'] = $statusFiltered[] = 'PENDING';
 }
 
+// Show success message if email was just sent (after redirect)
+if (isset($_GET['emailSent']) && $_GET['emailSent'] == '1') {
+    $page->success = "User was issued another verification email.";
+}
+
 // get results
 app_log("Find");
 if ($can_proceed) {
@@ -244,33 +249,45 @@ if (!empty($verifyAgain)) {
                 app_log("Successfully updated validation key for customer " . $verifyAgain, 'debug');
                 
                 // create the verify account email
-                $verify_url = $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->code;
-                if ($_config->site->https) $verify_url = "https://$verify_url";
-                else $verify_url = "http://$verify_url";
+                $hostname = $_config->site->hostname ?? $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
+                $verify_url = $hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->code;
+                $verify_url = ($_config->site->https ?? false ? "https://" : "http://") . $verify_url;
+                
+                // Get template path with fallback
+                $templatePath = $_config->register->verify_email->template ?? (defined('TEMPLATES') ? TEMPLATES : BASE.'/templates') . '/registration/verify_email.html';
+                
                 $template = new \Content\Template\Shell(
                     array(
-                        'path'    => $_config->register->verify_email->template,
+                        'path'    => $templatePath,
                         'parameters'    => array(
                             'VERIFYING.URL' => $verify_url,
                             'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? ''
                         )
                     )
                 );
-                if ($template->error()) {
-                    app_log($template->error(), 'error');
-                    $page->addError("Error: generating verification email");
-                    $can_proceed = false;
+                
+                $message = new \Email\Message($_config->register->verify_email);
+                $message->html(true);
+                $message->body($template->output());
+                $message->from($_config->register->verify_email->from ?? 'no-reply@spectrosinstruments.com');
+                $message->subject($_config->register->verify_email->subject ?? 'Verify your Email');
+                
+                if (! $customer->notify($message)) {
+                    $page->addError("Error: Confirmation email could not be sent: " . $customer->error());
                 } else {
-                    $message = new \Email\Message($_config->register->verify_email);
-                    $message->html(true);
-                    $message->body($template->output());
-                    if (! $customer->notify($message)) {
-                        $page->addError("Error: Confirmation email could not be sent");
-                        app_log("Error: sending confirmation email: " . $customer->error(), 'error');
-                        $can_proceed = false;
-                    } else {
-                        $page->success = "User was issued another verification email.";
-                    }
+                    // Redirect to remove verifyAgain parameter and preserve search parameters
+                    $redirectParams = array();
+                    if (!empty($searchTerm)) $redirectParams['search'] = $searchTerm;
+                    if (!empty($dateStart)) $redirectParams['dateStart'] = $dateStart;
+                    if (!empty($dateEnd)) $redirectParams['dateEnd'] = $dateEnd;
+                    if (in_array('VERIFYING', $statusFiltered)) $redirectParams['VERIFYING'] = 'VERIFYING';
+                    if (in_array('PENDING', $statusFiltered)) $redirectParams['PENDING'] = 'PENDING';
+                    if (in_array('APPROVED', $statusFiltered)) $redirectParams['APPROVED'] = 'APPROVED';
+                    if (in_array('DENIED', $statusFiltered)) $redirectParams['DENIED'] = 'DENIED';
+                    $redirectParams['emailSent'] = '1';
+                    $redirectUrl = '/_register/pending_customers?' . http_build_query($redirectParams);
+                    header("Location: " . $redirectUrl);
+                    exit;
                 }
             }
         }
