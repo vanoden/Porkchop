@@ -430,7 +430,7 @@
 			}
 
 			// See if the request comes through a proxy server from a local network
-			if (! preg_match('/^(192\.168\.|10\.)/',$_SERVER['REMOTE_ADDR'])) {
+			if (preg_match('/^(192\.168\.|10\.)/',$_SERVER['REMOTE_ADDR'])) {
 
 				// Get the IP address of the client behind trusted proxy
 				if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
