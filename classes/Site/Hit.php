@@ -47,7 +47,7 @@
 
 			// Add Parameters
 			$database->AddParam($parameters['session_id']);
-			$database->AddParam($_SERVER['REMOTE_ADDR']);
+			$database->AddParam($GLOBALS['_REQUEST_']->client_ip ?? '');
 			$database->AddParam($secure);
 			$database->AddParam($_SERVER['SCRIPT_NAME']);
 			$database->AddParam($_SERVER['REQUEST_URI']);

@@ -18,20 +18,19 @@
 		/************************************************/
 		public function auth_failed($reason,$message = null) {
 			// Get client IP address
-			$ip_address = $_SERVER['REMOTE_ADDR'];
 			if (isset($GLOBALS['_REQUEST_']->client_ip)) {
 				$ip_address = $GLOBALS['_REQUEST_']->client_ip;
 			}
-			
+
 			// Get user agent
 			$user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
-			
+
 			// Get login from request
 			$login = isset($_REQUEST['login']) ? $_REQUEST['login'] : '';
-			
+
 			// Get endpoint
 			$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
-			
+
 			// Map reason codes to failure reasons
 			$failure_reason = 'UNKNOWN';
 			switch($reason) {

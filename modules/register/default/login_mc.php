@@ -19,7 +19,7 @@
     // Check Risk Level from Host
 	$CAPTCHA_GO = false;
 	$remote_host = new \Network\Host();
-	if ($remote_host->getByIPAddress($_SERVER['REMOTE_ADDR'])) {
+	if ($remote_host->getByIPAddress($GLOBALS['_REQUEST_']->client_ip ?? '')) {
 		if ($remote_host->CAPTCHARequired()) {
 			$CAPTCHA_GO = true;
 		}
@@ -114,7 +114,7 @@
 					$page->addError("Invalid Request");
 					$failure = new \Register\AuthFailure();
 					$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
-					$failure->add(array($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'CSRFTOKEN',$endpoint));
+					$failure->add(array($GLOBALS['_REQUEST_']->client_ip ?? '',$_REQUEST['login'],'CSRFTOKEN',$endpoint));
 				}
 				else {
 					if ($customer->isBlocked()) {
@@ -123,7 +123,7 @@
 						$counter->increment();
 						$failure = new \Register\AuthFailure();
 						$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
-						$failure->add(array($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'INACTIVE',$endpoint));
+						$failure->add(array($GLOBALS['_REQUEST_']->client_ip ?? '',$_REQUEST['login'],'INACTIVE',$endpoint));
 						app_log("EXIT 1",'notice');
 						return;
 					}
@@ -169,7 +169,7 @@
 						$page->addError("This account is ".$customer->status);
 						$failure = new \Register\AuthFailure();
 						$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
-						$failure->add(array($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'INACTIVE',$endpoint));
+						$failure->add(array($GLOBALS['_REQUEST_']->client_ip ?? '',$_REQUEST['login'],'INACTIVE',$endpoint));
 					} else {
 
 						// populate the final target after the user logs in

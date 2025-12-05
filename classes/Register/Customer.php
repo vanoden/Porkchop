@@ -1359,7 +1359,7 @@
 						'CUSTOMER.NAME' => $this->full_name(),
 						'CUSTOMER.EMAIL' => $notify_email,
 						'DATE.TIME' => date('F j, Y \a\t g:i A T'),
-						'IP.ADDRESS' => $_SERVER['REMOTE_ADDR'] ?? 'Unknown',
+						'IP.ADDRESS' => $GLOBALS['_REQUEST_']->client_ip ?? 'Unknown',
 						'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
 					)
 				)
