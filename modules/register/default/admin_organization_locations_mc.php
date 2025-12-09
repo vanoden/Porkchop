@@ -26,13 +26,16 @@
 	}
 	else $organization = $GLOBALS['_SESSION_']->customer->organization();
 
+	$locations = array();
 	if ($organization->id) {
 		// get locations for organization
-		$locationList = new \Register\LocationList();
-		$locations = $locationList->find(array("organization_id" => $organization->id));
-		if ($locationList->error()) {
-			$page->addError("Error finding organization locations: ".$locationList->error());
-			app_log("Error finding organization locations: ".$locationList->error(),'error',__FILE__,__LINE__);
+		$locations = $organization->locations();
+		if ($organization->error()) {
+			$page->addError("Error finding organization locations: ".$organization->error());
+			app_log("Error finding organization locations: ".$organization->error(),'error',__FILE__,__LINE__);
+		}
+		if (!is_array($locations)) {
+			$locations = array();
 		}
 
 		// Update Existing Organization default billing
