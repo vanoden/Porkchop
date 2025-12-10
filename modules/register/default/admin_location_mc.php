@@ -32,23 +32,43 @@ if (isset($_REQUEST['btn_submit'])) {
 				$page->addError("Invalid city");
 			else {
 				$parameters = array();
+				$changed_fields = array();
 				if ($location->id > 0) {
-					if ($_REQUEST['name'] != $location->name)
+					if ($_REQUEST['name'] != $location->name) {
 						$parameters['name'] = $_REQUEST['name'];
-					if ($_REQUEST['address_1'] != $location->address_1)
+						$changed_fields[] = "Name: '{$location->name}' to '{$_REQUEST['name']}'";
+					}
+					if ($_REQUEST['address_1'] != $location->address_1) {
 						$parameters['address_1'] = $_REQUEST['address_1'];
-					if ($_REQUEST['address_2'] != $location->address_2)
+						$changed_fields[] = "Address 1: '{$location->address_1}' to '{$_REQUEST['address_1']}'";
+					}
+					if ($_REQUEST['address_2'] != $location->address_2) {
 						$parameters['address_2'] = $_REQUEST['address_2'];
-					if (isset($_REQUEST['city']) && $_REQUEST['city'] != $location->city)
+						$changed_fields[] = "Address 2: '{$location->address_2}' to '{$_REQUEST['address_2']}'";
+					}
+					if (isset($_REQUEST['city']) && $_REQUEST['city'] != $location->city) {
 						$parameters['city'] = $_REQUEST['city'];
-					if ($_REQUEST['province_id'] != $location->province_id)
+						$changed_fields[] = "City: '{$location->city}' to '{$_REQUEST['city']}'";
+					}
+					if ($_REQUEST['province_id'] != $location->province_id) {
 						$parameters['province_id'] = $_REQUEST['province_id'];
-					if ($_REQUEST['zip_code'] != $location->zip_code)
+						$old_province = $location->province();
+						$new_province = new \Geography\Province($_REQUEST['province_id']);
+						$changed_fields[] = "Province: '{$old_province->name}' to '{$new_province->name}'";
+					}
+					if ($_REQUEST['zip_code'] != $location->zip_code) {
 						$parameters['zip_code'] = $_REQUEST['zip_code'];
+						$changed_fields[] = "Zip Code: '{$location->zip_code}' to '{$_REQUEST['zip_code']}'";
+					}
 
 					$location->update($parameters);
 					if ($location->error())
 						$page->addError("Error updating location " . $location->id . ": " . $location->error());
+					elseif (!empty($changed_fields) && isset($_REQUEST['organization_id']) && isset($organization) && $organization->id) {
+						// Log location update to organization audit log
+						$audit_notes = "Location '{$location->name}' updated: " . implode("; ", $changed_fields);
+						$organization->auditRecord('ORGANIZATION_UPDATED', $audit_notes);
+					}
 				} else {
 					$parameters['name'] = $_REQUEST['name'];
 					$parameters['address_1'] = $_REQUEST['address_1'];
@@ -65,12 +85,42 @@ if (isset($_REQUEST['btn_submit'])) {
 						} else {
 							$page->addError("Unhandled error adding location");
 						}
+					} elseif (isset($_REQUEST['organization_id']) && isset($organization) && $organization->id) {
+						// Log location addition to organization audit log
+						$audit_notes = "Location '{$parameters['name']}' added: {$parameters['address_1']}, {$parameters['city']}, {$parameters['zip_code']}";
+						$organization->auditRecord('ORGANIZATION_UPDATED', $audit_notes);
 					}
 				}
 
 				// apply any default billing or shipping set
-				if (isset($_REQUEST['organization_id']))
+				if (isset($_REQUEST['organization_id']) && isset($organization) && $organization->id) {
+					$old_default_billing = $organization->default_billing_location_id;
+					$old_default_shipping = $organization->default_shipping_location_id;
+					$new_default_billing = isset($_REQUEST['default_billing']) ? $location->id : null;
+					$new_default_shipping = isset($_REQUEST['default_shipping']) ? $location->id : null;
+					
 					$location->applyDefaultBillingAndShippingAddresses($_REQUEST['organization_id'], $location->id, isset($_REQUEST['default_billing']), isset($_REQUEST['default_shipping']));
+					
+					// Log default address changes to organization audit log
+					$default_changes = array();
+					if ($old_default_billing != $new_default_billing) {
+						if ($new_default_billing == $location->id) {
+							$default_changes[] = "Set '{$location->name}' as default billing address";
+						} elseif ($old_default_billing == $location->id) {
+							$default_changes[] = "Removed '{$location->name}' as default billing address";
+						}
+					}
+					if ($old_default_shipping != $new_default_shipping) {
+						if ($new_default_shipping == $location->id) {
+							$default_changes[] = "Set '{$location->name}' as default shipping address";
+						} elseif ($old_default_shipping == $location->id) {
+							$default_changes[] = "Removed '{$location->name}' as default shipping address";
+						}
+					}
+					if (!empty($default_changes)) {
+						$organization->auditRecord('ORGANIZATION_UPDATED', implode("; ", $default_changes));
+					}
+				}
 				if ($page->errorCount() < 1) {
 					if (isset($_REQUEST['organization_id']) && !$location->associateOrganization($_REQUEST['organization_id']))
 						$page->addError("Error associating organization: " . $location->error());
