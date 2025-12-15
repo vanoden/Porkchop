@@ -26,8 +26,33 @@
 
 		public function add($parameters = array()) {
 			$province = new \Geography\Province($parameters['province_id']);
+			if (!$province->id) {
+				$this->error("Province not found");
+				return false;
+			}
+			// Ensure province details are loaded to get country_id
+			if (empty($province->country_id)) {
+				$province->details();
+			}
 			$parameters['country_id'] = $province->country_id;
 			return parent::add($parameters);
+		}
+
+		public function update($parameters = []): bool {
+			// If province_id is being updated, also update country_id
+			if (isset($parameters['province_id']) && $parameters['province_id'] != $this->province_id) {
+				$province = new \Geography\Province($parameters['province_id']);
+				if (!$province->id) {
+					$this->error("Province not found");
+					return false;
+				}
+				// Ensure province details are loaded to get country_id
+				if (empty($province->country_id)) {
+					$province->details();
+				}
+				$parameters['country_id'] = $province->country_id;
+			}
+			return parent::update($parameters);
 		}
 
         /**

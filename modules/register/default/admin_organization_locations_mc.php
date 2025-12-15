@@ -26,35 +26,72 @@
 	}
 	else $organization = $GLOBALS['_SESSION_']->customer->organization();
 
+	$locations = array();
 	if ($organization->id) {
 		// get locations for organization
-		$locationList = new \Register\LocationList();
-		$locations = $locationList->find(array("organization_id" => $organization->id));
-		if ($locationList->error()) {
-			$page->addError("Error finding organization locations: ".$locationList->error());
-			app_log("Error finding organization locations: ".$locationList->error(),'error',__FILE__,__LINE__);
+		$locations = $organization->locations();
+		if ($organization->error()) {
+			$page->addError("Error finding organization locations: ".$organization->error());
+			app_log("Error finding organization locations: ".$organization->error(),'error',__FILE__,__LINE__);
+		}
+		if (!is_array($locations)) {
+			$locations = array();
 		}
 
 		// Update Existing Organization default billing
 		if (!empty($_REQUEST['setDefaultBilling']) && is_numeric($_REQUEST['setDefaultBilling'])) {
+		    $old_billing_location_id = $organization->default_billing_location_id;
+		    $new_billing_location_id = $_REQUEST['setDefaultBilling'];
+		    
 		    $updateParameters = array();
-		    $updateParameters['default_billing_location_id'] = $_REQUEST['setDefaultBilling'];
+		    $updateParameters['default_billing_location_id'] = $new_billing_location_id;
 		    $organization->update($updateParameters);
 		    if ($organization->error()) {
 			    $page->addError("Error updating organization");
 		    } else {
+			    // Log the change to organization audit log
+			    $old_location_name = "None";
+			    if ($old_billing_location_id) {
+			        $old_location = new \Register\Location($old_billing_location_id);
+			        if ($old_location->id) {
+			            $old_location_name = $old_location->name;
+			        }
+			    }
+			    $new_location = new \Register\Location($new_billing_location_id);
+			    $new_location_name = $new_location->id ? $new_location->name : "Unknown";
+			    
+			    $audit_notes = "Default billing location changed from '{$old_location_name}' to '{$new_location_name}'";
+			    $organization->auditRecord('ORGANIZATION_UPDATED', $audit_notes);
+			    
 			    $page->appendSuccess("Organization Updated Successfully");
 		    }		
 		}
 		
 		// Update Existing Organization default shipping
         if (!empty($_REQUEST['setDefaultShipping']) && is_numeric($_REQUEST['setDefaultShipping'])) {
+		    $old_shipping_location_id = $organization->default_shipping_location_id;
+		    $new_shipping_location_id = $_REQUEST['setDefaultShipping'];
+		    
 		    $updateParameters = array();
-		    $updateParameters['default_shipping_location_id'] = $_REQUEST['setDefaultShipping'];
+		    $updateParameters['default_shipping_location_id'] = $new_shipping_location_id;
 		    $organization->update($updateParameters);
 		    if ($organization->error()) {
 			    $page->addError("Error updating organization");
 		    } else {
+			    // Log the change to organization audit log
+			    $old_location_name = "None";
+			    if ($old_shipping_location_id) {
+			        $old_location = new \Register\Location($old_shipping_location_id);
+			        if ($old_location->id) {
+			            $old_location_name = $old_location->name;
+			        }
+			    }
+			    $new_location = new \Register\Location($new_shipping_location_id);
+			    $new_location_name = $new_location->id ? $new_location->name : "Unknown";
+			    
+			    $audit_notes = "Default shipping location changed from '{$old_location_name}' to '{$new_location_name}'";
+			    $organization->auditRecord('ORGANIZATION_UPDATED', $audit_notes);
+			    
 			    $page->appendSuccess("Organization Updated Successfully");
 		    }
 		}
