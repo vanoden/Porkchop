@@ -51,8 +51,6 @@
 		"Geography"		=> array(
 			"schema"		=> 1,
 			"roles"			=> array(
-				"geography manager"	=> array(),
-				"geography user"	=> array(),
 			),
 			"privileges"	=> array(
 				'manage geographical data',
