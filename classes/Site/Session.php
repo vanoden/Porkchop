@@ -904,7 +904,7 @@ use Register\Customer;
 			$otpStatus = $this->getOTPVerified();
 			app_log("OTP verified status: " . ($otpStatus === false ? 'false' : ($otpStatus === true ? 'true' : 'null')), 'debug', __FILE__, __LINE__, 'otplogs');
 			app_log("Current URI: " . $_SERVER['REQUEST_URI'], 'debug', __FILE__, __LINE__, 'otplogs');
-			
+
 			if ($GLOBALS['_config']->register->use_otp && isset($this->customer->id) && $this->customer->requiresOTP() && $this->customer->id > 0 && $this->getOTPVerified() === false) {
 				// If OTP is required and not verified, redirect to OTP page
 				// But don't redirect if we're already on the OTP page to prevent loops
@@ -917,10 +917,10 @@ use Register\Customer;
 				}
 			}
 			if (isset($this->customer->id) && $this->customer->id > 0) {
-				app_log("Authentication successful", 'debug', __FILE__, __LINE__, 'otplogs');
+				app_log("User Authentication Confirmed", 'debug', __FILE__, __LINE__, 'otplogs');
 				return true;
 			} else {
-				app_log("Authentication failed - no customer ID", 'debug', __FILE__, __LINE__, 'otplogs');
+				app_log("User Not Yet Authenticated - no customer ID", 'debug', __FILE__, __LINE__, 'otplogs');
 				return false;
 			}
 		}
