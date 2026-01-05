@@ -98,7 +98,7 @@
 			}
 
 			// Fetch ID of new record
-			$this->id = $GLOBALS['_database']->Insert_ID();
+			$this->id = $database->Insert_ID();
 
 			// Audit the add event
 			$auditLog = new \Site\AuditLog\Event();
