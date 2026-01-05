@@ -136,9 +136,6 @@
 
 			$database = new \Database\Service();
 
-			$database->trace(9);
-			$database->debug = 'screen';
-
 			$find_person_query = "
 				SELECT	id
 				FROM	register_users
