@@ -1,6 +1,7 @@
 <?php
 	namespace Product;
 
+	include_once INCLUDES. '/enums.php';
 	/**
 	 * Class Item
 	 * 
@@ -51,6 +52,9 @@
 
 		/** @var int|null The spec table image ID */
 		public ?int $spec_table_image = null;
+
+		/** @var int Visibility Matrix - Defaults to 255 for full visibility */
+		public int $visibility = 255;
 
 		/**
 		 * Constructor
@@ -186,7 +190,8 @@
 				"max_quantity"	=> '/^\d+(\.\d+)?$/',
 				"default_vendor" => '/^\d*$/',
 				"total_purchased" => '/^\d+(\.\d+)?$/',
-				"total_cost" => '/^\d+(\.\d+)?$/'
+				"total_cost" => '/^\d+(\.\d+)?$/',
+				"visibility"	=> '/^\d+$/',
 			);
 
 			# Prepare Query to Update Product
@@ -206,7 +211,12 @@
 					}
 					if ($current->$parameter != $parameters[$parameter]) {
 						$changed_value++;
-						$change_description .= "Changed $parameter from ".$current->$parameter." to ".$parameters[$parameter]."; ";
+						if ($parameter == 'visibility') {
+							#$this->visibility = $parameters['visibility'];
+							$change_description .= "Changed visibility to ".implode(", ", $this->visibilitiesStrings())."; ";
+						} else {
+							$change_description .= "Changed $parameter from ".$current->$parameter." to ".$parameters[$parameter]."; ";
+						}
 					}
 					else continue;
 					$update_product_query .= ",
@@ -358,6 +368,7 @@
 				$this->total_cost = $product->total_cost ?? 0;
 				$this->manual_id = $product->manual_id ?? null;
 				$this->spec_table_image = $product->spec_table_image ?? null;
+				$this->visibility = $product->visibility ?? 255;
 				$this->cached($product->_cached);
 				$this->exists(true);
 
@@ -406,6 +417,7 @@
 				$this->total_cost = $object->total_cost ?? 0;
 				$this->manual_id = $object->manual_id ?? null;
 				$this->spec_table_image = $object->spec_table_image ?? null;
+				$this->visibility = $object->visibility ?? 255;
 				$this->exists(true);
 			}
 			else {
@@ -414,6 +426,7 @@
 				$this->name = "";
 				$this->code = "";
 				$this->description = "";
+				$this->visibility = 0;
 				return false;
 			}
 
@@ -924,5 +937,59 @@
 		public function validVariantType($type) {
 			$valid_types = ['none','size','color','shape','material','model','style'];
 			return in_array($type, $valid_types);
+		}
+
+		/** @method setVisibility(productVisibilityRealm $realm, bool $visible) */
+		/* Set the visibility of the product in a specific realm
+		 * @param productVisibilityRealm $realm The visibility realm
+		 * @param bool $visible True to make visible, false to hide
+		 * @return bool True if successful, false otherwise
+		 */
+		public function setVisibility(\productVisibilityRealm $realm, bool $visible): bool {
+			app_log("Setting product visibility for realm ".$realm->name." to ".($visible ? "visible" : "hidden"),'info',__FILE__,__LINE__);
+			if ($visible === $this->getVisibility($realm)) {
+				app_log("Product visibility for realm ".$realm->name." already set to ".($visible ? "visible" : "hidden"),'info',__FILE__,__LINE__);
+				return true;
+			}
+			app_log("Current visibility matrix for realm ".$realm->value.": ".$this->visibility,'info',__FILE__,__LINE__);
+			$this->visibility = setMatrix($this->visibility, $realm->value, $visible);
+			app_log("Setting product visibility to ".$this->visibility,'info',__FILE__,__LINE__);
+			return $this->update(array('visibility' => $this->visibility));
+		}
+
+		/** @method getVisibility(productVisibilityRealm $realm)
+		 * Get the visibility of the product in a specific realm
+		 * @param productVisibilityRealm $realm The visibility realm
+		 * @return bool True if visible, false otherwise
+		 */
+		public function getVisibility(\productVisibilityRealm $realm): bool {
+			return inMatrix($this->visibility, $realm->value);
+		}
+
+		/** @method visibilities()
+		 * Get an array of visibility realms where the product is visible
+		 * @return array Array of productVisibilityRealm values
+		 */
+		public function visibilities(): array {
+			$realms = [];
+			foreach (\productVisibilityRealm::cases() as $realm) {
+				if ($this->getVisibility($realm)) {
+					$realms[] = $realm;
+				}
+			}
+			return $realms;
+		}
+
+		/** @method visibilitiesStrings()
+		 * Get an array of visibility realm names where the product is visible
+		 * @return array Array of visibility realm names
+		 */		public function visibilitiesStrings(): array {
+			$realms = [];
+			foreach (\productVisibilityRealm::cases() as $realm) {
+				if ($this->getVisibility($realm)) {
+					$realms[] = $realm->name;
+				}
+			}
+			return $realms;
 		}
 	}

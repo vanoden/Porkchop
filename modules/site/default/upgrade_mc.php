@@ -20,8 +20,6 @@
 		),
 		"Geography"		=> array(
 			"roles"			=> array(
-				"geography manager"	=> array(),
-				"geography user"	=> array(),
 			),
 		),
 		"Content"		=> array(
@@ -34,12 +32,6 @@
 		),
         "Register"		=> array(
 			"roles"			=> array(
-				"register manager"	=> array(
-					"description"		=> "Manager Organizations and Users"
-				),
-				"register reporter"	=> array(
-					"description"		=> "View Organizations and Users"
-				),
 			),
 			"templates"		=> array(
 				"organizations"		=> $admin_template,
@@ -69,8 +61,6 @@
 		"Navigation"	=> array(),
         "Storage"		=> array(
 			"roles"			=> array(
-				"storage manager"	=> $admin_template,
-				"storage upload"	=> $admin_template,
 			),
 			"templates"		=> array(
 				"repositories"		=> $admin_template,
@@ -80,15 +70,10 @@
 		),
 		"Media"			=> array(
 			"roles"			=> array(
-				"media developer"	=> array(),
-				"media manager"		=> array(),
-				"media reporter"	=> array(),
 			),
 		),
         "Product"		=> array(
 			"roles"			=> array(
-				"product manager"	=> array(),
-				"product reporter"	=> array(),
 			),
 			"templates"		=> array(
 				"report"			=> $admin_template,
@@ -97,14 +82,10 @@
 		),
         "Email"			=> array(
 			"roles"			=> array(
-				"manager"		=> array(),
 			),
 		),
 		"Monitor"		=> array(
 			"roles"			=> array(
-				"monitor admin"		=> array(),
-				"monitor manager"	=> array(),
-				"monitor reporter"	=> array(),
 				"monitor asset"		=> array(),
 			),
 			"templates"		=> array(

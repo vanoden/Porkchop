@@ -72,7 +72,7 @@
 			// Execute Query
 			$rs = $database->Execute($get_queued_contacts_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return [];
 			}
 			// get list of contacts for UI

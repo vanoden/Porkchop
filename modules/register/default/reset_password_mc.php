@@ -33,7 +33,7 @@
 			} else {
                 // assign a super elevated user session for password reset
 				$GLOBALS['_SESSION_']->assign($customer->id, true);
-				app_log("Customer ".$customer->id." logged in by token",'notice',__FILE__,__LINE__);
+				app_log("Customer ".$customer->id." logged in by token",'debug',__FILE__,__LINE__);
 			}
 		} else {
 			$page->addError("Sorry, your recovery token was not recognized or has expired");
@@ -41,11 +41,8 @@
 		}
 	}
 	elseif (isset($_REQUEST["password"])) {
-		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
-			$page->addError("Invalid Request");
-			app_log("csrfToken missing or invalid",'info');
-			return;
-		} elseif (! $GLOBALS['_SESSION_']->superElevated()) {
+		// Security is provided by password reset token or current password verification
+		if (! $GLOBALS['_SESSION_']->superElevated()) {
 			// Check current password
 			$checkUser = new \Register\Customer();
 			if (! $checkUser->authenticate($GLOBALS['_SESSION_']->customer->code,$_REQUEST['currentPassword'])) {

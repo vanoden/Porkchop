@@ -1,5 +1,26 @@
 <script src="https://www.google.com/recaptcha/api.js"></script>
 
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', function() {
+	var form = document.querySelector('form[action="forgot_password"]');
+	if (form) {
+		var submitButton = form.querySelector('input[type="submit"][name="btn_submit"]');
+		if (submitButton) {
+			form.addEventListener('submit', function(e) {
+				if (submitButton.disabled) {
+					e.preventDefault();
+					return false;
+				}
+				submitButton.disabled = true;
+				submitButton.value = 'Sending...';
+				submitButton.style.opacity = '0.6';
+				submitButton.style.cursor = 'not-allowed';
+			});
+		}
+	}
+});
+</script>
+
 <?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">
 	<ul class="connectBorder errorText">

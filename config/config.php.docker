@@ -120,7 +120,7 @@
         );
         $_config->register->verify_email = (object) array(
                 "from"          => 'no-reply@spectrosinstruments.com',
-                "subject"       => 'Contact Form Submitted',
+                "subject"       => 'Verify your Email',
                 "channel"               => '',
                 "template"      => TEMPLATES."/registration/verify_email.html"
         );

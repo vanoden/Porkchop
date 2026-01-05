@@ -14,8 +14,8 @@ class Image extends \Storage\File {
 			return null;
 		}
 
-		$repository = $this->repository();
-		$data = $repository->content($this);
+		// Get The Original Image Content
+		$data = $this->content();
 		if ($this->error()) {
 			return null;
 		}

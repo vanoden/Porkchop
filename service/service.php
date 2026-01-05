@@ -178,6 +178,11 @@
 	}
 	$logger->writeln("Database Initiated",'trace');
 
+
+	/* Global Aggregate Variables */
+	$_page_query_count = 0;
+	$_page_query_time = 0;
+
 	###################################################
 	### Connect to Memcache if so configured		###
 	###################################################
@@ -212,6 +217,10 @@
 	// Temporarily Local Session Table
 	$sessionList = new \S4Engine\SessionList();
 	$clientList = new \S4Engine\ClientList();
+
+
+	// Initialize Error Factory
+	$errorFactory = new \S4Engine\Error\Factory();
 
 	/* Allow the script to hang around waiting for connections. */
 	set_time_limit(0);
@@ -334,89 +343,54 @@
 			$s4Engine = new \S4Engine\Engine();
 			$s4Engine->serverId(99);
 
-			// Debugging
-			//app_log($s4Engine->printChars($buffer),'info');
-
-			//app_log("ENG IN :  TYPE: Unknown SERVER: ".$s4Engine->serverId()." CLIENTID: ".$s4Engine->clientId()." SESSIONCODE: ".$s4Engine->sessionCodeDebug(),'info');
-
 			// See if we have a full message and parse it if so
 			if ($s4Engine->parse($buffer)) {
 				//app_log("Getting message from engine");
 				$request = $s4Engine->getMessage();
 
+				$envelope = "";		// Outgoing message buffer
 				if (empty($request)) {
 					app_log("Got no message back!",'error');
 					$response = new \Document\S4\BadRequestResponse();
-
+					$error = $errorFactory->createError(1);
+					$response->errorType($error->typeId());
 					$s4Engine->setMessage($response);
 					$envSize = $s4Engine->serialize($envelope);
 					socket_write($msgsock, $envelope, $envSize);
 					break;
 				}
 				// See if we have a session for this client
-				elseif ($s4Engine->clientId() > 0) {
-					// Get the client
-					app_log("Looking for client ".$s4Engine->clientId(),'info');
-					$client = new \S4Engine\Client();
-					if (!$client->get($s4Engine->clientId())) {
-						app_log("Failed to load client instance: ".$client->error(),'error');
-						$response = new \Document\S4\BadRequestResponse();
-						$s4Engine->setMessage($response);
-						app_log("ERR OUT:  TYPE: ".$request->typeName()." SERVER: ".$s4Engine->serverId()." CLIENTID: ".$client->id()." CLIENTNUM: ".$client->number(),'info');
-	
-						$envSize = $s4Engine->serialize($envelope);
-						socket_write($msgsock, $envelope, $envSize);
-						break;
-					}
-					app_log("FOUND CLIENT:  TYPE: ".$request->typeName()." SERVER: ".$s4Engine->serverId()." CLIENTID: ".$client->id()." CLIENTNUM: ".$client->number(),'info');
-
-					// Get the session
-					app_log("Looking for session for client ".$client->id().", session code ".$s4Engine->session()->codeDebug(),'info');
-					$session = new \S4Engine\Session();
-					if ($session->getSession($client->id(),$s4Engine->session()->codeArray())) {
-						// Populate Global Variable for Application
-						$_SESSION_ = $session->portalSession();
-
-						app_log("Loading existing session",'info');
-						// Session code, Client Id contained in session
+				elseif ($s4Engine->sessionId() > 0) {
+					$session = $s4Engine->session();
+					$_SESSION_ = $session;
+					if ($session->id() > 0) {
 						$client = $session->client();
-
-						app_log("FOUND SESSION:  TYPE: ".$request->typeName()."SERVER: ".$s4Engine->serverId()." CLIENTID: ".$client->id()." CLIENTNUM: ".$client->number()." SESSIONCODE: ".$session->codeDebug()." SESSIONNUM: ".$session->id(),'info');
-
-						if ($client->id() < 1) {
-							app_log("Failed to load client instance: ".$client->error(),'error');
+						print_r($session);
+						print_r($client);
+						if (! $client->id() > 0) {
+							app_log("Session has invalid client id: ".$session->clientId(),'error');
+							$error = $errorFactory->createError(3);
 							$response = new \Document\S4\BadRequestResponse();
+							$response->errorType($error->typeId());
 							$s4Engine->setMessage($response);
 							$envSize = $s4Engine->serialize($envelope);
 							socket_write($msgsock, $envelope, $envSize);
 							break;
 						}
-
-						//print_r($session->portalSession());
+						elseif ($client->number() != $s4Engine->clientId()) {
+							app_log("Session Client ID Mismatch: ".$client->number()." != ".$s4Engine->clientId(),'error');
+							$error = $errorFactory->createError(3);
+							$response = new \Document\S4\BadRequestResponse();
+							$response->errorType($error->typeId());
+							$s4Engine->setMessage($response);
+							$envSize = $s4Engine->serialize($envelope);
+							socket_write($msgsock, $envelope, $envSize);
+							break;
+						}
+						else {
+							app_log("Loaded session ".$session->id()." for client ".$client->id(),'info');
+						}
 					}
-					else {
-						// Create a new session
-						app_log("Creating a new session",'info');
-						$client = new \S4Engine\Client();
-						if (is_null($client)) {
-							app_log("Failed to create client instance: ".$client->error(),'error');
-							$response = new \Document\S4\BadRequestResponse();
-							$s4Engine->setMessage($response);
-							$envSize = $s4Engine->serialize($envelope);
-							socket_write($msgsock, $envelope, $envSize);
-							break;
-						}
-						elseif ($client->id() < 1) {
-							app_log("Client was created without an id",'error');
-							$response = new \Document\S4\BadRequestResponse();
-							$s4Engine->setMessage($response);
-							$envSize = $s4Engine->serialize($envelope);
-							socket_write($msgsock, $envelope, $envSize);
-							break;
-						}
-						$session = $sessionList->addInstance(array('client_id' => $client->id()));
-					}
-					//app_log("DUN:  TYPE: ".$request->typeName()." SERVER: ".$s4Engine->serverId()." CLIENTID: ".$s4Engine->session()->client()->id()." CLIENTNUM: ".$client->number()." SESSIONCODE: ".$session->codeDebug()." SESSIONNUM: ".$session->id(),'info');
 				}
 
 				app_log("Received ".$request->typeName()."!",'info');
@@ -436,8 +410,10 @@
 						app_log("Creating a new client",'info');
 						$client = new \S4Engine\Client();
 						if (is_null($client)) {
+							$error = $errorFactory->createError(7);
 							app_log("Failed to create client instance",'error');
 							$response = new \Document\S4\BadRequestResponse();
+							$response->errorType($error->typeId());
 							$s4Engine->setMessage($response);
 							$envSize = $s4Engine->serialize($envelope);
 							socket_write($msgsock, $envelope, $envSize);
@@ -456,7 +432,9 @@
 								exit;
 							}
 							else {
+								$error = $errorFactory->createError(7);
 								$response = new \Document\S4\BadRequestResponse();
+								$response->errorType($error->typeId());
 								app_log("Failed to create client instance: ".$client->error(),'error');
 							}
 							$s4Engine->setMessage($response);
@@ -469,7 +447,9 @@
 						$session = $sessionList->addInstance(array('client_id' => $client->id()));
 						if ($session->error()) {
 							app_log("Failed to create session instance: ".$session->error(),'error');
+							$error = $errorFactory->createError(7);
 							$response = new \Document\S4\BadRequestResponse();
+							$response->errorType($error->typeId());
 							$s4Engine->setMessage($response);
 							$envSize = $s4Engine->serialize($envelope);
 							socket_write($msgsock, $envelope, $envSize);
@@ -521,6 +501,8 @@
 							if (!$asset->exists()) {
 								app_log("Asset not found",'notice');
 								$response = new \Document\S4\BadRequestResponse();
+								$error = $errorFactory->createError(8);
+								$response->errorType($error->typeId());
 							}
 							else {
 								app_log("Finding sensor ".$request->sensorId(),'info');
@@ -528,10 +510,14 @@
 								if (!$sensor->exists()) {
 									app_log("Sensor not found",'notice');
 									$response = new \Document\S4\BadRequestResponse();
+									$error = $errorFactory->createError(8);
+									$response->errorType($error->typeId());
 								}
 								elseif ($sensor->asset()->id() != $asset->id()) {
 									app_log("Sensor does not belong to asset",'notice');
 									$response = new \Document\S4\BadRequestResponse();
+									$error = $errorFactory->createError(8);
+									$response->errorType($error->typeId());
 								}
 								else {
 									app_log("Adding reading to asset ".$asset->id()." sensor ".$sensor->id(),'info');
@@ -572,8 +558,8 @@
 						break;
 					case 13:		// Auth Request
 						$customer = new \Register\Customer();
-						app_log("Authenticating Customer '".$request->login()."' with 'TestPH3Node'");
-						if ($customer->authenticate($request->login(),'TestPH3Node')) {
+						app_log("Authenticating Customer '".$request->login()."' with '".$request->password()."'");
+						if ($customer->authenticate($request->login(),$request->password())) {
 							app_log("Customer '".$customer->login()."' authenticated",'info');
 							$session->portalSession()->assign($customer->id());
 							$response = new \Document\S4\AuthResponse();
@@ -600,10 +586,18 @@
 						$s4Engine->printChars($envelope);
 						socket_write($msgsock, $envelope, $envSize);
 						break;
-
+					case 19:
+						app_log("Unauthorized Request",'notice');
+						$response = new \Document\S4\Unauthorized();
+						$s4Engine->setMessage($response);
+						$envSize = $s4Engine->serialize($envelope);
+						socket_write($msgsock, $envelope, $envSize);
+						break;
 					default:		// Unrecognized
 						app_log("Unknown request type: ".$request->typeId(),'error');
 						$response = new \Document\S4\BadRequestResponse();
+						$error = $errorFactory->createError(1);
+						$response->errorType($error->typeId());
 						$s4Engine->setMessage($response);
 						$envSize = $s4Engine->serialize($envelope);
 						socket_write($msgsock, $envelope, $envSize);
@@ -616,6 +610,8 @@
 				$logger->writeln("Error parsing request: ".$s4Engine->error(),'error');
 				print("Error parsing request: ".$s4Engine->error()."\n");
 				$response = new \Document\S4\BadRequestResponse();
+				$error = $errorFactory->createError(5);
+				$response->errorType($error->typeId());
 				$s4Engine->setMessage($response);
 				$envSize = $s4Engine->serialize($envelope);
 				if ($envSize < 1) {

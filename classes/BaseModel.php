@@ -824,6 +824,13 @@ class BaseModel extends \BaseClass {
 	public function setMetadataScalar(string $key, string $value): bool {
 		$this->clearError();
 		if (! isset($value)) return $this->unsetMetadata($key);
+		
+		// Validate that object has a valid ID before setting metadata
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			$this->error("Cannot set metadata: object ID is invalid or not set");
+			return false;
+		}
+		
 		// Initialize Database Service
 		$database = new \Database\Service();
 
@@ -869,6 +876,12 @@ class BaseModel extends \BaseClass {
 	 */
 	public function setMetadataObject(string $key, stdClass $value): bool {
 		$this->clearError();
+		
+		// Validate that object has a valid ID before setting metadata
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			$this->error("Cannot set metadata: object ID is invalid or not set");
+			return false;
+		}
 
 		// Initialize Database Service
 		$database = new \Database\Service();

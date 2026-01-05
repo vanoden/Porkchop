@@ -348,7 +348,7 @@
 			// Execute Query
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return [];
 			}
 

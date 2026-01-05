@@ -1,5 +1,7 @@
 
 <script>
+    // CSRF token for form submissions
+    var csrfToken = '<?=$GLOBALS['_SESSION_']->getCSRFToken()?>';
 
     // check if the organization already exists for button states
     function checkExisting(id, orgName) {
@@ -138,8 +140,25 @@
 	   document.getElementById("customer_add_form_" + queueId).submit();
    }
    
-   function resend(customerId) {
-	  window.location.href = "/_register/pending_customers?verifyAgain="+customerId;
+   function resend(customerId, buttonElement) {
+	  // Disable button and show loading state
+	  if (buttonElement) {
+		  buttonElement.disabled = true;
+		  var originalText = buttonElement.textContent || buttonElement.innerText;
+		  buttonElement.textContent = 'Sending...';
+		  buttonElement.setAttribute('data-original-text', originalText);
+		  // Style button as grey with white text
+		  buttonElement.style.backgroundColor = '#6c757d';
+		  buttonElement.style.color = '#ffffff';
+		  buttonElement.style.cursor = 'not-allowed';
+		  buttonElement.style.opacity = '0.7';
+	  }
+	  
+	  // Preserve all search parameters
+	  var params = new URLSearchParams(window.location.search);
+	  params.set('verifyAgain', customerId);
+	  params.set('csrfToken', csrfToken);
+	  window.location.href = "/_register/pending_customers?" + params.toString();
    }
    
    // date picker with max date being current day
@@ -258,7 +277,6 @@
 					<span class="register-pending-customers-status-verifying">
 						<img src="/img/contact/icon_form-mail.svg" alt="Email Validating" class="status-icon"> Email Validating
 					</span>
-					<button type="button" class="button secondary marginTop_5" onclick="resend(<?=$queuedCustomer->register_user_id?>)">Resend Verification Email</button>
 				</div>
 				<?php
 				break;
@@ -311,6 +329,11 @@
 		  <div id="customer_status_form_links_<?=$queuedCustomer->id?>" class="customer_status_form_links">
 			  <span class="register-pending-customers-status-<?=strtolower($queuedCustomer->status)?>"><?=$queuedCustomer->status?></span><br/>
 			  <a class="small-text cursor-pointer" onclick="editStatus(<?=$queuedCustomer->id?>)"><img src="/img/icons/edit_dk.svg" alt="Edit Status" class="edit-icon"> Edit Status</a>
+			  <?php if ($queuedCustomer->status == 'VERIFYING') { ?>
+			  <div class="marginTop_5">
+				  <button type="button" class="button secondary" onclick="resend(<?=$queuedCustomer->register_user_id?>, this)">Resend Email</button>
+			  </div>
+			  <?php } ?>
 		  </div>
 	  </div>
 	  <div class="tableCell">
@@ -340,13 +363,36 @@
 	  </div>
 	  <div class="tableCell">
 		  <div id="customer_notes_form_<?=$queuedCustomer->id?>" class="hidden customer_notes_form">
-        <form method="POST" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
+        <form method="POST" action="/_register/pending_customers">
           <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
           <div>
             <textarea name="notes" class="value input notes-textarea" placeholder="Enter admin notes..."><?=htmlspecialchars($queuedCustomer->notes ?? '')?></textarea>
           </div>
           <input type="hidden" name="action" value="updateNotes"/>
-          <input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/><br/><br/><br/>
+          <input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/>
+          <!-- Preserve search parameters -->
+          <?php if (!empty($_REQUEST['search'])) { ?>
+          <input type="hidden" name="search" value="<?=htmlspecialchars($_REQUEST['search'])?>">
+          <?php } ?>
+          <?php if (!empty($_REQUEST['dateStart'])) { ?>
+          <input type="hidden" name="dateStart" value="<?=htmlspecialchars($_REQUEST['dateStart'])?>">
+          <?php } ?>
+          <?php if (!empty($_REQUEST['dateEnd'])) { ?>
+          <input type="hidden" name="dateEnd" value="<?=htmlspecialchars($_REQUEST['dateEnd'])?>">
+          <?php } ?>
+          <?php if (isset($_REQUEST['VERIFYING'])) { ?>
+          <input type="hidden" name="VERIFYING" value="VERIFYING">
+          <?php } ?>
+          <?php if (isset($_REQUEST['PENDING'])) { ?>
+          <input type="hidden" name="PENDING" value="PENDING">
+          <?php } ?>
+          <?php if (isset($_REQUEST['APPROVED'])) { ?>
+          <input type="hidden" name="APPROVED" value="APPROVED">
+          <?php } ?>
+          <?php if (isset($_REQUEST['DENIED'])) { ?>
+          <input type="hidden" name="DENIED" value="DENIED">
+          <?php } ?>
+          <br/><br/><br/>
           <div class="button-spacing">
             <button type="submit" class="button save-button">Save</button>
             <button type="button" class="button secondary small-button" onclick="cancelEditNote(<?=$queuedCustomer->id?>)">Cancel</button>

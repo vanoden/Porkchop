@@ -99,10 +99,6 @@
 	###################################################
 	$_REQUEST_ = new \HTTP\Request();
 	$_REQUEST_->deconstruct();
-	
-	# Identify Remote IP.  User X-Forwarded-For if local address
-	if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) and preg_match('/^(192\.168|172\.16|10|127\.)\./',$_SERVER['REMOTE_ADDR'])) $_REQUEST_->client_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-	else $_REQUEST_->client_ip = $_SERVER['REMOTE_ADDR'];
 
 	###################################################
 	### Traffic Management							###

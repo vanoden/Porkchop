@@ -3,8 +3,6 @@
 
 	class AuthRequest Extends \Document\S4\Message {
 		private $_userId;
-		private $_login;
-		private $_password;
 
 		public function __construct() {
 			$this->_typeId = 13;
@@ -12,25 +10,25 @@
 			$this->_login = "";
 		}
 
-		public function parse(array $array): bool {
+		public function parse(array $array, $length = 0): bool {
 			// Parse the Data
 			$this->_login = "";
 			$this->_password = "";
 			$pos = 0;
-			app_log("Parsing ".count($array)." bytes of data",'info');
+			app_log("Parsing $length bytes of data",'info');
 
-			while ($pos < count($array)) {
+			while ($pos < $length) {
 				if (ord($array[$pos]) == 0) {
 					$pos ++;
 					break;
 				}
 				else {
-					$this->_login .= chr(ord($array[$pos]));
+					$this->_login .= $array[$pos];
 				}
 				$pos ++;
 			}
-			while ($pos < count($array)) {
-				$this->_password .= chr(ord($array[$pos]));
+			while ($pos < $length) {
+				$this->_password .= $array[$pos];
 				$pos ++;
 			}
 			app_log("AuthRequest::parse() - Login: ".$this->_login.", Password: ".$this->_password,'info');
@@ -67,5 +65,9 @@
 				$this->error("Invalid Login");
 				return null;
 			}
+		}
+
+		public function readable(): string {
+			return "Login: ".$this->_login.", Password: ".$this->_password;
 		}
 	}

@@ -104,7 +104,6 @@ class File extends \BaseModel {
 		$database->AddParam($parameters['path']);
 
 		// Execute Query
-		$database->trace(9);
 		$database->Execute($add_object_query);
 
 		// Check for Errors
@@ -347,7 +346,7 @@ class File extends \BaseModel {
 				AND		path = ?";
 			$database->AddParam($path);
 		}
-		$database->trace(9);
+
 		// Execute Query
 		$rs = $database->Execute($get_file_query);
 
@@ -623,10 +622,55 @@ class File extends \BaseModel {
 	 * @return string - Content of the file
 	 */
 	public function content() {
+		// Initialize Repository
 		$repository = $this->repository();
-		$repository->content($this);
 		if ($repository->error()) $this->error($repository->error());
-		return $repository->content($this);
+
+		// See If Cache Configured
+		if (empty($GLOBALS['_config']->storage->cache_path) || !is_dir($GLOBALS['_config']->storage->cache_path)) {
+			// Cache not configured, load from repository
+			app_log("Cache path not configured, loading from repository", 'debug');
+			return $repository->content($this);
+		}
+
+		// Check Cache
+		$cachePath = $GLOBALS['_config']->storage->cache_path . "/" . $this->code;
+		if (file_exists($cachePath)) {
+			if (filesize($cachePath) > 0) {
+				// File Found in Cache!
+				app_log("Loading file from cache: " . $cachePath, 'debug');
+				return file_get_contents($cachePath);
+			}
+			else {
+				// Cached File is Zero Bytes, Remove It
+				app_log("Cached file is zero bytes, removing: " . $cachePath, 'debug');
+				unlink($cachePath);
+			}
+		}
+
+		// File Not Found in Cache, Load from Repository and Cache It
+		app_log("File not found in cache: " . $cachePath.", loading from repository", 'debug');
+		$file_handle = fopen($cachePath, 'w');
+		if (! $file_handle) {
+			// Can't cache file, return content directly
+			$this->error("Unable to open cache file for writing: " . $cachePath);
+			return $repository->content($this);
+		}
+		app_log("Caching file to: " . $cachePath, 'debug');
+		fwrite($file_handle, $repository->content($this));
+		fclose($file_handle);
+
+		// Return from Cache
+		return file_get_contents($cachePath);
+	}
+
+	/** @method cacheFile()
+	 * Cache the file locally and return the local path
+	 * @return string - Local path of the cached file
+	 */
+	public function cacheFile() {
+		$repository = $this->repository();
+		$localPath = $GLOBALS['_CONFIG_']->storage->cache_path . "/" . $this->code;
 	}
 
 	public function code() {

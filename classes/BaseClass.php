@@ -1108,16 +1108,17 @@ class BaseClass {
     
     /**
      * Get client IP address
+     * Checks multiple server variables in order of priority
+     * Prioritizes HAProxy HTTP_X_FORWARDED_FOR header when available
+     * Handles comma-separated values (takes first IP)
+     * Validates IP address before returning
      * 
      * @return string Client IP address
      */
     public function getIpAddress(): string {
-        if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ip = filter_var($_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP);
-            if ($ip !== false) return $ip;
-        }
-        if (isset($_SERVER['REMOTE_ADDR'])) return filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) ?: '';
-        return '';
+        $request = new \HTTP\Request();
+		$request->deconstruct();
+		return $request->client_ip;
     }
 
 	/**

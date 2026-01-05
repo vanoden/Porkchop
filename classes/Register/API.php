@@ -13,6 +13,57 @@
 			parent::__construct();
 		}
 
+		/************************************************/
+		/* Override auth_failed to log to register_auth_failures */
+		/************************************************/
+		public function auth_failed($reason,$message = null) {
+			// Get client IP address
+			if (isset($GLOBALS['_REQUEST_']->client_ip)) {
+				$ip_address = $GLOBALS['_REQUEST_']->client_ip;
+			}
+
+			// Get user agent
+			$user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+
+			// Get login from request
+			$login = isset($_REQUEST['login']) ? $_REQUEST['login'] : '';
+
+			// Get endpoint
+			$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
+
+			// Map reason codes to failure reasons
+			$failure_reason = 'UNKNOWN';
+			switch($reason) {
+				case 'blocked_account':
+					$failure_reason = 'INACTIVE';
+					break;
+				case 'expired_account':
+					$failure_reason = 'PASSEXPIRED';
+					break;
+				case 'inactive_account':
+					$failure_reason = 'INACTIVE';
+					break;
+				case 'incorrect_password':
+					// This will be logged by authenticate() method, but log here too for API calls
+					$failure_reason = 'WRONGPASS';
+					break;
+				case 'too_many_failures':
+					$failure_reason = 'UNKNOWN';
+					break;
+				default:
+					$failure_reason = 'UNKNOWN';
+			}
+			
+			// Log the failure to register_auth_failures
+			if (!empty($login)) {
+				$failure = new \Register\AuthFailure();
+				$failure->add(array($ip_address, $login, $failure_reason, $endpoint, $user_agent));
+			}
+			
+			// Call parent method
+			parent::auth_failed($reason, $message);
+		}
+
         ###################################################
         ### Get Details regarding Current Customer		###
         ###################################################
@@ -27,27 +78,58 @@
 				$siteMessagesUnread = $siteMessageDeliveryList->count();
 			}
 			else {
-				$siteMessagesUnread = [];
+				$siteMessagesUnread = 0;
 			}
 
-			if (empty($GLOBALS['_SESSION_'])) {
+			if (empty($GLOBALS['_SESSION_']) || empty($GLOBALS['_SESSION_']->customer)) {
 				$me = new \Register\Customer();
 				$me->unreadMessages = 0;
+				// Set empty organization object for JavaScript compatibility
+				$emptyOrg = new \stdClass();
+				$emptyOrg->id = null;
+				$emptyOrg->name = '';
+				$emptyOrg->code = '';
+				$responseObj = $me->_clone();
+				$responseObj->organization = $emptyOrg;
 			}
 			else {
 				$me = $GLOBALS['_SESSION_']->customer;
 				if (!empty($me)) {
 					$me->unreadMessages = $siteMessagesUnread;
-					$me->organization = $me->organization();
+					$org = $me->organization();
+					$responseObj = $me->_clone();
+					if ($org && $org->id) {
+						$responseObj->organization = $org;
+					}
+					else {
+						// Set empty organization object if none exists
+						$emptyOrg = new \stdClass();
+						$emptyOrg->id = null;
+						$emptyOrg->name = '';
+						$emptyOrg->code = '';
+						$responseObj->organization = $emptyOrg;
+					}
 				}
 				else {
-					//$me->unreadMessages = 0;
+					$me = new \Register\Customer();
+					$me->unreadMessages = 0;
+					// Set empty organization object for JavaScript compatibility
+					$emptyOrg = new \stdClass();
+					$emptyOrg->id = null;
+					$emptyOrg->name = '';
+					$emptyOrg->code = '';
+					$responseObj = $me->_clone();
+					$responseObj->organization = $emptyOrg;
 				}
 			}
 
+			$responseObj->client_ip = $GLOBALS['_REQUEST_']->client_ip ?? '';
+			unset($responseObj->password);
+			unset($responseObj->secret_key);
+
             $response = new \APIResponse();
 			$response->success(true);
-            $response->addElement('customer',$me);
+            $response->addElement('customer',$responseObj);
 
             # Send Response
             $response->print();
@@ -658,6 +740,69 @@
             
             else $this->error("Invalid validation key");
 
+            # Send Response
+            $response->print();
+        }
+
+        ###################################################
+        ### Verify Users Email Address with Queue Update ###
+        ###################################################
+        function verifyEmailWithQueue() {
+            # Initiate Response
+            $response = new \APIResponse();
+            
+            if (empty($_REQUEST['login'])) $this->error("login required");
+            if (empty($_REQUEST['access'])) $this->error("access key required");
+            
+            app_log("Verifying customer ".$_REQUEST['login']." with key ".$_REQUEST['access'],'notice');
+            
+            // Initialize Customer Object
+            $customer = new \Register\Customer();
+            if ($customer->get($_REQUEST['login'])) {
+                app_log("Found customer ".$customer->id);
+                if ($customer->verify_email($_REQUEST['access'])) {
+                    // update the queued organization to "PENDING" because the email has been verified
+                    app_log("Validation key confirmed, updating queue record");
+                    $queuedCustomer = new \Register\Queue(); 
+                    $queuedCustomer->getByQueuedLogin($customer->id);
+                    
+                    if ($queuedCustomer->status == "VERIFYING") $queuedCustomer->update(array('status'=>'PENDING'));
+                    
+                    // create the notify support reminder email for the new verified customer
+                    app_log("Generating notification email");
+                    $url = $GLOBALS['_config']->site->hostname . '/_register/pending_customers';
+                    if ($GLOBALS['_config']->site->https) $url = "https://$url";
+                    else $url = "http://$url";
+                    
+                    $template = new \Content\Template\Shell($GLOBALS['_config']->register->registration_notification->template);
+                    $template->addParams(array(
+                        'ORGANIZATION.NAME'		=> $queuedCustomer->organization() ? $queuedCustomer->organization()->name : 'Unknown Organization',
+                        'CUSTOMER.FIRST_NAME'	=> $customer->first_name,
+                        'CUSTOMER.LAST_NAME'	=> $customer->last_name,
+                        'EMAIL'					=> $customer->notify_email(),
+                        'CUSTOMER.LOGIN'		=> $customer->code,
+                        'SITE.LINK'				=> 'http://'.$GLOBALS['_config']->site->hostname.'/_register/pending_customers',
+                        'COMPANY.NAME'			=> $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
+                    ));
+                    
+                    $message = new \Email\Message($GLOBALS['_config']->register->registration_notification);
+                    $message->body($template->output());
+                    
+                    app_log("Sending Admin Confirm new customer reminder",'debug');
+                    $slackClient = new \Slack\Client();
+                    $slackClient->send($GLOBALS['_config']->register->registration_notification->channel,$template->render());
+                    
+                    $response->success(true);
+                    $response->addElement('verified', true);
+                } else {
+                    app_log("Key not matched",'notice');
+                    $this->error("Invalid key");
+                }
+            } else {
+                app_log("Login not matched",'notice');
+                $this->error("Invalid key");
+            }
+            
             # Send Response
             $response->print();
         }
@@ -2152,6 +2297,26 @@
                             'type' => 'string',
                             'description' => 'Login of the customer whose sessions should be purged. If not provided, sessions for all customers will be purged.',
                             'validation_method' => 'Register::Customer::validLogin()'
+                        )
+                    )
+                ),
+                'verifyEmailWithQueue' => array(
+                    'description' => 'Verify user email address and update queue status',
+                    'authentication_required' => false,
+                    'token_required' => false,
+                    'return_element' => 'verified',
+                    'return_type' => 'boolean',
+                    'parameters' => array(
+                        'login' => array(
+                            'required' => true,
+                            'type' => 'string',
+                            'description' => 'Customer login',
+                            'validation_method' => 'Register::Customer::validLogin()'
+                        ),
+                        'access' => array(
+                            'required' => true,
+                            'type' => 'string',
+                            'description' => 'Email verification access key'
                         )
                     )
                 )

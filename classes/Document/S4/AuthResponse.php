@@ -41,4 +41,8 @@
 			}
 			return count($array);
 		}
+
+		public function readable(): string {
+			return "Auth Response: ".($this->_success ? "Success" : "Failure");
+		}
 	}

@@ -53,8 +53,12 @@
 					$this->error("Invalid method");
 					return array();
 				}
+				// Use JSON_EXTRACT for better performance (MySQL 5.7+ / MariaDB 10.2+)
+				// The method is stored at the top level of the JSON: {"method":"addReading",...}
+				// Since method is already validated, we can safely escape it
+				$method_escaped = $GLOBALS['_database']->qstr($parameters['method']);
 				$get_event_query .= "
-				AND		mc.request like '%\"method\":\"".$parameters['method']."\"%'";
+				AND		JSON_UNQUOTE(JSON_EXTRACT(mc.request, '$.method')) = ".$method_escaped;
 			}
 
 			if (!empty($parameters['result'])) {
@@ -145,7 +149,7 @@
 
 			$rs = $database->Execute($get_event_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			list($session_id) = $rs->FetchRow();

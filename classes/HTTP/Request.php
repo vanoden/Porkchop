@@ -210,7 +210,7 @@
 		 * Deconstructs the HTTP request from the server variables
 		 * Parses the URI, identifies module, view, index, and query variables
 		 */
-		public function deconstruct() {
+		public function deconstruct(): true {
 			app_log("REQUEST: ".$_SERVER['REQUEST_URI'],'debug',__FILE__,__LINE__);
 			# Store User Agent
 			$this->user_agent = $_SERVER['HTTP_USER_AGENT'];
@@ -220,6 +220,9 @@
 
 			# Decode URI
 			$this->_uri = urldecode($this->_uri);
+
+			# Fetch Useable Client IP Address
+			$this->client_ip = $this->getClientIP();
 
 			# Parse Query String
 			if ($this->_uri == "/") {
@@ -362,6 +365,8 @@
 				$qv_counter ++;
 			}
 			$this->_body = file_get_contents('php://input');
+
+			return true;
 		}
 
 		/** @method body(string $body = null)
@@ -414,100 +419,132 @@
 			return $this->_parameters[$key] ?? null;
 		}
 
+		/** @method getClientIP()
+		 * Figure out the best Client IP Address available
+		 * @return IP Address
+		 */
+		public function getClientIP(): ?string {
+			// Nothing to do without any reliable information
+			if (!isset ($_SERVER['REMOTE_ADDR'])) {
+				return NULL;
+			}
+
+			// See if the request comes through a proxy server from a local network
+			if (preg_match('/^(192\.168\.|10\.)/',$_SERVER['REMOTE_ADDR'])) {
+
+				// Get the IP address of the client behind trusted proxy
+				if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+
+					// Header can contain multiple IP-s of proxies that are passed through.
+					// Only the IP added by the last proxy (last IP in the list) can be trusted.
+					$proxy_list = explode (",", $_SERVER['HTTP_X_FORWARDED_FOR']);
+					$client_ip = trim (end ($proxy_list));
+
+					// Validate just in case
+					if (filter_var ($client_ip, FILTER_VALIDATE_IP)) {
+						return $client_ip;
+					}
+				}
+			}
+
+			// In all other cases, REMOTE_ADDR is the ONLY IP we can trust.
+			return $_SERVER['REMOTE_ADDR'];
+		}
+
 		/** @method riskLevel()
 		 * Calculates the risk level of the request based on various factors
 		 * @return int The calculated risk level
 		 */
-        public function riskLevel() {
-            $risk_level = 0;
-            $uri = $this->_uri;
-            if (preg_match('/^([\/\w\-\_\.]+)\?(.*)$/',$uri,$matches)) {
-                $uri = $matches[1];
-                $query_string = $matches[2];
-            }
-            elseif (preg_match('/^([\/\w\-\_\.]+)$/',$uri,$matches)) {
-                $uri = $matches[1];
-                $query_string = null;
-            }
-            else {
-                # Unparseable URI
-                app_log("WAF RULE: unparseable URI",'trace2');
-                $risk_level += 80;
-                $uri = null;
-            }
+		public function riskLevel() {
+			$risk_level = 0;
+			$uri = $this->_uri;
+			if (preg_match('/^([\/\w\-\_\.]+)\?(.*)$/',$uri,$matches)) {
+				$uri = $matches[1];
+				$query_string = $matches[2];
+			}
+			elseif (preg_match('/^([\/\w\-\_\.]+)$/',$uri,$matches)) {
+				$uri = $matches[1];
+				$query_string = null;
+			}
+			else {
+				# Unparseable URI
+				app_log("WAF RULE: unparseable URI",'trace2');
+				$risk_level += 80;
+				$uri = null;
+			}
 
-            if ($this->module && $this->module != "content") {
-                # Proper Porkchop URI
-                app_log("WAF RULE: porkchop URI",'trace2');
-                $risk_level -= 50;
-            }
-            elseif (preg_match('/([\w\-\.\_]+)\.([\w\-\_]+)/',$uri,$matches)) {
-                $extension = $matches[2];
-                $basename = $matches[1].".".$matches[2];
-                if ($basename == "wplogin.php") {
-                    # We're not WordPress
-                    app_log("WAF RULE: wplogin",'trace2');
-                    $risk_level += 100;
-                }
-                elseif (preg_match('/^(php|asp|aspx|jsp|jspx|exe|cgi|pl)$/i',$extension)) {
-                    # Porkchop doesn't use engines based on extension
-                    app_log("WAF RULE: extension",'trace2');
-                    $risk_level += 100;
-                }
-                elseif (preg_match('/^vendor\/phpunit/',$uri)) {
-                    # No php unit test here
-                    app_log("WAF RULE: phpunit",'trace2');
-                    $risk_level += 100;
-                }
-                elseif (preg_match('/^\./',$uri)) {
-                    # Hidden files or backref
-                    app_log("WAF RULE: hidden file",'trace2');
-                    $risk_level += 100;
-                }
-            }
+			if ($this->module && $this->module != "content") {
+				# Proper Porkchop URI
+				app_log("WAF RULE: porkchop URI",'trace2');
+				$risk_level -= 50;
+			}
+			elseif (preg_match('/([\w\-\.\_]+)\.([\w\-\_]+)/',$uri,$matches)) {
+				$extension = $matches[2];
+				$basename = $matches[1].".".$matches[2];
+				if ($basename == "wplogin.php") {
+					# We're not WordPress
+					app_log("WAF RULE: wplogin",'trace2');
+					$risk_level += 100;
+				}
+				elseif (preg_match('/^(php|asp|aspx|jsp|jspx|exe|cgi|pl)$/i',$extension)) {
+					# Porkchop doesn't use engines based on extension
+					app_log("WAF RULE: extension",'trace2');
+					$risk_level += 100;
+				}
+				elseif (preg_match('/^vendor\/phpunit/',$uri)) {
+					# No php unit test here
+					app_log("WAF RULE: phpunit",'trace2');
+					$risk_level += 100;
+				}
+				elseif (preg_match('/^\./',$uri)) {
+					# Hidden files or backref
+					app_log("WAF RULE: hidden file",'trace2');
+					$risk_level += 100;
+				}
+			}
 
-            $contents = array(
-                preg_replace('/[\/\\\.\-\_\%\'\"\0\=]/','',$query_string ?? ''),
-                preg_replace('/[\/\\\.\-\_\%\'\"\0\=]/','',$this->_body ?? '')
-            );
+			$contents = array(
+				preg_replace('/[\/\\\.\-\_\%\'\"\0\=]/','',$query_string ?? ''),
+				preg_replace('/[\/\\\.\-\_\%\'\"\0\=]/','',$this->_body ?? '')
+			);
 
-            foreach ($contents as $content) {
-                if (preg_match('/select.+from/i',$content)) {
-                    # SQL Injection Attempt
-                    app_log("WAF RULE: SQL Inject",'trace2');
-                    $risk_level += 100;
-                }
-                elseif (preg_match('/insert.+into/i',$content)) {
-                    # SQL Injection Attempt
-                    app_log("WAF RULE: SQL Inject",'trace2');
-                    $risk_level += 100;
-                }
-                elseif (preg_match('/update.+set/i',$content)) {
-                    # SQL Injection Attempt
-                    app_log("WAF RULE: SQL Inject",'trace2');
-                    $risk_level += 100;
-                }
-                elseif (preg_match('/replace.+into/i',$content)) {
-                    # SQL Injection Attempt
-                    app_log("WAF RULE: SQL Inject",'trace2');
-                    $risk_level += 100;
-                }
-                elseif (preg_match('/delete.+from/i',$content)) {
-                    # SQL Injection Attempt
-                    app_log("WAF RULE: SQL Inject",'trace2');
-                    $risk_level += 100;
-                }
-                elseif (preg_match('/drop.+database/i',$content)) {
-                    # SQL Injection Attempt
-                    app_log("WAF RULE: SQL Inject",'trace2');
-                    $risk_level += 100;
-                }
-                elseif (preg_match('/alter.+table/i',$content)) {
-                    # SQL Injection Attempt
-                    app_log("WAF RULE: SQL Inject",'trace2');
-                    $risk_level += 100;
-                }
-            }
-            return $risk_level;
-        }
+			foreach ($contents as $content) {
+				if (preg_match('/select.+from/i',$content)) {
+					# SQL Injection Attempt
+					app_log("WAF RULE: SQL Inject",'trace2');
+					$risk_level += 100;
+				}
+				elseif (preg_match('/insert.+into/i',$content)) {
+					# SQL Injection Attempt
+					app_log("WAF RULE: SQL Inject",'trace2');
+					$risk_level += 100;
+				}
+				elseif (preg_match('/update.+set/i',$content)) {
+					# SQL Injection Attempt
+					app_log("WAF RULE: SQL Inject",'trace2');
+					$risk_level += 100;
+				}
+				elseif (preg_match('/replace.+into/i',$content)) {
+					# SQL Injection Attempt
+					app_log("WAF RULE: SQL Inject",'trace2');
+					$risk_level += 100;
+				}
+				elseif (preg_match('/delete.+from/i',$content)) {
+					# SQL Injection Attempt
+					app_log("WAF RULE: SQL Inject",'trace2');
+					$risk_level += 100;
+				}
+				elseif (preg_match('/drop.+database/i',$content)) {
+					# SQL Injection Attempt
+					app_log("WAF RULE: SQL Inject",'trace2');
+					$risk_level += 100;
+				}
+				elseif (preg_match('/alter.+table/i',$content)) {
+					# SQL Injection Attempt
+					app_log("WAF RULE: SQL Inject",'trace2');
+					$risk_level += 100;
+				}
+			}
+			return $risk_level;
+		}
 	}

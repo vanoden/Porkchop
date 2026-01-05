@@ -26,7 +26,7 @@
 	}
 	document.addEventListener("DOMContentLoaded", function() {
 		scrollToBottom('sales_cart_form');
-		var activeElem = "<?=$_REQUEST['active_element']?>";
+		var activeElem = "<?=isset($_REQUEST['active_element']) ? $_REQUEST['active_element'] : ''?>";
 		if (activeElem.length > 0) document.forms[0].activeElem.focus();
 	});
 </script>
@@ -49,8 +49,8 @@
 	    </div>
       <div class="tableRow">
         <div class="tableCell"><?=$order->date_created()?></div>
-        <div class="tableCell"><?=$order->saleperson()?></div>
-        <div class="tableCell"><?=$order->status?></div>
+        <div class="tableCell"><?php if ($order->salesperson_id > 0) { $salesperson = $order->salesperson(); echo $salesperson->full_name(); } else echo "N/A"; ?></div>
+        <div class="tableCell"><?=$order->status()?></div>
         <div class="tableCell">
           <select id="shipping_location" name="shipping_location" onchange="update()">
             <option value="">Select</option>

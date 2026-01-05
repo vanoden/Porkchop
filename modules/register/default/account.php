@@ -74,17 +74,17 @@
 
 <section id="reg_form" class="body">
 	<h1 class="pageSect_full">My Account</h1>
-
+	
 	<!-- Success/Error Messages Section -->
 	<?php if ($page->errorCount() > 0) { ?>
-		<section id="form-message" class="message error">
+		<section id="form-message" class="message error pageSect_full" style="margin-top: 0.5rem;">
 			<ul class="connectBorder errorText">
 				<li><?= $page->errorString() ?></li>
 			</ul>
 		</section>
 	<?php }
 	if ($page->success) { ?>
-		<section id="form-message" class="message success">
+		<section id="form-message" class="message success pageSect_full" style="margin-top: 0.5rem;">
 			<ul class="connectBorder progressText">
 				<li><?= $page->success ?></li>
 			</ul>
@@ -313,7 +313,9 @@
 
 			<?php if (!$readOnly) { ?>
 				<!-- Two-Factor Authentication Section -->
-				<?php if ($GLOBALS['_config']->register->use_otp) { ?>
+				<?php
+					$configurations = new \Site\Configuration(); 
+					if ($configurations->getValueBool("use_otp")) { ?>
 					<section class="form-group two-factor pageSect_full">
 						<h5>Time Based Password [Google Authenticator]</h5>
 						<div class="checkbox-group">

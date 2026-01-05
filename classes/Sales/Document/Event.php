@@ -2,15 +2,16 @@
 	namespace Sales\Document;
 
 	class Event extends \BaseModel {
-		public $order_id;
+		public $document_id;
 		public $user_id;
 		public $date_event;
 		public $new_status;
 		public $message;
+		public $type;
 
 		public function __construct($id = 0) {
-			$this->_tableName = 'sales_order_events';
-			$this->_addFields(array('order_id','user_id','date_event','new_status'));
+			$this->_tableName = 'sales_document_events';
+			$this->_addFields(array('document_id','user_id','date_event','new_status','type'));
 			parent::__construct($id);
 		}
 
@@ -20,24 +21,27 @@
 
 			$database = new \Database\Service();
 
-			$order = new \Sales\Document($parameters['order_id']);
+			$order = new \Sales\Document($parameters['order_id'] ?? $parameters['document_id'] ?? null);
 			if (! $order->exists()) {
 				$this->error("Document not found");
 				return false;
 			}
             if (!isset($parameters['user_id'])) $parameters['user_id'] = $GLOBALS['_SESSION_']->customer->id;
 			if (!isset($parameters['new_status'])) $parameters['new_status'] = $order->status();
+			if (!isset($parameters['type'])) $parameters['type'] = $parameters['type'] ?? 'CREATE';
+			$document_id = $parameters['order_id'] ?? $parameters['document_id'] ?? $order->id;
 
 			$add_object_query = "
 				INSERT
-				INTO	sales_order_events
-				(		id,order_id,date_event,user_id,new_status)
+				INTO	sales_document_events
+				(		id,document_id,date_event,user_id,new_status,type)
 				VALUES
-				(		null,?,sysdate(),?,?)
+				(		null,?,sysdate(),?,?,?)
 			";
-			$database->AddParam($parameters['order_id']);
+			$database->AddParam($document_id);
 			$database->AddParam($parameters['user_id']);
 			$database->AddParam($parameters['new_status']);
+			$database->AddParam($parameters['type']);
 
 			$database->Execute($add_object_query);
 			if ($database->ErrorMsg()) {
@@ -61,7 +65,7 @@
 		public function update($parameters = array()): bool {
 
 			$update_object_query = "
-				UPDATE	sales_order_events
+				UPDATE	sales_document_events
 				SET		id = id";
 
 			$bind_params = array();
@@ -103,7 +107,7 @@
 		public function details(): bool {
 			$get_details_query = "
 				SELECT	*
-				FROM	sales_order_events
+				FROM	sales_document_events
 				WHERE	id = ?
 			";
 			$rs = $GLOBALS['_database']->Execute($get_details_query,array($this->id));
@@ -115,11 +119,12 @@
 			if ($this->id) {
 				app_log("Got details for ".$this->id);
 				$this->id = $object->id;
-				$this->order_id = $object->order_id;
+				$this->document_id = $object->document_id;
 				$this->user_id = $object->user_id;
 				$this->date_event = $object->date_event;
                 $this->new_status = $object->new_status;
-                $this->message = $object->message;
+                $this->message = $object->message ?? null;
+				$this->type = $object->type ?? null;
 				return true;
 			}
 			else {

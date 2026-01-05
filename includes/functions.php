@@ -99,7 +99,7 @@
 		}
 
 		# Unix Timestamp
-		if (preg_match('/^\d{10}$/',$date)) {
+		if (preg_match('/^\d{9,10}$/',$date)) {
 			# Unix Timestamp
 			return date('Y-m-d H:i:s',$date);
 		}
@@ -555,6 +555,7 @@
 	 * @return int
 	 */
 	function setMatrix($byte,$position,$value) {
+		app_log("setMatrix called with byte=$byte, position=$position, value=".($value ? "true" : "false"),'debug',__FILE__,__LINE__);
 		$mask = 1 << (7 - $position);
 		if ($value) {
 			$byte = $byte | $mask;
@@ -562,6 +563,7 @@
 		else {
 			$byte = $byte & (~$mask);
 		}
+		app_log("setMatrix returning byte=$byte",'debug',__FILE__,__LINE__);
 		return $byte;
 	}
 

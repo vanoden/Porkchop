@@ -1,6 +1,8 @@
 <?php
 	namespace S4Engine;
 
+use Site\Session as SiteSession;
+
 	/**
 	 * Session Object
 	 */
@@ -10,6 +12,9 @@
 		public int $_endTime = 0;						// End Time as Unix Timestamp
 		public int $_clientId = 0;						// Client ID
 		public int $_portalSessionId = 0;				// Portal Session ID
+
+		// Map Actual Session Fields for Compatibility
+		public ?string $timezone = 'UTC';
 
 		/**
 		 * Constructor
@@ -192,6 +197,14 @@
 				$this->_endTime = strtotime($object->time_end);
 				$this->_clientId = $object->client_id;
 				$this->_portalSessionId = $object->portal_id;
+
+				// Fetch Values from Associated Portal Session
+				$portalSession = new \Site\Session();
+				$portalSession->id($this->_portalSessionId);
+				$portalSession->details();
+				if ($portalSession->exists()) {
+					$this->timezone = $portalSession->timezone();
+				}
 			}
 			else {
 				$this->_number = 0;
@@ -201,6 +214,35 @@
 				$this->_portalSessionId = 0;
 			}
 			return true;
+		}
+
+		/** @method getSessionByNumber(number)
+		 * Get the Session by Number
+		 * @param int $sessionNumber
+		 * @return bool
+		 */
+		public function getSessionByNumber(int $sessionNumber): bool {
+			$this->clearError();
+			$database = new \Database\Service();
+			$get_object_query = "
+				SELECT	id
+				FROM	s4engine_sessions
+				WHERE	number = ?
+			";
+			$database->AddParam($sessionNumber);
+			$rs = $database->Execute($get_object_query);
+			if (! $rs) {
+				$this->error("Error getting session: ".$database->error());
+				return false;
+			}
+			$object = $rs->FetchNextObject();
+			if (!empty($object->id)) {
+				$this->id = $object->id;
+				return $this->details();
+			}
+			else {
+				return false;
+			}
 		}
 
 		/**
@@ -273,13 +315,25 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * Get the Client Object for the session
 		 * @return \S4Engine\Client
 		 */
-		public function client(\S4Engine\Client $client = null): ?\S4Engine\Client {
+		public function client(?\S4Engine\Client $client = null): ?\S4Engine\Client {
 			if (!is_null($client)) {
 				app_log("Setting client for session ".$this->id().": ".$client->id(),'info');
 				$this->_clientId = $client->id();
 			}
 			$client = new \S4Engine\Client($this->_clientId);
 			return $client;
+		}
+
+		/**
+		 * Get the Customer Object for the session
+		 * @return \Register\Customer
+		 */
+		public function customer(): ?\Register\Customer {
+			$session = $this->portalSession();
+			if ($session->customer()->id() > 0) {
+				return $session->customer();
+			}
+			return null;
 		}
 
 		/**
@@ -311,10 +365,21 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * Get/Set the client for the session
 		 * @param \S4Engine\Client $client
 		 */
-		public function clientId(int $clientId): int {
-			app_log("Setting client for session ".$this->id().": ".$clientId,'info');
-			$this->_clientId = $clientId;
+		public function clientId(?int $clientId = null): int {
+			if (!is_null($clientId)) {
+				app_log("Setting client for session ".$this->id().": ".$clientId,'info');
+				$this->_clientId = $clientId;
+			}
 			return $this->_clientId;
+		}
+
+		/** @method clientNumber(): int
+		 * Get Client Number for the Session
+		 * @return int
+		 */
+		public function clientNumber(): int {
+			$client = new \S4Engine\Client($this->_clientId);
+			return $client->number();
 		}
 
 		/**
@@ -381,9 +446,26 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 				$id -= $arr[1] * 256 * 256;
 				$arr[2] = floor($id / 256);
 				$arr[3] = $id % 256;
-				app_log("Returning session code: ".print_r($arr,true),'trace');
+				#app_log("Returning session code: ".print_r($arr,true),'trace');
 				return $arr;
 			}
+		}
+
+		/** @method codeBytes()
+		 * Code as String of byte values
+		 * @return string
+		 */
+		public function codeBytes(): string {
+			app_log("Generating code bytes for session number ".$this->_number,'trace');
+			$bytes = chr($this->_number % 256);
+			print_r("Byte 0: ".($this->_number % 256)."\n");
+			$bytes .= chr(floor($this->_number / 256) % 256);
+			print_r("Byte 1: ".(floor($this->_number / 256) % 256)."\n");
+			$bytes .= chr(floor($this->_number / (256*256)) % 256);
+			print_r("Byte 2: ".(floor($this->_number / (256*256)) % 256)."\n");
+			$bytes .= chr(floor($this->_number / (256*256*256)) % 256);
+			print_r("Byte 3: ".(floor($this->_number / (256*256*256)) % 256)."\n");
+			return $bytes;
 		}
 
 		/**
@@ -453,7 +535,7 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * @param int $time
 		 * @return int Start Time
 		 */
-		public function startTime(int $time = null): int {
+		public function startTime(?int $time = null): int {
 			if ($time) {
 				$this->_startTime = $time;
 			}
@@ -465,10 +547,31 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * @param int $time
 		 * @return int End Time
 		 */
-		public function endTime(int $time = null): int {
+		public function endTime(?int $time = null): int {
 			if ($time) {
 				$this->_endTime = $time;
 			}
 			return $this->_endTime;
+		}
+
+		/** @method localtime(timestamp)
+		 * Get local time fields for a given timestamp
+		 * @param int $timestamp Unix timestamp, defaults to current time
+		 * @return array Associative array with keys: timestamp, year, month, day, hour, minute, second, timezone
+		 */
+		public function localtime($timestamp = 0) {
+			if ($timestamp == 0) $timestamp = time();
+			$datetime = new \DateTime('@'.$timestamp,new \DateTimeZone('UTC'));
+			$datetime->setTimezone(new \DateTimeZone($this->timezone));
+			return array(
+				'timestamp'		=> $timestamp,
+				'year'			=> $datetime->format('Y'),
+				'month'			=> $datetime->format('m'),
+				'day'			=> $datetime->format('d'),
+				'hour'			=> $datetime->format('H'),
+				'minute'		=> $datetime->format('i'),
+				'second'		=> $datetime->format('s'),
+				'timezone'		=> $this->timezone
+			);
 		}
 	}

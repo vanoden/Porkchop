@@ -74,6 +74,13 @@
 					$this->readOnly = true;
 					return true;
 				}
+				// Also check register config section
+				elseif (isset($GLOBALS['_config']->register->{$key})) {
+					$this->key = $key;
+					$this->value = $GLOBALS['_config']->register->{$key};
+					$this->readOnly = true;
+					return true;
+				}
 				else {
 					$this->key = $key;
 					$this->value = null;
@@ -83,6 +90,31 @@
 			else {
 				app_log("Config record ".$this->key." found with ".$this->value);
 				return true;
+			}
+		}
+
+		public function getValue($key) {
+			if ($this->get($key)) {
+				return $this->value;
+			}
+			else {
+				return null;
+			}
+		}
+
+		/** @method public getValueBool(key)
+		 * Get configuration value as boolean
+		 * Returns True for '1', 'true', 'on', 'yes' (case insensitive), False otherwise
+		 * Be careful not to let false outcome provide additional privileges
+		 * @param string $key Configuration key to retrieve
+		 * @return bool Boolean value of the configuration
+		*/
+		public function getValueBool($key): bool {
+			if ($this->get($key)) {
+				return filter_var($this->value, FILTER_VALIDATE_BOOLEAN);
+			}
+			else {
+				return false;
 			}
 		}
 

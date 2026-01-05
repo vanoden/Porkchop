@@ -164,6 +164,15 @@ use function Amp\now;
 				}
 			}
 			fclose($this->_socket);
+			if (!isset($GLOBALS['_HTTP_CLIENT_STATS_'])) {
+				$GLOBALS['_HTTP_CLIENT_STATS_'] = array('requests' => 0, 'time' => 0);
+			}
+			if (!isset($GLOBALS['_HTTP_CLIENT_STATS_']['requests'])) {
+				$GLOBALS['_HTTP_CLIENT_STATS_']['requests'] = 0;
+			}
+			if (!isset($GLOBALS['_HTTP_CLIENT_STATS_']['time'])) {
+				$GLOBALS['_HTTP_CLIENT_STATS_']['time'] = 0;
+			}
 			$GLOBALS['_HTTP_CLIENT_STATS_']['requests'] ++;
 			$GLOBALS['_HTTP_CLIENT_STATS_']['time'] += microtime(true) - $this->_start_time;
 			app_log("Connection closed at ".(time() - $start_time)." seconds",'debug');

@@ -19,7 +19,7 @@
     // Check Risk Level from Host
 	$CAPTCHA_GO = false;
 	$remote_host = new \Network\Host();
-	if ($remote_host->getByIPAddress($_SERVER['REMOTE_ADDR'])) {
+	if ($remote_host->getByIPAddress($GLOBALS['_REQUEST_']->client_ip ?? '')) {
 		if ($remote_host->CAPTCHARequired()) {
 			$CAPTCHA_GO = true;
 		}
@@ -48,18 +48,18 @@
 	elseif (isset($_POST['login_target'])) {
 		# This is how the SHOULD come in from FORM submit
 		$target = $_POST['login_target'];
-		if (!preg_match('/[-\.\/\?\=\&a-zA-Z0-9]+$/',$target)) $target = '';
+		if (!preg_match('/[-\.\/\?\=\&_a-zA-Z0-9]+$/',$target)) $target = '';
 		if (!isset($GLOBALS['_config']->register->auth_target)) app_log("auth_target not configured",'warning');
-		else app_log("login_target = ".$GLOBALS['_config']->register->auth_target);
+		else app_log("login_target = ".$target,'debug',__FILE__,__LINE__);
 	}
 	elseif(isset($_REQUEST['target'])) {
 
 		# Translate target
 		$target = urldecode($_REQUEST['target']);
 		
-		# Validate URL characters
- 		if (!preg_match('/[-\.\/\?\=\&a-zA-Z0-9]+$/',$target)) $target = '';
-		app_log("target = ".$GLOBALS['_config']->register->auth_target);
+		# Validate URL characters (include underscore for module/view names and path segments like RMA codes)
+		if (!preg_match('/[-\.\/\?\=\&_a-zA-Z0-9]+$/',$target)) $target = '';
+		app_log("target = ".$target,'debug',__FILE__,__LINE__);
 	}
 	elseif($GLOBALS['_config']->register->auth_target) {
 		$target = $GLOBALS['_config']->register->auth_target;
@@ -113,7 +113,8 @@
 				if ( !$GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 					$page->addError("Invalid Request");
 					$failure = new \Register\AuthFailure();
-					$failure->add($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'CSRFTOKEN',$_SERVER['PHP_SELF']);
+					$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
+					$failure->add(array($GLOBALS['_REQUEST_']->client_ip ?? '',$_REQUEST['login'],'CSRFTOKEN',$endpoint));
 				}
 				else {
 					if ($customer->isBlocked()) {
@@ -121,7 +122,8 @@
 						$counter = new \Site\Counter("auth_failed");
 						$counter->increment();
 						$failure = new \Register\AuthFailure();
-						$failure->add($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'INACTIVE',$_SERVER['PHP_SELF']);
+						$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
+						$failure->add(array($GLOBALS['_REQUEST_']->client_ip ?? '',$_REQUEST['login'],'INACTIVE',$endpoint));
 						app_log("EXIT 1",'notice');
 						return;
 					}
@@ -165,6 +167,9 @@
 					}
 					elseif (!$customer->isActive()) {
 						$page->addError("This account is ".$customer->status);
+						$failure = new \Register\AuthFailure();
+						$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
+						$failure->add(array($GLOBALS['_REQUEST_']->client_ip ?? '',$_REQUEST['login'],'INACTIVE',$endpoint));
 					} else {
 
 						// populate the final target after the user logs in

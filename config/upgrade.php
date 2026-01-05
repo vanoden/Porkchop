@@ -23,7 +23,7 @@
 			)
 		),
 		"Site"			=> array(
-			"schema"	=> 29,
+			"schema"	=> 30,
 			"privileges"	=> array(
 				'send admin in-site message',
 				'edit site pages',
@@ -51,8 +51,6 @@
 		"Geography"		=> array(
 			"schema"		=> 1,
 			"roles"			=> array(
-				"geography manager"	=> array(),
-				"geography user"	=> array(),
 			),
 			"privileges"	=> array(
 				'manage geographical data',
@@ -69,7 +67,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 50,
+			"schema"		=> 51,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
@@ -89,6 +87,7 @@
 				"accounts"			=> $templates['admin'],
 				"admin_account"		=> $templates['admin'],
 				"pending_customers"	=> $templates['admin'],
+				"privileges"		=> $templates['admin'],
 				"roles"				=> $templates['admin'],
 				"role"				=> $templates['admin'],
 				"admin_location"	=> $templates['admin'],
@@ -101,6 +100,8 @@
 				"admin_account_images"		=> $templates['admin'],
 				"admin_account_backup_codes"	=> $templates['admin'],
 				"admin_account_search_tags"	=> $templates['admin'],
+				"admin_account_audit_log"	=> $templates['admin'],
+				"admin_account_register_audit"	=> $templates['admin'],
 				"ent_accounts"			=> $templates['support']
 			),
 		),

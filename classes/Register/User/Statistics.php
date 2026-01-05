@@ -97,7 +97,7 @@
 				UPDATE	register_user_statistics
 				SET		user_id = user_id";
 
-			if (!empty($parameters['last_login_date']) && $parameters['last_login_date'] > $this->last_login_date) {
+			if (!empty($parameters['last_login_date']) && (empty($this->last_login_date) || $parameters['last_login_date'] > $this->last_login_date)) {
 				$update_object_query .= ", last_login_date = ?";
 				if (is_string($parameters['last_login_date'])) {
 					$this->last_login_date = convertMySQLDateTimeToDateTime($parameters['last_login_date']);
@@ -108,7 +108,7 @@
 					$database->AddParam(convertDateTimeToMySQLDateTime($parameters['last_login_date']));
 				}
 			}
-			if (!empty($parameters['last_hit_date']) && $parameters['last_hit_date'] > $this->last_hit_date) {
+			if (!empty($parameters['last_hit_date']) && (empty($this->last_hit_date) || $parameters['last_hit_date'] > $this->last_hit_date)) {
 				$update_object_query .= ", last_hit_date = ?";
 				if (is_string($parameters['last_hit_date'])) {
 					$this->last_hit_date = convertMySQLDateTimeToDateTime($parameters['last_hit_date']);
@@ -119,7 +119,7 @@
 					$database->AddParam(convertDateTimeToMySQLDateTime($parameters['last_hit_date']));
 				}
 			}
-			if (!empty($parameters['first_login_date']) && $parameters['first_login_date'] > $this->first_login_date) {
+			if (!empty($parameters['first_login_date']) && (empty($this->first_login_date) || $parameters['first_login_date'] < $this->first_login_date)) {
 				$update_object_query .= ", first_login_date = ?";
 				if (is_string($parameters['first_login_date'])) {
 					$this->first_login_date = convertMySQLDateTimeToDateTime($parameters['first_login_date']);
@@ -130,7 +130,7 @@
 					$database->AddParam(convertDateTimeToMySQLDateTime($parameters['first_login_date']));
 				}
 			}
-			if (!empty($parameters['last_failed_login_date']) && $parameters['last_failed_login_date'] > $this->last_failed_login_date) {
+			if (!empty($parameters['last_failed_login_date']) && (empty($this->last_failed_login_date) || $parameters['last_failed_login_date'] > $this->last_failed_login_date)) {
 				$update_object_query .= ", last_failed_login_date = ?";
 				if (is_string($parameters['last_failed_login_date'])) {
 					$this->last_failed_login_date = convertMySQLDateTimeToDateTime($parameters['last_failed_login_date']);
@@ -141,7 +141,7 @@
 					$database->AddParam(convertDateTimeToMySQLDateTime($parameters['last_failed_login_date']));
 				}
 			}
-			if (!empty($parameters['last_password_change_date']) && $parameters['last_password_change_date'] > $this->last_password_change_date) {
+			if (!empty($parameters['last_password_change_date']) && (empty($this->last_password_change_date) || $parameters['last_password_change_date'] > $this->last_password_change_date)) {
 				$update_object_query .= ", last_password_change_date = ?";
 				if (is_string($parameters['last_password_change_date'])) {
 					$this->last_password_change_date = convertMySQLDateTimeToDateTime($parameters['last_password_change_date']);
@@ -196,15 +196,15 @@
 			// Initialize Database Service
 			$database = new \Database\Service();
 
-			// Prepare Insert Query
+			// Prepare Insert Query - Initialize record with date created
+			// For new registrations, we initialize the record but don't set login dates yet
 			$insert_object_query = "
 				INSERT INTO	register_user_statistics
-				(	user_id,
-					last_login_date
+				(	user_id
 				) VALUES (
-					?, sysdate()
+					?
 				)
-				ON DUPLICATE KEY UPDATE last_login_date = sysdate()
+				ON DUPLICATE KEY UPDATE user_id = user_id
 			";
 
 			// Bind Parameters
@@ -230,22 +230,23 @@
 				return false;
 			}
 
-			// Update Statistics
-			$now = new \DateTime();
-			$params = [
-				'last_login_date' => $now,
-				'last_hit_date' => $now,
-			];
-			if (empty($this->first_login_date)) {
-				$params['first_login_date'] = $now;
-			}
-			if (is_numeric($this->session_count)) {
-				$params['session_count'] = $this->session_count + 1;
-			} else {
-				$params['session_count'] = 1;
-			}
+		// Update Statistics
+		$now = new \DateTime();
+		$params = [
+			'last_login_date' => $now,
+			'last_hit_date' => $now,
+			'failed_login_count' => 0,  // Reset failed login count on successful login
+		];
+		if (empty($this->first_login_date)) {
+			$params['first_login_date'] = $now;
+		}
+		if (is_numeric($this->session_count)) {
+			$params['session_count'] = $this->session_count + 1;
+		} else {
+			$params['session_count'] = 1;
+		}
 
-			return $this->update($params);
+		return $this->update($params);
 		}
 
 		/** @method recordPasswordChange()
