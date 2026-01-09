@@ -121,16 +121,26 @@ class BaseClass {
 	 * @return string The extracted class name or "Object" if not found
 	 */
 	public function _objectName() {
+		// Try to get class name from get_class first (more reliable)
+		$class = get_class($this);
+		if (!empty($class)) {
+			// Extract just the class name (last part after namespace separator)
+			if (preg_match('/([^\\\\]+)$/', $class, $matches)) {
+				return $matches[1];
+			}
+		}
+		
+		// Fallback to old method if get_class doesn't work
 		if (!isset($caller)) {
 			$trace = debug_backtrace();
-			if (count($trace) < 3) return "NULL";
+			if (count($trace) < 3) return "Object";
 			$caller = $trace[2];
 		}
 
 		$class = isset($caller['class']) ? $caller['class'] : null;
-		if (empty($class)) return "NULL";
+		if (empty($class)) return "Object";
 		if (preg_match('/(\w[\w\_]*)$/', $class, $matches)) $classname = $matches[1];
-		else $classname = "NULL";
+		else $classname = "Object";
 		return $classname;
 	}
 

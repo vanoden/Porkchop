@@ -400,35 +400,43 @@
 			return $locations;
 		}
 
-		public function auditRecord($type,$notes,$admin_id = null) {
+	public function auditRecord($type,$notes,$admin_id = null) {
+		// Validate type and notes are not NULL
+		if (empty($type) || $type === null) {
+			$this->error("Audit type is required and cannot be NULL");
+			return false;
+		}
+		if ($notes === null) {
+			$notes = 'Value not found';
+		}
 
-			$audit = new \Register\OrganizationAuditEvent();
-			if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
+		$audit = new \Register\OrganizationAuditEvent();
+		if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
 
-			if (!isset($admin_id) || empty($admin_id)) {
-				$this->error("Admin User is not set");
-				return false;
-			}
+		if (!isset($admin_id) || empty($admin_id)) {
+			$this->error("Admin User is not set");
+			return false;
+		}
 
-			if (!isset($this->id)) {
-				$this->error("Organization is not set");
-				return false;
-			}
-			
-			// validate type
-			if ($audit->validClass($type) == false) {
-				$this->error("Invalid audit class: ".$type);
-				return false;
-			}
+		if (!isset($this->id)) {
+			$this->error("Organization is not set");
+			return false;
+		}
+		
+		// validate type
+		if ($audit->validClass($type) == false) {
+			$this->error("Invalid audit class: ".$type);
+			return false;
+		}
 
-			// add record if all good
-			$audit->add(array(
-				'organization_id'	=> $this->id,
-				'admin_id'			=> $admin_id,
-				'event_date'		=> date('Y-m-d H:i:s'),
-				'event_class'		=> $type,
-				'event_notes'		=> $notes
-			));
+		// add record if all good
+		$audit->add(array(
+			'organization_id'	=> $this->id,
+			'admin_id'			=> $admin_id,
+			'event_date'		=> date('Y-m-d H:i:s'),
+			'event_class'		=> $type,
+			'event_notes'		=> $notes
+		));
 			if ($audit->error()) {
 				$this->error($audit->error());
 				return false;
