@@ -523,11 +523,7 @@
 		public function __call($name, $parameters) {
 			if ($name == "can") {
 				if (count($parameters) == 2) {
-					// Check if second parameter is an object (entity-based access control)
-					if (is_object($parameters[1])) {
-						return $this->_canWithEntity($parameters[0], $parameters[1]);
-					}
-					// Otherwise, treat as privilege level check
+					// Check privilege with specific level
 					return $this->_canLevel($parameters[0], $parameters[1]);
 				} elseif (count($parameters) == 1) {
 					return $this->_canLevel($parameters[0], \Register\PrivilegeLevel::ADMINISTRATOR); // Default to administrator level
@@ -547,26 +543,21 @@
 		protected function _canLevel($privilege_name, $required_level): bool {
 			if ($GLOBALS['_SESSION_']->elevated()) return true;
 
-			// Convert level to integer if it's a string
-			$level_int = \Register\PrivilegeLevel::convertLevelToInt($required_level);
-			if ($level_int === null) {
+			if (is_int($required_level)) {
+				return $this->has_privilege($privilege_name, $required_level);
+			}
+			elseif (is_string($required_level)) {
+				// Convert level name to integer
+				$level_int = \Register\PrivilegeLevel::privilegeId($required_level);
+				if ($level_int === null) {
+					return false;
+				}
+				return $this->has_privilege($privilege_name, $level_int);
+			}
+			else {
 				return false;
 			}
-
-			return $this->has_privilege($privilege_name, $level_int);
 		}
-
-		/**
-		 * Check if customer can perform action on a specific entity
-		 * @param string $privilege_name The privilege name to check
-		 * @param object $entity The entity object (Register::Customer, Register::Organization, Register::SubOrganization)
-		 * @return bool True if customer has the privilege and is authorized for the entity
-		 */
-		protected function _canWithEntity($privilege_name, \Register\PrivilegeLevel $entity): bool {
-			if ($GLOBALS['_SESSION_']->elevated()) return true;
-			return $this->has_privilege($privilege_name, $entity->requiredPrivilegeLevel());
-		}
-
 
 		/** @method has_role(role_name)
 		 * See If a User has been granted a Role

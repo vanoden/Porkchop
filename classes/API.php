@@ -93,16 +93,16 @@
 		/* To require multiple privileges, call 	*/
 		/* this function multiple times.			*/
 		/********************************************/
-		public function requirePrivilege($privilege_name, $required_level = \Register\PrivilegeLevel::CUSTOMER) {
+		public function requirePrivilege($privilege_name, $required_level = \Register\PrivilegeLevel::ADMINISTRATOR) {
 			if (is_array($privilege_name)) {
 				// Ok if ANY privilege is matched
 				foreach ($privilege_name as $privilege) {
-					if ($GLOBALS['_SESSION_']->customer->can_level($privilege, $required_level)) return;
+					if ($GLOBALS['_SESSION_']->customer->can($privilege, $required_level)) return;
 				}
-				$this->deny("Permission Denied");
+				$this->deny("Permission Denied - Requires one of the following privileges at level $required_level: ".implode(", ", $privilege_name));
 			}
-			if (! $GLOBALS['_SESSION_']->customer->can_level($privilege_name, $required_level)) {
-				$this->deny("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can($privilege_name, $required_level)) {
+				$this->deny("Permission Denied - Requires $privilege_name privilege at level $required_level");
 			}
 		}
 
@@ -112,7 +112,7 @@
 		/* If an array is passed, only one is 		*/
 		/* required.								*/
 		/********************************************/
-		public function requirePrivilegeLevel($privilege_name, $required_level = \Register\PrivilegeLevel::CUSTOMER) {
+		public function requirePrivilegeLevel($privilege_name, $required_level = \Register\PrivilegeLevel::ADMINISTRATOR) {
 			return $this->requirePrivilege($privilege_name, $required_level);
 		}
 
