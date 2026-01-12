@@ -600,6 +600,7 @@
 				    }
 
 				    // Build New URL
+					app_log("Redirect to /_register/login/$auth_target",'INFO');
 				    header ( "location: " . PATH . "/_register/login/" . $auth_target );
                     exit;
 			    }

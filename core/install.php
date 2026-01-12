@@ -60,6 +60,11 @@
 	}
 	else $site->install_log("version.txt not found",'warn');
 
+	# Debug Variables
+	$_debug_queries = array();
+	$_page_query_count = 0;
+	$_page_query_time = 0;
+
 	###################################################
 	### Connect to Logger                           ###
 	###################################################
@@ -354,6 +359,10 @@
 	$site->install_log("Elevating privileges for install");
 	$_SESSION_->elevate();
 
+	# Create Administrator Role
+	$role = new \Register\Role();
+	$role->add(array("name" => "Administrator", "description" => "Default Super User"));
+	
 	# Get Existing Roles
 	$site->install_log("Getting available roles");
 	$rolelist = new \Register\RoleList();

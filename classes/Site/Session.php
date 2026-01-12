@@ -942,10 +942,10 @@ use Register\Customer;
 				}
 			}
 			if (isset($this->customer->id) && $this->customer->id > 0) {
-				app_log("Authentication successful", 'debug', __FILE__, __LINE__, 'otplogs');
+				app_log("User Authentication Confirmed", 'debug', __FILE__, __LINE__, 'otplogs');
 				return true;
 			} else {
-				app_log("Authentication failed - no customer ID", 'debug', __FILE__, __LINE__, 'otplogs');
+				app_log("User Not Yet Authenticated - no customer ID", 'debug', __FILE__, __LINE__, 'otplogs');
 				return false;
 			}
 		}

@@ -1148,6 +1148,17 @@
 	 * @return bool
 	 */
 	public function auditRecord($type, $notes, $customer_id = null) {
+		// Validate type and notes are not NULL
+		if (empty($type) || $type === null) {
+			$this->error("Audit type is required and cannot be NULL");
+			return false;
+		}
+		if ($notes === null) {
+			$notes = 'Value not found';
+		} elseif (empty($notes)) {
+			$notes = '';
+		}
+		
 		// Get user_id from session if not provided
 		if (empty($customer_id)) {
 			if (!empty($GLOBALS['_SESSION_']->customer->id)) {
