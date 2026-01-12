@@ -1,6 +1,6 @@
 <?php
 	namespace S4Engine;
-	
+
 	class Schema Extends \Database\BaseSchema {
 		public $module = "s4engine";
 
@@ -9,7 +9,7 @@
 
 			if ($this->version() < 1) {
 				app_log("Upgrading schema to version 1", 'notice', __FILE__, __LINE__);
-				
+
 				# Start Transaction
 				if (!$GLOBALS['_database']->BeginTrans())
 					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
@@ -24,7 +24,7 @@
 						UNIQUE KEY `UK_NUMBER` (`number`)
 					)
 				";
-					
+
 				if (! $this->executeSQL($create_table_query)) {
 					$this->SQLError("Creating s4engine_clients table: ".$this->error());
 					return false;
@@ -44,7 +44,7 @@
 						FOREIGN KEY `FK_CLIENT` (`client_id`) REFERENCES s4engine_clients (`id`)
 					)
 				";
-					
+
 				if (! $this->executeSQL($create_table_query)) {
 					$this->error("Creating S4Engine::Sessions table: ".$this->error());
 					return false;
@@ -56,7 +56,7 @@
 
 			if ($this->version() < 2) {
 				app_log("Upgrading schema to version 2", 'notice', __FILE__, __LINE__);
-				
+
 				# Start Transaction
 				if (!$GLOBALS['_database']->BeginTrans())
 					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
@@ -71,7 +71,7 @@
 						UNIQUE KEY `UK_NUMBER` (`number`)
 					)
 				";
-					
+
 				if (! $this->executeSQL($create_table_query)) {
 					$this->SQLError("Creating s4engine_clients table: ".$this->error());
 					return false;
@@ -96,7 +96,7 @@
 						INDEX `IDX_CLIENT_ID` (`time_created`,`client_id`)
 					)
 				";
-					
+
 				if (! $this->executeSQL($create_table_query)) {
 					$this->error("Creating S4Engine::Log table: ".$this->error());
 					return false;
