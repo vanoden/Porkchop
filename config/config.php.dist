@@ -96,6 +96,19 @@
         $_config->otp->uri = '';
         $_config->otp->label = 'CHANGEME';
 
+        # Email Template Configurations
+        $_config->register->account_blocked_notification = (object) array(
+                "from"          => 'no-reply@CHANGEME',
+                "to"            => 'support@CHANGEME',
+                "subject"       => "Account Blocked - Security Alert",
+                "template"      => TEMPLATES . "/registration/account_blocked_notification.html"
+        );
+        $_config->register->account_blocked_user_notification = (object) array(
+                "from"          => 'no-reply@CHANGEME',
+                "subject"       => "Account Security Alert - Your Account Has Been Blocked",
+                "template"      => TEMPLATES . "/registration/account_blocked_user_notification.html"
+        );
+
         # Site Auditing Setup
         $_config->auditing = new stdClass();
         $_config->auditing->auditedClasses =  array (
