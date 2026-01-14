@@ -83,7 +83,7 @@
 			}
 
 			$get_event_query .= "
-				ORDER BY ss.first_hit_date DESC
+				ORDER BY mc.timestamp DESC, mc.session_id DESC
 			";
 
 			if (isset($parameters['_limit']) && preg_match('/^\d+$/',$parameters['_limit']))
@@ -143,7 +143,7 @@
 			}
 
 			$get_event_query .= "
-				ORDER BY ss.last_hit_date DESC
+				ORDER BY mc.timestamp DESC, mc.session_id DESC
 				LIMIT 1
 			";
 
