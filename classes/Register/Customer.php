@@ -619,14 +619,8 @@
 			$database = new \Database\Service();
 			$privilege = new \Register\Privilege();
 
-			if (! $privilege->get($privilege_name)) {
-				if ($privilege_name != "manage privileges" && $GLOBALS['_SESSION_']->customer->can("manage privileges")) {
-					$privilege->add(array('name' => $privilege_name));
-				}
-				else {
-					return false;
-				}
-			}
+			# Add the privilege if it doesn't exist
+			if (! $privilege->get($privilege_name)) $privilege->add(array('name' => $privilege_name));
 
 			$check_privilege_query = "
 				SELECT	rrp.level
