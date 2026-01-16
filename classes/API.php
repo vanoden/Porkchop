@@ -902,6 +902,15 @@
 											),
 										),
 									),
+									"403" => array(
+										"description" => "You are not authorized to access this resource",
+									),
+									"404" => array(
+										"description" => "Instance Not Found Matching Criteria",
+									),
+									"500" => array(
+										"description" => "Internal Server Error",
+									),
 								),
 							);
 						}
@@ -922,6 +931,15 @@
 								"responses" => array(
 									"200" => array(
 										"description" => "Successful Operation",
+									),
+									"403" => array(
+										"description" => "You are not authorized to access this resource",
+									),
+									"404" => array(
+										"description" => "Instance Not Found Matching Criteria",
+									),
+									"500" => array(
+										"description" => "Internal Server Error",
 									),
 								),
 							);
