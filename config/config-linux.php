@@ -157,6 +157,17 @@
                 "subject"       => "Account Backup Code was used",
                 "template"      => TEMPLATES . "/registration/backup_code_used_notification.html"
         );
+        $_config->register->account_blocked_notification = (object) array(
+                "from"          => 'no-reply@spectrosinstruments.com',
+                "to"            => 'support@spectrosinstruments.com',
+                "subject"       => "Account Blocked - Security Alert",
+                "template"      => TEMPLATES . "/registration/account_blocked_notification.html"
+        );
+        $_config->register->account_blocked_user_notification = (object) array(
+                "from"          => 'no-reply@spectrosinstruments.com',
+                "subject"       => "Account Security Alert - Your Account Has Been Blocked",
+                "template"      => TEMPLATES . "/registration/account_blocked_user_notification.html"
+        );
         
         $_config->engineering = new stdClass();
         $_config->engineering->internal_notification = (object) array(

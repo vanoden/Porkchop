@@ -380,6 +380,8 @@
 				if ($this->auth_failures() >= 6) {
 					app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
 					$this->block();
+					// Send notification to support staff
+					$this->sendAccountBlockedNotification();
 				}
 				return false;
 			}
@@ -1590,6 +1592,341 @@
 				app_log("Error creating email transport for OTP reset notification: " . ($transport ? $transport->error() : 'Transport creation failed'), 'error', __FILE__, __LINE__);
 				return false;
 			}
+		}
+
+		/** @method createBlockedAccountSupportTicket()
+		 * Create a support ticket when an account is blocked
+		 * @return bool True if ticket created successfully, false on error
+		 */
+		public function createBlockedAccountSupportTicket(): bool {
+			$this->clearError();
+
+			if (!$this || !$this->id) {
+				app_log("Invalid customer object for creating blocked account support ticket", 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			// Get customer details
+			$this->details();
+			$organization = $this->organization();
+			if (!$organization || !$organization->id) {
+				app_log("Customer " . $this->id . " has no organization, cannot create support ticket", 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			// Get last failed login IP from auth failures
+			$lastFailedIP = 'Unknown';
+			$failureList = new \Register\AuthFailureList();
+			$lastFailure = $failureList->last(['login' => $this->code]);
+			if ($lastFailure && !$failureList->error() && isset($lastFailure->ip_address)) {
+				$lastFailedIP = $lastFailure->ip_address;
+			}
+
+			// Get recent audit events for context
+			$auditList = new \Site\AuditLog\EventList();
+			$recentAuditEvents = $auditList->find(
+				['instance_id' => $this->id],
+				[
+					'sort' => 'event_date',
+					'order' => 'desc',
+					'limit' => 20
+				]
+			);
+
+			// Build audit history text
+			$auditHistory = '';
+			if (!empty($recentAuditEvents) && !$auditList->error()) {
+				$auditHistory = "\n\nRecent Account Activity (Audit History):\n";
+				$auditHistory .= str_repeat("-", 60) . "\n";
+				$actors = [];
+				foreach ($recentAuditEvents as $event) {
+					$actorName = 'System';
+					if (!empty($event->user_id)) {
+						if (!isset($actors[$event->user_id])) {
+							$actor = new \Register\Customer($event->user_id);
+							$actors[$event->user_id] = $actor->code ?? 'Unknown';
+						}
+						$actorName = $actors[$event->user_id];
+					}
+					$eventDate = $event->event_date ? date('Y-m-d H:i:s', strtotime($event->event_date)) : 'N/A';
+					$auditHistory .= "Date: " . $eventDate . "\n";
+					$auditHistory .= "Acted By: " . $actorName . "\n";
+					$auditHistory .= "Action: " . ($event->class_method ?? 'N/A') . "\n";
+					$auditHistory .= "Description: " . ($event->description ?? 'N/A') . "\n";
+					$auditHistory .= str_repeat("-", 60) . "\n";
+				}
+			} else {
+				$auditHistory = "\n\nNo recent audit events found for this account.\n";
+			}
+
+			// Create support request with type 'SERVICE' (database enum requirement)
+			$supportRequest = new \Support\Request();
+			$supportRequest->add(array(
+				'customer_id' => $this->id,
+				'organization_id' => $organization->id,
+				'type' => 'SERVICE',
+				'status' => 'NEW',
+				'date_request' => date('Y-m-d H:i:s')
+			));
+
+			if ($supportRequest->error()) {
+				app_log("Error creating support ticket for blocked account: " . $supportRequest->error(), 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			// Add item to the support request with blocking details
+			// Type of Request: "web portal" (as description)
+			// Describe Problem: "user has been blocked (history of account audits)"
+			$description = "Type of Request: web portal\n\n";
+			$description .= "Describe Problem: User has been blocked (history of account audits)\n\n";
+			$description .= "Account Blocked - Security Alert\n\n";
+			$description .= "Account: " . $this->code . " (ID: " . $this->id . ")\n";
+			$description .= "Customer: " . $this->full_name() . "\n";
+			$description .= "Organization: " . $organization->name . "\n";
+			$description .= "Failed Login Attempts: " . $this->auth_failures() . "\n";
+			$description .= "Last Failed Login IP: " . $lastFailedIP . "\n";
+			$description .= "Blocked Date: " . date('Y-m-d H:i:s T') . "\n";
+			$description .= $auditHistory;
+			$description .= "\nThe account was automatically blocked after multiple failed login attempts. ";
+			$description .= "The customer will need to use the 'Forgot Password' feature to reset their password and restore account access.";
+
+			$ticket = $supportRequest->addItem(array(
+				'line' => 1,
+				'product_id' => 0,  // No product for web portal requests
+				'serial_number' => 'N/A',  // No serial number for account blocking
+				'quantity' => 1,
+				'status' => 'NEW',
+				'description' => $description
+			));
+
+			if ($supportRequest->error() || !$ticket) {
+				app_log("Error adding item to support ticket for blocked account: " . ($supportRequest->error() ?: 'Unknown error'), 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			app_log("Support ticket " . $supportRequest->code . " created for blocked account " . $this->code, 'info', __FILE__, __LINE__);
+			$this->auditRecord('SUPPORT_TICKET_CREATED', 'Support ticket ' . $supportRequest->code . ' created for blocked account');
+			
+			return true;
+		}
+
+		/** @method sendAccountBlockedNotification()
+		 * Send account blocked notification emails to both user and support staff
+		 * @return bool True if both emails sent successfully, false on error
+		 */
+		public function sendAccountBlockedNotification(): bool {
+			$this->clearError();
+
+			if (!$this || !$this->id) {
+				app_log("Invalid customer object for account blocked notification", 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			// Get customer details
+			$this->details();
+			$organization = $this->organization();
+			$organizationName = $organization ? $organization->name : 'N/A';
+			
+			// Get customer email
+			$customerEmail = $this->notify_email();
+			if (empty($customerEmail)) {
+				// Try to get any email
+				$contacts = $this->contacts(['type' => 'email']);
+				if (!empty($contacts) && count($contacts) > 0) {
+					$customerEmail = $contacts[0]->value;
+				}
+			}
+
+			// Get last failed login IP from auth failures
+			$lastFailedIP = 'Unknown';
+			$failureList = new \Register\AuthFailureList();
+			$lastFailure = $failureList->last(['login' => $this->code]);
+			if ($lastFailure && !$failureList->error() && isset($lastFailure->ip_address)) {
+				$lastFailedIP = $lastFailure->ip_address;
+			}
+
+			// Get admin account URL
+			$adminAccountUrl = 'http' . ($GLOBALS['_config']->site->https ? 's' : '') . '://' . $GLOBALS['_config']->site->hostname . '/_register/admin_account?id=' . $this->id;
+			$forgotPasswordUrl = 'http' . ($GLOBALS['_config']->site->https ? 's' : '') . '://' . $GLOBALS['_config']->site->hostname . '/_register/forgot_password';
+
+			$result = true;
+
+			// Send email to user
+			if (!empty($customerEmail)) {
+				if (!isset($GLOBALS['_config']->register->account_blocked_user_notification)) {
+					app_log("Account blocked user notification email configuration not found", 'error', __FILE__, __LINE__);
+					$result = false;
+				} else {
+					$user_email_config = $GLOBALS['_config']->register->account_blocked_user_notification;
+					if (!isset($user_email_config->template) || !file_exists($user_email_config->template)) {
+						app_log("Account blocked user notification email template not found", 'error', __FILE__, __LINE__);
+						$result = false;
+					} else {
+						$user_template = new \Content\Template\Shell(
+							array(
+								'path' => $user_email_config->template,
+								'parameters' => array(
+									'CUSTOMER.FIRST_NAME' => $this->first_name,
+									'CUSTOMER.LOGIN' => $this->code,
+									'FAILED_ATTEMPTS' => $this->auth_failures(),
+									'BLOCKED.DATE' => date('Y-m-d'),
+									'BLOCKED.TIME' => date('H:i:s T'),
+									'FORGOT_PASSWORD.URL' => $forgotPasswordUrl,
+									'SUPPORT.EMAIL' => $GLOBALS['_config']->site->support_email ?? 'service@spectrosinstruments.com',
+									'SUPPORT.PHONE' => $GLOBALS['_config']->site->support_phone ?? '',
+									'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
+								)
+							)
+						);
+
+						if (!$user_template->error()) {
+							$user_message = new \Email\Message();
+							$user_message->html(true);
+							$user_message->to($customerEmail);
+							$user_message->from($user_email_config->from);
+							$user_message->subject($user_email_config->subject);
+							$user_message->body($user_template->output());
+
+							$transportFactory = new \Email\Transport();
+							$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+							if ($transport && !$transport->error()) {
+								$transport->hostname($GLOBALS['_config']->email->hostname);
+								$transport->token($GLOBALS['_config']->email->token);
+								if (!$transport->deliver($user_message)) {
+									app_log("Error sending account blocked user notification email: " . $transport->error(), 'error', __FILE__, __LINE__);
+									$result = false;
+								} else {
+									app_log("Account blocked user notification email sent to " . $customerEmail, 'info', __FILE__, __LINE__);
+								}
+							} else {
+								app_log("Error creating email transport for user notification: " . ($transport ? $transport->error() : 'Transport creation failed'), 'error', __FILE__, __LINE__);
+								$result = false;
+							}
+						} else {
+							app_log("Error generating user notification email: " . $user_template->error(), 'error', __FILE__, __LINE__);
+							$result = false;
+						}
+					}
+				}
+			} else {
+				app_log("No email address available for customer " . $this->id . ", skipping user notification", 'info', __FILE__, __LINE__);
+			}
+
+			// Create support ticket for blocked account
+			$this->createBlockedAccountSupportTicket();
+
+			// Send email to support with audit information
+			if (!isset($GLOBALS['_config']->register->account_blocked_notification)) {
+				app_log("Account blocked notification email configuration not found", 'error', __FILE__, __LINE__);
+				$result = false;
+			} else {
+				$support_email_config = $GLOBALS['_config']->register->account_blocked_notification;
+				if (!isset($support_email_config->template) || !file_exists($support_email_config->template)) {
+					app_log("Account blocked notification email template not found", 'error', __FILE__, __LINE__);
+					$result = false;
+				} else {
+					// Get recent audit events (last 10)
+					$auditList = new \Site\AuditLog\EventList();
+					$recentAuditEvents = $auditList->find(
+						['instance_id' => $this->id],
+						[
+							'sort' => 'event_date',
+							'order' => 'desc',
+							'limit' => 10
+						]
+					);
+
+					$auditHtml = '';
+					if (!empty($recentAuditEvents) && !$auditList->error()) {
+						$auditHtml = '<table class="info-table" style="width: 100%; border-collapse: collapse; margin: 10px 0;">';
+						$auditHtml .= '<tr><th style="background-color: #f9f9f9; padding: 8px; text-align: left; font-weight: bold; border-bottom: 1px solid #ececec;">Date</th>';
+						$auditHtml .= '<th style="background-color: #f9f9f9; padding: 8px; text-align: left; font-weight: bold; border-bottom: 1px solid #ececec;">Acted By</th>';
+						$auditHtml .= '<th style="background-color: #f9f9f9; padding: 8px; text-align: left; font-weight: bold; border-bottom: 1px solid #ececec;">Action</th>';
+						$auditHtml .= '<th style="background-color: #f9f9f9; padding: 8px; text-align: left; font-weight: bold; border-bottom: 1px solid #ececec;">Description</th></tr>';
+						
+						$actors = [];
+						foreach ($recentAuditEvents as $event) {
+							$actorName = 'System';
+							if (!empty($event->user_id)) {
+								if (!isset($actors[$event->user_id])) {
+									$actor = new \Register\Customer($event->user_id);
+									$actors[$event->user_id] = $actor->code ?? 'Unknown';
+								}
+								$actorName = $actors[$event->user_id];
+							}
+							
+							$eventDate = $event->event_date ? date('Y-m-d H:i:s', strtotime($event->event_date)) : 'N/A';
+							$auditHtml .= '<tr>';
+							$auditHtml .= '<td style="padding: 8px; border-bottom: 1px solid #ececec;">' . htmlspecialchars($eventDate) . '</td>';
+							$auditHtml .= '<td style="padding: 8px; border-bottom: 1px solid #ececec;">' . htmlspecialchars($actorName) . '</td>';
+							$auditHtml .= '<td style="padding: 8px; border-bottom: 1px solid #ececec;">' . htmlspecialchars($event->class_method ?? 'N/A') . '</td>';
+							$auditHtml .= '<td style="padding: 8px; border-bottom: 1px solid #ececec;">' . htmlspecialchars($event->description ?? 'N/A') . '</td>';
+							$auditHtml .= '</tr>';
+						}
+						$auditHtml .= '</table>';
+					} else {
+						$auditHtml = '<p>No recent audit events found for this account.</p>';
+					}
+
+					$support_template = new \Content\Template\Shell(
+						array(
+							'path' => $support_email_config->template,
+							'parameters' => array(
+								'CUSTOMER.LOGIN' => $this->code,
+								'CUSTOMER.FULL_NAME' => $this->full_name(),
+								'CUSTOMER.ID' => $this->id,
+								'CUSTOMER.EMAIL' => $customerEmail ?: 'N/A',
+								'CUSTOMER.ORGANIZATION' => $organizationName,
+								'FAILED_ATTEMPTS' => $this->auth_failures(),
+								'BLOCKED.DATE' => date('Y-m-d'),
+								'BLOCKED.TIME' => date('H:i:s T'),
+								'LAST_FAILED_IP' => $lastFailedIP,
+								'ADMIN.ACCOUNT_URL' => $adminAccountUrl,
+								'RECENT_AUDIT_EVENTS' => $auditHtml,
+								'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
+							)
+						)
+					);
+
+					if (!$support_template->error()) {
+						// Get support email address - use config "to" field if available, otherwise fall back to site support_email
+						$supportEmail = $support_email_config->to ?? ($GLOBALS['_config']->site->support_email ?? 'service@spectrosinstruments.com');
+						if (empty($supportEmail)) {
+							app_log("Support email address not configured", 'error', __FILE__, __LINE__);
+							$result = false;
+						} else {
+							$support_message = new \Email\Message();
+							$support_message->html(true);
+							$support_message->to($supportEmail);
+							$support_message->from($support_email_config->from);
+							$support_message->subject($support_email_config->subject);
+							$support_message->body($support_template->output());
+
+							$transportFactory = new \Email\Transport();
+							$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+							if ($transport && !$transport->error()) {
+								$transport->hostname($GLOBALS['_config']->email->hostname);
+								$transport->token($GLOBALS['_config']->email->token);
+								if (!$transport->deliver($support_message)) {
+									app_log("Error sending account blocked support notification email: " . $transport->error(), 'error', __FILE__, __LINE__);
+									$result = false;
+								} else {
+									app_log("Account blocked support notification email sent to " . $supportEmail, 'info', __FILE__, __LINE__);
+									$this->auditRecord('ACCOUNT_BLOCKED_NOTIFICATION_SENT', 'Account blocked notification emails sent - user: ' . ($customerEmail ?: 'N/A') . ', support: ' . $supportEmail);
+								}
+							} else {
+								app_log("Error creating email transport for support notification: " . ($transport ? $transport->error() : 'Transport creation failed'), 'error', __FILE__, __LINE__);
+								$result = false;
+							}
+						}
+					} else {
+						app_log("Error generating support notification email: " . $support_template->error(), 'error', __FILE__, __LINE__);
+						$result = false;
+					}
+				}
+			}
+
+			return $result;
 		}
 
 		/** @method resetOTPSetup()
