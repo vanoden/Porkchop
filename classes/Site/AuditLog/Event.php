@@ -66,9 +66,14 @@ class Event Extends \BaseModel {
 		}
 
 		$database = new \Database\Service();
-		if (empty($params['instance_id']) || empty($params['description'])) {
-			$this->error("Instance ID and description are required.");
+		if (empty($params['instance_id'])) {
+			$this->error("Instance ID is required.");
 			return false;
+		}
+		// Allow NULL descriptions but add a message about "value not found"
+		if (empty($params['description']) || $params['description'] === 'NULL' || $params['description'] === 'Updated NULL' || $params['description'] === 'Added new NULL' || $params['description'] === 'Deleted NULL') {
+			$params['description'] = 'Value not found - ' . ($params['class_name'] ?? 'unknown class') . '::' . ($params['class_method'] ?? 'unknown method');
+			app_log("Audit event with NULL description replaced with 'value not found' message. Class: " . ($params['class_name'] ?? 'unknown') . ", Method: " . ($params['class_method'] ?? 'unknown'), 'warning');
 		}
 		if (empty($GLOBALS['_SESSION_']->customer->id)) {
 			if (!empty($params['customer_id'])) $customer_id = $params['customer_id'];

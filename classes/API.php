@@ -93,34 +93,27 @@
 		/* To require multiple privileges, call 	*/
 		/* this function multiple times.			*/
 		/********************************************/
-		public function requirePrivilege($privilege_name) {
+		public function requirePrivilege($privilege_name, $required_level = \Register\PrivilegeLevel::ADMINISTRATOR) {
 			if (is_array($privilege_name)) {
 				// Ok if ANY privilege is matched
 				foreach ($privilege_name as $privilege) {
-					if ($GLOBALS['_SESSION_']->customer->can($privilege)) return;
+					if ($GLOBALS['_SESSION_']->customer->can($privilege, $required_level)) return;
 				}
-				$this->deny();
+				$this->deny("Permission Denied - Requires one of the following privileges at level $required_level: ".implode(", ", $privilege_name));
 			}
-			if (! $GLOBALS['_SESSION_']->customer->can($privilege_name)) $this->deny("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can($privilege_name, $required_level)) {
+				$this->deny("Permission Denied - Requires $privilege_name privilege at level $required_level");
+			}
 		}
 
 		/********************************************/
 		/* Return Error unless User has the			*/
 		/* required privilege with required level.	*/
 		/* If an array is passed, only one is 		*/
-		/* required.									*/
+		/* required.								*/
 		/********************************************/
-		public function requirePrivilegeLevel($privilege_name, $required_level = \Register\PrivilegeLevel::CUSTOMER) {
-			if (is_array($privilege_name)) {
-				// Ok if ANY privilege is matched
-				foreach ($privilege_name as $privilege) {
-					if ($GLOBALS['_SESSION_']->customer->can_level($privilege, $required_level)) return;
-				}
-				$this->deny();
-			}
-			if (! $GLOBALS['_SESSION_']->customer->can_level($privilege_name, $required_level)) {
-				$this->deny("Permission Denied - Insufficient privilege level");
-			}
+		public function requirePrivilegeLevel($privilege_name, $required_level = \Register\PrivilegeLevel::ADMINISTRATOR) {
+			return $this->requirePrivilege($privilege_name, $required_level);
 		}
 
 		/********************************************/
@@ -909,6 +902,15 @@
 											),
 										),
 									),
+									"403" => array(
+										"description" => "You are not authorized to access this resource",
+									),
+									"404" => array(
+										"description" => "Instance Not Found Matching Criteria",
+									),
+									"500" => array(
+										"description" => "Internal Server Error",
+									),
 								),
 							);
 						}
@@ -929,6 +931,15 @@
 								"responses" => array(
 									"200" => array(
 										"description" => "Successful Operation",
+									),
+									"403" => array(
+										"description" => "You are not authorized to access this resource",
+									),
+									"404" => array(
+										"description" => "Instance Not Found Matching Criteria",
+									),
+									"500" => array(
+										"description" => "Internal Server Error",
 									),
 								),
 							);
