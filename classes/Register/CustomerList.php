@@ -335,24 +335,43 @@
 				return [];
 			}
 
-			$people = array();
-			while (list($id) = $rs->FetchRow()) {
-				// Always create customer object if we need it for role checking or array building
-				if (isset($parameters['role']) || ! array_key_exists('ids',$controls) || ! $controls['ids']) {
-					$customer = new Customer($id);
-				}
-				
-				// Check role if required
-				if (isset($parameters['role']) && isset($customer) && ! $customer->has_role($parameters['role'])) continue;
+		// Get privilege name if privilege_id or privilege_name is provided
+		$privilege_name = null;
+		if (!empty($parameters['privilege_id']) && is_numeric($parameters['privilege_id'])) {
+			$privilege = new \Register\Privilege($parameters['privilege_id']);
+			if (!$privilege->id) {
+				$this->error("Invalid privilege_id");
+				return [];
+			}
+			$privilege_name = $privilege->name;
+		} elseif (!empty($parameters['privilege_name'])) {
+			$privilege_name = $parameters['privilege_name'];
+		}
 
-				// Don't build array if count is requested
-				if (array_key_exists('count', $controls) && isset($controls['count']) && !empty($controls['count'])) {}
-				elseif (isset($customer)) array_push($people,$customer);
+		$people = array();
+		while (list($id) = $rs->FetchRow()) {
+			// Always create customer object if we need it for role checking, privilege checking, or array building
+			if (isset($parameters['role']) || isset($privilege_name) || ! array_key_exists('ids',$controls) || ! $controls['ids']) {
+				$customer = new Customer($id);
+			}
+			
+			// Check role if required
+			if (isset($parameters['role']) && isset($customer) && ! $customer->has_role($parameters['role'])) continue;
 
-				$this->incrementCount();
+			// Check privilege if required
+			if (isset($privilege_name) && isset($customer)) {
+				// Check if customer has the privilege (using default administrator level)
+				if (!$customer->has_privilege($privilege_name)) continue;
 			}
 
-			return $people;
+			// Don't build array if count is requested
+			if (array_key_exists('count', $controls) && isset($controls['count']) && !empty($controls['count'])) {}
+			elseif (isset($customer)) array_push($people,$customer);
+
+			$this->incrementCount();
+		}
+
+		return $people;
 		}
 		
 		public function searchAdvanced($search_string, $advanced, $controls): array {

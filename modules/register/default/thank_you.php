@@ -46,6 +46,10 @@
 	<div class="thank-you-content">
 		<h2 class="pageTitle">Thank you for registering with <?=$company->name?></h2>
 		<p>You will receive an email soon to confirm your email address is valid.</p>
-		<p>Please check your spam / other mail folder if you have trouble finding it in your inbox.</p>
+		<p><strong>Important:</strong> Our emails are sent from <strong>no-reply@spectrosinstruments.com</strong>. To ensure you receive all important notifications, please:</p>
+		<ul style="text-align: left; display: inline-block; margin: 1rem 0;">
+			<li>Add <strong>no-reply@spectrosinstruments.com</strong> to your email address book or contacts</li>
+			<li>Check your spam, junk, or bulk mail folders if you don't see the email in your inbox right away</li>
+		</ul>
 	</div>
 </section>
