@@ -307,4 +307,58 @@
 		public function module_list() {
 			return new \Site\ModuleList();
 		}
+
+		/** @method findModule(name) 
+		 * Find a module by name - Case Insensitive
+		 * @param string $name Name of the module to find
+		 * @return Site\Module|null The module if found, null otherwise
+		*/
+		public function findModule($name) {
+			$module_list = $this->module_list();
+			foreach ($module_list->find(["name" => $name]) as $module) {
+				if (strtolower($module->name()) == strtolower($name)) {
+					return $module;
+				}
+			}
+			return null;
+		}
+
+		/** @method findModuleName(name)
+		 * Get the module name from a file path
+		 * @param string $name File path - Case Insensitive
+		 * @return string|null Module name if found, null otherwise
+		*/
+		public function findModuleName($name) {
+			$module_list = $this->module_list();
+			print_r($module_list->find(["name" => $name]));
+			foreach ($module_list->find(["name" => $name]) as $module) {
+				$module_path = MODULES."/".$module->name();
+				if (stripos($name,$module_path) === 0) {
+					app_log("Found module ".$module->name()." for path $name",'debug');
+					return $module->name();
+				}
+			}
+			return null;
+		}
+
+		/** @method findModuleAPI(name)
+		 * Get the module API class from the class file matching the name - Case Insensitive
+		 * @param string $name Module Name
+		 * @return string|null Module API class if found, null otherwise
+		 */
+		public function findModuleAPI($name): ?string {
+			if (!is_dir(CLASS_PATH)) return null;
+			$handle = opendir(CLASS_PATH);
+			if ($handle) {
+				while (false !== ($module_name = readdir($handle))) {
+					if (!preg_match('/^[\w\-\_]+$/',$module_name)) continue;
+					if (!is_file(CLASS_PATH."/".$module_name."/API.php")) continue;
+					if (strtolower($module_name) != strtolower($name)) continue;
+					closedir($handle);
+					return $module_name;
+				}
+			}
+			closedir($handle);
+			return null;
+		}
 	}
