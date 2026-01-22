@@ -770,7 +770,13 @@
 		    }
 			elseif ($this->view() == "api") {
 				app_log("Loading API for module ".$this->module(),'debug');
-				$api_name = "\\".ucfirst($this->module())."\\API";
+				$site = new \Site();
+				$module_name = $site->findModuleAPI($this->module());
+				if (empty($module_name)) {
+					$this->error("Module ".$this->module()." not found for API request");
+					return '';
+				}
+				$api_name = "\\".$module_name."\\API";
 				$api = new $api_name();
 				if (empty($_REQUEST["method"])) {
 					# Call the Specified Method
