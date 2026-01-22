@@ -354,6 +354,23 @@
 				'parameters' => [],
 				'hidden'	=> true
 			);
+			$methods['schemaVersion'] = array(
+				'description' => 'Get Database Schema Version',
+				'authentication_required' => false,
+				'return_element' => 'version',
+				'return_type' => 'string',
+				'parameters' => [],
+				'hidden'	=> true
+			);
+			$methods['schemaUpgrade'] = array(
+				'description' => 'Run Database Schema Upgrade',
+				'authentication_required' => true,
+				'privilege_required' => 'manage database schema',
+				'return_element' => 'version',
+				'return_type' => 'string',
+				'parameters' => [],
+				'hidden'	=> true
+			);
 			return $methods;
 		}
 
@@ -586,8 +603,8 @@
 		/* Run Database Schema Upgrade Function			*/
 		/************************************************/
 		public function schemaUpgrade() {
-			if ($this->_schema->error) {
-				$this->app_error("Error getting version: ".$this->_schema->error,__FILE__,__LINE__);
+			if ($this->_schema->error()) {
+				$this->app_error("Error getting version: ".$this->_schema->error(),__FILE__,__LINE__);
 			}
 
 			$response = new \APIResponse();
@@ -596,7 +613,7 @@
 				$response->addElement('version',$this->_schema->version());
 			}
 			else {
-				$this->app_error("Error upgrading schema: ".$this->_schema->error,__FILE__,__LINE__);
+				$this->app_error("Error upgrading schema: ".$this->_schema->error(),__FILE__,__LINE__);
 			}
 			$response->print();
 		}
@@ -893,6 +910,14 @@
 										"description" => "Successful Operation",
 										"content"	=> array(
 											"application/xml" => array(
+												"schema" => array(
+													"type" => "array",
+													"items" => array(
+														"\$ref" => "#/components/schemas/".$settings['return_type'],
+													),
+												),
+											),
+											"application/json" => array(
 												"schema" => array(
 													"type" => "array",
 													"items" => array(
