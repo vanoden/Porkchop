@@ -21,11 +21,12 @@
 				while (false !== ($module_name = readdir($handle))) {
 					if (preg_match('/^[\w\-\_]+$/',$module_name)) {
 						if (isset($parameters['name'])) {
-							if ($parameters['name'] != $module_name) continue;
+							if (strtolower($parameters['name']) != strtolower($module_name)) continue;
 						}
 
 						$module = new Module();
 						if ($module->get($module_name)) {
+							$module->caseName($module_name);
 							array_push($modules,$module);
 							$this->incrementCount();
 						}
