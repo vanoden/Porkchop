@@ -14,13 +14,6 @@
 <?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
-<div style="margin: 10px 0;">
-	<a href="<?=PATH."/_register/organizations_report"?>">
-		<img src="/img/icons/icon_tools_search.svg" alt="Report" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;" />
-		Duplicate Report
-	</a>
-</div>
-
 <form id="orgSearch" method="get" class="float: left">
 <div id="search_container">
 	<div><input type="text" id="searchOrganizationInput" name="name" placeholder="organization name" value="<?php if (!empty($_REQUEST["name"])) print $_REQUEST["name"];?>"/></div>

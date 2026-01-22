@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <section>
 <h1 class="pageSect_full">Forgot Password</h1>
 	<ul class="connectBorder infoText">
-		<li>Enter the email associated with your account. If that address exists in our system, instructions will be sent to it to reset your password.</li>
+		<li>Enter the email associated with your account. If that address exists in our system, instructions will be sent to it to reset your password. Our emails are sent from <strong>no-reply@spectrosinstruments.com</strong> - please add this address to your email address book and check your spam folder if needed.</li>
 	</ul>
 </section>
 
