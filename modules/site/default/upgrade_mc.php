@@ -35,6 +35,7 @@
 			),
 			"templates"		=> array(
 				"organizations"		=> $admin_template,
+				"organizations_report"	=> $admin_template,
 				"organization"		=> $admin_template,
 				"accounts"			=> $admin_template,
 				"admin_account"		=> $admin_template,
@@ -514,7 +515,8 @@
 			else {
 				install_fail("Error adding menu item ".$item["title"].": ".$nav_item->error());
 			}
-			foreach ($item['items'] as $subitem) {
+			if (isset($item['items']) && is_array($item['items'])) {
+				foreach ($item['items'] as $subitem) {
 				$subnav_item = new \Site\Navigation\Item();
 				if ($subnav_item->get($nav_menu->id,$subitem["title"],$nav_item)) {
 					$subnav_item->update(
@@ -543,6 +545,7 @@
 				else {
 					install_fail("Error adding menu item ".$subitem["title"].": ".$subnav_item->error());
 				}
+			}
 			}
 		}
 	}

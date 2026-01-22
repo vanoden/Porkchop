@@ -155,7 +155,8 @@
 					else {
 						$this->install_fail("Error adding menu item ".$item["title"].": ".$nav_item->error());
 					}
-					foreach ($item['items'] as $subitem) {
+					if (isset($item['items']) && is_array($item['items'])) {
+						foreach ($item['items'] as $subitem) {
 						$subnav_item = new \Site\Navigation\Item();
 						if ($subnav_item->getItem($nav_menu->id,$subitem["title"],$nav_item)) {
 							$subnav_item->update(
@@ -184,6 +185,7 @@
 						else {
 							$this->install_fail("Error adding menu item ".$subitem["title"].": ".$subnav_item->error());
 						}
+					}
 					}
 				}
 			}

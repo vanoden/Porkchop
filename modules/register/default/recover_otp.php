@@ -16,9 +16,9 @@
             <h2>How it works</h2>
             <ul>
                 <li>Enter your email address and submit the form.</li>
-                <li>If your account is eligible, you'll receive a recovery email.</li>
+                <li>If your account is eligible, you'll receive a recovery email from <strong>no-reply@spectrosinstruments.com</strong>.</li>
                 <li>The email contains a link to reset your 2FA and set up a new authenticator app.</li>
-                <li>If you do not receive an email, check your spam folder or contact support.</li>
+                <li><strong>Tip:</strong> Add <strong>no-reply@spectrosinstruments.com</strong> to your email address book to ensure delivery. If you do not receive an email, check your spam, junk, or bulk mail folders, or contact support.</li>
             </ul>
         </div>
         <div class="pageSect_half">
