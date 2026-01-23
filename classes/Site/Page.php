@@ -836,7 +836,7 @@
 								$button_class = "button_" . preg_replace ( "/\W/", "_", $menu->title );
 							}
 							$button_id = "button[" . $item->id . "]";
-							if (count ( $item->children )) {
+							if (count($item->children())) {
 								$child_container_class = "child_container_" . preg_replace ( "/\W/", "_", $menu->title );
 								$child_container_id = "child_container[" . $item->id . "]";
 								$child_button_class = "child_button_" . preg_replace ( "/\W/", "_", $menu->title );
@@ -844,7 +844,7 @@
 								$buffer .= "<div" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . " id=\"$button_id\"" . " class=\"$button_class\"" . ">" . $item->title . "</div>\n";
 
 								$buffer .= "\t<div class=\"$child_container_class\" id=\"$child_container_id\">\n";
-								foreach ( $item->children as $child ) {
+								foreach ( $item->children() as $child ) {
 									$buffer .= "\t\t" . "<a" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . ' href="' . $child->target . '"' . ' class="' . $child_button_class . '">' . $child->title . "</a>\n";
 								}
 								$buffer .= "\t</div>";
