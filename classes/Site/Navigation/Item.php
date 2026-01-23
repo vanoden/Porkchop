@@ -537,6 +537,13 @@
 		public function children() {
 			$itemList = new \Site\Navigation\ItemList();
 			$items = $itemList->find(array('parent_id' => $this->id));
+			if ($itemList->error()) {
+				$this->error($itemList->error());
+				return array();
+			}
+			if (!is_array($items)) {
+				return array();
+			}
 			return $items;
 		}
 
