@@ -1,6 +1,6 @@
 <?php
 
-    namespace Site\Navigation;
+	namespace Site\Navigation;
 
 class Menu Extends \BaseModel {
 
@@ -8,10 +8,10 @@ class Menu Extends \BaseModel {
 	public $title;
 	private $_page = null;
 
-	    public function __construct($id = 0) {
+		public function __construct($id = 0) {
 			$this->_tableName = 'navigation_menus';
-    		parent::__construct($id);
-	    }
+			parent::__construct($id);
+		}
 
 		/**
 		 * Set the page object for admin menu section override
@@ -62,19 +62,19 @@ class Menu Extends \BaseModel {
 			return null;
 		}
 
-	    public function add($parameters = array ()) {
+		public function add($parameters = array ()) {
 
-		    if (! isset($parameters ['code'])) {
-			    $this->error("code required");
-			    return false;
-		    }
-		    $add_object_query = "
-				    INSERT
-				    INTO	navigation_menus
-				    (code)
-				    VALUES
-				    (?)
-			    ";
+			if (! isset($parameters ['code'])) {
+				$this->error("code required");
+				return false;
+			}
+			$add_object_query = "
+					INSERT
+					INTO	navigation_menus
+					(code)
+					VALUES
+					(?)
+				";
 				$GLOBALS ['_database']->Execute($add_object_query, array ($parameters ['code']));
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->SQLError($GLOBALS['_database']->ErrorMsg());
@@ -92,35 +92,35 @@ class Menu Extends \BaseModel {
 				));
 
 				return $this->update($parameters);
-	    }
-	    public function update($parameters = []): bool {
-		    $update_object_query = "
-				    UPDATE	navigation_menus
-				    SET		id = id
-			    ";
-		    $bind_params = array ();
+		}
+		public function update($parameters = []): bool {
+			$update_object_query = "
+					UPDATE	navigation_menus
+					SET		id = id
+				";
+			$bind_params = array ();
 
-		    if (isset ( $parameters ['code'] )) {
-			    $update_object_query .= ",
-						    code = ?";
-			    array_push ( $bind_params, $parameters ['code'] );
-		    }
-		    if (isset ( $parameters ['title'] )) {
-			    $update_object_query .= ",
-						    title = ?";
-			    array_push ( $bind_params, $parameters ['title'] );
-		    }
-		    $update_object_query .= "
-				    WHERE	id = ?
+			if (isset ( $parameters ['code'] )) {
+				$update_object_query .= ",
+							code = ?";
+				array_push ( $bind_params, $parameters ['code'] );
+			}
+			if (isset ( $parameters ['title'] )) {
+				$update_object_query .= ",
+							title = ?";
+				array_push ( $bind_params, $parameters ['title'] );
+			}
+			$update_object_query .= "
+					WHERE	id = ?
 			";
-		    array_push($bind_params,$this->id );
-		    query_log($update_object_query,$bind_params);
-		    $GLOBALS['_database']->Execute($update_object_query,$bind_params);
+			array_push($bind_params,$this->id );
+			query_log($update_object_query,$bind_params);
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
-		    if ($GLOBALS['_database']->ErrorMsg()) {
-			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
-			    return false;
-		    }
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS ['_database']->ErrorMsg());
+				return false;
+			}
 			
 			// audit the update event
 			$auditLog = new \Site\AuditLog\Event();
@@ -131,51 +131,51 @@ class Menu Extends \BaseModel {
 				'class_method' => 'update'
 			));
 
-		    return $this->details ();
-	    }
+			return $this->details ();
+		}
 
-	    public function details(): bool {
+		public function details(): bool {
 
-		    $get_default_query = "
-				    SELECT  *
-				    FROM    navigation_menus
-				    WHERE   id = ?
-			    ";
-		    $rs = $GLOBALS['_database']->Execute($get_default_query, array($this->id ) );
-		    if (! $rs) {
-			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
-			    return false;
-		    }
-		    $object = $rs->FetchNextObject ( false );
-		    if ($object->id) {
-			    $this->id = $object->id;
-			    $this->code = $object->code;
-			    $this->title = $object->title;
-		    }
+			$get_default_query = "
+					SELECT  *
+					FROM    navigation_menus
+					WHERE   id = ?
+				";
+			$rs = $GLOBALS['_database']->Execute($get_default_query, array($this->id ) );
+			if (! $rs) {
+				$this->SQLError($GLOBALS ['_database']->ErrorMsg());
+				return false;
+			}
+			$object = $rs->FetchNextObject ( false );
+			if ($object->id) {
+				$this->id = $object->id;
+				$this->code = $object->code;
+				$this->title = $object->title;
+			}
 			else {
-			    $this->id = null;
-			    $this->code = null;
-			    $this->title = null;
-		    }
-		    return true;
-	    }
+				$this->id = null;
+				$this->code = null;
+				$this->title = null;
+			}
+			return true;
+		}
 
 		/** @method public items($parent_id)
 		 * Get list of navigation items for this menu
 		 * @param $parent_id, parent id of items to get, default 0 for top level items
 		 * @return array of navigation items
 		 */
-	    public function items($parent_id = 0) {
-		    if (! preg_match("/^\d+$/", $parent_id )) $parent_id = 0;
+		public function items($parent_id = 0) {
+			if (! preg_match("/^\d+$/", $parent_id )) $parent_id = 0;
 
-		    $itemlist = new \Site\Navigation\ItemList();
-		    $items = $itemlist->find(array('menu_id' => $this->id, 'parent_id' => $parent_id));
-		    if ($itemlist->error()) {
-			    $this->error($itemlist->error());
-			    return null;
-		    }
-		    return $items;
-	    }
+			$itemlist = new \Site\Navigation\ItemList();
+			$items = $itemlist->find(array('menu_id' => $this->id, 'parent_id' => $parent_id));
+			if ($itemlist->error()) {
+				$this->error($itemlist->error());
+				return null;
+			}
+			return $items;
+		}
 
 		/** @method public getItem($title)
 		 * Get navigation item belonging to this menu by title
@@ -193,91 +193,91 @@ class Menu Extends \BaseModel {
 			return $item;
 		}
 
-	    public function cascade($parent_id = 0) {
-		    $response = array ();
-		    $items = $this->items ( $parent_id );
-		    foreach ( $items as $item ) {
-			    $item->item = $this->cascade ( $item->id );
-			    array_push ( $response, $item );
-		    }
-		    return $response;
-	    }
+		public function cascade($parent_id = 0) {
+			$response = array ();
+			$items = $this->items ( $parent_id );
+			foreach ( $items as $item ) {
+				$item->item = $this->cascade ( $item->id );
+				array_push ( $response, $item );
+			}
+			return $response;
+		}
 		public function asHTML($parameters = array ()) {
-		    $html = '';
-		    
-		    // Get current URL for navigation matching
-		    $currentURL = $this->getCurrentURL();
-		    
-		    if (isset ( $parameters ['type'] ) && $parameters ['type'] == 'left_nav') {
-			    if (! isset ( $parameters ['nav_id'] )) $parameters ['nav_id'] = 'left_nav';
-			    if (! isset ( $parameters ['a_class'] )) $parameters ['a_class'] = 'left_nav_button';
-			    $html .= '<nav id="' . $parameters ['nav_id'] . '">';
-			    $items = $this->cascade ();
-			    foreach ( $items as $item ) $html .= '<a class="' . $parameters ['a_class'] . '">' . $item->title . "</a>";
-		    }
+			$html = '';
+			
+			// Get current URL for navigation matching
+			$currentURL = $this->getCurrentURL();
+			
+			if (isset ( $parameters ['type'] ) && $parameters ['type'] == 'left_nav') {
+				if (! isset ( $parameters ['nav_id'] )) $parameters ['nav_id'] = 'left_nav';
+				if (! isset ( $parameters ['a_class'] )) $parameters ['a_class'] = 'left_nav_button';
+				$html .= '<nav id="' . $parameters ['nav_id'] . '">';
+				$items = $this->cascade ();
+				foreach ( $items as $item ) $html .= '<a class="' . $parameters ['a_class'] . '">' . $item->title . "</a>";
+			}
 			else {
-			    // Defaults
-			    if (! isset ( $parameters ['nav_id'] )) $parameters ['nav_id'] = 'left_nav';
-			    if (! isset ( $parameters ['nav_button_class'] )) $parameters ['nav_button_class'] = 'left_nav_button';
-			    if (! isset ( $parameters ['subnav_button_class'] )) $parameters ['subnav_button_class'] = 'left_subnav_button';
+				// Defaults
+				if (! isset ( $parameters ['nav_id'] )) $parameters ['nav_id'] = 'left_nav';
+				if (! isset ( $parameters ['nav_button_class'] )) $parameters ['nav_button_class'] = 'left_nav_button';
+				if (! isset ( $parameters ['subnav_button_class'] )) $parameters ['subnav_button_class'] = 'left_subnav_button';
 
-			    // Get items that should be expanded based on current URL
-			    $expandedItems = $this->findItemsToExpand($currentURL);
-			    // Get items that should be highlighted as current page
-			    $currentPageItems = $this->findCurrentPageItems($currentURL);
+				// Get items that should be expanded based on current URL
+				$expandedItems = $this->findItemsToExpand($currentURL);
+				// Get items that should be highlighted as current page
+				$currentPageItems = $this->findCurrentPageItems($currentURL);
 
-			    // Nav Container
-			    $html .= '<nav id="' . $parameters ['nav_id'] . '">' . "\n";
-			    // Close button as first menu item
-			    $html .= '<div class="nav-close-container">' . "\n";
-			    $html .= '<a href="javascript:void(0)" class="nav-close-btn" onclick="closeNav()">Close Menu</a>' . "\n";
-			    $html .= '</div>' . "\n";
-			    $items = $this->cascade ();
-			    foreach ( $items as $item ) {
-				    if ($item->hasChildren ()) $has_children = 1;
-				    else $has_children = 0;
+				// Nav Container
+				$html .= '<nav id="' . $parameters ['nav_id'] . '">' . "\n";
+				// Close button as first menu item
+				$html .= '<div class="nav-close-container">' . "\n";
+				$html .= '<a href="javascript:void(0)" class="nav-close-btn" onclick="closeNav()">Close Menu</a>' . "\n";
+				$html .= '</div>' . "\n";
+				$items = $this->cascade ();
+				foreach ( $items as $item ) {
+					if ($item->hasChildren ()) $has_children = 1;
+					else $has_children = 0;
 
-				    // Parent Nav Button
-				    $buttonClass = $parameters ['nav_button_class'];
-				    if (in_array($item->id, $currentPageItems)) {
-					    $buttonClass .= ' current-page';
-				    }
-				    if (in_array($item->id, $expandedItems)) {
-					    $buttonClass .= ' open-section';
-				    }
-				    $html .= "\t" . '<a id="left_nav[' . $item->id . ']" class="' . $buttonClass . '"';
+					// Parent Nav Button
+					$buttonClass = $parameters ['nav_button_class'];
+					if (in_array($item->id, $currentPageItems)) {
+						$buttonClass .= ' current-page';
+					}
+					if (in_array($item->id, $expandedItems)) {
+						$buttonClass .= ' open-section';
+					}
+					$html .= "\t" . '<a id="left_nav[' . $item->id . ']" class="' . $buttonClass . '"';
 
-				    if ($has_children) {
-					    $html .= ' href="javascript:void(0)"';
-					    $html .= ' onclick="toggleMenu(this)"';
-				    } else {
-					    $html .= ' href="' . $item->target . '"';
-				    }
-				    $html .= '>' . $item->title . "</a>\n";
-				    if ($has_children) {
-					    // Sub Nav Container
-					    $html .= '<div id="left_subnav[' . $item->id . ']" class="left_subnav"';
-					    // Use new URL-based expansion instead of expandNav parameter
-					    if (in_array($item->id, $expandedItems)) $html .= ' style="display: block"';
-					    $html .= '>';
-					    foreach ( $item->item as $subitem ) {
-						    // Sub Nav Button - no longer append expandNav parameter
-						    $subButtonClass = $parameters ['subnav_button_class'];
-						    if (in_array($subitem->id, $currentPageItems)) {
-							    $subButtonClass .= ' current-page';
-						    }
-						    $html .= '<a href="' . $subitem->target . '" class="' . $subButtonClass . '">' . $subitem->title . '</a>';
-					    }
-					    $html .= '</div>';
-				    }
-			    }
+					if ($has_children) {
+						$html .= ' href="javascript:void(0)"';
+						$html .= ' onclick="toggleMenu(this)"';
+					} else {
+						$html .= ' href="' . $item->target . '"';
+					}
+					$html .= '>' . $item->title . "</a>\n";
+					if ($has_children) {
+						// Sub Nav Container
+						$html .= '<div id="left_subnav[' . $item->id . ']" class="left_subnav"';
+						// Use new URL-based expansion instead of expandNav parameter
+						if (in_array($item->id, $expandedItems)) $html .= ' style="display: block"';
+						$html .= '>';
+						foreach ( $item->item as $subitem ) {
+							// Sub Nav Button - no longer append expandNav parameter
+							$subButtonClass = $parameters ['subnav_button_class'];
+							if (in_array($subitem->id, $currentPageItems)) {
+								$subButtonClass .= ' current-page';
+							}
+							$html .= '<a href="' . $subitem->target . '" class="' . $subButtonClass . '">' . $subitem->title . '</a>';
+						}
+						$html .= '</div>';
+					}
+				}
 				$html.= '</nav>' . "\n";
 				
 				// Add JavaScript for navigation auto-expansion
 				$html .= $this->generateNavigationScript($currentURL, $expandedItems);
-		    }
-		    return $html;
-	    }
+			}
+			return $html;
+		}
 
 		public function asHTMLV2($parameters = array()) {
 			$items = $this->items();
@@ -534,12 +534,12 @@ END;
 <script>
 // Navigation Configuration - Generated by PHP
 window.NAV_CONFIG = {
-    currentURL: {$currentURLJson},
-    expandedItems: {$expandedItemsJson},
-    currentPageItems: {$currentPageItemsJson},
-    storageKey: 'navigation_expanded_items'
+	currentURL: {$currentURLJson},
+	expandedItems: {$expandedItemsJson},
+	currentPageItems: {$currentPageItemsJson},
+	storageKey: 'navigation_expanded_items'
 };
 </script>
 SCRIPT;
 	}
-    }
+	}
