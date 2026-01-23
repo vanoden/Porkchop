@@ -104,6 +104,11 @@ class Event Extends \BaseModel {
 		}
 		$this->user_id = !empty($customer_id) ? $customer_id : 0;
 
+		if (empty($this->instance_id) || empty($this->class_name) || empty($this->class_method) || empty($this->description) || empty($this->user_id) || is_null($this->ip_address)) {
+			app_log("Rejected audit event - missing required fields. Params: " . print_r($params, true),"warning");
+			$this->warn("Missing required fields. Cannot log event.");
+			return true;
+		}
 		// Use sysdate() for event_date as per specification
 		$query = "
 			INSERT INTO site_audit_events
@@ -123,6 +128,7 @@ class Event Extends \BaseModel {
 		$rs = $database->Execute($query);
 		if (!$rs) {
 			$this->SQLError($database->ErrorMsg());
+			$this->error("Failed to insert audit event into database: ".print_r($params, true));
 			return false;
 		}
 
