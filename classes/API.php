@@ -588,7 +588,7 @@
 		/* Get Database Schema 							*/
 		/************************************************/
 		public function schemaVersion() {
-			if ($this->_schema->error) {
+			if ($this->_schema->error()) {
 				$this->app_error("Error getting version: ".$this->_schema->error,__FILE__,__LINE__);
 			}
 
