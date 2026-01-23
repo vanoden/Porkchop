@@ -1,64 +1,64 @@
 <?php
-    namespace Site;
-    
-    class Page Extends \BaseModel {
-	    public string $module = 'content';
-	    public string $view = 'index';
-	    public string $index = '';
-	    public string $style = 'default';
-	    public bool $auth_required = false;
-	    public bool $ssl_required = false;
+	namespace Site;
+	
+	class Page Extends \BaseModel {
+		public string $module = 'content';
+		public string $view = 'index';
+		public string $index = '';
+		public string $style = 'default';
+		public bool $auth_required = false;
+		public bool $ssl_required = false;
 		public string $method = "";
-	    public string $uri = "";
-    public string $title = "";
-    public $metadata;
-    public string $template = "";
-	    public ?string $success = null;
+		public string $uri = "";
+		public string $title = "";
+		public $metadata;
+		public string $template = "";
+		public ?string $success = null;
 		public string $instructions = "";
 		public ?int $tou_id = null;
 		public string $sitemap = "";
 		public bool $isSearchResults = false;
 		private $_breadcrumbs = array();
-	    private $_errors = array();
+		private $_errors = array();
 		private $_warnings = array();
 
 		/** @constructor */
-	    public function __construct() {
+		public function __construct() {
 			$this->_tableName = "page_pages";
 			$this->_tableUKColumn = null;
 			$this->_cacheKeyPrefix = "site.page";
 			$this->_metaTableName = "page_metadata";
 			$this->_tableMetaFKColumn = "page_id";
 			$this->_tableMetaKeyColumn = "key";
-            parent::__construct();
-            
-		    $args = func_get_args();
+			parent::__construct();
+			
+			$args = func_get_args();
 			if (func_num_args() == 1 && gettype($args[0]) == "integer") {
 				$this->id = $args[0];
 				$this->details();
 			}
 			elseif (func_num_args() == 1 && gettype( $args [0] ) == "string") {
-			    $this->id = $args [0];
-			    $this->details();
-		    }
+				$this->id = $args [0];
+				$this->details();
+			}
 			elseif (func_num_args() == 1 && gettype($args [0] ) == "array") {
-			    if (isset($args[0]['method'])) {
-				    $this->method = $args[0]['method'];
+				if (isset($args[0]['method'])) {
+					$this->method = $args[0]['method'];
 					if ($this->validView($args[0]['view'])) $this->view = $args[0]['view'];
 					if ($this->validIndex($args[0]['index'])) $this->index = $args[0]['index'];
-			    }
-		    }
+				}
+			}
 			elseif (func_num_args() == 2 && gettype( $args[0] ) == "string" && gettype( $args[1] ) == "string" && isset( $args[2])) {
-			    $this->getPage( $args[0], $args[1], $args[2] );
-		    }
+				$this->getPage( $args[0], $args[1], $args[2] );
+			}
 			elseif (func_num_args() == 2 && gettype( $args[0] ) == "string" && gettype( $args[1] ) == "string") {
-			    $this->getPage( $args[0], $args[1] );
-		    }
+				$this->getPage( $args[0], $args[1] );
+			}
 			else {
-			    $this->fromRequest();
-		    }
+				$this->fromRequest();
+			}
 			$this->_addFields('tou_id');
-	    }
+		}
 
 		/** @method public __call(name, arguments)
 		 * Handles dynamic method calls for the Page class.
@@ -72,9 +72,9 @@
 		/** @method public fromRequest()
 		 * Initializes the Page object from the current request.
 		 */
-	    public function fromRequest() {
-		    return $this->getPage($GLOBALS['_REQUEST_']->module, $GLOBALS['_REQUEST_']->view, $GLOBALS['_REQUEST_']->index );
-	    }
+		public function fromRequest() {
+			return $this->getPage($GLOBALS['_REQUEST_']->module, $GLOBALS['_REQUEST_']->view, $GLOBALS['_REQUEST_']->index );
+		}
 
 		/** @method public applyStyle()
 		 * Applies the style configuration for the current page based on the module.
@@ -82,8 +82,8 @@
 		 * If no specific style is defined, it defaults to the 'default' style.
 		 */
 		public function applyStyle() {
-		    if (isset ( $GLOBALS ['_config']->style [$this->module()] )) $this->style = $GLOBALS['_config']->style[$this->module()];
-	    }
+			if (isset ( $GLOBALS ['_config']->style [$this->module()] )) $this->style = $GLOBALS['_config']->style[$this->module()];
+		}
 
 		/** @method private buildTargetURL()
 		 * Builds the target URL from the parsed request to preserve path segments (like RMA codes).
@@ -106,36 +106,36 @@
 		/** @method requireAuth()
 		 * Check if the user is authenticated.  If not, redirect to the login page.
 		 */
-	    public function requireAuth(): bool {
+		public function requireAuth(): bool {
 			if ($this->module == 'register' && $this->view == 'login') return true;
-		    if (! $GLOBALS['_SESSION_']->authenticated()) {
+			if (! $GLOBALS['_SESSION_']->authenticated()) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
 				app_log("User not authenticated, redirecting to login page",'info');
 				
 				$target = $this->buildTargetURL();
 				app_log("Redirect target: ".$target,'debug',__FILE__,__LINE__);
-			    header('location: /_register/login?target='.urlencode($target));
-                exit;
+				header('location: /_register/login?target='.urlencode($target));
+				exit;
 				return false;	// Never gets here ;-)
-		    }
+			}
 			return true;
-	    }
+		}
 
 		/** @method public requireSuperElevation()
 		 * Checks if the user has super elevation privileges.
 		 * If not, redirects to the login page.
 		 */
-	    public function requireSuperElevation() {
-		    if (! $GLOBALS ['_SESSION_']->customer->is_super_elevated()) {
+		public function requireSuperElevation() {
+			if (! $GLOBALS ['_SESSION_']->customer->is_super_elevated()) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
 				$target = $this->buildTargetURL();
 				app_log("Redirect target: ".$target,'debug',__FILE__,__LINE__);
-			    header('location: /_register/login?target=' . urlencode($target));
-                exit;
-		    }
-	    }
+				header('location: /_register/login?target=' . urlencode($target));
+				exit;
+			}
+		}
 
 		/** @method public requireRole(role)
 		 * Checks if the user has a specific role.
@@ -143,29 +143,29 @@
 		 * @param string $role The role to check for.
 		 * @return bool True if the user has the required role, otherwise redirects.
 		 */
-	    public function requireRole($role) {
-		    $this->requireAuth();
-		    if ($this->module == 'register' && $this->view == 'login') {
-			    // Do Nothing, we're Here
-		    }
+		public function requireRole($role) {
+			$this->requireAuth();
+			if ($this->module == 'register' && $this->view == 'login') {
+				// Do Nothing, we're Here
+			}
 			elseif (! $GLOBALS ['_SESSION_']->customer->id) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
 				$target = $this->buildTargetURL();
 				app_log("Redirect target: ".$target,'debug',__FILE__,__LINE__);
-			    header('location: /_register/login?target=' . urlencode($target));
-			    exit;
-		    }
+				header('location: /_register/login?target=' . urlencode($target));
+				exit;
+			}
 			elseif (! $GLOBALS ['_SESSION_']->customer->has_role($role)) {
 				$counter = new \Site\Counter("permission_denied");
 				$counter->increment();
-			    header('location: /_register/permission_denied' );
-			    exit;
-		    }
+				header('location: /_register/permission_denied' );
+				exit;
+			}
 			else {
 				return true;
 			}
-	    }
+		}
 
 		/** @method public requirePrivilege(privilege name, level)
 		 * Checks if the user has a specific privilege.
@@ -174,28 +174,28 @@
 		 * @param int $level The required privilege level. Optional - Defaults to ADMINISTRATOR.
 		 * @return bool True if the user has the required privilege, otherwise redirects.
 		 */
-        public function requirePrivilege($privilege, $level = \Register\PrivilegeLevel::ADMINISTRATOR) {
+		public function requirePrivilege($privilege, $level = \Register\PrivilegeLevel::ADMINISTRATOR) {
 			$this->requireAuth();
-            if ($GLOBALS['_SESSION_']->customer->can($privilege, $level)) {
+			if ($GLOBALS['_SESSION_']->customer->can($privilege, $level)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-                return true;
-            }
-            elseif (!isset($GLOBALS['_SESSION_']->customer->id)) {
+				return true;
+			}
+			elseif (!isset($GLOBALS['_SESSION_']->customer->id)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
 				$target = $this->buildTargetURL();
 				app_log("Redirect target: ".$target,'debug',__FILE__,__LINE__);
 				header('location: /_register/login?target=' . urlencode($target));
-			    exit;
-		    }
-            else {
+				exit;
+			}
+			else {
 				$counter = new \Site\Counter("permission_denied");
 				$counter->increment();
-			    header('location: /_register/permission_denied' );
-                exit;
+				header('location: /_register/permission_denied' );
+				exit;
 			}
-        }
+		}
 
 		/** @method public requirePrivilegeLevel(privilege, required_level)
 		 * Checks if the user has a specific privilege with required level.
@@ -204,28 +204,28 @@
 		 * @param int $required_level The required privilege level.
 		 * @return bool True if the user has the required privilege level, otherwise redirects.
 		 */
-        public function requirePrivilegeLevel($privilege, $required_level = \Register\PrivilegeLevel::CUSTOMER) {
+		public function requirePrivilegeLevel($privilege, $required_level = \Register\PrivilegeLevel::CUSTOMER) {
 			$this->requireAuth();
-            if ($GLOBALS['_SESSION_']->customer->can_level($privilege, $required_level)) {
+			if ($GLOBALS['_SESSION_']->customer->can_level($privilege, $required_level)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-                return true;
-            }
-            elseif (!isset($GLOBALS['_SESSION_']->customer->id)) {
+				return true;
+			}
+			elseif (!isset($GLOBALS['_SESSION_']->customer->id)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
 				$target = $this->buildTargetURL();
 				app_log("Redirect target: ".$target,'debug',__FILE__,__LINE__);
 				header('location: /_register/login?target=' . urlencode($target));
-			    exit;
-		    }
-            else {
+				exit;
+			}
+			else {
 				$counter = new \Site\Counter("permission_denied");
 				$counter->increment();
-			    header('location: /_register/permission_denied' );
-                exit;
+				header('location: /_register/permission_denied' );
+				exit;
 			}
-        }
+		}
 
 		/** @method public requireOrganization()
 		 * Checks if the user belongs to an organization.
@@ -235,8 +235,8 @@
 			if (empty($GLOBALS['_SESSION_']->customer->organization()->id)) {
 				$counter = new \Site\Counter("organization_required");
 				$counter->increment();
-			    header('location: /_register/organization_required');
-			    exit;
+				header('location: /_register/organization_required');
+				exit;
 			}
 		}
 
@@ -271,46 +271,46 @@
 		 * @param string|null $index The index of the page, if applicable.
 		 * @return bool True if the page exists or was created successfully, otherwise false.
 		 */
-	    public function getPage($module, $view, $index = null) {
+		public function getPage($module, $view, $index = null) {
 			$this->clearError();
 
 			$database = new \Database\Service();
 
-		    if (empty($index) || strlen($index) < 1) $index = null;
+			if (empty($index) || strlen($index) < 1) $index = null;
 
-		    // Prepare Query
-		    $get_object_query = "
-				    SELECT	id
-				    FROM	page_pages
-				    WHERE	module = ?
-				    AND		view = ?
-			    ";
+			// Prepare Query
+			$get_object_query = "
+					SELECT	id
+					FROM	page_pages
+					WHERE	module = ?
+					AND		view = ?
+				";
 			$database->AddParam($module);
 			$database->AddParam($view);
 
-		    if (isset ( $index )) {
-			    $get_object_query .= "
-				    AND		`index` = ?
-				    ";
+			if (isset ( $index )) {
+				$get_object_query .= "
+					AND		`index` = ?
+					";
 				$database->AddParam($index);
-		    }
+			}
 			else {
-			    $get_object_query .= "
-				    AND		(`index` is null or `index` = '')
-				    ";
-		    }
+				$get_object_query .= "
+					AND		(`index` is null or `index` = '')
+					";
+			}
 
-		    $rs = $database->Execute($get_object_query);
-		    if (! $rs) {
-			    $this->SQLError($database->ErrorMsg());
-			    return ;
-		    }
-		    list($id) = $rs->FetchRow();
+			$rs = $database->Execute($get_object_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return ;
+			}
+			list($id) = $rs->FetchRow();
 
-		    if (is_numeric($id)) {
-			    $this->id = $id;
-			    return $this->details();
-		    }
+			if (is_numeric($id)) {
+				$this->id = $id;
+				return $this->details();
+			}
 			elseif ($module == "static") {
 				// No Special Characters in static path
 				if ($this->validView($view)) {
@@ -345,11 +345,11 @@
 				}
 				else {
 					app_log("Request for $module::$view view, not adding page: No '$file_path/".$view.".php or $file_path/".$view."_mc.php",'notice');
-				    return false;
+					return false;
 				}
-		    }
-		    return true;
-	    }
+			}
+			return true;
+		}
 
 		/**
 		 * Add a page by raw data parameters
@@ -367,56 +367,56 @@
 		 * @param string $index
 		 * @return bool True if successful
 		 */
-	    public function add($module = '', $view = '', $index = '') {
+		public function add($module = '', $view = '', $index = '') {
 			// Clear previous errors
 			$this->clearError();
 
 			// Initialize Database Service
 			$database = new \Database\Service();
 
-		    // Apply optional parameters
-		    if (!empty($module) && $this->validModule($module)) {
-			    $this->module = $module;
-			    if (!empty($view) && $this->validView($view)) {
-				    $this->view = $view;
-				    if (!empty($index) && $this->validIndex($index)) $this->index = $index;
-			    }
-		    }
+			// Apply optional parameters
+			if (!empty($module) && $this->validModule($module)) {
+				$this->module = $module;
+				if (!empty($view) && $this->validView($view)) {
+					$this->view = $view;
+					if (!empty($index) && $this->validIndex($index)) $this->index = $index;
+				}
+			}
 
 			// Prepare Query to Add Page
-		    $add_object_query = "
-			    INSERT
-			    INTO	page_pages
-			    (		module,view,`index`
-			    )
-			    VALUES
-			    (		?,?,?)
-		    ";
+			$add_object_query = "
+				INSERT
+				INTO	page_pages
+				(		module,view,`index`
+				)
+				VALUES
+				(		?,?,?)
+			";
 
 			// Bind Parameters
 			$database->AddParam($this->module);
 			$database->AddParam($this->view);
 			$database->AddParam($this->index);
 
-		    $database->Execute($add_object_query);
-		    if ($database->ErrorMsg()) {
-			    $this->SQLError($database->ErrorMsg());
-			    return false;
-		    }
-		    $this->id = $database->Insert_ID();
+			$database->Execute($add_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			$this->id = $database->Insert_ID();
 			
-            // audit the add event
-            $auditLog = new \Site\AuditLog\Event();
-            $auditLog->add(array(
-                'instance_id' => $this->id,
-                'description' => 'Added new '.$this->_objectName(),
-                'class_name' => get_class($this),
-                'class_method' => 'add'
-            ));
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
 
-		    app_log("Added page id ".$this->id);
-		    return $this->details();
-	    }
+			app_log("Added page id ".$this->id);
+			return $this->details();
+		}
 
 		/**
 		 * Update a page by raw data parameters
@@ -517,7 +517,7 @@
 		 * Get Page Details
 		 * @return bool 
 		 */
-	    public function details(): bool {
+		public function details(): bool {
 			$this->clearError();
 
 			$cache = $this->cache();
@@ -576,38 +576,38 @@
 				}
 			}
 
-		    if (isset($GLOBALS['_config']->style[$this->module] )) {
-			    $this->style = $GLOBALS['_config']->style[$this->module];
-		    }
+			if (isset($GLOBALS['_config']->style[$this->module] )) {
+				$this->style = $GLOBALS['_config']->style[$this->module];
+			}
 
 			// Intranet style site, No public content
-            if (isset($GLOBALS['_config']->site->private_mode) && $GLOBALS['_config']->site->private_mode) {
+			if (isset($GLOBALS['_config']->site->private_mode) && $GLOBALS['_config']->site->private_mode) {
 				if ($this->view == "api") $this->auth_required = false;
-                else $this->auth_required = true;
-            }
+				else $this->auth_required = true;
+			}
 
-		    // Make Sure Authentication Requirements are Met
-		    if (($this->auth_required) and (! $GLOBALS ["_SESSION_"]->authenticated())) {
-			    if (($this->module != "register") or (! in_array ( $this->view, array ('login', 'forgot_password', 'register', 'email_verify', 'resend_verify', 'invoice_login', 'thank_you' ) ))) {
-				    // Clean Query Vars for this
-				    $auth_query_vars = preg_replace ( "/\/$/", "", $GLOBALS['_REQUEST_']->query_vars );
+			// Make Sure Authentication Requirements are Met
+			if (($this->auth_required) and (! $GLOBALS ["_SESSION_"]->authenticated())) {
+				if (($this->module != "register") or (! in_array ( $this->view, array ('login', 'forgot_password', 'register', 'email_verify', 'resend_verify', 'invoice_login', 'thank_you' ) ))) {
+					// Clean Query Vars for this
+					$auth_query_vars = preg_replace ( "/\/$/", "", $GLOBALS['_REQUEST_']->query_vars );
 
-				    if ($this->module == 'content' && $this->view == 'index' && ! $auth_query_vars) $auth_target = '';
-				    else {
-					    $auth_target = ":_" . $this->module . ":" . $this->view;
-					    if ($auth_query_vars) $auth_target .= ":" . $auth_query_vars;
-					    $auth_target = urlencode ( $auth_target );
-				    }
+					if ($this->module == 'content' && $this->view == 'index' && ! $auth_query_vars) $auth_target = '';
+					else {
+						$auth_target = ":_" . $this->module . ":" . $this->view;
+						if ($auth_query_vars) $auth_target .= ":" . $auth_query_vars;
+						$auth_target = urlencode ( $auth_target );
+					}
 
-				    // Build New URL
+					// Build New URL
 					app_log("Redirect to /_register/login/$auth_target",'INFO');
-				    header ( "location: " . PATH . "/_register/login/" . $auth_target );
-                    exit;
-			    }
-		    }
+					header ( "location: " . PATH . "/_register/login/" . $auth_target );
+					exit;
+				}
+			}
 
-		    return true;
-	    }
+			return true;
+		}
 
 		public function module() {
 			if (preg_match('/(\w[\w\_\.]*)/',$this->module,$matches)) return $matches[1];
@@ -646,7 +646,7 @@
 		 * or null if no suitable template exists.
 		 * @return string|null Returns the template filename if found, otherwise null.
 		 */
-        public function template() {
+		public function template() {
 			$template = $this->getMetadata('template');
 			if (preg_match('/(\w[\w\_\-\.]*\.html)/',$template,$matches)) return $matches[1];
 			elseif (file_exists(HTML . "/" . $this->module() . "." . $this->view() . ".html")) return $this->module() . "." . $this->view() . ".html";
@@ -666,7 +666,7 @@
 		 * @return string The parsed HTML content of the template.
 		 */
 		public function load_template() {
-            $this->loadSiteHeaders();
+			$this->loadSiteHeaders();
 			if ($this->module() == 'static') {
 				return $this->parse(file_get_contents(HTML."/".$this->view));
 			}
@@ -677,22 +677,22 @@
 			if (!empty($this->template ) && file_exists(HTML."/".$this->template)) return $this->parse(file_get_contents(HTML."/".$this->template));
 			elseif (!empty($this->template)) app_log("Template ".HTML."/".$this->template." not found!",'error');
 			return $this->parse('<r7 object="page" property="view"/>');
-	    }
+		}
 
 		/** @method public parse(message)
 		 * Parses a message string, replacing <r7> tokens with dynamic content.
 		 * @param string $message The message to parse.
 		 * @return string The parsed message with tokens replaced.
 		*/
-	    public function parse($message) {
-		    $module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
-		    while ( preg_match( $module_pattern, $message, $matched ) ) {
-			    $search = isset($matched[0]) ? $matched[0] : "";
-			    $parse_message = "Replaced $search";
-			    $replace_start = microtime( true );
-			    $replace = $this->replace($search);
-			    $message = str_replace( $search, $replace, $message );
-		    }
+		public function parse($message) {
+			$module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
+			while ( preg_match( $module_pattern, $message, $matched ) ) {
+				$search = isset($matched[0]) ? $matched[0] : "";
+				$parse_message = "Replaced $search";
+				$replace_start = microtime( true );
+				$replace = $this->replace($search);
+				$message = str_replace( $search, $replace, $message );
+			}
 
 			if (preg_match('/Input\sarray\shas\s\d+\sparams\,\sdoes\snot\smatch\squery\:/',$message)) {
 				app_log("Database Input Array count missmatch at ".$this->module()."/".$this->view(),'error');
@@ -704,70 +704,70 @@
 			if (!empty($this->template())) header("X-Template: ".$this->template());
 			if (!empty($this->module)) header("X-Module: ".$this->module());
 			return $message;
-	    }
+		}
 
 		/** @method public parse_element(string)
 		 * Parses a <r7> element string into an associative array of parameters.
 		 * @param string $string The <r7> element string to parse.
 		 * @return array An associative array of parameters extracted from the <r7> element.
 		*/
-	    private function parse_element($string) {
-	    
-		    // Initialize Array to hold Parameters
-		    $parameters = array ();
+		private function parse_element($string) {
+		
+			// Initialize Array to hold Parameters
+			$parameters = array ();
 
-		    // Grab Parameters from Element
-		    preg_match ( '/^<r7\s(.*)\/>/', $string, $matches );
-		    $string = $matches [1];
+			// Grab Parameters from Element
+			preg_match ( '/^<r7\s(.*)\/>/', $string, $matches );
+			$string = $matches [1];
 
-		    // Tokenize Parameters
-		    while (strlen ( $string ) > 0 ) {
-		    
-			    // Trim Leading Space
-			    $string = ltrim ( $string );
+			// Tokenize Parameters
+			while (strlen ( $string ) > 0 ) {
+			
+				// Trim Leading Space
+				$string = ltrim ( $string );
 
-			    // Grab Parameter Name
-			    list ( $name, $string ) = preg_split ( '/\=/', $string, 2 );
+				// Grab Parameter Name
+				list ( $name, $string ) = preg_split ( '/\=/', $string, 2 );
 
-			    // Grab Parameter Value (with optional surrounding double quotes)
-			    if (substr ( $string, 0, 1 ) == '"') list ( $value, $string ) = preg_split ( '/\"/', substr ( $string, 1 ), 2 );
-			    else list ( $value, $string ) = preg_split ( '/\s/', $string, 2 );
+				// Grab Parameter Value (with optional surrounding double quotes)
+				if (substr ( $string, 0, 1 ) == '"') list ( $value, $string ) = preg_split ( '/\"/', substr ( $string, 1 ), 2 );
+				else list ( $value, $string ) = preg_split ( '/\s/', $string, 2 );
 
-			    // Store Parameter in Array
-			    $parameters [$name] = $value;
-		    }
-		    return $parameters;
-	    }
+				// Store Parameter in Array
+				$parameters [$name] = $value;
+			}
+			return $parameters;
+		}
 
 		/** @method public replace(string)
 		 * Replaces tokens in a string with dynamic content based on the <r7> element.
 		 * @param string $string The string containing the <r7> element to replace.
 		 * @return string The string with the <r7> element replaced by dynamic content.
 		 */
-	    public function replace($string) {
+		public function replace($string) {
 			
-		    // Initialize Replacement Buffer
-		    $buffer = '';
+			// Initialize Replacement Buffer
+			$buffer = '';
 
-		    // Parse Token
-		    $parameter = $this->parse_element($string);
+			// Parse Token
+			$parameter = $this->parse_element($string);
 
-		    if (array_key_exists ( 'module', $parameter )) $module = $parameter ['module'];
-		    if (array_key_exists ( 'object', $parameter )) $object = $parameter ['object'];
-		    if (array_key_exists ( 'property', $parameter )) $property = $parameter ['property'];
+			if (array_key_exists ( 'module', $parameter )) $module = $parameter ['module'];
+			if (array_key_exists ( 'object', $parameter )) $object = $parameter ['object'];
+			if (array_key_exists ( 'property', $parameter )) $property = $parameter ['property'];
 
-		    app_log ( "Object: $object Property: $property", 'trace', __FILE__, __LINE__ );
-		    if ($object == "constant") {
-			    if ($property == "path") {
-				    $buffer .= PATH;
-			    }
+			app_log ( "Object: $object Property: $property", 'trace', __FILE__, __LINE__ );
+			if ($object == "constant") {
+				if ($property == "path") {
+					$buffer .= PATH;
+				}
 				elseif ($property == "date") {
-				    $buffer .= date ( 'm/d/Y h:i:s' );
-			    }
+					$buffer .= date ( 'm/d/Y h:i:s' );
+				}
 				elseif ($property == "host") {
-				    $buffer .= $_SERVER ['HTTP_HOST'];
-			    }
-		    }
+					$buffer .= $_SERVER ['HTTP_HOST'];
+				}
+			}
 			elseif ($this->view() == "api") {
 				app_log("Loading API for module ".$this->module(),'debug');
 				$site = new \Site();
@@ -788,7 +788,7 @@
 				}
 			}
 			elseif ($object == "page") {
-			    if ($property == "view") {
+				if ($property == "view") {
 					$buffer = "<r7 object=\"" . $this->module() . "\" property=\"" . $this->view() . "\"/>";
 				}
 				elseif ($property == "errorblock") {
@@ -813,11 +813,11 @@
 					}
 				}
 				elseif ($property == "title") {
-				    if (isset ( $this->metadata->title )) $buffer = $this->metadata->title;
-			    }
+					if (isset ( $this->metadata->title )) $buffer = $this->metadata->title;
+				}
 				elseif ($property == "metadata") {
-				    if ($this->getMetadata($parameter["field"])) $buffer = $this->getMetadata($parameter["field"]);
-			    }
+					if ($this->getMetadata($parameter["field"])) $buffer = $this->getMetadata($parameter["field"]);
+				}
 				elseif ($property == "navigation") {
 					$menu = new \Site\Navigation\Menu();
 					if ($menu->get($parameter["name"])) {
@@ -829,71 +829,71 @@
 					}					
 					$items = $menu->items();
 
-				    if (count($items)) {
-					    foreach ($items as $item) {
-						    if (isset( $parameter ['class'] )) $button_class = $parameter ['class'];
-						    else {
-							    $button_class = "button_" . preg_replace ( "/\W/", "_", $menu->title );
-						    }
-						    $button_id = "button[" . $item->id . "]";
-						    if (count ( $item->children )) {
-							    $child_container_class = "child_container_" . preg_replace ( "/\W/", "_", $menu->title );
-							    $child_container_id = "child_container[" . $item->id . "]";
-							    $child_button_class = "child_button_" . preg_replace ( "/\W/", "_", $menu->title );
-
-							    $buffer .= "<div" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . " id=\"$button_id\"" . " class=\"$button_class\"" . ">" . $item->title . "</div>\n";
-
-							    $buffer .= "\t<div class=\"$child_container_class\" id=\"$child_container_id\">\n";
-							    foreach ( $item->children as $child ) {
-								    $buffer .= "\t\t" . "<a" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . ' href="' . $child->target . '"' . ' class="' . $child_button_class . '">' . $child->title . "</a>\n";
-							    }
-							    $buffer .= "\t</div>";
-						    }
+					if (count($items)) {
+						foreach ($items as $item) {
+							if (isset( $parameter ['class'] )) $button_class = $parameter ['class'];
 							else {
-							    $buffer .= "<a" . " href=\"" . $item->target . "\"" . " class=\"$button_class\"" . ">" . $item->title . "</a>\n";
-						    }
-					    }
-				    }
-			    }
+								$button_class = "button_" . preg_replace ( "/\W/", "_", $menu->title );
+							}
+							$button_id = "button[" . $item->id . "]";
+							if (count ( $item->children )) {
+								$child_container_class = "child_container_" . preg_replace ( "/\W/", "_", $menu->title );
+								$child_container_id = "child_container[" . $item->id . "]";
+								$child_button_class = "child_button_" . preg_replace ( "/\W/", "_", $menu->title );
+
+								$buffer .= "<div" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . " id=\"$button_id\"" . " class=\"$button_class\"" . ">" . $item->title . "</div>\n";
+
+								$buffer .= "\t<div class=\"$child_container_class\" id=\"$child_container_id\">\n";
+								foreach ( $item->children as $child ) {
+									$buffer .= "\t\t" . "<a" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . ' href="' . $child->target . '"' . ' class="' . $child_button_class . '">' . $child->title . "</a>\n";
+								}
+								$buffer .= "\t</div>";
+							}
+							else {
+								$buffer .= "<a" . " href=\"" . $item->target . "\"" . " class=\"$button_class\"" . ">" . $item->title . "</a>\n";
+							}
+						}
+					}
+				}
 				elseif ($property == "message") {
-				    $buffer .= "<div class=\"page_message\">" . $GLOBALS ['page_message'] . "</div>";
-			    }
+					$buffer .= "<div class=\"page_message\">" . $GLOBALS ['page_message'] . "</div>";
+				}
 				elseif ($property == "error") {
-				    $buffer .= "<div class=\"page_error\">" . $GLOBALS ['page_error'] . "</div>";
-			    }
+					$buffer .= "<div class=\"page_error\">" . $GLOBALS ['page_error'] . "</div>";
+				}
 				elseif ($property == "not_authorized") {
-				    $buffer .= "<div class=\"page_error\">Sorry, you are not authorized to see this view</div>";
-			    }
+					$buffer .= "<div class=\"page_error\">Sorry, you are not authorized to see this view</div>";
+				}
 				else {
-				    $buffer = $this->loadViewFiles($buffer);
-			    }
-		    }
+					$buffer = $this->loadViewFiles($buffer);
+				}
+			}
 			elseif ($object == "navigation") {
-			    if ($property == "menu") {
-				    if ($parameter['code']) {
-					    $menu = new \Site\Navigation\Menu ();
-					    if ($menu->get($parameter['code'])) {
+				if ($property == "menu") {
+					if ($parameter['code']) {
+						$menu = new \Site\Navigation\Menu ();
+						if ($menu->get($parameter['code'])) {
 							// Pass the current page object to the menu for admin menu section override
 							$menu->setPage($this);
 							if (!empty($parameter['version']) && $parameter['version'] == 'v2') {
 								$buffer .= $menu->asHTMLV2($parameter);
 							}
 							else {
-							    $buffer .= $menu->asHTML($parameter);
+								$buffer .= $menu->asHTML($parameter);
 							}
-					    }
-				    }
-				    else {
-					    app_log("navigation menu references without code");
-				    }
-			    }
+						}
+					}
+					else {
+						app_log("navigation menu references without code");
+					}
+				}
 				else {
-				    $buffer = $this->loadViewFiles($buffer);
-			    }
-		    }
+					$buffer = $this->loadViewFiles($buffer);
+				}
+			}
 			elseif ($object == "content") {
-			    if ($property == "index") {
-				    app_log( "content::index", 'trace', __FILE__, __LINE__ );
+				if ($property == "index") {
+					app_log( "content::index", 'trace', __FILE__, __LINE__ );
 
 					// Load Content Block with specified id
 					if (isset($parameter['id']) && is_numeric($parameter["id"])) {
@@ -916,10 +916,10 @@
 						app_log("Load block target '$target' from request 'index'",'trace');
 					}
 
-				    $block = new \Content\Block();
-				    $block->get($target);
-				    if ($block->error()) $buffer = "Error: " . $block->error();
-				    elseif (! $block->id) {
+					$block = new \Content\Block();
+					$block->get($target);
+					if ($block->error()) $buffer = "Error: " . $block->error();
+					elseif (! $block->id) {
 						app_log("Message not found matching '$target', adding", 'info', __FILE__, __LINE__ );
 						if ($GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 							$block->add(array("target" => $target));
@@ -927,199 +927,199 @@
 						else {
 							$buffer = "Sorry, the page you requested was not found";
 							app_log("Page not found: $target", 'error', __FILE__, __LINE__ );
-					    }
-				    }
+						}
+					}
 					else {
 						app_log("Found message ".$block->id);
 					}
-				    if ($block->cached()) {
+					if ($block->cached()) {
 						app_log("Loading from cache");
-					    header("X-Object-Cached: true" );
-				    }
-				    if ($block->id) {
-					    // Make Sure User Has Privileges
-					    if (is_object($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->id && $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
-						    $buffer .= '<contentblock id="'.$block->id.'">' . $block->content . '</contentblock>';
-						    $buffer .= '<a href="javascript:void(0)" class="btn_editContent" onclick="goToEditPage(\''.$block->target.'\')">Edit</a>';
-					    }
+						header("X-Object-Cached: true" );
+					}
+					if ($block->id) {
+						// Make Sure User Has Privileges
+						if (is_object($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->id && $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
+							$buffer .= '<contentblock id="'.$block->id.'">' . $block->content . '</contentblock>';
+							$buffer .= '<a href="javascript:void(0)" class="btn_editContent" onclick="goToEditPage(\''.$block->target.'\')">Edit</a>';
+						}
 						else {
-						    $buffer .= $block->content;
-					    }
-				    }
-			    }
+							$buffer .= $block->content;
+						}
+					}
+				}
 				else {
-				    $buffer = $this->loadViewFiles($buffer);
-			    }
-		    }
+					$buffer = $this->loadViewFiles($buffer);
+				}
+			}
 			elseif ($object == "product") {  
-			    // Load Product Class if Not Already Loaded
-			    if ($property == "thumbnail") {
-				    $id = $GLOBALS['_REQUEST_']->query_vars;
-				    $product = new \Product\Item($id);
-				    if (! $id) {
-					    $category_id = $product->defaultCategory();
-					    if ($product->error()) {
-						    print $product->error();
-						    exit();
-					    }
-				    }
+				// Load Product Class if Not Already Loaded
+				if ($property == "thumbnail") {
+					$id = $GLOBALS['_REQUEST_']->query_vars;
+					$product = new \Product\Item($id);
+					if (! $id) {
+						$category_id = $product->defaultCategory();
+						if ($product->error()) {
+							print $product->error();
+							exit();
+						}
+					}
 					else {
-					    $category_id = $product->id;
-				    }
+						$category_id = $product->id;
+					}
 					$category = new \Product\Item($category_id);
 					$productList = new \Product\ItemList();
-				    $products = $productList->find ( array ("category" => $category->code ) );
+					$products = $productList->find ( array ("category" => $category->code ) );
 
-				    // Loop Through Products
-				    foreach ( $products as $product ) {
-					    $buffer .= "<r7_product.detail format=thumbnail id=".$product->id.">";
-				    }
-			    }
+					// Loop Through Products
+					foreach ( $products as $product ) {
+						$buffer .= "<r7_product.detail format=thumbnail id=".$product->id.">";
+					}
+				}
 				elseif ($property == "detailz") {
-				    if (preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
-				    elseif ($GLOBALS['_REQUEST_']->query_vars) $id = $GLOBALS['_REQUEST_']->query_vars;
+					if (preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
+					elseif ($GLOBALS['_REQUEST_']->query_vars) $id = $GLOBALS['_REQUEST_']->query_vars;
 
-				    $product = new \Product\Item( $id );
-				    if ($parameter["format"] == "thumbnail") {
-					    if ($product->type()->group) {
-						    $buffer .= "<div id=\"product[" . $parameter ["id"] . "]\" class=\"product_thumbnail\">\n";
-						    $buffer .= "\t<a href=\"/_product/thumbnail/" . $product->id . "\" class=\"product_thumbnail_name\">" . $product->name . "</a>\n";
-						    $buffer .= "\t<div class=\"product_thumbnail_description\">" . $product->description . "</div>\n";
-						    $buffer .= "\t<div class=\"product_thumbnail_retail\">" . $product->currentPrice() . "</div>\n";
-						    if ($product->images()[0]->files->thumbnail->path) $buffer .= "\t\t<img src=\"" . $product->images()["0"]->files->thumbnail->path . "\" class=\"product_thumbnail_image\"/>\n";
-						    $buffer .= "</div>\n";
-					    }
+					$product = new \Product\Item( $id );
+					if ($parameter["format"] == "thumbnail") {
+						if ($product->type()->group) {
+							$buffer .= "<div id=\"product[" . $parameter ["id"] . "]\" class=\"product_thumbnail\">\n";
+							$buffer .= "\t<a href=\"/_product/thumbnail/" . $product->id . "\" class=\"product_thumbnail_name\">" . $product->name . "</a>\n";
+							$buffer .= "\t<div class=\"product_thumbnail_description\">" . $product->description . "</div>\n";
+							$buffer .= "\t<div class=\"product_thumbnail_retail\">" . $product->currentPrice() . "</div>\n";
+							if ($product->images()[0]->files->thumbnail->path) $buffer .= "\t\t<img src=\"" . $product->images()["0"]->files->thumbnail->path . "\" class=\"product_thumbnail_image\"/>\n";
+							$buffer .= "</div>\n";
+						}
 						else {
-						    $buffer .= "<div id=\"product[" . $parameter ["id"] . "]\" class=\"product_thumbnail\">\n";
-						    $buffer .= "\t<a href=\"/_product/detail/" . $product->id . "\" class=\"product_thumbnail_name\">" . $product->name . "</a>\n";
-						    $buffer .= "\t<div class=\"product_thumbnail_description\">" . $product->description . "</div>\n";
-						    $buffer .= "\t<div class=\"product_thumbnail_retail\">" . $product->currentPrice(). "</div>\n";
-						    if ($product->images()["0"]->files->thumbnail->path) $buffer .= "\t<div class=\"product_thumbnail_image\"><img src=\"" . $product->images()["0"]->files->thumbnail->path . "\" class=\"product_thumbnail_image\"/></div>\n";
-						    $buffer .= "</div>\n";
-					    }
-				    }
+							$buffer .= "<div id=\"product[" . $parameter ["id"] . "]\" class=\"product_thumbnail\">\n";
+							$buffer .= "\t<a href=\"/_product/detail/" . $product->id . "\" class=\"product_thumbnail_name\">" . $product->name . "</a>\n";
+							$buffer .= "\t<div class=\"product_thumbnail_description\">" . $product->description . "</div>\n";
+							$buffer .= "\t<div class=\"product_thumbnail_retail\">" . $product->currentPrice(). "</div>\n";
+							if ($product->images()["0"]->files->thumbnail->path) $buffer .= "\t<div class=\"product_thumbnail_image\"><img src=\"" . $product->images()["0"]->files->thumbnail->path . "\" class=\"product_thumbnail_image\"/></div>\n";
+							$buffer .= "</div>\n";
+						}
+					}
 					else {
-					    $buffer .= "<div id=\"product[" . $parameter ["id"] . "]\" class=\"product_thumbnail\">\n";
-					    $buffer .= "<a href=\"/_product/detail/" . $product->id . "\" class=\"product_thumbnail_name\">" . $product->name . "</a>\n";
-					    $buffer .= "<div class=\"product_detail_description\">" . $product->description . "</div>\n";
-					    $buffer .= "<div class=\"product_detail_retail\">" . $product->currentPrice(). "</div>\n";
-					    if ($product->images()["0"]->files->large->path) $buffer .= "<img src=\"" . $product->images()["0"]->files->large->path . "\" class=\"product_thumbnail_image\"/>\n";
-					    $buffer .= "</div>\n";
-				    }
-			    }
+						$buffer .= "<div id=\"product[" . $parameter ["id"] . "]\" class=\"product_thumbnail\">\n";
+						$buffer .= "<a href=\"/_product/detail/" . $product->id . "\" class=\"product_thumbnail_name\">" . $product->name . "</a>\n";
+						$buffer .= "<div class=\"product_detail_description\">" . $product->description . "</div>\n";
+						$buffer .= "<div class=\"product_detail_retail\">" . $product->currentPrice(). "</div>\n";
+						if ($product->images()["0"]->files->large->path) $buffer .= "<img src=\"" . $product->images()["0"]->files->large->path . "\" class=\"product_thumbnail_image\"/>\n";
+						$buffer .= "</div>\n";
+					}
+				}
 				elseif ($property == "navigation") {
-				    if (preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
-				    elseif ($GLOBALS['_REQUEST_']->query_vars) $id = $GLOBALS['_REQUEST_']->query_vars;
+					if (preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
+					elseif ($GLOBALS['_REQUEST_']->query_vars) $id = $GLOBALS['_REQUEST_']->query_vars;
 
-				    $_product = new \Product\Item($id);
-				    if (! $id) {
-					    $category_id = $_product->defaultCategory();
-					    if ($_product->error()) {
-						    print $_product->error();
-						    exit();
-					    }
-				    }
+					$_product = new \Product\Item($id);
+					if (! $id) {
+						$category_id = $_product->defaultCategory();
+						if ($_product->error()) {
+							print $_product->error();
+							exit();
+						}
+					}
 					else {
-					    $category_id = $_product->id;
-				    }
+						$category_id = $_product->id;
+					}
 					$category = new \Product\Item($category_id);
-                    $productList = new \Product\ItemList();
-				    $products = $productList->find( array ("category" => $category->code ) );
+					$productList = new \Product\ItemList();
+					$products = $productList->find( array ("category" => $category->code ) );
 
-				    // Loop Through Products
-				    foreach ($products as $product) {
-					    if ($product->type->group) {
-						    $buffer .= "<div id=\"product_navigation[" . $parameter ["id"] . "]\" class=\"product_navigation\">\n";
-						    $buffer .= "<a href=\"/_product/thumbnail/" . $product->id . "\" class=\"product_navigation_name\">" . $product->name . "</a>\n";
-						    if ($product->images ["0"]->files->icon->path) $buffer .= "<img src=\"" . $product->images ["0"]->files->icon->path . "\" class=\"product_navigation_image\"/>\n";
-						    $buffer .= "</div>\n";
-					    } else {
-						    $buffer .= "<div id=\"product_navigation[" . $parameter ["id"] . "]\" class=\"product_navigation\">\n";
-						    $buffer .= "<a href=\"/_product/detail/" . $product->id . "\" class=\"product_navigation_name\">" . $product->name . "</a>\n";
-						    if ($product->images ["0"]->files->icon->path) $buffer .= "<img src=\"" . $product->images ["0"]->files->icon->path . "\" class=\"product_navigation_image\"/>\n";
-						    $buffer .= "</div>\n";
-					    }
-				    }
-			    } else {
-				    $buffer = $this->loadViewFiles($buffer);
-			    }
-		    }
+					// Loop Through Products
+					foreach ($products as $product) {
+						if ($product->type->group) {
+							$buffer .= "<div id=\"product_navigation[" . $parameter ["id"] . "]\" class=\"product_navigation\">\n";
+							$buffer .= "<a href=\"/_product/thumbnail/" . $product->id . "\" class=\"product_navigation_name\">" . $product->name . "</a>\n";
+							if ($product->images ["0"]->files->icon->path) $buffer .= "<img src=\"" . $product->images ["0"]->files->icon->path . "\" class=\"product_navigation_image\"/>\n";
+							$buffer .= "</div>\n";
+						} else {
+							$buffer .= "<div id=\"product_navigation[" . $parameter ["id"] . "]\" class=\"product_navigation\">\n";
+							$buffer .= "<a href=\"/_product/detail/" . $product->id . "\" class=\"product_navigation_name\">" . $product->name . "</a>\n";
+							if ($product->images ["0"]->files->icon->path) $buffer .= "<img src=\"" . $product->images ["0"]->files->icon->path . "\" class=\"product_navigation_image\"/>\n";
+							$buffer .= "</div>\n";
+						}
+					}
+				} else {
+					$buffer = $this->loadViewFiles($buffer);
+				}
+			}
 			elseif ($object == "monitor") {
 				$buffer = $this->loadViewFiles($buffer);
-		    }
+			}
 			elseif ($object == "session") {
-			    if ($property == "customer_id") $buffer = $GLOBALS ['_SESSION_']->customer->id;
-			    elseif ($property == "loggedin") {
-				    if (isset ( $GLOBALS ['_SESSION_']->customer->id )) $buffer = "true";
-				    else $buffer = "false";
-			    } else {
-				    $buffer = $this->loadViewFiles($buffer);
-			    }
-		    }
+				if ($property == "customer_id") $buffer = $GLOBALS ['_SESSION_']->customer->id;
+				elseif ($property == "loggedin") {
+					if (isset ( $GLOBALS ['_SESSION_']->customer->id )) $buffer = "true";
+					else $buffer = "false";
+				} else {
+					$buffer = $this->loadViewFiles($buffer);
+				}
+			}
 			elseif ($object == "register") {
-			    if (isset ( $parameter ['id'] ) and preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
-			    elseif (isset ( $GLOBALS['_REQUEST_']->query_vars )) $id = $GLOBALS['_REQUEST_']->query_vars;
+				if (isset ( $parameter ['id'] ) and preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
+				elseif (isset ( $GLOBALS['_REQUEST_']->query_vars )) $id = $GLOBALS['_REQUEST_']->query_vars;
 
-			    if ($property == "user") {
-				    if ($parameter ['field'] == "name") {
-					    $customer = new \Register\Customer ( $GLOBALS ['_SESSION_']->customer->id );
-					    $buffer .= $customer->first_name . " " . $customer->last_name;
-				    }
-			    } elseif ($property == "welcomestring") {
-				    if ($GLOBALS ['_SESSION_']->customer) {
-					    $buffer .= "<span class=\"register_welcomestring\">Welcome " . $GLOBALS ['_SESSION_']->customer->first_name . " " . $GLOBALS ['_SESSION_']->customer->last_name . "</span>";
-				    } else {
-					    $buffer .= "<a class=\"register_welcomestring\" href=\"" . PATH . "/_register/login\">Log In</a>";
-				    }
-			    } else {
-				    $buffer = $this->loadViewFiles($buffer);
-			    }
-		    }
+				if ($property == "user") {
+					if ($parameter ['field'] == "name") {
+						$customer = new \Register\Customer ( $GLOBALS ['_SESSION_']->customer->id );
+						$buffer .= $customer->first_name . " " . $customer->last_name;
+					}
+				} elseif ($property == "welcomestring") {
+					if ($GLOBALS ['_SESSION_']->customer) {
+						$buffer .= "<span class=\"register_welcomestring\">Welcome " . $GLOBALS ['_SESSION_']->customer->first_name . " " . $GLOBALS ['_SESSION_']->customer->last_name . "</span>";
+					} else {
+						$buffer .= "<a class=\"register_welcomestring\" href=\"" . PATH . "/_register/login\">Log In</a>";
+					}
+				} else {
+					$buffer = $this->loadViewFiles($buffer);
+				}
+			}
 			elseif ($object == "company") {
-			    $companies = new \Company\CompanyList ();
-			    list ( $company ) = $companies->find ();
+				$companies = new \Company\CompanyList ();
+				list ( $company ) = $companies->find ();
 
-			    if ($property == "name") {
-				    $buffer .= $company->name;
-			    }
+				if ($property == "name") {
+					$buffer .= $company->name;
+				}
 				elseif ($property == "copyright") {
 					$buffer = '&copy;'.date('Y')." ".$company->name;
 				}
 				else {
-                    $buffer = $this->loadViewFiles($buffer);
-			    }
-		    }
+					$buffer = $this->loadViewFiles($buffer);
+				}
+			}
 			elseif ($object == "news") {
-			    if ($property == "events") {
-				    $eventlist = new \News\EventList();
-				    if ($eventlist->error()) {
-					    $this->error("Error fetching events: " . $eventlist->error());
-				    } else {
-					    $events = $eventlist->find ( array ('feed_id' => $parameter ['id'] ) );
-					    if ($eventlist->error()) {
-						    $this->error("Error fetching events: " . $eventlist->error());
-					    } else if (count ( $events )) {
-						    foreach ( $events as $event ) {
+				if ($property == "events") {
+					$eventlist = new \News\EventList();
+					if ($eventlist->error()) {
+						$this->error("Error fetching events: " . $eventlist->error());
+					} else {
+						$events = $eventlist->find ( array ('feed_id' => $parameter ['id'] ) );
+						if ($eventlist->error()) {
+							$this->error("Error fetching events: " . $eventlist->error());
+						} else if (count ( $events )) {
+							foreach ( $events as $event ) {
 								$greenbar = '';
-							    $buffer .= "<a class=\"value " . $greenbar . "newsWidgetEventValue\" href=\"" . PATH . "/_news/event/" . $event->id . "\">" . $event->name . "</a>";
-							    if ($greenbar) $greenbar = '';
-							    else $greenbar = 'greenbar ';
-						    }
-						    $buffer .= "<a class=\"value newsWidgetEventValue newsWidgetAddLink\" href=\"" . PATH . "/_news/new_event" . "\">Add</a>";
-					    }
-				    }
-			    } else {
-				    $buffer = $this->loadViewFiles($buffer);
-			    }
-		    }
+								$buffer .= "<a class=\"value " . $greenbar . "newsWidgetEventValue\" href=\"" . PATH . "/_news/event/" . $event->id . "\">" . $event->name . "</a>";
+								if ($greenbar) $greenbar = '';
+								else $greenbar = 'greenbar ';
+							}
+							$buffer .= "<a class=\"value newsWidgetEventValue newsWidgetAddLink\" href=\"" . PATH . "/_news/new_event" . "\">Add</a>";
+						}
+					}
+				} else {
+					$buffer = $this->loadViewFiles($buffer);
+				}
+			}
 			elseif ($object == "adminbar") {
-			    if (role ( 'administrator' )) $buffer = "<div class=\"adminbar\" id=\"adminbar\" style=\"height:20px; width: 100%; position: absolute; top: 0px; left: 0px;\">Admin stuff goes here</div>\n";
-		    }
+				if (role ( 'administrator' )) $buffer = "<div class=\"adminbar\" id=\"adminbar\" style=\"height:20px; width: 100%; position: absolute; top: 0px; left: 0px;\">Admin stuff goes here</div>\n";
+			}
 			else {
-                $buffer = $this->loadViewFiles($buffer);
-		    }
-		    return $buffer;
-	    }
+				$buffer = $this->loadViewFiles($buffer);
+			}
+			return $buffer;
+		}
 
 		/** @method public loadSiteHeaders()
 		 * Loads site headers from the database and sets them in the HTTP response.
@@ -1127,13 +1127,13 @@
 		 * It is typically called before rendering the view to ensure all necessary headers are set.
 		 * @return void
 		 */
-        public function loadSiteHeaders() {
-            $headerList = new \Site\HeaderList();
-            $headers = $headerList->find();
-            foreach ($headers as $header) {
-                header($header->name().": ".$header->value());
-            }
-        }
+		public function loadSiteHeaders() {
+			$headerList = new \Site\HeaderList();
+			$headers = $headerList->find();
+			foreach ($headers as $header) {
+				header($header->name().": ".$header->value());
+			}
+		}
 
 		/** @method public loadViewFiles(buffer)
 		 * Loads the view files for the current page, including both backend and frontend components.
@@ -1143,79 +1143,79 @@
 		 * @param string $buffer The initial buffer content to append the view output to.
 		 * @return string The combined output of the backend and frontend view files.
 		 */
-        public function loadViewFiles($buffer = "") {
-		    ob_start ();
-            $be_file = null;
-            $fe_file = null;
-            
-            if (isset($this->style)) {
-                if (file_exists(MODULES.'/'.$this->module().'/'.$this->style.'/'.$this->view.'_mc.php'))
-                    $be_file = MODULES.'/'.$this->module().'/'.$this->style.'/'.$this->view.'_mc.php';
-                elseif (file_exists(MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php'))
-                    $be_file = MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php';
-                if (file_exists(MODULES . '/' . $this->module() . '/' . $this->style . '/' . $this->view . '.php'))
-                    $fe_file = MODULES . '/' . $this->module() . '/' . $this->style . '/' . $this->view . '.php';
-                elseif (file_exists(MODULES . '/' . $this->module() . '/default/' . $this->view . '.php'))
-                    $fe_file = MODULES . '/' . $this->module() . '/default/' . $this->view . '.php';
-            } else {
-                // If no style is set, check default directory
-                if (file_exists(MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php'))
-                    $be_file = MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php';
-                if (file_exists(MODULES . '/' . $this->module() . '/default/' . $this->view . '.php'))
-                    $fe_file = MODULES . '/' . $this->module() . '/default/' . $this->view . '.php';
-            }
-		    app_log ( "Loading view " . $this->view() . " of module " . $this->module(), 'debug', __FILE__, __LINE__ );
-		    if (isset($be_file) && file_exists($be_file)) {
+		public function loadViewFiles($buffer = "") {
+			ob_start ();
+			$be_file = null;
+			$fe_file = null;
+			
+			if (isset($this->style)) {
+				if (file_exists(MODULES.'/'.$this->module().'/'.$this->style.'/'.$this->view.'_mc.php'))
+					$be_file = MODULES.'/'.$this->module().'/'.$this->style.'/'.$this->view.'_mc.php';
+				elseif (file_exists(MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php'))
+					$be_file = MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php';
+				if (file_exists(MODULES . '/' . $this->module() . '/' . $this->style . '/' . $this->view . '.php'))
+					$fe_file = MODULES . '/' . $this->module() . '/' . $this->style . '/' . $this->view . '.php';
+				elseif (file_exists(MODULES . '/' . $this->module() . '/default/' . $this->view . '.php'))
+					$fe_file = MODULES . '/' . $this->module() . '/default/' . $this->view . '.php';
+			} else {
+				// If no style is set, check default directory
+				if (file_exists(MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php'))
+					$be_file = MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php';
+				if (file_exists(MODULES . '/' . $this->module() . '/default/' . $this->view . '.php'))
+					$fe_file = MODULES . '/' . $this->module() . '/default/' . $this->view . '.php';
+			}
+			app_log ( "Loading view " . $this->view() . " of module " . $this->module(), 'debug', __FILE__, __LINE__ );
+			if (isset($be_file) && file_exists($be_file)) {
 				// Load Backend File
-                try {
-                    $res = include($be_file);
-                } catch (\Exception $e) {
-                    app_log("Error in backend file $be_file: " . $e->getMessage(), 'error');
-                    http_response_code(500);
-                    $counter = new \Site\Counter("return500");
-                    $counter->increment();
-                    return '<span class="label page_response_code">Internal Site Error</span>';
-                }
-
-				// Handle possible return codes
-                if ($res == 403) {
-                    http_response_code(403);
-					$counter = new \Site\Counter("return403");
-					$counter->increment();
-                    return '<span class="label page_response_code">Permission Denied</span>';
-                }
-                elseif ($res == 500) {
-                    http_response_code(500);
+				try {
+					$res = include($be_file);
+				} catch (\Exception $e) {
+					app_log("Error in backend file $be_file: " . $e->getMessage(), 'error');
+					http_response_code(500);
 					$counter = new \Site\Counter("return500");
 					$counter->increment();
-                    return '<span class="label page_response_code">Internal Error</span>';
-                }
+					return '<span class="label page_response_code">Internal Site Error</span>';
+				}
+
+				// Handle possible return codes
+				if ($res == 403) {
+					http_response_code(403);
+					$counter = new \Site\Counter("return403");
+					$counter->increment();
+					return '<span class="label page_response_code">Permission Denied</span>';
+				}
+				elseif ($res == 500) {
+					http_response_code(500);
+					$counter = new \Site\Counter("return500");
+					$counter->increment();
+					return '<span class="label page_response_code">Internal Error</span>';
+				}
 				elseif ($res == 404) {
-                    http_response_code(404);
+					http_response_code(404);
 					$counter = new \Site\Counter("return404");
 					$counter->increment();
 					return '<span class="label page_response_code">Resource not found</span>';
 				}
-            }
-		    else app_log ( "Backend file for module " . $this->module() . " not found" );
-            if (isset($fe_file) && file_exists ( $fe_file )) {
-                try {
-                    include ($fe_file);
-                } catch (\Exception $e) {
-                    app_log("Error in frontend file $fe_file: " . $e->getMessage(), 'error');
-                    // Don't return here, just log the error and continue
-                }
-            }
-		    $buffer .= ob_get_clean ();
-            
-            // if match "query: " then must be an ADODB error happening
-            //      scrub out any non HTML characters BEFORE the first HTML tag to remove the standard output ADODB errors that end up getting printed on the page
-            if (strpos($buffer, " query: ") !== false) {
-                preg_match('/^[^<]*/', $buffer, $matches);
-                if (!empty($matches[0])) $buffer = str_replace($matches[0], "",$buffer);
-            }
-            return $buffer;
-        }
+			}
+			else app_log ( "Backend file for module " . $this->module() . " not found" );
+			if (isset($fe_file) && file_exists ( $fe_file )) {
+				try {
+					include ($fe_file);
+				} catch (\Exception $e) {
+					app_log("Error in frontend file $fe_file: " . $e->getMessage(), 'error');
+					// Don't return here, just log the error and continue
+				}
+			}
+			$buffer .= ob_get_clean ();
+			
+			// if match "query: " then must be an ADODB error happening
+			//      scrub out any non HTML characters BEFORE the first HTML tag to remove the standard output ADODB errors that end up getting printed on the page
+			if (strpos($buffer, " query: ") !== false) {
+				preg_match('/^[^<]*/', $buffer, $matches);
+				if (!empty($matches[0])) $buffer = str_replace($matches[0], "",$buffer);
+			}
+			return $buffer;
+		}
 
 		/** @method public requires(role)
 		 * Checks if the current user has the required role to access the page.
@@ -1224,23 +1224,23 @@
 		 * @param string $role The role required to access the page. Defaults to '_customer'.
 		 * @return bool Returns true if the user has the required role, otherwise redirects and exits
 		 */
-	    public function requires($role = '_customer') {
-		    if ($role == '_customer') {
-			    if ($GLOBALS ['_SESSION_']->customer->id) {
-				    return true;
-			    } else {
-				    header ( "location: /_register/login?target=_" . $this->module() . ":" . $this->view() );
-				    ob_flush ();
-				    exit ();
-			    }
-		    } elseif ($GLOBALS ['_SESSION_']->customer->has_role ( $role )) {
-			    return true;
-		    } else {
-			    header ( "location: /_register/not_authorized" );
-			    ob_flush ();
-			    exit ();
-		    }
-	    }
+		public function requires($role = '_customer') {
+			if ($role == '_customer') {
+				if ($GLOBALS ['_SESSION_']->customer->id) {
+					return true;
+				} else {
+					header ( "location: /_register/login?target=_" . $this->module() . ":" . $this->view() );
+					ob_flush ();
+					exit ();
+				}
+			} elseif ($GLOBALS ['_SESSION_']->customer->has_role ( $role )) {
+				return true;
+			} else {
+				header ( "location: /_register/not_authorized" );
+				ob_flush ();
+				exit ();
+			}
+		}
 
 		// Return the Terms of Use object for this page
 		public function tou() {
@@ -1252,79 +1252,79 @@
 		/********************************************/
 		// Add a warning to the page
 		public function addWarning($msg) {
-		    $trace = debug_backtrace ();
-		    $caller = $trace [0];
-		    $file = $caller ['file'];
-		    $line = $caller ['line'];
-		    app_log ( $msg, 'warn', $file, $line );
-		    array_push ( $this->_warnings, $msg );
-	    }
+			$trace = debug_backtrace ();
+			$caller = $trace [0];
+			$file = $caller ['file'];
+			$line = $caller ['line'];
+			app_log ( $msg, 'warn', $file, $line );
+			array_push ( $this->_warnings, $msg );
+		}
 
 		// Return the serialized warning string
-	    public function warningString($delimiter = "<br>\n") {
-		    $warning_string = '';
-		    foreach ( $this->_warnings as $warning ) {
-			    if (strlen ( $warning_string )) $warning_string .= $delimiter;
-			    $warning_string .= $warning;
-		    }
-		    return $warning_string;
-	    }
+		public function warningString($delimiter = "<br>\n") {
+			$warning_string = '';
+			foreach ( $this->_warnings as $warning ) {
+				if (strlen ( $warning_string )) $warning_string .= $delimiter;
+				$warning_string .= $warning;
+			}
+			return $warning_string;
+		}
 
 		// Return the warning array
-	    public function warnings() {
-		    return $this->_warnings;
-	    }
+		public function warnings() {
+			return $this->_warnings;
+		}
 
 		// Return the number of warnings in the array
-	    public function warningCount() {
-		    if (empty ( $this->_warnings )) $this->_warnings = array();
-		    return count ( $this->_warnings );
-	    }
+		public function warningCount() {
+			if (empty ( $this->_warnings )) $this->_warnings = array();
+			return count ( $this->_warnings );
+		}
 
 		// Add an errors to the page from an array
-	    public function addErrors(array $errors) {
-		    foreach ($errors as $error) $this->addError($error);
-	    }
+		public function addErrors(array $errors) {
+			foreach ($errors as $error) $this->addError($error);
+		}
 
 		// Add an error to the page
-	    public function addError($error) {
-		    $trace = debug_backtrace ();
-		    $caller = $trace [0];
-		    $file = $caller ['file'];
-		    $line = $caller ['line'];
-		    app_log ( $error, 'error', $file, $line );
-		    array_push ( $this->_errors, $error );
-	    }
+		public function addError($error) {
+			$trace = debug_backtrace ();
+			$caller = $trace [0];
+			$file = $caller ['file'];
+			$line = $caller ['line'];
+			app_log ( $error, 'error', $file, $line );
+			array_push ( $this->_errors, $error );
+		}
 
 		// Return the serialized error string
-	    public function errorString($delimiter = "<br>\n") {
-		    if (isset ( $this->error )) array_push ( $this->_errors, $this->error());
-		    $error_string = '';
-		    foreach ( $this->_errors as $error ) {
-			    if (strlen ( $error_string )) $error_string .= $delimiter;
-			    $called_from = debug_backtrace()[1];
-			    // SQL errors in the error log, then output to page is standard "site error message"
-			    if (preg_match ( '/SQL\sError/', $error ) || preg_match ( '/ query\:/', $error )) {
-				    app_log ( $error, 'error',$called_from['file'],$called_from['line']);
-				    $error_string .= "Internal site error";
-			    } else {
-				    $error_string .= $error;
-			    }
-		    }
-		    return $error_string;
-	    }
+		public function errorString($delimiter = "<br>\n") {
+			if (isset ( $this->error )) array_push ( $this->_errors, $this->error());
+			$error_string = '';
+			foreach ( $this->_errors as $error ) {
+				if (strlen ( $error_string )) $error_string .= $delimiter;
+				$called_from = debug_backtrace()[1];
+				// SQL errors in the error log, then output to page is standard "site error message"
+				if (preg_match ( '/SQL\sError/', $error ) || preg_match ( '/ query\:/', $error )) {
+					app_log ( $error, 'error',$called_from['file'],$called_from['line']);
+					$error_string .= "Internal site error";
+				} else {
+					$error_string .= $error;
+				}
+			}
+			return $error_string;
+		}
 
 		// Return the error array
-	    public function errors() {
-		    return $this->_errors;
-	    }
+		public function errors() {
+			return $this->_errors;
+		}
 
 		// Return the number of errors in the array
-	    public function errorCount() {
-		    if (empty ( $this->_errors )) $this->_errors = array();
-		    if (! empty ( $this->error )) array_push ($this->_errors, $this->error());
-		    return count ( $this->_errors );
-	    }
+		public function errorCount() {
+			if (empty ( $this->_errors )) $this->_errors = array();
+			if (! empty ( $this->error )) array_push ($this->_errors, $this->error());
+			return count ( $this->_errors );
+		}
 
 		// We don't keep an array of successes, just a string
 		// Append a success message to the success string
@@ -1352,7 +1352,7 @@
 				if (!empty($breadcrumb['target'])) $html .= "\t\t<li><a href=\"".$breadcrumb['target']."\">".$breadcrumb['name']."</a></li>\n";
 				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
 			}
-		    return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
+			return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
 		}
 
 		/**
@@ -1381,48 +1381,48 @@
 			$buffer = "";
 			if ($this->errorCount() > 0) {
 				$buffer .= "
-          <section id=\"form-message\">
-            <ul class=\"connectBorder errorText\">
-              <li>".$this->errorString()."</li>
-            </ul>
-          </section>
+		  <section id=\"form-message\">
+			<ul class=\"connectBorder errorText\">
+			  <li>".$this->errorString()."</li>
+			</ul>
+		  </section>
 			  ";
 			}
 			elseif (!empty($this->success)) {
 				$buffer .= "
-          <section id=\"form-message\">
-            <ul class=\"connectBorder progressText\">
-              <li>".$this->success."</li>
-            </ul>
-          </section>
+		  <section id=\"form-message\">
+			<ul class=\"connectBorder progressText\">
+			  <li>".$this->success."</li>
+			</ul>
+		  </section>
 			  ";
 			}
 			if ($this->warningCount() > 0) {
 				$buffer .= "
-          <section id=\"form-message\">
-            <ul class=\"connectBorder warningText\">
-              <li>".$this->warningString()."</li>
-            </ul>
-          </section>
+		  <section id=\"form-message\">
+			<ul class=\"connectBorder warningText\">
+			  <li>".$this->warningString()."</li>
+			</ul>
+		  </section>
 			  ";
 			}
 			if (!empty($this->instructions)) {
 				$buffer .= "
-          <section id=\"form-message\">
-            <ul class=\"connectBorder infoText\">
-              <li>".$this->instructions."</li>
-            </ul>
-          </section>
-        ";
+		  <section id=\"form-message\">
+			<ul class=\"connectBorder infoText\">
+			  <li>".$this->instructions."</li>
+			</ul>
+		  </section>
+		";
 			}
 			elseif (!empty($this->getMetadata("instructions"))) {
 				$buffer .= "
-          <section id=\"form-message\">
-            <ul class=\"connectBorder infoText\">
-              <li>".$this->getMetadata("instructions")."</li>
-            </ul>
-          </section>
-        ";
+		  <section id=\"form-message\">
+			<ul class=\"connectBorder infoText\">
+			  <li>".$this->getMetadata("instructions")."</li>
+			</ul>
+		  </section>
+		";
 			}
 			return $buffer;
 		}
@@ -1433,9 +1433,9 @@
 
 		public function showTitle() {
 			$title = "<h1 id=\"page_title\">".$this->title()."</h1>";
-            if ($GLOBALS['_SESSION_']->customer->can("edit site pages"))
-                $title .= "<a id=\"icon_settings\" href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\"></a>";
-            return $title;
+			if ($GLOBALS['_SESSION_']->customer->can("edit site pages"))
+				$title .= "<a id=\"icon_settings\" href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\"></a>";
+			return $title;
 		}
 	
 		public function uri() {
@@ -1511,7 +1511,7 @@
 		}
 
 		public function validIndex($string) {
-            if (empty($string)) return true;
+			if (empty($string)) return true;
 			if (preg_match('/^\w[\w\.\_\-]*$/',$string)) return true;
 			else return false;
 		}
@@ -1547,4 +1547,4 @@
 		public function setSearchResults(bool $isSearchResults): void {
 			$this->isSearchResults = $isSearchResults;
 		}
-    }
+	}
