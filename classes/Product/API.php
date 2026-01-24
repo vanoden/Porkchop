@@ -117,6 +117,11 @@
 			if (isset($_REQUEST['status'])) $parameters["status"] = $_REQUEST['status'];
 			if (isset($_REQUEST['type']) && !empty($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
 			if (!empty($_REQUEST['variant_type'])) $parameters['variant_type'] = $_REQUEST['variant_type'];
+			// BaseListClass control params: _sort, _order, _limit, _offset
+			if (isset($_REQUEST['_sort'])) $parameters['_sort'] = $_REQUEST['_sort'];
+			if (isset($_REQUEST['_order'])) $parameters['_order'] = $_REQUEST['_order'];
+			if (isset($_REQUEST['_limit'])) $parameters['_limit'] = $_REQUEST['_limit'];
+			if (isset($_REQUEST['_offset'])) $parameters['_offset'] = $_REQUEST['_offset'];
 			$products = $productlist->find($parameters);
 			if ($productlist->error()) $this->error("Error finding products: ".$productlist->error());
 	

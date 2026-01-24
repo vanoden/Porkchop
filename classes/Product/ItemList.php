@@ -46,14 +46,14 @@
 			return $productIds;
 		}
 
-		/** @method findAdvanced(parameters, controls, advanced)
-		 * Find items based on a set of parameters, controls, and advanced search options
+		/** @method findAdvanced(parameters, advanced, controls)
+		 * Find items based on a set of parameters, controls, and advanced search options. Signature matches BaseListClass::findSimple -> findAdvanced($parameters, [], $controls).
 		 * @param array $parameters (fields to match on)
-		 * @param array $controls (sort/limit/offset)
 		 * @param array $advanced (advanced search parameters)
+		 * @param array $controls (sort/limit/offset from _sort, _order, _limit, _offset)
 		 * @return array
 		 */
-		public function findAdvanced($parameters = [], $controls = [], $advanced = []): array {
+		public function findAdvanced($parameters = [], $advanced = [], $controls = []): array {
 			$this->clearError();
 			$this->resetCount();
 
@@ -241,9 +241,10 @@
 			}
 
             // Build final query using outer select to allow ORDER BY on non-selected columns
-            $final_query = "SELECT ids.id FROM (".$find_ids_query.") ids JOIN product_products p ON p.id = ids.id".$order_by;
-            // Limit Clause
-            $final_query .= $this->limitClause($parameters);
+            $order_dir = (isset($controls['order']) && preg_match('/^(asc|desc)$/i', $controls['order'])) ? strtoupper($controls['order']) : 'ASC';
+            $final_query = "SELECT ids.id FROM (".$find_ids_query.") ids JOIN product_products p ON p.id = ids.id".$order_by." ".$order_dir;
+            // Limit Clause (from controls, not parameters)
+            $final_query .= $this->limitClause($controls);
 
             $rs = $database->Execute($final_query);
 			if ($database->ErrorMsg()) {
