@@ -424,21 +424,23 @@
 			// Initialize Database Service
 			$database = new \Database\Service();
 			
+			$match_length_int = (int) $match_length;
+			$min_matches_int = (int) $min_matches;
 			$get_duplicates_query = "
 				SELECT	COUNT(*) as match_count,
 						SUBSTRING(
 							REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
 								REPLACE(LOWER(name),'&','and'),
 							' ',''),'.',''),'-',''),';',''),':',''),CHAR(9),''),
-							1,?) as nickname
+							1,{$match_length_int}) as nickname
 				FROM	register_organizations
 				WHERE	status = 'ACTIVE'
 				GROUP BY nickname
-				HAVING COUNT(*) >= ?
+				HAVING COUNT(*) >= {$min_matches_int}
 				ORDER BY match_count DESC, nickname
 			";
 			
-			$rs = $database->Execute($get_duplicates_query, array($match_length, $min_matches));
+			$rs = $database->Execute($get_duplicates_query);
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
 				return null;
@@ -479,20 +481,21 @@
 			// Initialize Database Service
 			$database = new \Database\Service();
 			
+			$match_length_int = (int) $match_length;
 			$get_organizations_query = "
 				SELECT	id, name, code, status, date_created,
-						(SELECT COUNT(*) FROM users WHERE organization_id = register_organizations.id) as user_count
+						(SELECT COUNT(*) FROM register_users WHERE organization_id = register_organizations.id) as user_count
 				FROM	register_organizations
 				WHERE	status = 'ACTIVE'
 				AND		SUBSTRING(
 							REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
 								REPLACE(LOWER(name),'&','and'),
 							' ',''),'.',''),'-',''),';',''),':',''),CHAR(9),''),
-						1,?) = ?
+						1,{$match_length_int}) = ?
 				ORDER BY name
 			";
 			
-			$rs = $database->Execute($get_organizations_query, array($match_length, $match_string));
+			$rs = $database->Execute($get_organizations_query, array($match_string));
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
 				return null;

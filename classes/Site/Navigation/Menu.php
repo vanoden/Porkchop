@@ -217,21 +217,18 @@ class Menu Extends \BaseModel {
 				$parameters['nav_id'] = $nav_id;
 			}
 
-			if (empty($parameters['nav_id']) && !empty($parameters['code'])) {
-				$parameters['nav_id'] = $parameters['code'];
-			}
-			if (!empty($parameters['type']) && $parameters['type'] == 'left_nav') {
-				if (empty($parameters['nav_id'])) $parameters['nav_id'] = 'left_nav';
-				if (empty($parameters['a_class'])) $parameters['a_class'] = 'left_nav_button';
+			if (isset($parameters['type']) && $parameters['type'] == 'left_nav') {
+				if (!isset($parameters['nav_id'])) $parameters['nav_id'] = 'left_nav';
+				if (!isset($parameters['a_class'])) $parameters['a_class'] = 'left_nav_button';
 				$html .= '<nav id="' . $parameters['nav_id'] . '">';
 				$items = $this->cascade ();
 				foreach ( $items as $item ) $html .= '<a class="' . $parameters['a_class'] . '">' . $item->title . "</a>";
 			}
 			else {
 				// Defaults
-				if (empty($parameters['nav_id'])) $parameters['nav_id'] = 'left_nav';
-				if (empty($parameters['nav_button_class'])) $parameters['nav_button_class'] = 'left_nav_button';
-				if (empty($parameters['subnav_button_class'])) $parameters['subnav_button_class'] = 'left_subnav_button';
+				if (!isset($parameters['nav_id'])) $parameters['nav_id'] = 'left_nav';
+				if (!isset($parameters['nav_button_class'])) $parameters['nav_button_class'] = 'left_nav_button';
+				if (!isset($parameters['subnav_button_class'])) $parameters['subnav_button_class'] = 'left_subnav_button';
 
 				// Get items that should be expanded based on current URL
 				$expandedItems = $this->findItemsToExpand($currentURL);
@@ -241,9 +238,9 @@ class Menu Extends \BaseModel {
 				// Nav Container
 				$html .= '<nav id="' . $parameters['nav_id'] . '">' . "\n";
 				// Close button as first menu item
-				//$html .= '<div class="nav-close-container">' . "\n";
-				//$html .= '<a href="javascript:void(0)" class="nav-close-btn" onclick="closeNav()">Close Menu</a>' . "\n";
-				//$html .= '</div>' . "\n";
+				$html .= '<div class="nav-close-container">' . "\n";
+				$html .= '<a href="javascript:void(0)" class="nav-close-btn" onclick="closeNav()">Close Menu</a>' . "\n";
+				$html .= '</div>' . "\n";
 				$items = $this->cascade();
 				foreach ( $items as $item ) {
 					if ($item->hasChildren()) $has_children = 1;
