@@ -117,11 +117,7 @@
 			if (isset($_REQUEST['status'])) $parameters["status"] = $_REQUEST['status'];
 			if (isset($_REQUEST['type']) && !empty($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
 			if (!empty($_REQUEST['variant_type'])) $parameters['variant_type'] = $_REQUEST['variant_type'];
-			// BaseListClass control params: _sort, _order, _limit, _offset
-			if (isset($_REQUEST['_sort'])) $parameters['_sort'] = $_REQUEST['_sort'];
-			if (isset($_REQUEST['_order'])) $parameters['_order'] = $_REQUEST['_order'];
-			if (isset($_REQUEST['_limit'])) $parameters['_limit'] = $_REQUEST['_limit'];
-			if (isset($_REQUEST['_offset'])) $parameters['_offset'] = $_REQUEST['_offset'];
+			$parameters = $this->addListControlParams($parameters);
 			$products = $productlist->find($parameters);
 			if ($productlist->error()) $this->error("Error finding products: ".$productlist->error());
 	
@@ -783,6 +779,43 @@
 						'variant_type'	=> array(
 							'description' => 'Variant Type',
 							'options' => array_merge(array(''), $validationClass->variantTypes())
+						),
+						'_sort'	=> array(
+							'description' => 'Column to sort by (name, date_added, code, type, status, category, id, price, quantity, sku; default code)',
+							'type' => 'string'
+						),
+						'_order'	=> array(
+							'description' => 'Sort order (ASC or DESC)',
+							'type' => 'string',
+							'options' => array('ASC', 'DESC')
+						),
+						'_limit'	=> array(
+							'description' => 'Maximum number of records to return',
+							'type' => 'integer'
+						),
+						'_offset'	=> array(
+							'description' => 'Number of records to skip',
+							'type' => 'integer'
+						),
+						'_count'	=> array(
+							'description' => 'Return only IDs (backwards compatibility)',
+							'type' => 'boolean'
+						),
+						'_sort_desc'	=> array(
+							'description' => 'Set sort order to DESC (backwards compatibility)',
+							'type' => 'boolean'
+						),
+						'_sort_order'	=> array(
+							'description' => 'Set sort order (backwards compatibility)',
+							'type' => 'string'
+						),
+						'_flat'	=> array(
+							'description' => 'Return IDs only (backwards compatibility)',
+							'type' => 'boolean'
+						),
+						'recursive'	=> array(
+							'description' => 'Include recursive objects',
+							'type' => 'boolean'
 						),
 					)
 				),
