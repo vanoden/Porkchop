@@ -10,6 +10,7 @@ class Menu Extends \BaseModel {
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'navigation_menus';
+			$this->_cacheKeyPrefix = 'navigation.menu';
 			parent::__construct($id);
 		}
 
@@ -62,6 +63,11 @@ class Menu Extends \BaseModel {
 			return null;
 		}
 
+		/** @method public add(parameters)
+		 * Add new navigation menu
+		 * @param $parameters, array of parameters for new navigation menu
+		 * @return boolean success
+		*/
 		public function add($parameters = array ()) {
 
 			if (! isset($parameters ['code'])) {
@@ -93,32 +99,58 @@ class Menu Extends \BaseModel {
 
 				return $this->update($parameters);
 		}
+
+		/** @method public update(parameters)
+		 * Update navigation menu
+		 * @param $parameters, array of parameters to update
+		 * @return boolean success
+		*/
 		public function update($parameters = []): bool {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build the Query
 			$update_object_query = "
 					UPDATE	navigation_menus
 					SET		id = id
 				";
-			$bind_params = array ();
 
-			if (isset ( $parameters ['code'] )) {
+			$audit_changes = [];
+
+			// Add Parameters
+			if (isset($parameters['code']) && $parameters['code'] != $this->code) {
 				$update_object_query .= ",
 							code = ?";
-				array_push ( $bind_params, $parameters ['code'] );
+				$database->AddParam($parameters ['code']);
+				array_push($audit_changes, "code changed to '".$parameters['code']."'");
 			}
-			if (isset ( $parameters ['title'] )) {
+			if (isset($parameters['title']) && $parameters['title'] != $this->title) {
 				$update_object_query .= ",
 							title = ?";
-				array_push ( $bind_params, $parameters ['title'] );
+				$database->AddParam($parameters ['title']);
+				array_push($audit_changes, "title changed to '".$parameters['title']."'");
 			}
 			$update_object_query .= "
 					WHERE	id = ?
 			";
-			array_push($bind_params,$this->id );
-			query_log($update_object_query,$bind_params);
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
+			$database->AddParam($this->id);
 
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS ['_database']->ErrorMsg());
+			if (count($audit_changes) < 1) {
+				// Nothing to update
+				return true;
+			}
+
+			// Clear the Cache
+			$this->clearCache();
+
+			// Execute the Query
+			$database->Execute($update_object_query);
+
+			// Check for SQL Error
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			
@@ -126,7 +158,7 @@ class Menu Extends \BaseModel {
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
 				'instance_id' => $this->id,
-				'description' => 'Updated '.$this->_objectName(),
+				'description' => 'Updated: '.implode("; ", $audit_changes),
 				'class_name' => get_class($this),
 				'class_method' => 'update'
 			));
@@ -134,16 +166,37 @@ class Menu Extends \BaseModel {
 			return $this->details ();
 		}
 
+		/** @method public details()
+		 * Get navigation menu details
+		 * @return boolean success
+		 */
 		public function details(): bool {
+			$this->clearError();
 
+			// Prepare Database Service
+			$database = new \Database\Service();
+
+			// Connect to Cache
+			$cache = $this->cache();
+			$cachedData = $cache->get();
+			if ($cachedData) {
+				$this->id = $cachedData->id;
+				$this->code = $cachedData->code;
+				$this->title = $cachedData->title;
+				$this->cached(true);
+				$this->exists(true);
+				return true;
+			}
+
+			// Build the Query
 			$get_default_query = "
 					SELECT  *
 					FROM    navigation_menus
 					WHERE   id = ?
 				";
-			$rs = $GLOBALS['_database']->Execute($get_default_query, array($this->id ) );
+			$rs = $database->Execute($get_default_query, array($this->id ) );
 			if (! $rs) {
-				$this->SQLError($GLOBALS ['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject ( false );
@@ -151,6 +204,8 @@ class Menu Extends \BaseModel {
 				$this->id = $object->id;
 				$this->code = $object->code;
 				$this->title = $object->title;
+				$cache->set($object);
+				$this->exists(true);
 			}
 			else {
 				$this->id = null;
@@ -202,6 +257,12 @@ class Menu Extends \BaseModel {
 			}
 			return $response;
 		}
+
+		/** @method public asHTML($parameters = array())
+		 * Render navigation menu as HTML
+		 * @param $parameters, array of parameters for rendering
+		 * @return string HTML of navigation menu
+		*/
 		public function asHTML($parameters = array()) {
 			$html = '';
 			
@@ -291,6 +352,11 @@ class Menu Extends \BaseModel {
 			return $html;
 		}
 
+		/** @method public asHTMLV2($parameters = array())
+		 * Render navigation menu as HTML - Version 2
+		 * @param $parameters, array of parameters for rendering
+		 * @return string HTML of navigation menu
+		*/
 		public function asHTMLV2($parameters = array()) {
 			$items = $this->items();
 			$buffer = '';
@@ -325,7 +391,7 @@ END;
 			else return false;
 		}
 
-		/**
+		/** @public method findItemsToExpand($currentURL)
 		 * Find navigation items that should be expanded based on current URL
 		 * 
 		 * @param string $currentURL The current page URL
@@ -334,132 +400,131 @@ END;
 		public function findItemsToExpand($currentURL) {
 			$expandedItems = array();
 			$items = $this->cascade();
-			
-		// Check for manual override first
-		if ($this->_page && $this->_page->getAdminMenuSection()) {
-			$sectionName = $this->_page->getAdminMenuSection();
-			app_log("Admin menu section override: " . $sectionName, 'debug');
-			foreach ($items as $item) {
-				if (strtolower($item->title) === strtolower($sectionName)) {
-					app_log("Found matching menu item: " . $item->title . " (ID: " . $item->id . ")", 'debug');
-					$expandedItems[] = $item->id;
-					// Also add parent chain if this item has parents
-					$expandedItems = array_merge($expandedItems, $item->getParentChain());
-					return array_unique($expandedItems);
-				}
-			}
-		}
-		
-		// Find all matches first, then select the most specific one
-		$allMatches = array();
-		foreach ($items as $item) {
-			// Check if this item or its children match the current URL
-			if ($item->matchesURLRecursive($currentURL)) {
-				// Find the specific child that matches
-				$matchingChild = $this->findMatchingChild($item, $currentURL);
-				if ($matchingChild) {
-					$allMatches[] = array(
-						'parent_id' => $item->id,
-						'child_id' => $matchingChild->id,
-						'target' => $matchingChild->target,
-						'specificity' => strlen($matchingChild->target)
-					);
-				}
-			}
-		}
-			
-		// If we have matches, find the most specific one
-		if (!empty($allMatches)) {
-			// Sort by specificity (longest target first)
-			usort($allMatches, function($a, $b) {
-				return $b['specificity'] - $a['specificity'];
-			});
-			
-			// Take the most specific match
-			$bestMatch = $allMatches[0];
-			
-			// Add the parent item to expanded list
-			$expandedItems[] = $bestMatch['parent_id'];
-			
-			// Add all parent items to expanded list
-			$parentItem = new Item($bestMatch['parent_id']);
-			$expandedItems = array_merge($expandedItems, $parentItem->getParentChain());
-		}
-			
-		// Remove duplicates and return
-		return array_unique($expandedItems);
-	}
 
-	/**
-	 * Find the specific child item that matches the current URL
-	 * 
-	 * @param Item $parentItem The parent navigation item
-	 * @param string $currentURL The current page URL
-	 * @return Item|null The matching child item or null
-	 */
-	private function findMatchingChild($parentItem, $currentURL) {
-		$children = $parentItem->children();
-		foreach ($children as $child) {
-			if ($child->matchesURL($currentURL)) {
-				return $child;
+			// Check for manual override first
+			if ($this->_page && $this->_page->getAdminMenuSection()) {
+				$sectionName = $this->_page->getAdminMenuSection();
+				app_log("Admin menu section override: " . $sectionName, 'debug');
+				foreach ($items as $item) {
+					if (strtolower($item->title) === strtolower($sectionName)) {
+						app_log("Found matching menu item: " . $item->title . " (ID: " . $item->id . ")", 'debug');
+						$expandedItems[] = $item->id;
+						// Also add parent chain if this item has parents
+						$expandedItems = array_merge($expandedItems, $item->getParentChain());
+						return array_unique($expandedItems);
+					}
+				}
 			}
+			
+			// Find all matches first, then select the most specific one
+			$allMatches = array();
+			foreach ($items as $item) {
+				// Check if this item or its children match the current URL
+				if ($item->matchesURLRecursive($currentURL)) {
+					// Find the specific child that matches
+					$matchingChild = $this->findMatchingChild($item, $currentURL);
+					if ($matchingChild) {
+						$allMatches[] = array(
+							'parent_id' => $item->id,
+							'child_id' => $matchingChild->id,
+							'target' => $matchingChild->target,
+							'specificity' => strlen($matchingChild->target)
+						);
+					}
+				}
+			}
+				
+			// If we have matches, find the most specific one
+			if (!empty($allMatches)) {
+				// Sort by specificity (longest target first)
+				usort($allMatches, function($a, $b) {
+					return $b['specificity'] - $a['specificity'];
+				});
+				
+				// Take the most specific match
+				$bestMatch = $allMatches[0];
+				
+				// Add the parent item to expanded list
+				$expandedItems[] = $bestMatch['parent_id'];
+				
+				// Add all parent items to expanded list
+				$parentItem = new Item($bestMatch['parent_id']);
+				$expandedItems = array_merge($expandedItems, $parentItem->getParentChain());
+			}
+				
+			// Remove duplicates and return
+			return array_unique($expandedItems);
 		}
-		return null;
-	}
 
 		/**
+		 * Find the specific child item that matches the current URL
+		 * 
+		 * @param Item $parentItem The parent navigation item
+		 * @param string $currentURL The current page URL
+		 * @return Item|null The matching child item or null
+		 */
+		private function findMatchingChild($parentItem, $currentURL) {
+			$children = $parentItem->children();
+			foreach ($children as $child) {
+				if ($child->matchesURL($currentURL)) {
+					return $child;
+				}
+			}
+			return null;
+		}
+
+		/** @public method findCurrentPageItems($currentURL)
 		 * Find navigation items that should be highlighted as current page
 		 * 
 		 * @param string $currentURL The current page URL
 		 * @return array Array of item IDs that should be highlighted
 		 */
-	public function findCurrentPageItems($currentURL) {
-		$currentItems = array();
-		$items = $this->cascade();
-		
-		
-		// Find all matches and their specificity (target length)
-		$matches = array();
-		foreach ($items as $item) {
-			// Check if this item exactly matches the current URL
-			if ($item->matchesURL($currentURL)) {
-				$matches[] = array('id' => $item->id, 'target' => $item->target, 'type' => 'parent');
-			}
+		public function findCurrentPageItems($currentURL) {
+			$currentItems = array();
+			$items = $this->cascade();
 			
-			// Also check children for exact matches
-			foreach ($item->item as $child) {
-				if ($child->matchesURL($currentURL)) {
-					$matches[] = array('id' => $child->id, 'target' => $child->target, 'type' => 'child', 'parent_id' => $item->id);
+			// Find all matches and their specificity (target length)
+			$matches = array();
+			foreach ($items as $item) {
+				// Check if this item exactly matches the current URL
+				if ($item->matchesURL($currentURL)) {
+					$matches[] = array('id' => $item->id, 'target' => $item->target, 'type' => 'parent');
+				}
+				
+				// Also check children for exact matches
+				foreach ($item->item as $child) {
+					if ($child->matchesURL($currentURL)) {
+						$matches[] = array('id' => $child->id, 'target' => $child->target, 'type' => 'child', 'parent_id' => $item->id);
+					}
 				}
 			}
-		}
-		
-		if (empty($matches)) {
-			return $currentItems;
-		}
-		
-		// Find the most specific match (longest target)
-		$mostSpecific = null;
-		$maxLength = 0;
-		foreach ($matches as $match) {
-			$targetLength = strlen($match['target']);
-			if ($targetLength > $maxLength) {
-				$maxLength = $targetLength;
-				$mostSpecific = $match;
-			}
-		}
-		
-		if ($mostSpecific) {
-			$currentItems[] = $mostSpecific['id'];
 			
-			// If it's a child match, also add the parent
-			if ($mostSpecific['type'] === 'child') {
-				$currentItems[] = $mostSpecific['parent_id'];
+			if (empty($matches)) {
+				return $currentItems;
 			}
+			
+			// Find the most specific match (longest target)
+			$mostSpecific = null;
+			$maxLength = 0;
+			foreach ($matches as $match) {
+				$targetLength = strlen($match['target']);
+				if ($targetLength > $maxLength) {
+					$maxLength = $targetLength;
+					$mostSpecific = $match;
+				}
+			}
+			
+			if ($mostSpecific) {
+				$currentItems[] = $mostSpecific['id'];
+				
+				// If it's a child match, also add the parent
+				if ($mostSpecific['type'] === 'child') {
+					$currentItems[] = $mostSpecific['parent_id'];
+				}
+			}
+			
+			return array_unique($currentItems);
 		}
-		
-		return array_unique($currentItems);
-	}
 
 		/**
 		 * Get navigation data for JavaScript processing
