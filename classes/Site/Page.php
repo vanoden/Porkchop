@@ -812,6 +812,16 @@
 						</section>';
 					}
 				}
+				elseif ($property == "myaccount_widget") {
+					$menu = new \Site\Navigation\Menu();
+					if ($menu->get($parameter["menu_code"])) {
+						$buffer .= $menu->asHTML($parameter["name"]);
+					}
+					else {
+						$this->error($menu->error());
+						return '';
+					}
+				}
 				elseif ($property == "title") {
 					if (isset ( $this->metadata->title )) $buffer = $this->metadata->title;
 				}
