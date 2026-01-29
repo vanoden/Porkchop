@@ -970,6 +970,18 @@ use Register\Customer;
 			return false;
 		}
 
+		/** @method isCustomer(customer_identifier)
+		 * Check if the session belongs to a specific customer (by id or code).
+		 * Used by Support\API::addRequest and other callers.
+		 * @param int|string $customer_identifier Customer ID or customer code to check against
+		 * @return bool True if the session belongs to the customer, false otherwise
+		 */
+		public function isCustomer($customer_identifier): bool {
+			if (empty($this->customer) || !$this->customer->id) return false;
+			if (is_numeric($customer_identifier)) return ((int) $this->customer->id === (int) $customer_identifier);
+			return ((string) $this->customer->code === (string) $customer_identifier);
+		}
+
 		/** @method isMobileBrowser(useragent)
 		 * Determine whether a user is browsing with a mobile device via user agent string
 		 * @param string $useragent User agent string to check

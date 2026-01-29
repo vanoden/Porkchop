@@ -73,6 +73,7 @@
 
 
 <section id="reg_form" class="body">
+	<div class="organization-page-wrapper" style="display: flex; flex-direction: column; width: 100%;">
 	<h1 class="pageSect_full">My Account</h1>
 	
 	<!-- Success/Error Messages Section -->
@@ -442,4 +443,5 @@
 			<input type="hidden" id="register-contacts-id" name="register-contacts-id" value="" />
 		</form>
 	<?php } ?>
+	</div>
 </section>

@@ -10,17 +10,14 @@
 
 	$organization = $GLOBALS['_SESSION_']->customer()->organization();
 
-    // handle form submit
-	if (!empty($_REQUEST['method'])) {
-	    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
-	        $page->addError("Invalid Request");
-	    }
-		else {
-            $page->appendSuccess($_REQUEST['method']);
-
-	    }		
+	$csrfOk = true;
+	if (isset($_REQUEST['method']) && $_REQUEST['method'] === 'Apply') {
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) {
+			$page->addError("Invalid Request");
+			$csrfOk = false;
+		}
 	}
-	
+
 	if ($organization->id) {
 		$user = new \Register\Person();
 		$status = array();
@@ -49,18 +46,23 @@
         if (!empty($_REQUEST['setDefaultShipping']) && is_numeric($_REQUEST['setDefaultShipping'])) {
 		    $parameters['default_shipping_location_id'] = $_REQUEST['setDefaultShipping'];
 		}
-	    if (!isset($_REQUEST['password_expiration_days']) || !is_numeric($_REQUEST['password_expiration_days'])) {
-	        $_REQUEST['password_expiration_days'] = 0;
-	    }
-		if (isset($_REQUEST['password_expiration_days']) && is_numeric($_REQUEST['password_expiration_days']))
-			$parameters['password_expiration_days'] = $_REQUEST['password_expiration_days'];
-		if (isset($_REQUEST['website_url']) && !empty($_REQUEST['website_url']))
-			$parameters['website_url'] = $_REQUEST['website_url'];
-		if (isset($_REQUEST['time_based_password']) && !empty($_REQUEST['time_based_password'])) {
-			$parameters['time_based_password'] = $_REQUEST['time_based_password'];
-		    app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
+
+		// Only add form fields when Apply was submitted and CSRF passed
+		if ($csrfOk && isset($_REQUEST['method']) && $_REQUEST['method'] === 'Apply') {
+			if (!isset($_REQUEST['password_expiration_days']) || !is_numeric($_REQUEST['password_expiration_days'])) {
+				$_REQUEST['password_expiration_days'] = 0;
+			}
+			if (isset($_REQUEST['password_expiration_days']) && is_numeric($_REQUEST['password_expiration_days']))
+				$parameters['password_expiration_days'] = $_REQUEST['password_expiration_days'];
+			if (isset($_REQUEST['website_url']) && !empty($_REQUEST['website_url']))
+				$parameters['website_url'] = $_REQUEST['website_url'];
+			if (isset($_REQUEST['time_based_password']) && !empty($_REQUEST['time_based_password'])) {
+				$parameters['time_based_password'] = $_REQUEST['time_based_password'];
+				app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
+			}
 		}
-	    // Update Existing Organization
+
+	    // Update Existing Organization (only when we have params and success/error shown only for actual update)
 		if (count($parameters) > 0) {
 		    $organization->update($parameters);
 
