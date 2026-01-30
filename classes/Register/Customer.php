@@ -1660,18 +1660,22 @@
 			}
 
 			// Create support request with type 'SERVICE' (database enum requirement)
-			$supportRequest = new \Support\Request();
-			$supportRequest->add(array(
-				'customer_id' => $this->id,
-				'organization_id' => $organization->id,
-				'type' => 'SERVICE',
-				'status' => 'NEW',
-				'date_request' => date('Y-m-d H:i:s')
-			));
+			$site = new \Site();
+			if ($site->findModule('Support')) {
+				$requestClass = "Support\\Request";
+				$supportRequest = new $requestClass();
+				$supportRequest->add(array(
+					'customer_id' => $this->id,
+					'organization_id' => $organization->id,
+					'type' => 'SERVICE',
+					'status' => 'NEW',
+					'date_request' => date('Y-m-d H:i:s')
+				));
 
-			if ($supportRequest->error()) {
-				app_log("Error creating support ticket for blocked account: " . $supportRequest->error(), 'error', __FILE__, __LINE__);
-				return false;
+				if ($supportRequest->error()) {
+					app_log("Error creating support ticket for blocked account: " . $supportRequest->error(), 'error', __FILE__, __LINE__);
+					return false;
+				}
 			}
 
 			// Add item to the support request with blocking details
@@ -1732,7 +1736,7 @@
 			if (empty($customerEmail)) {
 				// Try to get any email
 				$contacts = $this->contacts(['type' => 'email']);
-				if (!empty($contacts) && count($contacts) > 0) {
+				if (!empty($contacts) && is_array($contacts) && count($contacts) > 0) {
 					$customerEmail = $contacts[0]->value;
 				}
 			}
