@@ -11,6 +11,13 @@
 	$auditClass = new \Site\AuditLog();
 	$classList = $auditClass->classes();
 
+	if (count($GLOBALS['_REQUEST_']->query_vars_array) > 0) {
+		$parameters['class_name'] = preg_replace('/\:\:/','\\',$GLOBALS['_REQUEST_']->query_vars_array[0]);
+		if (count($GLOBALS['_REQUEST_']->query_vars_array) > 1) {
+			$parameters['code'] = $GLOBALS['_REQUEST_']->query_vars_array[1];
+			$_REQUEST['btn_submit'] = 'Apply Filter';
+		}
+	}
 	// extract sort and order parameters from request
 	$sort_direction = $_REQUEST['sort_by'] ?? '';
 	$order_by = $_REQUEST['order_by'] ?? 'desc';
@@ -19,8 +26,8 @@
 
 	// get audits based on current search
 	$btn_submit = $_REQUEST['btn_submit'] ?? null;
-	if ($request->validText($btn_submit)) {
-		$class_name = $_REQUEST['class_name'] ?? null;
+	if ($request->validText($btn_submit) || !empty($parameters['class_name'])) {
+		$class_name = $_REQUEST['class_name'] ?? $parameters['class_name'] ?? null;
 		if (empty($class_name)) {
 			$page->addError("Please select a class to view audit logs.");
 		}
@@ -30,7 +37,7 @@
 		else {
 			$parameters['class_name'] = $class_name;
 			$class = new $class_name();
-			$code = $_REQUEST['code'] ?? null;
+			$code = $_REQUEST['code'] ?? $parameters['code'] ?? null;
 			if (empty($code)) {
 				$page->addError("Please enter an instance code");
 			}
