@@ -769,6 +769,22 @@
 				$database->CommitTrans();
 			}
 
+			if ($this->version() < 31) {
+				app_log("Upgrading ".$this->module." schema to version 31",'notice',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `navigation_menus`
+					ADD COLUMN `show_close_button` tinyint(1) NOT NULL DEFAULT 0
+				";
+				if (! $database->Execute($alter_table_query)) {
+					$this->SQLError("Altering navigation_menus table: ".$database->error());
+					return false;
+				}
+
+				$this->setVersion(31);
+				$database->CommitTrans();
+			}
+
 			return true;
 		}
 	}

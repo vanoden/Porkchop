@@ -7,6 +7,7 @@ class Menu Extends \BaseModel {
 	public $code;
 	public $title;
 	private $_page = null;
+	public ?bool $show_close_button = false;
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'navigation_menus';
@@ -132,6 +133,13 @@ class Menu Extends \BaseModel {
 				$database->AddParam($parameters ['title']);
 				array_push($audit_changes, "title changed to '".$parameters['title']."'");
 			}
+			if (isset($parameters['show_close_button']) && $parameters['show_close_button'] !== $this->show_close_button) {
+				$update_object_query .= ",
+							show_close_button = ?";
+				$database->AddParam($parameters ['show_close_button'] ? 1 : 0);
+				$changeValue = $parameters['show_close_button'] ? 'true' : 'false';
+				array_push($audit_changes, "show_close_button changed to '".$changeValue."'");
+			}
 			$update_object_query .= "
 					WHERE	id = ?
 			";
@@ -153,15 +161,9 @@ class Menu Extends \BaseModel {
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			
+
 			// audit the update event
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Updated: '.implode("; ", $audit_changes),
-				'class_name' => get_class($this),
-				'class_method' => 'update'
-			));
+			$this->recordAuditEvent($this->id,'Updated: '.implode("; ", $audit_changes),get_class($this),'update');
 
 			return $this->details ();
 		}
@@ -183,6 +185,7 @@ class Menu Extends \BaseModel {
 				$this->id = $cachedData->id;
 				$this->code = $cachedData->code;
 				$this->title = $cachedData->title;
+				$this->show_close_button = (isset($cachedData->show_close_button) ? (bool)$cachedData->show_close_button : false);
 				$this->cached(true);
 				$this->exists(true);
 				return true;
@@ -204,6 +207,7 @@ class Menu Extends \BaseModel {
 				$this->id = $object->id;
 				$this->code = $object->code;
 				$this->title = $object->title;
+				$this->show_close_button = (isset($object->show_close_button) ? (bool)$object->show_close_button : false);
 				$cache->set($object);
 				$this->exists(true);
 			}
@@ -211,6 +215,7 @@ class Menu Extends \BaseModel {
 				$this->id = null;
 				$this->code = null;
 				$this->title = null;
+				$this->show_close_button = false;
 			}
 			return true;
 		}
@@ -298,10 +303,13 @@ class Menu Extends \BaseModel {
 
 				// Nav Container
 				$html .= '<nav id="' . $parameters['nav_id'] . '">' . "\n";
-				// Close button as first menu item
-				$html .= '<div class="nav-close-container">' . "\n";
-				$html .= '<a href="javascript:void(0)" class="nav-close-btn" onclick="closeNav()">Close Menu</a>' . "\n";
-				$html .= '</div>' . "\n";
+				
+				if ($this->showCloseButton ?? true) {
+					// Close button as first menu item
+					$html .= '<div class="nav-close-container">' . "\n";
+					$html .= '<a href="javascript:void(0)" class="nav-close-btn" onclick="closeNav()">Close Menu</a>' . "\n";
+					$html .= '</div>' . "\n";
+				}
 				$items = $this->cascade();
 				foreach ( $items as $item ) {
 					if ($item->hasChildren()) $has_children = 1;

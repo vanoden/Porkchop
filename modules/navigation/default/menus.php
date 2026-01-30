@@ -19,6 +19,10 @@
 		<span class="label">Title</span>
 		<input type="text" name="title" value="<?=$menu->title?>" />
 	</div>
+	<div class="container">
+		<span class="label">Show Close Button</span>
+		<input type="checkbox" name="show_close_button" value="1" <?=($menu->show_close_button ? 'checked' : '')?> />
+	</div>
 	<div class="form_footer">
 		<input type="submit" name="btn_submit" value="Update" class="button" />
 		<input type="button" name="btn_menu" value="Items" class="button" onclick="goTo('/_navigation/items/<?=$menu->code?>')" />
@@ -37,6 +41,10 @@
 	<div class="container">
 		<span class="label">Title</span>
 		<input type="text" name="title" value="" />
+	</div>
+	<div class="container">
+		<span class="label">Show Close Button</span>
+		<input type="checkbox" name="show_close_button" value="1" />
 	</div>
 	<div class="form_footer">
 		<input type="submit" name="btn_submit" value="Add" class="button" />

@@ -688,6 +688,7 @@
 			$module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
 			while ( preg_match( $module_pattern, $message, $matched ) ) {
 				$search = isset($matched[0]) ? $matched[0] : "";
+				
 				$parse_message = "Replaced $search";
 				$replace_start = microtime( true );
 				$replace = $this->replace($search);
@@ -749,6 +750,7 @@
 			// Initialize Replacement Buffer
 			$buffer = '';
 
+			$buffer .= "\n<!-- R7 Replacement Start -->\n";
 			// Parse Token
 			$parameter = $this->parse_element($string);
 
@@ -756,6 +758,7 @@
 			if (array_key_exists ( 'object', $parameter )) $object = $parameter ['object'];
 			if (array_key_exists ( 'property', $parameter )) $property = $parameter ['property'];
 
+			$buffer .= "<!-- R7 Replacement: Module: $module Object: $object Property: $property -->\n";
 			app_log ( "Object: $object Property: $property", 'trace', __FILE__, __LINE__ );
 			if ($object == "constant") {
 				if ($property == "path") {
@@ -810,16 +813,6 @@
 						$buffer .= '</li>
 						</ul>
 						</section>';
-					}
-				}
-				elseif ($property == "myaccount_widget") {
-					$menu = new \Site\Navigation\Menu();
-					if ($menu->get($parameter["menu_code"])) {
-						$buffer .= $menu->asHTML($parameter["name"]);
-					}
-					else {
-						$this->error($menu->error());
-						return '';
 					}
 				}
 				elseif ($property == "title") {
@@ -879,7 +872,9 @@
 				}
 			}
 			elseif ($object == "navigation") {
+				$buffer .= "<!-- Navigation Menu -->";
 				if ($property == "menu") {
+					$buffer .= "<!-- Navigation Menu: ".$parameter['code']." -->";
 					if ($parameter['code']) {
 						$menu = new \Site\Navigation\Menu ();
 						if ($menu->get($parameter['code'])) {
@@ -897,8 +892,23 @@
 						app_log("navigation menu references without code");
 					}
 				}
+				elseif ($property == "myaccount") {
+					$buffer .= "<!-- My Account Menu: ".$parameter['code']." -->";
+					$menu = new \Site\Navigation\MyAccountMenu();
+					if ($menu->get($parameter["code"])) {
+						$buffer .= $menu->asHTML();
+					}
+					elseif ($menu->error()) {
+						$buffer .= "<!-- My Account Menu Error: ".$menu->error()." -->";
+						$this->error($menu->error());
+					}
+					else {
+						$buffer .= "<!-- My Account Menu: No menu found for code '".$parameter['code']."' -->";
+					}
+				}
 				else {
-					$buffer = $this->loadViewFiles($buffer);
+					$buffer .= "<!-- Navigation Menu: Unknown property '".$property."' -->";
+					$buffer .= $this->loadViewFiles($buffer);
 				}
 			}
 			elseif ($object == "content") {
