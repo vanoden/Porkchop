@@ -641,6 +641,13 @@
                 if (! $organization->id) $this->error("Could not find organization by id");
                 $organization_id = $organization->id;
             }
+            elseif (!empty($_REQUEST['organization_code'])) {
+                $organization = new \Register\Organization();
+                $organization->get($_REQUEST['organization_code']);
+                if ($organization->error()) $this->app_error("Error finding organization: ".$organization->error(),'error',__FILE__,__LINE__);
+                if (! $organization->id) $this->error("Could not find organization by code");
+                $organization_id = $organization->id;
+            }
             elseif (!empty($_REQUEST['organization'])) {
                 $organization = new \Register\Organization();
                 $organization->get($_REQUEST['organization']);

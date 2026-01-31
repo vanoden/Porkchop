@@ -46,7 +46,6 @@
 	spl_autoload_register('load_class');
 
 	$site = new \Site();
-	if (isset($_REQUEST['log_level'])) $site->log_level($_REQUEST['log_level']);
 
 	# Database Abstraction
 	require THIRD_PARTY.'/adodb/adodb-php/adodb-exceptions.inc.php';
@@ -68,7 +67,7 @@
 	###################################################
 	### Connect to Logger                           ###
 	###################################################
-	$logger = \Site\Logger::get_instance(array('type' => "Screen",'level' => $site->log_level(),'html' => true));
+	$logger = \Site\Logger::get_instance(array('type' => "Screen",'level' => 'info','html' => true));
 	if ($logger->error()) {
 		error_log("Error initializing logger: ".$logger->error());
 		print "Logger error\n";
@@ -80,6 +79,9 @@
 		print "Logger error\n";
 		exit;
 	}
+	if (!empty($_REQUEST['log_level']) && $logger->validLevel($_REQUEST['log_level'])) $logger->level($_REQUEST['log_level']);
+	if (isset($_REQUEST['log_level'])) $site->log_level($_REQUEST['log_level']);
+	else $site->log_level('info');
 
 	###################################################
 	### Check Input									###
@@ -102,131 +104,55 @@
 	if ((! isset($_REQUEST['submit'])) or ($errorstr))	{
 	if (! isset($_REQUEST['company_name'])) $_REQUEST['company_name'] = "";
 	if (! isset($_REQUEST['admin_login'])) $_REQUEST['admin_login'] = "admin";
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Site Installer</title>
-	<style>
-		* { box-sizing: border-box; }
-		body {
-			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-			background: linear-gradient(145deg, #f0f2f5 0%, #e4e6eb 100%);
-			color: #1c1e21;
-			margin: 0;
-			min-height: 100vh;
-			padding: 2rem 1rem;
-			line-height: 1.5;
-		}
-		.install-wrap {
-			max-width: 420px;
-			margin: 0 auto;
-		}
-		.install-card {
-			background: #fff;
-			border-radius: 12px;
-			box-shadow: 0 4px 24px rgba(0,0,0,.08);
-			padding: 2rem;
-			margin-bottom: 1.5rem;
-		}
-		.install-card h1 {
-			margin: 0 0 1.5rem 0;
-			font-size: 1.5rem;
-			font-weight: 600;
-			color: #1c1e21;
-		}
-		.install-form .field {
-			margin-bottom: 1.25rem;
-		}
-		.install-form label {
-			display: block;
-			font-weight: 500;
-			margin-bottom: 0.35rem;
-			color: #333;
-		}
-		.install-form input[type="text"],
-		.install-form input[type="password"] {
-			width: 100%;
-			padding: 0.6rem 0.75rem;
-			border: 1px solid #ced4da;
-			border-radius: 8px;
-			font-size: 1rem;
-		}
-		.install-form input:focus {
-			outline: none;
-			border-color: #0d6efd;
-			box-shadow: 0 0 0 3px rgba(13, 110, 253, .15);
-		}
-		.install-form .radio-group {
-			display: flex;
-			gap: 1rem;
-			align-items: center;
-		}
-		.install-form .radio-group label { display: inline; margin: 0; font-weight: 400; }
-		.install-form button[type="submit"] {
-			width: 100%;
-			margin-top: 0.5rem;
-			padding: 0.75rem 1rem;
-			background: #0d6efd;
-			color: #fff;
-			border: none;
-			border-radius: 8px;
-			font-size: 1rem;
-			font-weight: 500;
-			cursor: pointer;
-		}
-		.install-form button[type="submit"]:hover { background: #0b5ed7; }
-		.install-error {
-			background: #f8d7da;
-			color: #842029;
-			border: 1px solid #f5c2c7;
-			border-radius: 8px;
-			padding: 1rem;
-			margin-bottom: 1.5rem;
-			font-size: 0.9rem;
-		}
-	</style>
-</head>
-<body>
-	<div class="install-wrap">
-		<div class="install-card">
-			<h1>Porkchop CMS - Site Installer</h1>
-			<?php if ($errorstr) print "<div class=\"install-error\">There are errors in your submittal:<br>$errorstr</div>"; ?>
-			<form method="post" action="_install" class="install-form">
-				<div class="field">
-					<label for="company_name">Company Name</label>
-					<input type="text" id="company_name" name="company_name" value="<?= htmlspecialchars($_REQUEST['company_name'] ?? '') ?>" required />
-				</div>
-				<div class="field">
-					<label for="admin_login">Admin Login</label>
-					<input type="text" id="admin_login" name="admin_login" value="<?= htmlspecialchars($_REQUEST['admin_login'] ?? '') ?>" />
-				</div>
-				<div class="field">
-					<label for="password_1">Password</label>
-					<input type="password" id="password_1" name="password_1" value="" required />
-				</div>
-				<div class="field">
-					<label for="password_2">Confirm Password</label>
-					<input type="password" id="password_2" name="password_2" value="" required />
-				</div>
-				<div class="field">
-					<label>Maintenance Mode?</label>
-					<div class="radio-group">
-						<input type="radio" id="status_no" name="status" value="1" checked /> <label for="status_no">No</label>
-						<input type="radio" id="status_yes" name="status" value="0" /> <label for="status_yes">Yes</label>
-					</div>
-				</div>
-				<button type="submit" name="submit" value="1">Install</button>
-			</form>
-		</div>
-	</div>
-</body>
-</html>
-<?php
-		exit;
+	
+	// Custom layout for install form (different from upgrade log layout)
+	print "<!DOCTYPE html>\n";
+	print "<html>\n<head>\n";
+	print "<title>Porkchop CMS - Site Installer</title>\n";
+	print "<meta charset='utf-8'>\n";
+	print "<meta name='viewport' content='width=device-width, initial-scale=1'>\n";
+	print "<style>\n";
+	print "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }\n";
+	print ".install-form-container { background: #fff; padding: 40px; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 500px; width: 100%; margin: 20px; }\n";
+	print ".install-form-container h1 { color: #333; margin-top: 0; margin-bottom: 30px; text-align: center; font-size: 28px; }\n";
+	print ".install-form-container .error { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; border-radius: 8px; padding: 1rem; margin-bottom: 20px; }\n";
+	print ".install-form-container form { margin: 0; }\n";
+	print ".install-form-container .form-group { margin-bottom: 20px; }\n";
+	print ".install-form-container label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }\n";
+	print ".install-form-container input[type='text'], .install-form-container input[type='password'] { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; box-sizing: border-box; transition: border-color 0.3s; }\n";
+	print ".install-form-container input[type='text']:focus, .install-form-container input[type='password']:focus { outline: none; border-color: #667eea; }\n";
+	print ".install-form-container .radio-group { display: flex; gap: 20px; margin-top: 8px; }\n";
+	print ".install-form-container .radio-group label { display: inline; font-weight: normal; margin-left: 5px; }\n";
+	print ".install-form-container button[type='submit'] { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }\n";
+	print ".install-form-container button[type='submit']:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }\n";
+	print ".install-form-container button[type='submit']:active { transform: translateY(0); }\n";
+	print "</style>\n";
+	print "</head>\n<body>\n";
+	print "<div class='install-form-container'>\n";
+	print "<h1>Porkchop CMS - Site Installer</h1>\n";
+	if ($errorstr) print "<div class='error'>There are errors in your submittal:<br>$errorstr</div>\n";
+	print "<form method='post' action='_install'>\n";
+	print "<div class='form-group'><label for='company_name'>Company Name</label>\n";
+	print "<input type='text' id='company_name' name='company_name' value='".htmlspecialchars($_REQUEST['company_name'] ?? '')."' required /></div>\n";
+	print "<div class='form-group'><label for='admin_login'>Admin Login</label>\n";
+	print "<input type='text' id='admin_login' name='admin_login' value='".htmlspecialchars($_REQUEST['admin_login'] ?? '')."' /></div>\n";
+	print "<div class='form-group'><label for='password_1'>Password</label>\n";
+	print "<input type='password' id='password_1' name='password_1' value='' required /></div>\n";
+	print "<div class='form-group'><label for='password_2'>Confirm Password</label>\n";
+	print "<input type='password' id='password_2' name='password_2' value='' required /></div>\n";
+	print "<div class='form-group'><label>Maintenance Mode?</label>\n";
+	print "<div class='radio-group'>\n";
+	print "<input type='radio' id='status_no' name='status' value='1' checked /> <label for='status_no'>No</label>\n";
+	print "<input type='radio' id='status_yes' name='status' value='0' /> <label for='status_yes'>Yes</label>\n";
+	print "</div></div>\n";
+	print "<button type='submit' name='submit' value='1'>Install</button>\n";
+	print "</form>\n";
+	print "</div>\n";
+	print "</body>\n</html>\n";
+	exit;
 	}
+
+	$site->install_page();
 
 	###################################################
 	### Initialize Common Objects					###
