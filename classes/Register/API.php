@@ -2082,6 +2082,48 @@
 						)
 					),
 				),
+				'addRolePrivilege'	=> array(
+					'description'	=> 'Assign a privilege to a role',
+					'authentication_required'	=> true,
+					'token_required' => true,
+					'privilege_required'	=> 'manage privileges',
+					'return_element'	=> 'success',
+					'parameters' => array(
+						'role'		=> array(
+							'description'	=> 'Role name/code',
+							'prompt'		=> 'Role name',
+							'required' => true,
+							'validation_method'	=> 'Register::Role::validCode()'
+						),
+						'privilege'		=> array(
+							'description'	=> 'Privilege name',
+							'prompt'		=> 'Privilege name',
+							'required' => true,
+							'validation_method'	=> 'Register::Privilege::validCode()'
+						),
+						'level'		=> array(
+							'description'	=> 'Privilege level (0=customer, 2=sub_organization_manager, 3=organization_manager, 5=distributor, 7=administrator). Defaults to 7 (administrator) if not specified.',
+							'prompt'		=> 'Privilege level',
+							'required' => false,
+							'content-type' => 'int',
+							'default' => 7
+						)
+					),
+				),
+				'getRolePrivileges'	=> array(
+					'description'	=> 'Get list of privileges assigned to a role',
+					'authentication_required'	=> true,
+					'return_element'	=> 'privilege',
+					'return_type'		=> 'Register::Privilege',
+					'parameters' => array(
+						'role'		=> array(
+							'description'	=> 'Role name/code',
+							'prompt'		=> 'Role name',
+							'required' => true,
+							'validation_method'	=> 'Register::Role::validCode()'
+						)
+					),
+				),
 				'findPrivileges'	=> array(
 					'description'	=> 'Get list of privileges',
 					'authentication_required'	=> true,

@@ -103,45 +103,125 @@
 	if (! isset($_REQUEST['company_name'])) $_REQUEST['company_name'] = "";
 	if (! isset($_REQUEST['admin_login'])) $_REQUEST['admin_login'] = "admin";
 ?>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Site Installer</title>
 	<style>
-		table {
-			width: 400px;
-			border: 1px solid black;
+		* { box-sizing: border-box; }
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+			background: linear-gradient(145deg, #f0f2f5 0%, #e4e6eb 100%);
+			color: #1c1e21;
+			margin: 0;
+			min-height: 100vh;
+			padding: 2rem 1rem;
+			line-height: 1.5;
 		}
-		th {
-			width: 200px;
+		.install-wrap {
+			max-width: 420px;
+			margin: 0 auto;
 		}
-		td.error {
-			border: 1px solid red;
+		.install-card {
+			background: #fff;
+			border-radius: 12px;
+			box-shadow: 0 4px 24px rgba(0,0,0,.08);
+			padding: 2rem;
+			margin-bottom: 1.5rem;
+		}
+		.install-card h1 {
+			margin: 0 0 1.5rem 0;
+			font-size: 1.5rem;
+			font-weight: 600;
+			color: #1c1e21;
+		}
+		.install-form .field {
+			margin-bottom: 1.25rem;
+		}
+		.install-form label {
+			display: block;
+			font-weight: 500;
+			margin-bottom: 0.35rem;
+			color: #333;
+		}
+		.install-form input[type="text"],
+		.install-form input[type="password"] {
 			width: 100%;
-			background-color: pink;
-			color: red;
+			padding: 0.6rem 0.75rem;
+			border: 1px solid #ced4da;
+			border-radius: 8px;
+			font-size: 1rem;
+		}
+		.install-form input:focus {
+			outline: none;
+			border-color: #0d6efd;
+			box-shadow: 0 0 0 3px rgba(13, 110, 253, .15);
+		}
+		.install-form .radio-group {
+			display: flex;
+			gap: 1rem;
+			align-items: center;
+		}
+		.install-form .radio-group label { display: inline; margin: 0; font-weight: 400; }
+		.install-form button[type="submit"] {
+			width: 100%;
+			margin-top: 0.5rem;
+			padding: 0.75rem 1rem;
+			background: #0d6efd;
+			color: #fff;
+			border: none;
+			border-radius: 8px;
+			font-size: 1rem;
+			font-weight: 500;
+			cursor: pointer;
+		}
+		.install-form button[type="submit"]:hover { background: #0b5ed7; }
+		.install-error {
+			background: #f8d7da;
+			color: #842029;
+			border: 1px solid #f5c2c7;
+			border-radius: 8px;
+			padding: 1rem;
+			margin-bottom: 1.5rem;
+			font-size: 0.9rem;
 		}
 	</style>
 </head>
 <body>
-<form method="post" action="_install">
-<table>
-<tr><th colspan="2">Porchop Web Installer V2.0</th></tr>
-</table>
-<?php if ($errorstr) print "<table><tr><td colspan=\"2\" class=\"error\">There are errors in your submittal:<br>$errorstr</td></tr></table>";?>
-<table>
-<tr><th>Company Name</th><td><input type="text" name="company_name" value="<?=$_REQUEST['company_name']?>"/></td></tr>
-</table>
-<table>
-<tr><th>Admin Login</th><td><input type="text" name="admin_login" value="<?=$_REQUEST['admin_login']?>"/></td></tr>
-<tr><th>Password</th><td><input type="password" name="password_1" value=""/></td></tr>
-<tr><th>Confirm</th><td><input type="password" name="password_2" value=""/></td></tr>
-</table>
-<table>
-<tr><th>Maintenance Mode?</th><td><input type="radio" name="status" value="1"/>No &nbsp; <input type="radio" name="status" value="0"/>Yes</td></tr>
-</table>
-<table>
-<tr><th colspan="2"><input type="submit" name="submit" value="Submit"/></th></tr>
-</table>
-</form>
+	<div class="install-wrap">
+		<div class="install-card">
+			<h1>Porkchop CMS - Site Installer</h1>
+			<?php if ($errorstr) print "<div class=\"install-error\">There are errors in your submittal:<br>$errorstr</div>"; ?>
+			<form method="post" action="_install" class="install-form">
+				<div class="field">
+					<label for="company_name">Company Name</label>
+					<input type="text" id="company_name" name="company_name" value="<?= htmlspecialchars($_REQUEST['company_name'] ?? '') ?>" required />
+				</div>
+				<div class="field">
+					<label for="admin_login">Admin Login</label>
+					<input type="text" id="admin_login" name="admin_login" value="<?= htmlspecialchars($_REQUEST['admin_login'] ?? '') ?>" />
+				</div>
+				<div class="field">
+					<label for="password_1">Password</label>
+					<input type="password" id="password_1" name="password_1" value="" required />
+				</div>
+				<div class="field">
+					<label for="password_2">Confirm Password</label>
+					<input type="password" id="password_2" name="password_2" value="" required />
+				</div>
+				<div class="field">
+					<label>Maintenance Mode?</label>
+					<div class="radio-group">
+						<input type="radio" id="status_no" name="status" value="1" checked /> <label for="status_no">No</label>
+						<input type="radio" id="status_yes" name="status" value="0" /> <label for="status_yes">Yes</label>
+					</div>
+				</div>
+				<button type="submit" name="submit" value="1">Install</button>
+			</form>
+		</div>
+	</div>
 </body>
 </html>
 <?php
@@ -323,6 +403,13 @@
 		$site->install_fail("Error adding default organization: ".$organization->error());
 	}
 
+	# Admin password must come from the form (never defaulted)
+	$admin_password = isset($_REQUEST['password_1']) ? (string) $_REQUEST['password_1'] : '';
+	if ($admin_password === '') {
+		$site->install_log("Admin password is required (form field password_1). Re-run install and enter a password.",'error');
+		exit;
+	}
+
 	$site->install_log("Setting up admin account");
 	$admin = new \Register\Customer();
 	if ($admin->error()) {
@@ -340,7 +427,7 @@
 		$admin->add(
 			array(
 				"login"			=> $_REQUEST['admin_login'],
-				"password"		=> $_REQUEST['password_1'],
+				"password"		=> $admin_password,
 				"company_id"	=> $company->id,
 				"status"		=> 'active',
 				"organization_id"	=> $organization->id
@@ -359,10 +446,37 @@
 	$site->install_log("Elevating privileges for install");
 	$_SESSION_->elevate();
 
-	# Create Administrator Role
+	# Create Administrator Role (or get existing)
 	$role = new \Register\Role();
-	$role->add(array("name" => "Administrator", "description" => "Default Super User"));
+	if (! $role->get("Administrator")) {
+		$role->add(array("name" => "Administrator", "description" => "Default Super User"));
+	}
+
+	# Bootstrap Administrator role with privileges at level 7 so InitSite/API and Portal admin work
 	
+	// DEBUG HERE
+	$privilege = new \Register\Privilege();
+	$privilege->add(array("name" => "manage customers"));
+	$privilege->add(array("name" => "manage privileges"));
+	$privilege->add(array("name" => "see register api"));
+	$privilege->add(array("name" => "see admin tools"));
+	$privilege->add(array("name" => "manage organization comments"));
+	$privilege->add(array("name" => "manage customer locations"));
+
+	if ($role->id) {
+		$site->install_log("Granting Administrator role privileges (e.g. manage customers at level ADMINISTRATOR)");
+		$role->addPrivilege("manage customers", \Register\PrivilegeLevel::ADMINISTRATOR);
+		$role->addPrivilege("manage privileges", \Register\PrivilegeLevel::ADMINISTRATOR);
+		$role->addPrivilege("see register api", \Register\PrivilegeLevel::ADMINISTRATOR);
+		$role->addPrivilege("see admin tools", \Register\PrivilegeLevel::ADMINISTRATOR);
+		$role->addPrivilege("manage organization comments", \Register\PrivilegeLevel::ADMINISTRATOR);
+		$role->addPrivilege("manage customer locations", \Register\PrivilegeLevel::ADMINISTRATOR);
+		$role->addPrivilege("manage customers", \Register\PrivilegeLevel::ADMINISTRATOR);
+		$role->addPrivilege("manage privileges", \Register\PrivilegeLevel::ADMINISTRATOR);
+		$role->addPrivilege("edit site navigation", \Register\PrivilegeLevel::ADMINISTRATOR);
+		$role->addPrivilege("configure site", \Register\PrivilegeLevel::ADMINISTRATOR);
+	}
+
 	# Get Existing Roles
 	$site->install_log("Getting available roles");
 	$rolelist = new \Register\RoleList();
@@ -390,5 +504,3 @@
 	$site_config->set("_install_complete",1);
 
 	$site->install_log("Installation completed successfully");
-
-?>
