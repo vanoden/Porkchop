@@ -758,7 +758,6 @@
 			if (array_key_exists ( 'object', $parameter )) $object = $parameter ['object'];
 			if (array_key_exists ( 'property', $parameter )) $property = $parameter ['property'];
 
-			$buffer .= "<!-- R7 Replacement: Module: $module Object: $object Property: $property -->\n";
 			app_log ( "Object: $object Property: $property", 'trace', __FILE__, __LINE__ );
 			if ($object == "constant") {
 				if ($property == "path") {
