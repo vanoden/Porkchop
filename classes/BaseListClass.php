@@ -2,6 +2,7 @@
 class BaseListClass extends \BaseClass {
 	protected $_count = 0;	// Number of matched records from latest find/search
 	protected $_modelName;	// Name of object type found in this list
+	protected $_tableName;	// Name of database table for this list
 
 	// Default Sort Controls
 	protected $_tableDefaultSortBy;	// Default column to sort by
