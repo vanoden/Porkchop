@@ -38,6 +38,11 @@ class BaseModel extends \BaseClass {
 	protected $_tableMetaFKColumn = 'instance_id';
 	protected $_tableMetaKeyColumn = 'key';
 
+	// Search Tag Table Info
+	protected $_searchTagTableName;
+	protected $_tableSearchTagFKColumn = 'instance_id';
+	protected $_tableSearchTagKeyColumn = 'tag';
+
 	// Should we always audit events for this class?
 	protected $_auditEvents = false;
 
