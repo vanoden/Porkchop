@@ -22,6 +22,9 @@ class BaseModel extends \BaseClass {
 	// Name for Software Incrementing Number Field
 	protected $_tableNumberColumn;
 
+	// Name for Unique Object Name Column
+	protected $_tableNameColumn = 'name';
+
 	// field names for columns in database tables
 	protected $_fields = array();
 	protected $_aliasFields = array();
@@ -813,6 +816,48 @@ class BaseModel extends \BaseClass {
 			$this->_cached = $cached;
 		}
 		return $this->_cached;
+	}
+
+	/** @method getByName(value)
+	 * Get Object Record Using Name
+	 * @param string $value
+	 * @return bool True if object found
+	 */
+	public function getByName(string $value): bool {
+		if (empty($this->_tableNameColumn)) {
+			$this->error("No name field defined for " . get_class($this));
+			return false;
+		}
+		// Clear Errors
+		$this->clearError();
+		$database = new \Database\Service();
+
+		// Prepare Query
+		$get_object_query = "
+				SELECT	`$this->_tableIDColumn`
+				FROM	`$this->_tableName`
+				WHERE	`$this->_tableNameColumn` = ?";
+
+		// Bind Code to Query
+		$database->AddParam($value);
+
+		// Execute Query
+		$rs = $database->Execute($get_object_query);
+		if (! $rs) {
+			$this->SQLError($database->ErrorMsg());
+			return false;
+		}
+		// Fetch Results
+		list($id) = $rs->FetchRow();
+		if (is_numeric($id) && $id > 0) {
+			$this->id = $id;
+			return $this->details();
+		} else {
+			$cls = get_called_class();
+			$parts = explode("\\", $cls);
+			$this->warn($parts[1] . " with name '" . $value . "' not found");
+			return false;
+		}
 	}
 
 	/** @method setMetadataScalar(key, value)
