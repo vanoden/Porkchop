@@ -242,7 +242,7 @@
 		}
 
 		public function validKey($string) {
-			if (preg_match('/^\w[\w\.\-\_\s]*$/',$string)) return true;
+			if (preg_match('/^[\/\w\.\-\_\s]*$/',$string)) return true;
 			else return false;
 		}
 
