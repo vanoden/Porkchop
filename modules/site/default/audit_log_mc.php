@@ -12,8 +12,10 @@
 
 	if (count($GLOBALS['_REQUEST_']->query_vars_array) > 0) {
 		$parameters['class_name'] = preg_replace('/\:\:/','\\',$GLOBALS['_REQUEST_']->query_vars_array[0]);
+		$_REQUEST['class_name'] = $parameters['class_name'];
 		if (count($GLOBALS['_REQUEST_']->query_vars_array) > 1) {
 			$parameters['code'] = $GLOBALS['_REQUEST_']->query_vars_array[1];
+			$_REQUEST['code'] = $parameters['code'];
 			$_REQUEST['btn_submit'] = 'Apply Filter';
 		}
 	}
@@ -44,7 +46,12 @@
 				$page->addError("Invalid instance code.");
 			}
 			elseif (!$class->get($code)) {
-				$page->addError("Instance does not exist.");
+				if ($class->error()) {
+					$page->addError("Error retrieving instance: " . $class->error());
+				}
+				else {
+					$page->addError("Instance not found.");
+				}
 			}
 			else {
 				$parameters['instance_id'] = $class->id;
