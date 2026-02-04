@@ -42,6 +42,13 @@
 		return array('function' => $caller['function'], 'class' => isset($caller['class']) ? $caller['class'] : '', 'file' => $caller['file'], 'line' => $caller['line']);
 	}
 
+	/** @function get_mysql_date(date, range)
+	 * Convert various date formats into MySQL formatted date string
+	 * Returns null if date is invalid
+	 * @param mixed $date
+	 * @param int $range
+	 * @return string|null
+	 */
 	function get_mysql_date($date = null,$range=0) {
 		if (empty($date)) {
 			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[1];
@@ -51,13 +58,19 @@
 			return null;
 		}
 
-		# Handle Some Keywords
+		// DateTime Object
+		if ($date instanceof \DateTime) {
+			return $date->format('Y-m-d H:i:s');
+		}
+
+		// Handle Some Keywords
 		if (preg_match("/today/i",$date)) return date("Y-m-d");
 		if (preg_match("/now/i",$date)) return date("Y-m-d h:i:s");
+		if (preg_match("/yesterday/i",$date)) return date("Y-m-d",time() - 86400);
 		if (preg_match("/tomorrow/i",$date)) return date("Y-m-d",time() + 86400);
 		if (preg_match('/^(19|20|21|22)\d{2}$/',$date)) return $date."-01-01 00:00:00";
 
-		# Handle OffSets
+		// Handle OffSets
 		if (preg_match('/(\+|\-)\s*(\d+)\s*(hour|day|week)s?/i',$date,$matches)) {
 			$operator = $matches[1];
 			$offset = $matches[2];
@@ -80,36 +93,35 @@
 			return $newdate;
 		}
 
-		# T Dates
+		// ISO 8601 international standard format (T separator between date and time)
 		if (preg_match('/^\d\d\d\d\-\d\d\-\d\dT/',$date)) {
 			$date = preg_replace('/T/',' ',$date);
 		}
 
-		# Ignore Empty Dates
+		// Ignore Empty Dates
 		if (! preg_match("/^[\d\-\/\:\s]+.$/",$date)) {
 			app_log("get_mysql_date found invalid date '$date', returns 0",'notice');
 			return null;
 		}
 		if (preg_match("/^0+\/0+\/0+\/$/",$date)) return "0000-00-00";
 
-		# Already SQL Formatted
+		// Already SQL Formatted
 		if (preg_match('/^\d\d\d\d\-\d\d\-\d\d/',$date)) {
 			app_log("get_mysql_date returns $date",'debug',__FILE__,__LINE__);
 			return $date;
 		}
 
-		# Unix Timestamp
+		// Unix Timestamp
 		if (preg_match('/^\d{9,10}$/',$date)) {
-			# Unix Timestamp
 			return date('Y-m-d H:i:s',$date);
 		}
 		elseif (isset($debug) && $debug) {
 			error_log("Parsing regular date format $date");
 		}
 
-		# Regular Format (slash delimited)
+		// Regular Format (slash delimited)
 		if (preg_match('/^(\d+)\/(\d+)\/(\d+)\s(\d+)\:(\d+)\:?(\d+)?/',$date,$matches)) {
-			# mm/dd/yyyy hh:mm:ss
+			// mm/dd/yyyy hh:mm:ss
 			$year = $matches[3];
 			$month = $matches[1];
 			$day = $matches[2];
@@ -145,14 +157,14 @@
 			$second = isset($matches[5]) ? $matches[5] : 0;
 		}
 
-		# Default 0 Seconds
+		// Default 0 Seconds
 		if (! preg_match('/^\d+$/',$second)) $second = 0;
 
-		# Partial Year
+		// Partial Year
         if (strlen($year) < 3) $year = $year + 2000;
 
         if (checkdate($month,$day,$year)) {
-            # Build new date string
+            // Build new date string
             return sprintf("%04d-%02d-%02d %02d:%02d:%02d",$year,$month,$day,$hour,$minute,$second);
         }
         else {
@@ -160,7 +172,7 @@
 			return null;
         }
 
-        # If Range Given, See if Date In Range
+        // If Range Given, See if Date In Range
         if (($range > 0) and (strtotime($date) <= time())) {
             $date = "";
         }
@@ -168,12 +180,18 @@
             $date = "";
         }
 
-        # Return Formatted Date
+        // Return Formatted Date
         app_log("get_mysql_date returning $date",'debug');
         return $date;
     }
 
-	function shortDate($date) {
+	/** @function shortDate(date)
+	 * Convert MySQL date into short date format for display
+	 * @param string $date
+	 * @return string
+	 */
+	function shortDate($date): ?string {
+		$date = get_mysql_date($date);
 		if (preg_match('/^(\d\d\d\d)\-(\d\d)\-(\d\d)\s(\d\d)\:(\d\d)\:(\d\d)/',$date,$matches)) {
 			list($junk,$year,$month,$day,$hours,$minutes,$seconds) = $matches;
 			switch($month) {

@@ -68,7 +68,7 @@
 			}
 		}
 
-		public function getByName($domain_id,$name) {
+		public function getByHostName($domain_id,$name) {
 
 			$get_object_query = "
 				SELECT	id

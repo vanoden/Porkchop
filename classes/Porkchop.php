@@ -1,6 +1,38 @@
 <?php
+	/** @class Porkchop
+	 * General Utility Functions
+	 */
 	class Porkchop {
-		# Application Logging (leave error_log for system errors)
+		/** @method public site()
+		 * Get Site Object
+		 * @return \Site Site Object
+		 */
+		public function site() {
+			if (!empty($GLOBALS['site']) && $GLOBALS['site'] instanceof \Site) {
+				return $GLOBALS['site'];
+			}
+			else {
+				$GLOBALS['site'] = new \Site();
+				return $GLOBALS['site'];
+			}
+		}
+
+		/** @method public session()
+		 * Get Current Session Object
+		 * @return null|\Site\Session Session Object
+		 */
+		public function session(): ?\Site\Session {
+			if (!empty($GLOBALS['_SESSION_']) && $GLOBALS['_SESSION_'] instanceof \Site\Session) {
+				return $GLOBALS['_SESSION_'];
+			}
+			else {
+				return null;
+			}
+		}
+
+		/** @method app_log()
+		 * Application Logging (leave error_log for system errors)
+		 */
 		public function app_log($message, $level = 'debug', $path = null, $line = null) {
 			if (! isset($path)) {
 				$trace = debug_backtrace();
@@ -11,6 +43,12 @@
 			$GLOBALS['logger']->writeln($message,$level,$path,$line);
 		}
 
+		/** @method datetime()
+		 * Convert Various Date Formats to MySQL DateTime Format
+		 * @param mixed $date Date String
+		 * @param int $range Optional Range Check (positive = past dates only, negative = future dates only)
+		 * @return string|null MySQL formatted date or null if invalid
+		*/
 		public function datetime($date = null,$range=0) {
 			if (empty($date)) {
 				$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[1];
@@ -134,13 +172,20 @@
 			return $date;
 		}
 
-		// 16 Character UUID
+		/** @method public uuid()
+		 * Generate Random 16 Character UUID
+		 * @return string UUID String
+		 */
 		public function uuid() {
 			$pid = substr($this->intToUUID(getmypid()),-3);
 			$sec = uniqid();
 			return strtoupper("$pid$sec");
 		}
 
+		/** @method public biguuid()
+		 * Generate Random 36 Character UUID
+		 * @return string UUID String
+		 */
 		public function biguuid() {
 			$pid = $this->intToUUID(getmypid());
 			$sec = uniqid();
@@ -148,13 +193,18 @@
 			return strtoupper("$pid-$sec-$rnd");
 		}
 
+		/** @method public intToUUID(int)
+		 * Convert Integer to Base36 UUID String
+		 * @param int $int Integer to convert
+		 * @return string UUID String
+		 */
 		public function intToUUID($int) {
 			$string = '';
 			while ($int / 36 >= 1) {
 				$char = $int % 36;
 				$int = sprintf("%0d",$int/36);
 
-				if ($char < 11) $char = chr($char + 48);
+				if ($char < 10) $char = chr($char + 48);
 				else $char = chr($char + 55);
 				$string = $char . $string;
 			}

@@ -264,6 +264,28 @@
 		}
 
 		/************************************************/
+		/* Extract Control Parameters		*/
+		/* from $_REQUEST and merge into parameters	*/
+		/* array. Supports: _sort, _order, _limit,		*/
+		/* _offset, _count, _sort_desc, _sort_order,	*/
+		/* _flat, recursive							*/
+		/************************************************/
+		protected function addListControlParams(array $parameters = []): array {
+			// control params: _sort, _order, _limit, _offset
+			// Also support backwards compatibility: _count, _sort_desc, _sort_order, _flat, recursive
+			if (isset($_REQUEST['_sort'])) $parameters['_sort'] = $_REQUEST['_sort'];
+			if (isset($_REQUEST['_order'])) $parameters['_order'] = $_REQUEST['_order'];
+			if (isset($_REQUEST['_limit'])) $parameters['_limit'] = $_REQUEST['_limit'];
+			if (isset($_REQUEST['_offset'])) $parameters['_offset'] = $_REQUEST['_offset'];
+			if (isset($_REQUEST['_count'])) $parameters['_count'] = $_REQUEST['_count'];
+			if (isset($_REQUEST['_sort_desc'])) $parameters['_sort_desc'] = $_REQUEST['_sort_desc'];
+			if (isset($_REQUEST['_sort_order'])) $parameters['_sort_order'] = $_REQUEST['_sort_order'];
+			if (isset($_REQUEST['_flat'])) $parameters['_flat'] = $_REQUEST['_flat'];
+			if (isset($_REQUEST['recursive'])) $parameters['recursive'] = $_REQUEST['recursive'];
+			return $parameters;
+		}
+
+		/************************************************/
 		/* Record API Communication for Debugging		*/
 		/************************************************/
 		public function _store_communication() {

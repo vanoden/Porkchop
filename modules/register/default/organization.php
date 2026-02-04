@@ -24,6 +24,8 @@
 	}
 </script>
 
+<section id="org_form" class="body">
+<div class="organization-page-wrapper" style="display: flex; flex-direction: column; width: 100%;">
 <!-- Page Header -->
 <?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
@@ -181,3 +183,5 @@
     <div><input type="button" name="method" value="Add Location" class="button" onclick="addLocation()"/></div>
     <!--End first row-->
 </form>
+</div>
+</section>
