@@ -3,16 +3,16 @@
 
 	class Location extends \BaseModel {
 	
-	public $name;
-	public $address_1;
-	public $address_2;
-	public $city;
-	public $province_id;
-	public $zip_code;
-	public $notes;
-	public $country_id;
-	public $province;
-	public $country;
+		public $name;
+		public $address_1;
+		public $address_2;
+		public $city;
+		public $province_id;
+		public $zip_code;
+		public $notes;
+		public $country_id;
+		public $province;
+		public $country;
 
 		public function __construct($id = 0,$parameters = array()) {		
 			$this->_tableName = 'register_locations';
@@ -24,6 +24,11 @@
 			}
 		}
 
+		/** @method public add($parameters)
+		 * Add new Location record
+		 * @param array $parameters
+		 * @return bool
+		 */
 		public function add($parameters = array()) {
 			$province = new \Geography\Province($parameters['province_id']);
 			if (!$province->id) {
@@ -38,6 +43,11 @@
 			return parent::add($parameters);
 		}
 
+		/** @method public update($parameters)
+		 * Update Location record
+		 * @param array $parameters
+		 * @return bool
+		 */
 		public function update($parameters = []): bool {
 			// If province_id is being updated, also update country_id
 			if (isset($parameters['province_id']) && $parameters['province_id'] != $this->province_id) {
@@ -55,18 +65,48 @@
 			return parent::update($parameters);
 		}
 
-        /**
+        /** @method public findExistingByAddress($parameters)
          * find existing entry by user provided address info
-         *
-         * @param array, $parameters
+         * @param array $parameters
+		 * @return bool
          */
-        public function findExistingByAddress($parameters = array()) {
+        public function findExistingByAddress($parameters = array()): bool {
+			$this->clearError();
+
+			$database = new \Database\Service();
+
+			// Sanitize input parameters
+			if (!empty($parameters['address_1'])) {
+				$parameters['address_1'] = $database->escapeString($parameters['address_1']);
+			} else {
+				$parameters['address_1'] = '';
+			}
+			if (!empty($parameters['address_2'])) {
+				$parameters['address_2'] = $database->escapeString($parameters['address_2']);
+			} else {
+				$parameters['address_2'] = '';
+			}
+			if (!empty($parameters['city'])) {
+				$parameters['city'] = $database->escapeString($parameters['city']);
+			} else {
+				$parameters['city'] = '';
+			}
+			if (!empty($parameters['zip_code'])) {
+				$parameters['zip_code'] = $database->escapeString($parameters['zip_code']);
+			} else {
+				$parameters['zip_code'] = '';
+			}
+
+			// Build query to find existing location by address fields
             $getObjectQuery = "SELECT id FROM `$this->_tableName` WHERE
                 LOWER(`address_1`) LIKE '%".strtolower($parameters['address_1'])."%'
                 AND LOWER(`address_2`) LIKE '%".strtolower($parameters['address_2'])."%'
                 AND LOWER(`city`) LIKE '%".strtolower($parameters['city'])."%'
-                AND LOWER(`zip_code`) LIKE '%".strtolower($parameters['zip_code'])."%'";   
-			$rs = $this->execute($getObjectQuery, array());
+                AND LOWER(`zip_code`) LIKE '%".strtolower($parameters['zip_code'])."%'
+			";
+			
+			// Execute Query
+			$rs = $database->Execute($getObjectQuery);
             if ($rs) {
                 list($id) = $rs->FetchRow();
                 if ($id) {
@@ -75,10 +115,14 @@
                     return true;
                 }
             }
-            $this->error("No records found for these values.");
             return false;
         }
 
+		/** @method public associateUser(user_id)
+		 * Associate Location with User
+		 * @param int $user_id
+		 * @return bool
+		 */
 		public function associateUser($user_id) {
 			$add_record_query = "
 				INSERT
@@ -98,6 +142,12 @@
 			return true;
 		}
 
+		/** @method public associateOrganization(organization_id, location_name)
+		 * Associate Location with Organization
+		 * @param int $organization_id
+		 * @param string $location_name
+		 * @return bool
+		 */
 		public function associateOrganization($organization_id, $location_name = '') {
 			$add_record_query = "
 				INSERT

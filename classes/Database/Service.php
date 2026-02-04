@@ -284,6 +284,15 @@
 			return $this->_connection->Affected_Rows();
 		}
 
+		/** @method public escapeString(string)
+		 * Escape a string for safe use in SQL queries
+		 * @param string $string
+		 * @return string
+		 */
+		public function escapeString($string) {
+			return $this->_connection->qstr($string,true);
+		}
+
 		/**
 		 * Get the MySQL Database Version
 		 * @return int 
