@@ -754,6 +754,11 @@
 			// Parse Token
 			$parameter = $this->parse_element($string);
 
+			// Initialize variables to avoid undefined variable warnings
+			$module = '';
+			$object = '';
+			$property = '';
+			
 			if (array_key_exists ( 'module', $parameter )) $module = $parameter ['module'];
 			if (array_key_exists ( 'object', $parameter )) $object = $parameter ['object'];
 			if (array_key_exists ( 'property', $parameter )) $property = $parameter ['property'];
