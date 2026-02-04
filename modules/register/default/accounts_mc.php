@@ -9,7 +9,7 @@
 	// Initalize the Page
 	$site = new \Site();
     $page = $site->page();
-	$page->requirePrivilege("manage customers");
+	$page->requirePrivilege("manage customers",\Register\PrivilegeLevel::ORGANIZATION_MANAGER);
 
 	// Initialize Parameter Array
 	$find_parameters = array();
@@ -19,11 +19,10 @@
     $pagination->forwardParameters(array('search','hidden','expired','blocked','deleted','sort_field','sort_direction'));
 
 	// Security - Only Register Module Operators or Managers can see other customers
-	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
-		// Ok
+	$organization = $GLOBALS['_SESSION_']->customer->organization();
+	if ($organization->exists()) {
+		$find_parameters['organization_id'] = $organization->id;
 	}
-	elseif ($GLOBALS['_SESSION_']->customer->organization() && !empty($GLOBALS['_SESSION_']->customer->organization()->id))
-		$find_parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
 	else 
 		return 403;
 
