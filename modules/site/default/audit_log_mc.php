@@ -7,7 +7,6 @@
 	$parameters['status'] = array();
 	$can_proceed = true;
 
-	$request = new \HTTP\Request();
 	$auditClass = new \Site\AuditLog();
 	$classList = $auditClass->classes();
 
@@ -19,7 +18,7 @@
 
 	// get audits based on current search
 	$btn_submit = $_REQUEST['btn_submit'] ?? null;
-	if ($request->validText($btn_submit)) {
+	if (!empty($_REQUEST['btn_submit'])) {
 		$class_name = $_REQUEST['class_name'] ?? null;
 		if (empty($class_name)) {
 			$page->addError("Please select a class to view audit logs.");
@@ -44,7 +43,7 @@
 				$parameters['instance_id'] = $class->id;
 
 				$pagination_start_id = $_REQUEST['pagination_start_id'] ?? 0;
-				if (!$request->validInteger($pagination_start_id)) $pagination_start_id = 0;
+				if (!is_numeric($_REQUEST['pagination_start_id'])) $pagination_start_id = 0;
 
 				// find audits
 				$auditList = new \Site\AuditLog\EventList();
@@ -59,13 +58,13 @@
 				$totalPages = ceil($totalResults / $recordsPerPage);
 
 				$start = $_REQUEST['start'] ?? 0;
-				if (!$request->validInteger($start)) $start = 0;
-				
+				if (!is_numeric($_REQUEST['start'])) $start = 0;
+
 				if ($start < $recordsPerPage)
 					$prev_offset = 0;
 				else
 					$prev_offset = $start - $recordsPerPage;
-					
+
 				$next_offset = $start + $recordsPerPage;
 				$last_offset = $totalResults - $recordsPerPage;
 
