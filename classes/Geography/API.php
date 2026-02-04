@@ -11,6 +11,7 @@
 			$this->_schema = new Schema();
 			parent::__construct();
 		}
+
 		###################################################
 		### Add a Country								###
 		###################################################
@@ -27,7 +28,7 @@
 			$response->AddElement('country',$country);
 			$response->print();
 		}
-	
+
 		###################################################
 		### Update a Country							###
 		###################################################
@@ -46,7 +47,7 @@
 			$response->AddElement('country',$country);
 			$response->print();
 		}
-	
+
 		###################################################
 		### Get Specified Country						###
 		###################################################
@@ -70,7 +71,7 @@
 			$response->AddElement('country',$country);
 			$response->print();
 		}
-	
+
 		###################################################
 		### Find matching Countrys						###
 		###################################################
@@ -109,7 +110,7 @@
 			$response->AddElement('province',$province);
 			$response->print();
 		}
-	
+
 		###################################################
 		### Update a Province							###
 		###################################################
@@ -132,7 +133,7 @@
 			$response->AddElement('province',$province);
 			$response->print();
 		}
-	
+
 		###################################################
 		### Get Specified Province						###
 		###################################################
@@ -160,7 +161,7 @@
 			$response->AddElement('province',$province);
 			$response->print();
 		}
-	
+
 		###################################################
 		### Find matching Provinces						###
 		###################################################
@@ -189,9 +190,11 @@
 			$response->print();
 		}
 
+		/** @method public _methods()
+		 * Define available API methods
+		 */
 		public function _methods() {
 			return array(
-				'ping'	=> array(),
 				'addCountry'	=> array(
 					'description'	=> 'Add a country',
 					'token_required'	=> true,
