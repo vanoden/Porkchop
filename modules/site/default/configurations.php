@@ -19,22 +19,8 @@
 		document.forms[0].submit();
 	}
 </script>
-<span class="title">Edit Site Configuration</span>
 
-<?php if ($page->errorCount() > 0) { ?>
-<section id="form-message">
-	<ul class="connectBorder errorText">
-		<li><?=$page->errorString()?></li>
-	</ul>
-</section>
-
-<?php	} else if ($page->success) { ?>
-<section id="form-message">
-	<ul class="connectBorder progressText">
-		<li><?=$page->success?></li>
-	</ul>
-</section>
-<?php	} ?>
+<?=$page->showAdminPageInfo()?>
 
 <form method="post" action="/_site/configurations">
     <input type="hidden" name="key" value="" />

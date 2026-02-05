@@ -1,13 +1,12 @@
 <?php
-	###################################################
-	### organizations_mc.php						###
-	### This program collects registration info		###
-	### for the user.								###
-	### A. Caravello 11/12/2002						###
-	###################################################
+	/** @view /_register/admin_organizations
+	 * This Administrative view lists all organizations associated with a
+	 * provide set of filters.
+	 * A. Caravello 11/12/2002
+	 */
 	$porkchop = new \Porkchop();
 	$page = $porkchop->site()->page();
-	$page->requirePrivilege('manage customers',\Register\PrivilegeLevel::DISTRIBUTOR);
+	$page->requirePrivilege('manage customers');
 
 	# Configure Pagination
     $pagination = new \Site\Page\Pagination();
@@ -25,20 +24,18 @@
 	}
 
 	// Initialize status array based on checkboxes
-	$find_parameters['distributor_id'] = $GLOBALS['_SESSION_']->customer->organization_id;
 	$find_parameters['status'] = array();
-
+	
 	// If no filters are selected, show only NEW and ACTIVE by default
 	if (empty($_REQUEST['deleted']) && empty($_REQUEST['expired']) && empty($_REQUEST['hidden'])) {
 		$find_parameters['status'] = array('NEW', 'ACTIVE');
-	}
-	else {
+	} else {
 		// Only add the statuses that are checked
 		if (isset($_REQUEST['deleted']) && $_REQUEST['deleted'] == 1) array_push($find_parameters['status'], 'DELETED');
 		if (isset($_REQUEST['expired']) && $_REQUEST['expired'] == 1) array_push($find_parameters['status'], 'EXPIRED');
 		if (isset($_REQUEST['hidden']) && $_REQUEST['hidden'] == 1) array_push($find_parameters['status'], 'HIDDEN');
 	}
-
+	
 	if (!empty($_REQUEST['searchedTag'])) $find_parameters['searchedTag'] = $_REQUEST['searchedTag'];
 
 	// Get Count before Pagination
@@ -63,6 +60,5 @@
 	$page->setAdminMenuSection("Customer");  // Keep Customer section open
 	$page->instructions = "Fill in the search field.  Use * for a wildcard.  Or click an organization code to see details.";
     $page->addBreadcrumb("Customer");
-    $page->addBreadcrumb("Organizations","/_register/organizations");
-
+    $page->addBreadcrumb("Organizations","/_register/admin_organizations");
     $pagination->count($total_organizations);

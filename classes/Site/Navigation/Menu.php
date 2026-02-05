@@ -374,7 +374,7 @@ class Menu Extends \BaseModel {
 
 END;
 				foreach ($items as $item) {
-					if (empty($item->target)) $buffer .= "\t<li hi=\"1\">".$item->title."\n";
+					if (empty($item->target)) $buffer .= "\t<li><button aria-expanded=\"false\" aria-controls=\"m".$item->id."\">".$item->title."</button>\n";
 					else $buffer .= "\t<li><a href=\"".$item->target."\">".$item->title."</a>\n";
 					$children = $item->children();
 					if (count($children)) {
@@ -384,7 +384,7 @@ END;
 						}
 						$buffer .= "\t</ul>\n";
 					}
-					$buffer .= "</li>\n";
+					$buffer .= "\t</li>\n";
 				}
 				$buffer .= "</ul>\n";
 			}

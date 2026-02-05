@@ -7,14 +7,15 @@
 	$parameters['status'] = array();
 	$can_proceed = true;
 
-	$request = new \HTTP\Request();
 	$auditClass = new \Site\AuditLog();
 	$classList = $auditClass->classes();
 
 	if (count($GLOBALS['_REQUEST_']->query_vars_array) > 0) {
 		$parameters['class_name'] = preg_replace('/\:\:/','\\',$GLOBALS['_REQUEST_']->query_vars_array[0]);
+		$_REQUEST['class_name'] = $parameters['class_name'];
 		if (count($GLOBALS['_REQUEST_']->query_vars_array) > 1) {
 			$parameters['code'] = $GLOBALS['_REQUEST_']->query_vars_array[1];
+			$_REQUEST['code'] = $parameters['code'];
 			$_REQUEST['btn_submit'] = 'Apply Filter';
 		}
 	}
@@ -26,8 +27,8 @@
 
 	// get audits based on current search
 	$btn_submit = $_REQUEST['btn_submit'] ?? null;
-	if ($request->validText($btn_submit) || !empty($parameters['class_name'])) {
-		$class_name = $_REQUEST['class_name'] ?? $parameters['class_name'] ?? null;
+	if (!empty($_REQUEST['btn_submit'])) {
+		$class_name = $_REQUEST['class_name'] ?? null;
 		if (empty($class_name)) {
 			$page->addError("Please select a class to view audit logs.");
 		}
@@ -45,13 +46,18 @@
 				$page->addError("Invalid instance code.");
 			}
 			elseif (!$class->get($code)) {
-				$page->addError("Instance does not exist.");
+				if ($class->error()) {
+					$page->addError("Error retrieving instance: " . $class->error());
+				}
+				else {
+					$page->addError("Instance not found.");
+				}
 			}
 			else {
 				$parameters['instance_id'] = $class->id;
 
 				$pagination_start_id = $_REQUEST['pagination_start_id'] ?? 0;
-				if (!$request->validInteger($pagination_start_id)) $pagination_start_id = 0;
+				if (!is_numeric($_REQUEST['pagination_start_id'])) $pagination_start_id = 0;
 
 				// find audits
 				$auditList = new \Site\AuditLog\EventList();
@@ -66,13 +72,13 @@
 				$totalPages = ceil($totalResults / $recordsPerPage);
 
 				$start = $_REQUEST['start'] ?? 0;
-				if (!$request->validInteger($start)) $start = 0;
-				
+				if (!is_numeric($_REQUEST['start'])) $start = 0;
+
 				if ($start < $recordsPerPage)
 					$prev_offset = 0;
 				else
 					$prev_offset = $start - $recordsPerPage;
-					
+
 				$next_offset = $start + $recordsPerPage;
 				$last_offset = $totalResults - $recordsPerPage;
 

@@ -1,15 +1,15 @@
 <?php
-	#######################################################
-	### accounts_mc.php									###
-	### This view lists all account associated with a	###
-	### provide set of filters.							###
-	### A. Caravello 11/12/2002							###
-	#######################################################
+	/** @view /_register/admin_accounts
+	 * This Administrative view lists all account associated with a
+	 * provide set of filters.
+	 * A. Caravello 11/12/2002
+	 */
 
 	// Initalize the Page
-	$site = new \Site();
+	$porkchop = new \Porkchop();
+	$site = $porkchop->site();
     $page = $site->page();
-	$page->requirePrivilege("manage customers",\Register\PrivilegeLevel::ORGANIZATION_MANAGER);
+	$page->requirePrivilege("manage customers");
 
 	// Initialize Parameter Array
 	$find_parameters = array();
@@ -19,10 +19,11 @@
     $pagination->forwardParameters(array('search','hidden','expired','blocked','deleted','sort_field','sort_direction'));
 
 	// Security - Only Register Module Operators or Managers can see other customers
-	$organization = $GLOBALS['_SESSION_']->customer->organization();
-	if ($organization->exists()) {
-		$find_parameters['organization_id'] = $organization->id;
+	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
+		// Ok
 	}
+	elseif ($GLOBALS['_SESSION_']->customer->organization() && !empty($GLOBALS['_SESSION_']->customer->organization()->id))
+		$find_parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
 	else 
 		return 403;
 
@@ -58,4 +59,4 @@
 	$page->title = "Accounts";
 	$page->setAdminMenuSection("Customer");  // Keep Customer section open
 	$page->addBreadCrumb("Customer");
-	$page->addBreadCrumb("Accounts","/_register/accounts");
+	$page->addBreadCrumb("Accounts","/_register/admin_accounts");

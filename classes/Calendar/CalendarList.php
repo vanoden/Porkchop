@@ -30,7 +30,7 @@
 				}
 				else {
 					$this->error("Invalid code");
-					eturn [];
+					return [];
 				}
 			}
 
