@@ -4,8 +4,8 @@
 
 <form method="post" action="/_site/pages">
   <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>"/>
-  <div class="tableBody">
-    <div class="tableRow">
+  <div class="tableBody bandedRows">
+    <div class="tableRow tableRowHeader">
       <div class="tableCell"><strong>Module</strong></div>
       <div class="tableCell"><strong>View</strong></div>
       <div class="tableCell"><strong>Index</strong></div>
