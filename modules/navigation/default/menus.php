@@ -20,8 +20,8 @@
 		<input type="text" name="title" value="<?=$menu->title?>" />
 	</div>
 	<div class="container">
-		<span class="label">Show Close Button</span>
-		<input type="checkbox" name="show_close_button" value="1" <?=($menu->show_close_button ? 'checked' : '')?> />
+		<span class="label">Required Authentication</span>
+		<input type="checkbox" name="authentication_required" value="1" <?=($menu->authentication_required ? 'checked' : '')?> />
 	</div>
 	<div class="form_footer">
 		<input type="submit" name="btn_submit" value="Update" class="button" />

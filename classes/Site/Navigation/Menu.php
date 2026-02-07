@@ -374,12 +374,56 @@ class Menu Extends \BaseModel {
 
 END;
 				foreach ($items as $item) {
+					if ($item->authentication_required && ! $GLOBALS['_SESSION_']->customer->id) {
+						continue;
+					}
+					if ($item->required_role_id > 0) {
+						if (! $GLOBALS['_SESSION_']->customer->has_role_id($item->required_role_id)) {
+							continue;
+						}
+					}
+					if (preg_match('/\[(\w[\w\-\.\_]+)\:\:(\w[\w\-\.\_]+)/', $item->title, $matches)) {
+						if ($matches[1] == 'register') {
+							if ($matches[2] == 'loginusername') {
+								if ($GLOBALS['_SESSION_']->customer->id) {
+									$item->title = $GLOBALS['_SESSION_']->customer->first_name;
+									$item->target = '/_register/account';
+								}
+								else {
+									$item->title = 'Login';
+									$item->target = '/_register/login';
+								}
+							}
+							elseif ($matches[2] == 'logout') {
+								$item->title = 'Logout';
+								$item->target = '/_register/logout?redirect='.urlencode($this->getCurrentURL());
+							}
+							else {
+								if ($GLOBALS['_SESSION_']->customer->id) {
+									$item->title = 'My Account';
+									$item->target = '/_register/account';
+								}
+								else {
+									$item->title = "Login";
+									$item->target = '/_register/account';
+								}
+							}
+						}
+					}
 					if (empty($item->target)) $buffer .= "\t<li><button aria-expanded=\"false\" aria-controls=\"m".$item->id."\">".$item->title."</button>\n";
 					else $buffer .= "\t<li><a href=\"".$item->target."\">".$item->title."</a>\n";
 					$children = $item->children();
 					if (count($children)) {
 						$buffer .= "\t<ul>\n";
 						foreach ( $children as $child ) {
+							if ($child->authentication_required && ! $GLOBALS['_SESSION_']->customer->id) {
+								continue;
+							}
+							if ($child->required_role_id > 0) {
+								if (! $GLOBALS['_SESSION_']->customer->has_role_id($child->required_role_id)) {
+									continue;
+								}
+							}
 							$buffer .= "\t\t<li><a href=\"".$child->target."\">".$child->title."</a></li>\n";
 						}
 						$buffer .= "\t</ul>\n";

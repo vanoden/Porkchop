@@ -10,6 +10,7 @@
 		public $description;
 		public $parent_id;
 		public $required_role_id;
+		public $authentication_required = false;
 		public $external = false;
 		public $ssl = false;
 		public $item; // Array of child navigation items
@@ -415,6 +416,14 @@
 					return false;
 				}
 			}
+			if (isset($parameters['authentication_required'])) {
+				if ($parameters['authentication_required'] == true) $parameters['authentication_required'] = 1;
+				elseif ($parameters['authentication_required'] == false) $parameters['authentication_required'] = 0;
+
+				$update_object_query .= ",
+					authentication_required = ?";
+				$database->AddParam($parameters['authentication_required'] ? 1 : 0);
+			}
 
 			// Prepare Query
 			$update_object_query .= "
@@ -492,6 +501,9 @@
 				else $this->external = false;
 				if ($object->ssl) $this->ssl = true;
 				else $this->ssl = false;
+				if ($object->authentication_required) $this->authentication_required = true;
+				else $this->authentication_required = false;
+				$this->exists(true);
 
 				if (!empty($this->_cacheKeyPrefix)) $cache->set($object);
 			}
@@ -506,6 +518,8 @@
 				$this->parent_id = null;
 				$this->external = null;
 				$this->ssl = null;
+				$this->authentication_required = false;
+				$this->exists(false);
 			}
 			return true;
 		}
@@ -548,6 +562,10 @@
 		}
 
 		public function validTitle($string): bool {
+			// Special Dynamic Links
+			if (preg_match('/^\[[\w\-\.\_]+\:\:[\w\-\.\_]+\]$/',$string)) return true;
+
+			// Otherwise, just Valid Name
 			return $this->validName($string);
 		}
 

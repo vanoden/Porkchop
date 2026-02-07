@@ -65,7 +65,7 @@
 				$item = new \Site\Navigation\Item();
 			}
 			
-			if (empty($_REQUEST['title']) || !$navItem->validCode($_REQUEST['title'])) {
+			if (empty($_REQUEST['title']) || !$navItem->validTitle($_REQUEST['title'])) {
 				$page->addError("Invalid title");
 				$can_proceed = false;
 			}
@@ -77,7 +77,8 @@
 					"alt" => noXSS($_REQUEST['alt'] ?? ''),
 					"required_role_id" => $_REQUEST['required_role_id'] ?? null,
 					"view_order" => filter_var($_REQUEST['view_order'] ?? 0, FILTER_VALIDATE_INT),
-					"description" => noXSS($_REQUEST['description'] ?? '')
+					"description" => noXSS($_REQUEST['description'] ?? ''),
+					"authentication_required" => isset($_REQUEST['authentication_required']) ? 1 : 0
 				);
 				
 				if ($item->id > 0) {
