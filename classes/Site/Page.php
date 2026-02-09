@@ -1089,13 +1089,24 @@
 						$customer = new \Register\Customer ( $GLOBALS ['_SESSION_']->customer->id );
 						$buffer .= $customer->first_name . " " . $customer->last_name;
 					}
-				} elseif ($property == "welcomestring") {
+				}
+				elseif ($property == "welcomestring") {
 					if ($GLOBALS ['_SESSION_']->customer) {
 						$buffer .= "<span class=\"register_welcomestring\">Welcome " . $GLOBALS ['_SESSION_']->customer->first_name . " " . $GLOBALS ['_SESSION_']->customer->last_name . "</span>";
-					} else {
+					}
+					else {
 						$buffer .= "<a class=\"register_welcomestring\" href=\"" . PATH . "/_register/login\">Log In</a>";
 					}
-				} else {
+				}
+				elseif ($property == "myAccountWidget") {
+					if ($GLOBALS ['_SESSION_']->customer->id) {
+						$buffer .= "\t\t<a href=\"/_register/account\" id=\"myAccountLoginUsername\">".$GLOBALS['_SESSION_']->customer->full_name()."</a>";
+					}
+					else {
+						$buffer .= "\t\t<a href=\"/_register/login\" id=\"myAccountLoginLink\">Log In</a>\n\t\t<a href=\"/_register/new_customer\" id=\"myAccountRegisterLink\">Register</a>";
+					}
+				}
+				else {
 					$buffer = $this->loadViewFiles($buffer);
 				}
 			}
