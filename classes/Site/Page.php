@@ -1361,6 +1361,17 @@
 			return count ( $this->_errors );
 		}
 
+		/** @method public success()
+		 * Set a success message for the page. This can be used to display a confirmation or success message to the user after an action is performed.
+		 * The success message is stored in the $success property and can be displayed in the view using the showMessages() method.
+		 * Note: This method overwrites any existing success message. If you want to append a message instead, use the appendSuccess() method.
+		 * @param string $message The success message to set for the page.
+		 * @return void
+		 */
+		public function success($message) {
+			$this->success = $message;
+		}
+
 		// We don't keep an array of successes, just a string
 		// Append a success message to the success string
 		public function appendSuccess($string) {
