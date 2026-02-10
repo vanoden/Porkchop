@@ -38,8 +38,9 @@ class BaseModel extends \BaseClass {
 	protected $_tableMetaFKColumn = 'instance_id';
 	protected $_tableMetaKeyColumn = 'key';
 
-	// Search Tag Table Info
-	protected $_searchTagTableName;
+	// Search Tag Table Info (for unified tag system)
+	protected $_searchTagTableName = 'search_tags';
+	protected $_searchTagXrefTableName = 'search_tags_xref';
 	protected $_tableSearchTagFKColumn = 'instance_id';
 	protected $_tableSearchTagKeyColumn = 'tag';
 
@@ -1368,6 +1369,563 @@ class BaseModel extends \BaseClass {
 			array_push($objects, $object);
 		}
 		return $objects;
+	}
+
+	/** @method _normalizeClassName($class)
+	 * Convert fully qualified class name to search_tags format (e.g., \Product\Item -> Product::Item)
+	 * @param string $class Fully qualified class name or already normalized
+	 * @return string Normalized class name
+	 */
+	protected function _normalizeClassName(string $class): string {
+		// If already in Product::Item format, return as-is
+		if (preg_match('/^[A-Z][a-zA-Z0-9]*::[A-Z][a-zA-Z0-9]*$/', $class)) {
+			return $class;
+		}
+		
+		// Convert \Product\Item to Product::Item
+		$class = trim($class, '\\');
+		$class = str_replace('\\', '::', $class);
+		
+		return $class;
+	}
+
+	/** @method _getTagClass()
+	 * Get normalized class name for current object
+	 * @return string Normalized class name (e.g., Product::Item)
+	 */
+	protected function _getTagClass(): string {
+		$class = get_class($this);
+		return $this->_normalizeClassName($class);
+	}
+
+	/** @method getTagClass()
+	 * Get normalized class name for current object (public accessor)
+	 * @return string Normalized class name (e.g., Product::Item)
+	 */
+	public function getTagClass(): string {
+		return $this->_getTagClass();
+	}
+
+	/** @method validTagValue($value)
+	 * Validate tag value format
+	 * @param string $value Tag value to validate
+	 * @return bool True if valid
+	 */
+	public function validTagValue(string $value): bool {
+		if (preg_match('/^[\w\-\.\_\s]+$/', $value)) return true;
+		return false;
+	}
+
+	/** @method validTagCategory($category)
+	 * Validate tag category format
+	 * @param string $category Tag category to validate
+	 * @return bool True if valid
+	 */
+	public function validTagCategory(string $category): bool {
+		if (empty($category)) return true; // Empty category is allowed
+		if (preg_match('/^[a-zA-Z][a-zA-Z0-9\.\-\_\s]*$/', $category)) return true;
+		return false;
+	}
+
+	/** @method _getOrCreateTag($value, $category = '')
+	 * Get existing tag ID or create new tag in search_tags table
+	 * @param string $value Tag value
+	 * @param string $category Tag category (optional)
+	 * @return int|false Tag ID or false on error
+	 */
+	protected function _getOrCreateTag(string $value, string $category = ''): int {
+		$this->clearError();
+		
+		// Validate inputs
+		if (!$this->validTagValue($value)) {
+			$this->error("Invalid tag value format");
+			app_log("Invalid tag value format: " . $value, 'warning', __FILE__, __LINE__);
+			return false;
+		}
+		if (!$this->validTagCategory($category)) {
+			$this->error("Invalid tag category format");
+			app_log("Invalid tag category format: " . $category, 'warning', __FILE__, __LINE__);
+			return false;
+		}
+		
+		$class = $this->_getTagClass();
+		app_log("Getting or creating tag. Class: $class, Category: '$category', Value: '$value'", 'debug', __FILE__, __LINE__);
+		
+		$database = new \Database\Service();
+		
+		// Check if tag already exists
+		$get_tag_query = "
+			SELECT id
+			FROM `{$this->_searchTagTableName}`
+			WHERE `class` = ?
+			AND `category` = ?
+			AND `value` = ?
+		";
+		$database->AddParam($class);
+		$database->AddParam($category);
+		$database->AddParam($value);
+		
+		$rs = $database->Execute($get_tag_query);
+		if ($database->ErrorMsg()) {
+			$errorMsg = $database->ErrorMsg();
+			$this->SQLError($errorMsg);
+			app_log("Error checking for existing tag: " . $errorMsg, 'error', __FILE__, __LINE__);
+			return false;
+		}
+		
+		if ($rs && $row = $rs->FetchRow()) {
+			list($tag_id) = $row;
+			app_log("Found existing tag ID: $tag_id", 'debug', __FILE__, __LINE__);
+			return intval($tag_id);
+		}
+		
+		// Create new tag
+		$create_tag_query = "
+			INSERT INTO `{$this->_searchTagTableName}`
+			(`class`, `category`, `value`)
+			VALUES (?, ?, ?)
+		";
+		$create_database = new \Database\Service();
+		$create_database->AddParam($class);
+		$create_database->AddParam($category);
+		$create_database->AddParam($value);
+		
+		$rs = $create_database->Execute($create_tag_query);
+		if ($create_database->ErrorMsg()) {
+			$errorMsg = $create_database->ErrorMsg();
+			$this->SQLError($errorMsg);
+			app_log("Error creating tag: " . $errorMsg . " Query: " . $create_tag_query, 'error', __FILE__, __LINE__);
+			return false;
+		}
+		
+		$new_tag_id = intval($create_database->Insert_ID());
+		app_log("Created new tag ID: $new_tag_id", 'debug', __FILE__, __LINE__);
+		return $new_tag_id;
+	}
+
+	/** @method addTag($tag, $category = '')
+	 * Add a tag to this object
+	 * @param string $tag Tag value to add
+	 * @param string $category Optional category for the tag
+	 * @return bool True if successful
+	 */
+	public function addTag(string $tag, string $category = ''): bool {
+		$this->clearError();
+		
+		app_log("BaseModel::addTag called. Object ID: " . ($this->id ?? 'NULL') . ", Class: " . get_class($this) . ", Tag: '$tag', Category: '$category'", 'debug', __FILE__, __LINE__);
+		
+		// Validate object ID
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			$this->error("Cannot add tag: object ID is invalid or not set");
+			app_log("Cannot add tag - invalid object ID: " . ($this->id ?? 'NULL'), 'warning', __FILE__, __LINE__);
+			return false;
+		}
+		
+		// Get or create tag
+		$tag_id = $this->_getOrCreateTag($tag, $category);
+		if (!$tag_id) {
+			app_log("Failed to get or create tag. Error: " . $this->error(), 'error', __FILE__, __LINE__);
+			return false; // Error already set
+		}
+		
+		app_log("Got tag ID: $tag_id, now checking xref", 'debug', __FILE__, __LINE__);
+		
+		$database = new \Database\Service();
+		
+		// Check if xref already exists
+		$check_xref_query = "
+			SELECT id
+			FROM `{$this->_searchTagXrefTableName}`
+			WHERE `tag_id` = ?
+			AND `object_id` = ?
+		";
+		$database->AddParam($tag_id);
+		$database->AddParam($this->id);
+		
+		$rs = $database->Execute($check_xref_query);
+		if ($database->ErrorMsg()) {
+			$errorMsg = $database->ErrorMsg();
+			$this->SQLError($errorMsg);
+			app_log("Error checking xref: " . $errorMsg, 'error', __FILE__, __LINE__);
+			return false;
+		}
+		
+		if ($rs && $row = $rs->FetchRow()) {
+			// Tag already exists for this object
+			app_log("Tag xref already exists, returning true", 'debug', __FILE__, __LINE__);
+			return true;
+		}
+		
+		// Create xref entry
+		$create_xref_query = "
+			INSERT INTO `{$this->_searchTagXrefTableName}`
+			(`tag_id`, `object_id`)
+			VALUES (?, ?)
+		";
+		$create_database = new \Database\Service();
+		$create_database->AddParam($tag_id);
+		$create_database->AddParam($this->id);
+		
+		app_log("Creating xref entry. Tag ID: $tag_id, Object ID: " . $this->id . ", Table: {$this->_searchTagXrefTableName}", 'debug', __FILE__, __LINE__);
+		$rs = $create_database->Execute($create_xref_query);
+		
+		// Check for errors - Execute can return null on failure
+		if (!$rs || $create_database->ErrorMsg()) {
+			$errorMsg = $create_database->ErrorMsg() ?: "Query execution returned null/false";
+			$this->SQLError($errorMsg);
+			app_log("Error creating xref: " . $errorMsg . " Query: " . $create_xref_query . " Tag ID: $tag_id, Object ID: " . $this->id, 'error', __FILE__, __LINE__);
+			
+			// Also check the underlying connection error
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$connError = $GLOBALS['_database']->ErrorMsg();
+				app_log("Underlying database connection error: " . $connError, 'error', __FILE__, __LINE__);
+				$this->SQLError($connError);
+			}
+			return false;
+		}
+		
+		$xref_id = $create_database->Insert_ID();
+		app_log("Tag added successfully. Xref ID: " . $xref_id, 'info', __FILE__, __LINE__);
+		
+		// Verify the xref was actually created
+		if (empty($xref_id)) {
+			app_log("Warning: Insert_ID() returned empty, verifying xref was created...", 'warning', __FILE__, __LINE__);
+			$verify_db = new \Database\Service();
+			$verify_query = "SELECT id FROM `{$this->_searchTagXrefTableName}` WHERE `tag_id` = ? AND `object_id` = ?";
+			$verify_db->AddParam($tag_id);
+			$verify_db->AddParam($this->id);
+			$verify_rs = $verify_db->Execute($verify_query);
+			if ($verify_rs && $verify_row = $verify_rs->FetchRow()) {
+				app_log("Xref verified - ID: " . $verify_row[0], 'info', __FILE__, __LINE__);
+			} else {
+				app_log("Xref NOT found after insert! This is a problem.", 'error', __FILE__, __LINE__);
+				$this->error("Xref entry was not created successfully");
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
+	/** @method removeTag($tag, $category = '')
+	 * Remove a tag from this object
+	 * @param string $tag Tag value to remove
+	 * @param string $category Optional category for the tag
+	 * @return bool True if successful
+	 */
+	public function removeTag(string $tag, string $category = ''): bool {
+		$this->clearError();
+		
+		// Validate object ID
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			$this->error("Cannot remove tag: object ID is invalid or not set");
+			return false;
+		}
+		
+		// Validate inputs
+		if (!$this->validTagValue($tag)) {
+			$this->error("Invalid tag value format");
+			return false;
+		}
+		if (!$this->validTagCategory($category)) {
+			$this->error("Invalid tag category format");
+			return false;
+		}
+		
+		$class = $this->_getTagClass();
+		$database = new \Database\Service();
+		
+		// Find tag ID
+		$get_tag_query = "
+			SELECT id
+			FROM `{$this->_searchTagTableName}`
+			WHERE `class` = ?
+			AND `category` = ?
+			AND `value` = ?
+		";
+		$database->AddParam($class);
+		$database->AddParam($category);
+		$database->AddParam($tag);
+		
+		$rs = $database->Execute($get_tag_query);
+		if ($database->ErrorMsg()) {
+			$this->SQLError($database->ErrorMsg());
+			return false;
+		}
+		
+		if (!$rs || !($row = $rs->FetchRow())) {
+			// Tag doesn't exist, nothing to remove
+			return true;
+		}
+		
+		list($tag_id) = $row;
+		
+		// Remove xref entry
+		$remove_xref_query = "
+			DELETE FROM `{$this->_searchTagXrefTableName}`
+			WHERE `tag_id` = ?
+			AND `object_id` = ?
+		";
+		$remove_database = new \Database\Service();
+		$remove_database->AddParam($tag_id);
+		$remove_database->AddParam($this->id);
+		
+		$rs = $remove_database->Execute($remove_xref_query);
+		if ($remove_database->ErrorMsg()) {
+			$this->SQLError($remove_database->ErrorMsg());
+			return false;
+		}
+		
+		return true;
+	}
+
+	/** @method hasTag($tag, $category = '')
+	 * Check if this object has a specific tag
+	 * @param string $tag Tag value to check
+	 * @param string $category Optional category for the tag
+	 * @return bool True if object has the tag
+	 */
+	public function hasTag(string $tag, string $category = ''): bool {
+		$this->clearError();
+		
+		// Validate object ID
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			return false;
+		}
+		
+		// Validate inputs
+		if (!$this->validTagValue($tag)) {
+			return false;
+		}
+		if (!$this->validTagCategory($category)) {
+			return false;
+		}
+		
+		$class = $this->_getTagClass();
+		$database = new \Database\Service();
+		
+		// Check if tag exists for this object
+		$check_tag_query = "
+			SELECT COUNT(*)
+			FROM `{$this->_searchTagXrefTableName}` stx
+			INNER JOIN `{$this->_searchTagTableName}` st ON stx.tag_id = st.id
+			WHERE stx.object_id = ?
+			AND st.class = ?
+			AND st.category = ?
+			AND st.value = ?
+		";
+		$database->AddParam($this->id);
+		$database->AddParam($class);
+		$database->AddParam($category);
+		$database->AddParam($tag);
+		
+		$rs = $database->Execute($check_tag_query);
+		if ($database->ErrorMsg()) {
+			$this->SQLError($database->ErrorMsg());
+			return false;
+		}
+		
+		if ($rs && $row = $rs->FetchRow()) {
+			list($count) = $row;
+			return intval($count) > 0;
+		}
+		
+		return false;
+	}
+
+	/** @method getTags($category = null)
+	 * Get all tags for this object, optionally filtered by category
+	 * @param string|null $category Optional category filter
+	 * @return array Array of tag values
+	 */
+	public function getTags(string $category = null): array {
+		$this->clearError();
+		
+		// Validate object ID
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			return [];
+		}
+		
+		$class = $this->_getTagClass();
+		$database = new \Database\Service();
+		
+		// Build query
+		$get_tags_query = "
+			SELECT st.value
+			FROM `{$this->_searchTagXrefTableName}` stx
+			INNER JOIN `{$this->_searchTagTableName}` st ON stx.tag_id = st.id
+			WHERE stx.object_id = ?
+			AND st.class = ?
+		";
+		$database->AddParam($this->id);
+		$database->AddParam($class);
+		
+		if ($category !== null) {
+			if (!$this->validTagCategory($category)) {
+				$this->error("Invalid tag category format");
+				return [];
+			}
+			$get_tags_query .= " AND st.category = ?";
+			$database->AddParam($category);
+		}
+		
+		$get_tags_query .= " ORDER BY st.category, st.value";
+		
+		$rs = $database->Execute($get_tags_query);
+		if ($database->ErrorMsg()) {
+			$this->SQLError($database->ErrorMsg());
+			return [];
+		}
+		
+		$tags = [];
+		if ($rs) {
+			while ($row = $rs->FetchRow()) {
+				list($value) = $row;
+				$tags[] = $value;
+			}
+		}
+		
+		return $tags;
+	}
+
+	/** @method setTags($tags, $category = '')
+	 * Replace all tags for this object with a new set (for a specific category)
+	 * @param array $tags Array of tag values
+	 * @param string $category Optional category (if provided, only replaces tags in that category)
+	 * @return bool True if successful
+	 */
+	public function setTags(array $tags, string $category = ''): bool {
+		$this->clearError();
+		
+		// Validate object ID
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			$this->error("Cannot set tags: object ID is invalid or not set");
+			return false;
+		}
+		
+		// Validate category
+		if (!$this->validTagCategory($category)) {
+			$this->error("Invalid tag category format");
+			return false;
+		}
+		
+		// Clear existing tags for this category
+		if (!$this->clearTags($category)) {
+			return false; // Error already set
+		}
+		
+		// Add new tags
+		foreach ($tags as $tag) {
+			if (!is_string($tag)) {
+				continue; // Skip non-string values
+			}
+			if (!$this->addTag($tag, $category)) {
+				return false; // Error already set
+			}
+		}
+		
+		return true;
+	}
+
+	/** @method clearTags($category = null)
+	 * Remove all tags from this object, optionally filtered by category
+	 * @param string|null $category Optional category filter
+	 * @return bool True if successful
+	 */
+	public function clearTags(string $category = null): bool {
+		$this->clearError();
+		
+		// Validate object ID
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			$this->error("Cannot clear tags: object ID is invalid or not set");
+			return false;
+		}
+		
+		$class = $this->_getTagClass();
+		$database = new \Database\Service();
+		
+		// Build query
+		$clear_tags_query = "
+			DELETE stx FROM `{$this->_searchTagXrefTableName}` stx
+			INNER JOIN `{$this->_searchTagTableName}` st ON stx.tag_id = st.id
+			WHERE stx.object_id = ?
+			AND st.class = ?
+		";
+		$database->AddParam($this->id);
+		$database->AddParam($class);
+		
+		if ($category !== null) {
+			if (!$this->validTagCategory($category)) {
+				$this->error("Invalid tag category format");
+				return false;
+			}
+			$clear_tags_query .= " AND st.category = ?";
+			$database->AddParam($category);
+		}
+		
+		$rs = $database->Execute($clear_tags_query);
+		if ($database->ErrorMsg()) {
+			$this->SQLError($database->ErrorMsg());
+			return false;
+		}
+		
+		return true;
+	}
+
+	/** @method findObjectsByTag($tag, $category = '', $class = null)
+	 * Find all objects with a specific tag (static method for cross-object queries)
+	 * @param string $tag Tag value to search for
+	 * @param string $category Optional category filter
+	 * @param string|null $class Optional class filter (e.g., 'Product::Item')
+	 * @return array Array of object IDs
+	 */
+	public static function findObjectsByTag(string $tag, string $category = '', string $class = null): array {
+		$database = new \Database\Service();
+		
+		// Validate tag value
+		if (!preg_match('/^[\w\-\.\_\s]+$/', $tag)) {
+			return [];
+		}
+		
+		// Build query
+		$find_query = "
+			SELECT DISTINCT stx.object_id
+			FROM `search_tags_xref` stx
+			INNER JOIN `search_tags` st ON stx.tag_id = st.id
+			WHERE st.value = ?
+		";
+		$database->AddParam($tag);
+		
+		if (!empty($category)) {
+			if (!preg_match('/^[a-zA-Z][a-zA-Z0-9\.\-\_\s]*$/', $category)) {
+				return [];
+			}
+			$find_query .= " AND st.category = ?";
+			$database->AddParam($category);
+		}
+		
+		if ($class !== null) {
+			// Normalize class name
+			$class = trim($class, '\\');
+			$class = str_replace('\\', '::', $class);
+			$find_query .= " AND st.class = ?";
+			$database->AddParam($class);
+		}
+		
+		$rs = $database->Execute($find_query);
+		if ($database->ErrorMsg()) {
+			return [];
+		}
+		
+		$object_ids = [];
+		if ($rs) {
+			while ($row = $rs->FetchRow()) {
+				list($object_id) = $row;
+				$object_ids[] = intval($object_id);
+			}
+		}
+		
+		return $object_ids;
 	}
 
 	/** @method images(object_type = null)

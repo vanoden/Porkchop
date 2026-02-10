@@ -43,6 +43,32 @@
 				$this->setVersion(1);
 				$GLOBALS['_database']->CommitTrans();
 			}
+
+			// Add performance indexes in version 2
+			if ($this->version() < 2) {
+				app_log("Upgrading ".$this->module." schema to version 2",'notice',__FILE__,__LINE__);
+				
+				// Add composite index for faster object tag lookups
+				$add_index_query = "
+					ALTER TABLE `search_tags_xref`
+					ADD INDEX `idx_object_tag` (`object_id`, `tag_id`)
+				";
+				if (! $this->executeSQL($add_index_query)) {
+					app_log("Warning: Could not add index idx_object_tag: ".$this->error(), 'warning', __FILE__, __LINE__);
+				}
+
+				// Add index for tag searches by class and value
+				$add_index_query = "
+					ALTER TABLE `search_tags`
+					ADD INDEX `idx_class_value` (`class`, `value`)
+				";
+				if (! $this->executeSQL($add_index_query)) {
+					app_log("Warning: Could not add index idx_class_value: ".$this->error(), 'warning', __FILE__, __LINE__);
+				}
+
+				$this->setVersion(2);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}
