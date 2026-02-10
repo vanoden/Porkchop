@@ -10,12 +10,14 @@
 <tr><th>Title</th>
 	<th>Target</th>
 	<th>Alt</th>
+	<th>Requires Auth</th>
 	<th>Required Role</th>
 	<th>View Order</th>
 </tr>
 <tr><td><input type="text" name="title" class="value input" value="<?=isset($item) ? $item->title : ''?>" /></td>
 	<td><input type="text" name="target" class="value input input-width-300" value="<?=isset($item) ? $item->target : ''?>" /></td>
 	<td><input type="text" name="alt" class="value input" value="<?=isset($item) ? $item->alt : ''?>" /></td>
+	<td><input type="checkbox" name="authentication_required" value="1" <?=isset($item) && $item->authentication_required ? 'checked' : ''?> /></td>
 	<td><select name="required_role_id" class="value input">
 			<option value="">None</option>
 <?php	foreach ($roles as $role) { ?>

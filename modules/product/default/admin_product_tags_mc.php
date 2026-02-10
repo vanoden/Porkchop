@@ -36,65 +36,61 @@
 	$productSearchTags = array();
 
 	if ($item->id) {
-		// get tags for product
-		$productTagList = new \Product\TagList();
-		$productTags = $productTagList->find(array("product_id" => $item->id));
-
-		// add tag to product
-		if (!empty($_REQUEST['newSearchTag']) && empty($_REQUEST['removeSearchTag'])) {
-			$searchTag = new \Site\SearchTag();
-			$searchTagList = new \Site\SearchTagList();
-			$searchTagXref = new \Site\SearchTagXref();
-
-			if (!empty($_REQUEST['newSearchTag']) && !empty($_REQUEST['newSearchTagCategory']) && 
-				$searchTag->validName($_REQUEST['newSearchTag']) && 
-				$searchTag->validName($_REQUEST['newSearchTagCategory'])) {
-
-				// Check if the tag already exists (by both category and value)
-				$existingTag = $searchTagList->find(array('class' => 'Product::Item', 'category' => $_REQUEST['newSearchTagCategory'], 'value' => $_REQUEST['newSearchTag']));
-
-				if (empty($existingTag)) {
-					// Create a new tag
-					$searchTag->add(array(
-						'class' => 'Product::Item', 
-						'category' => $_REQUEST['newSearchTagCategory'], 
-						'value' => $_REQUEST['newSearchTag']
-					));
-					
-					if ($searchTag->error()) $page->addError("Error adding product search tag: " . $searchTag->error());
-					else {
-						// Create a new cross-reference
-						$searchTagXref->add(array('tag_id' => $searchTag->id, 'object_id' => $item->id));
-						if ($searchTagXref->error()) $page->addError("Error adding product tag cross-reference: " . $searchTagXref->error());
-						else $page->appendSuccess("Product Search Tag added Successfully");
-					}
-				} else {
-					// Create a new cross-reference with the existing tag
-					$searchTagXref->add(array('tag_id' => $existingTag[0]->id, 'object_id' => $item->id));
-					if ($searchTagXref->error()) $page->addError("Error adding product tag cross-reference: " . $searchTagXref->error());
-					else $page->appendSuccess("Product Search Tag added Successfully");
-				}
-			} else $page->addError("Value for Product Tag and Category are required");
+		// get tags for product (using BaseModel unified tag system)
+		$productTags = $item->getTags();
+		if (!is_array($productTags)) {
+			$productTags = array();
 		}
 
-		// remove tag from product
+		// add search tag or product tag to product (using BaseModel unified tag system)
+		if (!empty($_REQUEST['newSearchTag']) && empty($_REQUEST['removeSearchTag'])) {
+			if (!$item->validTagValue($_REQUEST['newSearchTag'])) {
+				$page->addError("Invalid tag format. Tags can only contain letters, numbers, dashes, underscores, dots, and spaces.");
+			} else {
+				// If category is empty (product tag), default to product_tag; otherwise use provided category (search tag)
+				$category = trim($_REQUEST['newSearchTagCategory'] ?? '');
+				if ($category === '') {
+					$category = 'product_tag';
+				}
+				if (!$item->validTagCategory($category)) {
+					$page->addError("Invalid tag category format.");
+				} elseif ($item->addTag($_REQUEST['newSearchTag'], $category)) {
+					$page->appendSuccess($category === 'product_tag' ? "Product Tag added Successfully" : "Product Search Tag added Successfully");
+				} else {
+					$page->addError("Error adding tag: " . $item->error());
+				}
+			}
+		}
+
+		// remove search tag from product (using BaseModel unified tag system)
 		if (!empty($_REQUEST['removeSearchTagId'])) {
 			$searchTagXrefItem = new \Site\SearchTagXref();
 			if ($searchTagXrefItem->validInteger($_REQUEST['removeSearchTagId'])) {
-				$searchTagXrefItem->deleteTagForObject($_REQUEST['removeSearchTagId'], "Product::Item", $item->id);
-				$page->appendSuccess("Product Search Tag removed Successfully");
+				$searchTagXrefItem = new \Site\SearchTagXref($_REQUEST['removeSearchTagId']);
+				if ($searchTagXrefItem->id) {
+					$searchTag = new \Site\SearchTag($searchTagXrefItem->tag_id);
+					$tagClass = $item->getTagClass(); // Get the normalized class name
+					if ($searchTag->id && $searchTag->class === $tagClass) {
+						if ($item->removeTag($searchTag->value, $searchTag->category)) {
+							$page->appendSuccess("Product Search Tag removed Successfully");
+						} else {
+							$page->addError("Error removing product search tag: " . $item->error());
+						}
+					}
+				}
 			} else {
 				$page->addError("Invalid tag ID format");
 			}
 		}
 
-		// get tags for product
+		// get search tags for product (using BaseModel unified tag system)
+		$tagClass = $item->getTagClass(); // Get the normalized class name
 		$searchTagXref = new \Site\SearchTagXrefList();
-		$searchTagXrefs = $searchTagXref->find(array("object_id" => $item->id, "class" => "Product::Item"));
+		$searchTagXrefs = $searchTagXref->find(array("object_id" => $item->id, "class" => $tagClass));
 		foreach ($searchTagXrefs as $searchTagXrefItem) {
 			$searchTag = new \Site\SearchTag();
 			$searchTag->load($searchTagXrefItem->tag_id);
-			$productSearchTags[] = $searchTag;
+			$productSearchTags[] = (object) array('searchTag' => $searchTag, 'xrefId' => $searchTagXrefItem->id);
 		}
 		// get unique categories and tags for autocomplete
 		$searchTagList = new \Site\SearchTagList();
@@ -108,6 +104,11 @@
 	    } else {
 	    	$organizationTags = array();
 	    }
+	}
+
+	if (!isset($uniqueTagsData) || !is_array($uniqueTagsData)) {
+		$searchTagList = new \Site\SearchTagList();
+		$uniqueTagsData = $searchTagList->getUniqueCategoriesAndTagsJson();
 	}
 
 	$page->addBreadcrumb('Products', '/_spectros/admin_products');

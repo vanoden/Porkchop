@@ -14,15 +14,13 @@
 </section>
 <?php	} ?>    
 
-<section id="form-message">
-  <h1 class="pageSect_full">Log In to Your Account</h1>
-	<ul class="connectBorder infoText">
-		<li>This site is for authorized use by employees and customers of <r7 object="company" property="name"/>. No other use is permitted.</li>
-	</ul>
-</section>
+<h1 class="pageSect_full">Log In to Your Account</h1>
+<ul class="pageMessage infoText">
+  <li>This site is for authorized use by employees and customers of <r7 object="company" property="name"/>. No other use is permitted.</li>
+</ul>
 
-<section id="reg_form" onkeypress="return loginSubmitEnter(event)" class="body">
-	<form name="loginForm" method="post" action="<?=PATH?>/_register/login">
+<!-- <section id="reg_form" onkeypress="return loginSubmitEnter(event)" class="body"> -->
+	<form id="reg_form" onkeypress="return loginSubmitEnter(event)" name="loginForm" method="post" action="<?=PATH?>/_register/login">
 		<input type="hidden" name="login_target" value="<?=$target?>" />
 		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 		<div id="register_form">
@@ -45,4 +43,4 @@
       </div>
 		</div>
 	</form>
-</section>
+<!-- </section> -->

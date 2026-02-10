@@ -1128,13 +1128,24 @@
 						$customer = new \Register\Customer ( $GLOBALS ['_SESSION_']->customer->id );
 						$buffer .= $customer->first_name . " " . $customer->last_name;
 					}
-				} elseif ($property == "welcomestring") {
+				}
+				elseif ($property == "welcomestring") {
 					if ($GLOBALS ['_SESSION_']->customer) {
 						$buffer .= "<span class=\"register_welcomestring\">Welcome " . $GLOBALS ['_SESSION_']->customer->first_name . " " . $GLOBALS ['_SESSION_']->customer->last_name . "</span>";
-					} else {
+					}
+					else {
 						$buffer .= "<a class=\"register_welcomestring\" href=\"" . PATH . "/_register/login\">Log In</a>";
 					}
-				} else {
+				}
+				elseif ($property == "myAccountWidget") {
+					if ($GLOBALS ['_SESSION_']->customer->id) {
+						$buffer .= "\t\t<a href=\"/_register/account\" id=\"myAccountLoginUsername\">".$GLOBALS['_SESSION_']->customer->full_name()."</a>";
+					}
+					else {
+						$buffer .= "\t\t<a href=\"/_register/login\" id=\"myAccountLoginLink\">Log In</a>\n\t\t<a href=\"/_register/new_customer\" id=\"myAccountRegisterLink\">Register</a>";
+					}
+				}
+				else {
 					$buffer = $this->loadViewFiles($buffer);
 				}
 			}
@@ -1387,6 +1398,17 @@
 			if (empty ( $this->_errors )) $this->_errors = array();
 			if (! empty ( $this->error )) array_push ($this->_errors, $this->error());
 			return count ( $this->_errors );
+		}
+
+		/** @method public success()
+		 * Set a success message for the page. This can be used to display a confirmation or success message to the user after an action is performed.
+		 * The success message is stored in the $success property and can be displayed in the view using the showMessages() method.
+		 * Note: This method overwrites any existing success message. If you want to append a message instead, use the appendSuccess() method.
+		 * @param string $message The success message to set for the page.
+		 * @return void
+		 */
+		public function success($message) {
+			$this->success = $message;
 		}
 
 		// We don't keep an array of successes, just a string

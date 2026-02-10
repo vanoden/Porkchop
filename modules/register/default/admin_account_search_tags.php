@@ -54,17 +54,19 @@
       <div class="tableCell width-33per">&nbsp;</div>
     </div>
     <?php
-    if (!empty($registerCustomerSearchTags)) { foreach ($registerCustomerSearchTags as $searchTag) {
+    if (!empty($registerCustomerSearchTags)) { foreach ($registerCustomerSearchTags as $row) {
+      $searchTag = $row->searchTag;
+      $xrefId = $row->xrefId;
     ?>
       <div class="tableRow">
         <div class="tableCell">
-          <?= $searchTag->category ?>
+          <?= htmlspecialchars($searchTag->category) ?>
         </div>
         <div class="tableCell">
-          <?= $searchTag->value ?>
+          <?= htmlspecialchars($searchTag->value) ?>
         </div>
         <div class="tableCell">
-          <img src="/img/icons/icon_tools_trash_active.svg" onclick="removeSearchTagById('<?= $searchTag->id ?>')" style="cursor: pointer; width: 20px; height: 20px;" alt="Remove" title="Remove" />
+          <img src="/img/icons/icon_tools_trash_active.svg" onclick="removeSearchTagById('<?= (int)$xrefId ?>')" style="cursor: pointer; width: 20px; height: 20px;" alt="Remove" title="Remove" />
         </div>
 
       </div>

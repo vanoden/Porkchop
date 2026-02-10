@@ -49,16 +49,16 @@
 	    <div class="tableRowHeader">
 		    <div class="tableCell width-35per">Tag</div>
 	    </div>
-        <?php	
+        <?php
             if (!empty($organizationTags)) {
                 foreach ($organizationTags as $tag) {
         ?>
 	        <div class="tableRow">
 		        <div class="tableCell">
-			        <input type="button" onclick="removeTagById('<?=$tag->id?>')" name="removeTag" value="Remove" class="button"/> <strong><?=$tag->name?></strong>
+			        <input type="button" onclick="removeTagById('<?= (int)$tag->xrefId ?>')" name="removeTag" value="Remove" class="button"/> <strong><?= htmlspecialchars($tag->name) ?></strong>
 		        </div>
 	        </div>
-        <?php	
+        <?php
                 }
             } else {
         ?>

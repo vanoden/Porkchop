@@ -785,6 +785,22 @@
 				$database->CommitTrans();
 			}
 
+			if ($this->version() < 32) {
+				app_log("Upgrading ".$this->module." schema to version 32",'notice',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `navigation_menu_items`
+					ADD COLUMN `authentication_required` tinyint(1) NOT NULL DEFAULT 0
+				";
+				if (! $database->Execute($alter_table_query)) {
+					$this->SQLError("Altering navigation_menu_items table: ".$database->error());
+					return false;
+				}
+
+				$this->setVersion(32);
+				$database->CommitTrans();
+			}
+
 			return true;
 		}
 	}

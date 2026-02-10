@@ -26,20 +26,20 @@
 	}
 	else $organization = $GLOBALS['_SESSION_']->customer->organization();
 
-	// add tag to organization
+	// add tag to organization (using BaseModel unified tag system) — category organization_tag
 	if (!empty($_REQUEST['addTag']) && empty($_REQUEST['removeTag'])) {
 	    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 	        $page->addError("Invalid Request");
 	    }
+	    elseif (empty($organization->id)) {
+	        $page->addError("Organization not found. Cannot add tag.");
+	    }
 	    else {
-	        $registerTag = new \Register\Tag();
-	        if (!empty($_REQUEST['newTag']) && $registerTag->validName($_REQUEST['newTag'])) {
-	            $registerTag->add(array('type'=>'ORGANIZATION','register_id'=>$_REQUEST['organization_id'],'name'=>$_REQUEST['newTag']));
-	            if ($registerTag->error()) {
-	                $page->addError("Error adding organization tag: ".$registerTag->error());
-	            }
-	            else {
+	        if (!empty($_REQUEST['newTag']) && $organization->validTagValue($_REQUEST['newTag'])) {
+	            if ($organization->addTag($_REQUEST['newTag'], 'organization_tag')) {
 	                $page->appendSuccess("Organization Tag added Successfully");
+	            } else {
+	                $page->addError("Error adding organization tag: ".$organization->error());
 	            }
 	        }
 	        else {
@@ -47,24 +47,41 @@
 	        }
 	    }
 	}
-	
-	// remove tag from organization
+
+	// remove tag from organization (using BaseModel unified tag system)
 	if (!empty($_REQUEST['removeTagId'])) {
 	    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 	        $page->addError("Invalid Request");
 	    }
-	    else {
-	        $registerTagList = new \Register\TagList();
-	        $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id, "id"=> $_REQUEST['removeTagId']));
-	        foreach ($organizationTags as $organizationTag) $organizationTag->delete();
-	        $page->appendSuccess("Tag removed successfully");
+	    elseif (!empty($organization->id)) {
+	        // Get tag details from xref ID
+	        $searchTagXrefItem = new \Site\SearchTagXref($_REQUEST['removeTagId']);
+	        if ($searchTagXrefItem->id) {
+	            $searchTag = new \Site\SearchTag($searchTagXrefItem->tag_id);
+	            $tagClass = $organization->getTagClass();
+	            $isOrgTag = ($searchTag->id && $searchTag->class === $tagClass && ($searchTag->category === 'organization_tag' || $searchTag->category === 'ORGANIZATION'));
+	            if ($isOrgTag && $organization->removeTag($searchTag->value, $searchTag->category)) {
+	                $page->appendSuccess("Tag removed successfully");
+	            } elseif ($isOrgTag) {
+	                $page->addError("Error removing tag: " . $organization->error());
+	            }
+	        }
 	    }
 	}
 
-	// get tags for organization (after any add/remove operations)
-	if ($organization->id) {
-		$registerTagList = new \Register\TagList();
-		$organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id));
+	// get tags for organization (using BaseModel unified tag system) — list with xref ids for remove
+	$organizationTags = array();
+	if (!empty($organization->id)) {
+	    $tagClass = $organization->getTagClass();
+	    $searchTagXref = new \Site\SearchTagXrefList();
+	    $searchTagXrefs = $searchTagXref->find(array("object_id" => $organization->id, "class" => $tagClass));
+	    foreach ($searchTagXrefs as $searchTagXrefItem) {
+	        $searchTag = new \Site\SearchTag();
+	        $searchTag->load($searchTagXrefItem->tag_id);
+	        if ($searchTag->id && ($searchTag->category === 'organization_tag' || $searchTag->category === 'ORGANIZATION')) {
+	            $organizationTags[] = (object) array('xrefId' => $searchTagXrefItem->id, 'name' => $searchTag->value);
+	        }
+	    }
 	}
 
 	$page->title = "Organization Tags";

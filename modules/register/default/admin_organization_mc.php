@@ -146,16 +146,13 @@
 	    }		
 	}
 	
-	// add tag to organization
+	// add tag to organization (using BaseModel unified tag system)
 	if (!empty($_REQUEST['addTag']) && empty($_REQUEST['removeTag'])) {
-	    $registerTag = new \Register\Tag();
-	    if (!empty($_REQUEST['newTag']) && $registerTag->validName($_REQUEST['newTag'])) {
-	        $registerTag->add(array('type'=>'ORGANIZATION','register_id'=>$_REQUEST['organization_id'],'name'=>$_REQUEST['newTag']));
-			if ($registerTag->error()) {
-				$page->addError("Error adding organization tag: ".$registerTag->error());
-			}
-			else {
+	    if (!empty($_REQUEST['newTag']) && $organization->validTagValue($_REQUEST['newTag'])) {
+	        if ($organization->addTag($_REQUEST['newTag'], 'organization_tag')) {
 				$page->appendSuccess("Organization Tag added Successfully");
+			} else {
+				$page->addError("Error adding organization tag: ".$organization->error());
 			}
 	    }
 		else {
@@ -163,11 +160,16 @@
 	    }
 	}
 	
-	// remove tag from organization
+	// remove tag from organization (using BaseModel unified tag system)
 	if (!empty($_REQUEST['removeTagId'])) {
-        $registerTagList = new \Register\TagList();
-        $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id, "id"=> $_REQUEST['removeTagId']));
-	    foreach ($organizationTags as $organizationTag) $organizationTag->delete();
+		// Get tag details from xref ID
+		$searchTagXrefItem = new \Site\SearchTagXref($_REQUEST['removeTagId']);
+		if ($searchTagXrefItem->id) {
+			$searchTag = new \Site\SearchTag($searchTagXrefItem->tag_id);
+			if ($searchTag->id && $searchTag->class === 'Register::Organization' && $searchTag->category === 'ORGANIZATION') {
+				$organization->removeTag($searchTag->value, $searchTag->category);
+			}
+		}
 	}
 
 	if ($organization->id) {
@@ -216,9 +218,15 @@
 	$resellerList = new \Register\OrganizationList();
 	$resellers = $resellerList->find(array("is_reseller" => true));
 
-    // get tags for organization
-    $registerTagList = new \Register\TagList();
-    $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id));
+    // get tags for organization (using BaseModel unified tag system)
+    if ($organization->id) {
+        $organizationTags = $organization->getTags();
+        if (!is_array($organizationTags)) {
+            $organizationTags = array();
+        }
+    } else {
+        $organizationTags = array();
+    }
 
     // get organization locations
     $locations = array();
