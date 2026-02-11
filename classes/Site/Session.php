@@ -922,30 +922,30 @@ use Register\Customer;
 		 */
 		public function authenticated(): bool {
 			$configuration = new \Site\Configuration();
-			app_log("=== AUTHENTICATED() METHOD CALL ===", 'debug', __FILE__, __LINE__, 'otplogs');
-			app_log("OTP Enabled: " . ($configuration->getValueBool("use_otp") ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
-			app_log("Customer ID: " . ($this->customer->id ?? 'null'), 'debug', __FILE__, __LINE__, 'otplogs');
-			app_log("Customer requires OTP: " . ($this->customer->requiresOTP() ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
+			app_log("=== AUTHENTICATED() METHOD CALL ===", 'trace', __FILE__, __LINE__, 'otplogs');
+			app_log("OTP Enabled: " . ($configuration->getValueBool("use_otp") ? 'true' : 'false'), 'trace', __FILE__, __LINE__, 'otplogs');
+			app_log("Customer ID: " . ($this->customer->id ?? 'null'), 'trace', __FILE__, __LINE__, 'otplogs');
+			app_log("Customer requires OTP: " . ($this->customer->requiresOTP() ? 'true' : 'false'), 'trace', __FILE__, __LINE__, 'otplogs');
 			$otpStatus = $this->getOTPVerified();
-			app_log("OTP verified status: " . ($otpStatus === false ? 'false' : ($otpStatus === true ? 'true' : 'null')), 'debug', __FILE__, __LINE__, 'otplogs');
-			app_log("Current URI: " . $_SERVER['REQUEST_URI'], 'debug', __FILE__, __LINE__, 'otplogs');
+			app_log("OTP verified status: " . ($otpStatus === false ? 'false' : ($otpStatus === true ? 'true' : 'null')), 'trace', __FILE__, __LINE__, 'otplogs');
+			app_log("Current URI: " . $_SERVER['REQUEST_URI'], 'trace', __FILE__, __LINE__, 'otplogs');
 			
 			if ($configuration->getValueBool("use_otp") && isset($this->customer->id) && $this->customer->requiresOTP() && $this->customer->id > 0 && $this->getOTPVerified() === false) {
 				// If OTP is required and not verified, redirect to OTP page
 				// But don't redirect if we're already on the OTP page to prevent loops
 				if (!preg_match('/\/_register\/otp/', $_SERVER['REQUEST_URI'])) {
-					app_log("Customer logged in but OTP not verified, redirecting to OTP page",'debug',__FILE__,__LINE__, 'otplogs');
+					app_log("Customer logged in but OTP not verified, redirecting to OTP page",'trace',__FILE__,__LINE__, 'otplogs');
 					header("Location: /_register/otp?target=".urlencode($_SERVER['REQUEST_URI']));
 					exit;
 				} else {
-					app_log("Already on OTP page, not redirecting to prevent loop",'debug',__FILE__,__LINE__, 'otplogs');
+					app_log("Already on OTP page, not redirecting to prevent loop",'trace',__FILE__,__LINE__, 'otplogs');
 				}
 			}
 			if (isset($this->customer->id) && $this->customer->id > 0) {
-				app_log("User Authentication Confirmed", 'debug', __FILE__, __LINE__, 'otplogs');
+				app_log("User Authentication Confirmed", 'trace', __FILE__, __LINE__, 'otplogs');
 				return true;
 			} else {
-				app_log("User Not Yet Authenticated - no customer ID", 'debug', __FILE__, __LINE__, 'otplogs');
+				app_log("User Not Yet Authenticated - no customer ID", 'trace', __FILE__, __LINE__, 'otplogs');
 				return false;
 			}
 		}

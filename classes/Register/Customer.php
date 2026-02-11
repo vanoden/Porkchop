@@ -1208,7 +1208,7 @@
 		 */
 		public function requiresOTP(): bool {
 			
-			app_log("DEBUG: requiresOTP() called for customer ID: ".$this->id, 'debug', __FILE__, __LINE__);
+			app_log("requiresOTP() called for customer ID: ".$this->id, 'trace', __FILE__, __LINE__);
 
 			// If use_otp false, return false immediately
 			$configuration = new \Site\Configuration();

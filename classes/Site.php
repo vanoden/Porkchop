@@ -31,8 +31,11 @@
 					}
 					$class_version = $class->version();
 					$this->install_log("$module_name::Schema: version ".$class_version);
-					if (isset($module_data['schema']) && $module_data['schema'] != $class_version) {
-						$this->install_fail($module_name." Schema version ".$class_version." doesn't match required version ".$module_data['schema']);
+					if (isset($module_data['schema']) && $module_data['schema'] < $class_version) {
+						$this->install_fail($module_name." Schema version ".$class_version." greater than required version ".$module_data['schema'].". Please correct the module schema version.");
+					}
+					elseif (isset($module_data['schema']) && $module_data['schema'] > $class_version) {
+						$this->install_fail($module_name." Schema version ".$class_version." less than required version ".$module_data['schema'].". Please check for errors in schema upgrade.");
 					}
 				}
 
@@ -41,10 +44,9 @@
 				/********************************************/
 				if (!empty($module_data['privileges'])) {
 					foreach ($module_data['privileges'] as $privilege_name) {
-						$this->install_log("Adding privilege ".$privilege_name);
 						$privilege = new \Register\Privilege();
 						if ($privilege->get($privilege_name)) {
-							$this->install_log("Privilege $privilege_name already exists",'info');
+							$this->install_log("Privilege $privilege_name already exists",'trace');
 							$privilege->update(array('module' => $module_name));
 						}
 						else {
@@ -116,6 +118,7 @@
 		 * @param array $menus Array of menus to populate.
 		 */
 		public function populateMenus($menus = array()) {
+			$this->install_log("Populating Navigation Menus");
 			foreach ($menus as $code => $menu) {
 				$nav_menu = new \Site\Navigation\Menu();
 				if ($nav_menu->get($code)) {
@@ -129,58 +132,49 @@
 				}
 				foreach ($menu["items"] as $item) {
 					$nav_item = new \Site\Navigation\Item();
+					$parameters = array(
+						"view_order"	=> $item["view_order"],
+						"alt"			=> $item["alt"],
+						"description"	=> $item["description"]
+					);
+					if (!empty($item['target'])) {
+						$parameters['target'] = $item['target'];
+					}
+
 					if ($nav_item->getItem($nav_menu->id,$item["title"])) {
-						$nav_item->update(
-							array(
-								"view_order"	=> $item["view_order"],
-								"alt"			=> $item["alt"],
-								"description"	=> $item["description"],
-								"target"		=> $item["target"],
-							)
-						);
+						$nav_item->update($parameters);
 						$this->install_log("Menu Item ".$item["title"]." updated");
 					}
-					elseif (! $nav_item->error() && $nav_item->add(
-							array(
-								"menu_id"		=> $nav_menu->id,
-								"title"			=> $item["title"],
-								"target"		=> $item["target"],
-								"view_order"	=> $item["view_order"],
-								"alt"			=> $item["alt"],
-								"description"	=> $item["description"]
-							)
-						)) {
-							$this->install_log("Adding Menu Item ".$item["title"]);
+					elseif (! $nav_item->error()) {
+						$parameters['menu_id'] = $nav_menu->id;
+						$parameters['title'] = $item["title"];
+						$this->install_log("Adding Menu Item ".$item["title"]);
+						$nav_item->add($parameters); 
 					}
 					else {
 						$this->install_fail("Error adding menu item ".$item["title"].": ".$nav_item->error());
 					}
+
 					if (isset($item['items']) && is_array($item['items'])) {
 						foreach ($item['items'] as $subitem) {
 						$subnav_item = new \Site\Navigation\Item();
+						$parameters = array();
+						if (!empty($subitem['target'])) $parameters['target'] = $subitem['target'];
+						if (!empty($subitem['view_order'])) $parameters['view_order'] = $subitem['view_order'];
+						if (!empty($subitem['description'])) $parameters['description'] = $subitem['description'];
+						if (!empty($subitem['alt'])) $parameters['alt'] = $subitem['alt'];
+						if (!empty($subitem['require_role'])) $parameters['require_role'] = $subitem['require_role'];
+
 						if ($subnav_item->getItem($nav_menu->id,$subitem["title"],$nav_item)) {
-							$subnav_item->update(
-								array(
-									"view_order"	=> $subitem["view_order"],
-									"target"		=> $subitem["target"],
-									"alt"			=> $subitem["alt"],
-									"description"	=> $subitem["description"]
-								)
-							);
+							$subnav_item->update($parameters);
 							$this->install_log("Sub Menu Item ".$subitem["title"]." updated");
 						}
-						elseif (! $subnav_item->error() && $subnav_item->add(
-								array(
-									"menu_id"		=> $nav_menu->id,
-									"parent_id"		=> $nav_item->id,
-									"title"			=> $subitem["title"],
-									"target"		=> $subitem["target"],
-									"view_order"	=> $subitem["view_order"],
-									"alt"			=> $subitem["alt"],
-									"description"	=> $subitem["description"]
-								)
-							)) {
-								$this->install_log("Adding SubMenu Item ".$subitem["title"]);
+						elseif (! $subnav_item->error()) {
+							$this->install_log("Adding SubMenu Item ".$subitem["title"]);
+							$parameters['menu_id'] = $nav_menu->id;
+							$parameters['parent_id'] = $nav_item->id;
+							$parameters['title'] = $subitem["title"];
+							$subnav_item->add($parameters);
 						}
 						else {
 							$this->install_fail("Error adding menu item ".$subitem["title"].": ".$subnav_item->error());
@@ -241,7 +235,15 @@
 
 		public function install_log($message = '',$level = 'info') {
 			if (! $this->log_display($level)) return;
-			app_log($message,$level);
+			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[0] ?? null;
+			if (isset($caller['file']) && isset($caller['function'])) {
+				$file = str_replace(BASE,"",$caller['file']);
+				$line = $caller['line'];
+				$class = $caller['class'] ?? '';
+				$function = $caller['function'] ?? '';
+			}
+
+			app_log($message,$level,$file, $line, $class, $function);
 			if (false) {
 				print date('Y/m/d H:i:s');
 				print " [".getmypid()."]";
@@ -332,7 +334,6 @@
 		*/
 		public function findModuleName($name) {
 			$module_list = $this->module_list();
-			print_r($module_list->find(["name" => $name]));
 			foreach ($module_list->find(["name" => $name]) as $module) {
 				$module_path = MODULES."/".$module->name();
 				if (stripos($name,$module_path) === 0) {

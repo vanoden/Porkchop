@@ -61,7 +61,7 @@
 			$this->clearError();
 			$this->clearCache();
 
-			app_log("Updating privilege ".$this->id,'debug',__FILE__,__LINE__);
+			app_log("Updating privilege ".$this->id,'trace',__FILE__,__LINE__);
 			$database = new \Database\Service();
 
 			$update_object_query = "
@@ -93,7 +93,7 @@
 			}
 
 			if (count($audit_messages) == 0) {
-				app_log("No changes detected, skipping update",'debug',__FILE__,__LINE__);
+				app_log("No changes detected, skipping update",'trace',__FILE__,__LINE__);
 				return true;
 			}
 
@@ -110,6 +110,7 @@
 			}
 
 			// audit the update event
+			app_log("Updated privilege ".$this->id.": ".implode("; ", $audit_messages),'debug',__FILE__,__LINE__);
 			$this->recordAuditEvent($this->id, implode("; ", $audit_messages));
 
 			return $this->details();
@@ -193,7 +194,12 @@
 		 * @return null|array 
 		 */
 		public function peersWithLevel($required_level = \Register\PrivilegeLevel::CUSTOMER) {
-		
+			// Clear Errors
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
 			// Level column exists, use it
 			$get_object_query = "
 				SELECT	rur.user_id, MAX(rrp.level) as max_level
@@ -204,17 +210,17 @@
 				GROUP BY rur.user_id
 				HAVING max_level >= ?
 			";
-			
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id, $required_level));
+
+			$rs = $database->Execute($get_object_query,array($this->id, $required_level));
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
-			
+
 			$people = array();
 			while (list($id, $level) = $rs->FetchRow()) {
 				$person = new \Register\Person($id);
-				$person->privilege_level = $level;
+				//$person->privilege_level = $level;
 				array_push($people,$person);
 			}
 			return $people;

@@ -67,7 +67,7 @@
 			list($this->key,$this->value) = $rs->FetchRow();
 
 			if (empty($this->key)) {
-				app_log("No Record in DB, Checking Config Global");
+				app_log("No Record in DB for $key, Checking Config Global",'trace');
 				if (isset($GLOBALS['_config']->site->{$key})) {
 					$this->key = $key;
 					$this->value = $GLOBALS['_config']->site->{$key};

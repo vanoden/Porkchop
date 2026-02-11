@@ -287,15 +287,17 @@
 	}
 
 	# Application Logging (leave error_log for system errors)
-	function app_log($message, $level = 'debug', $path = null, $line = null) {
+	function app_log($message, $level = 'debug', $path = null, $line = null, $class = null, $function = null) {
 		if (! isset($path)) {
 			$trace = debug_backtrace();
 			$caller = $trace[0];
 			$path = $caller['file'];
 			$line = $caller['line'];
+			$class = isset($caller['class']) ? $caller['class'] : '';
+			$function = isset($caller['function']) ? $caller['function'] : '';
 		}
 
-		if (!empty($GLOBALS['logger'])) $GLOBALS['logger']->writeln($message,$level,$path,$line);
+		if (!empty($GLOBALS['logger'])) $GLOBALS['logger']->writeln($message,$level,$path,$line,$class,$function);
 	}
 	
 	function executeSQLByParams($query, $bindParams) {

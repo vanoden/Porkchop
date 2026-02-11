@@ -21,7 +21,7 @@
 			parent::__construct($parameters);
 		}
 
-		public function connect() {
+		public function connect(): bool {
 			if ($this->connected) return true;
 			try {
 				$this->fh = fopen($this->path,'a');
@@ -40,20 +40,20 @@
 			return true;
 		}
 
-		public function write($message,$level = 'debug',$file = null,$line = null) {
+		public function write($message,$level = 'debug',$file = null,$line = null, $module = null, $view = null): bool {
 			if (! $this->compares($level)) return 1;
 			list($file,$line) = $this->caller($file,$line);
 
-			fwrite($this->fh,$this->formatted($message,$level,$file,$line));
+			fwrite($this->fh,$this->formatted($message,$level,$file,$line,$module,$view)."\n");
 			return 1;
 		}
 
-		public function writeln($message,$level = 'debug',$file = null,$line = null) {
+		public function writeln($message,$level = 'debug',$file = null,$line = null, $module = null, $view = null): void {
 			list($file,$line) = $this->caller($file,$line);
 			if (is_object($message)) {
 				app_log("Object send to Site::Logger::File::writeln(): ".print_r(debug_backtrace(),true),'warning');
 				$message = print_r($message,true);
 			}
-			$this->write($message,$level,$file,$line);
+			$this->write($message,$level,$file,$line,$module,$view);
 		}
 	}
