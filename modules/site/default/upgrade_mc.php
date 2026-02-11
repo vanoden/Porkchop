@@ -15,6 +15,10 @@
 				"page"	=> $admin_template,
 				"pages"	=> $admin_template,
 				"configurations"	=> $admin_template,
+				"counters"	=> $admin_template,
+				"headers"	=> $admin_template,
+				"terms_of_use"	=> $admin_template,
+				"audit_log"	=> $admin_template,
 				"send_customer_message" => $admin_template
 			),
 		),
@@ -59,7 +63,13 @@
 				"contact admin"	=> array(),
 			),
 		),
-		"Navigation"	=> array(),
+		"Navigation"	=> array(
+			"templates"	=> array(
+				"menus"	=> $admin_template,
+				"items"	=> $admin_template,
+				"item"	=> $admin_template
+			)
+		),
         "Storage"		=> array(
 			"roles"			=> array(
 			),
@@ -81,6 +91,46 @@
 				"edit"				=> $admin_template,
 			),
 		),
+		"Spectros"		=> array(
+			"templates"		=> array(
+				"outstanding_requests"	=> $admin_template,
+				"admin_products"		=> $admin_template,
+				"admin_product"			=> $admin_template,
+				"admin_credits"			=> $admin_template,
+				"cal_report"			=> $admin_template,
+				"transfer_ownership"	=> $admin_template,
+			),
+		),
+		"Engineering"	=> array(
+			"templates"		=> array(
+				"home"			=> $admin_template,
+				"tasks"			=> $admin_template,
+				"releases"		=> $admin_template,
+				"projects"		=> $admin_template,
+				"products"		=> $admin_template,
+				"event_report"	=> $admin_template,
+			),
+		),
+		"Support"		=> array(
+			"templates"		=> array(
+				"request_new"	=> $admin_template,
+				"requests"		=> $admin_template,
+				"request_items"	=> $admin_template,
+				"admin_actions"	=> $admin_template,
+				"admin_rmas"	=> $admin_template,
+				"summary"		=> $admin_template,
+			),
+		),
+		"Shipping"		=> array(
+			"templates"		=> array(
+				"admin_shipments"	=> $admin_template,
+			),
+		),
+		"Package"		=> array(
+			"templates"		=> array(
+				"packages"	=> $admin_template,
+			),
+		),
         "Email"			=> array(
 			"roles"			=> array(
 			),
@@ -92,6 +142,7 @@
 			"templates"		=> array(
 				"admin_assets"		=> $admin_template,
 				"admin_details"		=> $admin_template,
+				"admin_collections"	=> $admin_template,
 				"comm_dashboard"	=> $admin_template,
 				"sensor_models"		=> $admin_template,
 				"sensor_model"		=> $admin_template,

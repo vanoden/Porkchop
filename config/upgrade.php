@@ -129,7 +129,58 @@
 		),
 		"Search"		=> array(
 			"schema"	=> 3
-		)
+		),
+		"Spectros"		=> array(
+			"templates"	=> array(
+				"outstanding_requests"	=> $templates['admin'],
+				"admin_products"		=> $templates['admin'],
+				"admin_product"			=> $templates['admin'],
+				"admin_credits"			=> $templates['admin'],
+				"cal_report"			=> $templates['admin'],
+				"transfer_ownership"	=> $templates['admin'],
+			)
+		),
+		"Engineering"	=> array(
+			"templates"	=> array(
+				"home"			=> $templates['admin'],
+				"tasks"			=> $templates['admin'],
+				"task"			=> $templates['admin'],
+				"releases"		=> $templates['admin'],
+				"release"		=> $templates['admin'],
+				"projects"		=> $templates['admin'],
+				"project"		=> $templates['admin'],
+				"products"		=> $templates['admin'],
+				"product"		=> $templates['admin'],
+				"event_report"	=> $templates['admin'],
+				"search"		=> $templates['admin'],
+			)
+		),
+		"Support"		=> array(
+			"templates"	=> array(
+				"request_new"	=> $templates['admin'],
+				"requests"		=> $templates['admin'],
+				"request_detail"	=> $templates['admin'],
+				"request_items"	=> $templates['admin'],
+				"request_item"	=> $templates['admin'],
+				"action"		=> $templates['admin'],
+				"admin_actions"	=> $templates['admin'],
+				"summary"		=> $templates['admin'],
+				"admin_rmas"	=> $templates['admin'],
+				"admin_rma"		=> $templates['admin'],
+			)
+		),
+		"Monitor"		=> array(
+			"templates"	=> array(
+				"admin_assets"	=> $templates['admin'],
+				"admin_details"	=> $templates['admin'],
+				"admin_collections"	=> $templates['admin'],
+				"comm_dashboard"	=> $templates['admin'],
+				"sensor_models"	=> $templates['admin'],
+				"sensor_model"	=> $templates['admin'],
+				"dashboards"	=> $templates['admin'],
+				"admin_dashboard"	=> $templates['admin'],
+			)
+		),
 	);
 
 	// Additional modules
@@ -137,6 +188,9 @@
 	include(MODULES."/sales/default/_metadata.php");
 	include(MODULES."/network/default/_metadata.php");
 	include(MODULES."/storage/default/_metadata.php");
+	include(MODULES."/shipping/default/_metadata.php");
+	include(MODULES."/package/default/_metadata.php");
+	include(MODULES."/support/default/_metadata.php");
 
 	$menus = array();
 	
