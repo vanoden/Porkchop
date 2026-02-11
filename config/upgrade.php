@@ -128,7 +128,7 @@
 			"schema"	=> 3
 		),
 		"Search"		=> array(
-			"schema"	=> 2
+			"schema"	=> 3
 		)
 	);
 
