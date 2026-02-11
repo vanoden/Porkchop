@@ -1,4 +1,4 @@
 <?php
 	$modules["Search"]	= array(
-		"schema"	=> 1
+		"schema"	=> 2
 	);

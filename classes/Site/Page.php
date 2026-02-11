@@ -167,7 +167,7 @@
 			}
 		}
 
-		/** @method public requirePrivilege(privilege name, level)
+		/** @method public _requirePrivilege(privilege name, level)
 		 * Checks if the user has a specific privilege.
 		 * If not, redirects to the login page or permission denied page.
 		 * @param string $privilege The privilege to check for.
@@ -197,6 +197,45 @@
 			}
 		}
 
+		/** @method public requirePrivilegeOr(privilege, levels)
+		 * Checks if the user has at least one of a set of privileges.
+		 * If not, redirects to the login page or permission denied page.
+		 * @param string $privilege The privilege to check for.
+		 * @param array $levels An array of required privilege levels.
+		 * @return bool True if the user has at least one of the required privilege levels, otherwise redirects.
+		 */
+		public function requirePrivilegeOr($privilege, $levels = array()): true {
+			$this->requireAuth();
+			foreach ($levels as $level) {
+				if ($GLOBALS['_SESSION_']->customer->can($privilege, $level)) {
+					return true;
+				}
+			}
+			$counter = new \Site\Counter("permission_denied");
+			$counter->increment();
+			header('location: /_register/permission_denied' );
+			exit;
+		}
+
+		/** @method public requirePrivilegeAnd(array (privilege,level))
+		 * Checks if the user has all of a set of privileges.
+		 * If not, redirects to the login page or permission denied page.
+		 * @param array $privileges An array of arrays, each containing a privilege and required level.
+		 * @return bool True if the user has all of the required privileges, otherwise redirects.
+		 */
+		public function requirePrivilegeAnd($privileges = array()): true {
+			$this->requireAuth();
+			foreach ($privileges as $privilege) {
+				if (! $GLOBALS['_SESSION_']->customer->can($privilege[0], $privilege[1])) {
+					$counter = new \Site\Counter("permission_denied");
+					$counter->increment();
+					header('location: /_register/permission_denied' );
+					exit;
+				}
+			}
+			return true;
+		}
+
 		/** @method public requirePrivilegeLevel(privilege, required_level)
 		 * Checks if the user has a specific privilege with required level.
 		 * If not, redirects to the login page or permission denied page.
@@ -206,7 +245,7 @@
 		 */
 		public function requirePrivilegeLevel($privilege, $required_level = \Register\PrivilegeLevel::CUSTOMER) {
 			$this->requireAuth();
-			if ($GLOBALS['_SESSION_']->customer->can_level($privilege, $required_level)) {
+			if ($GLOBALS['_SESSION_']->customer->can($privilege, $required_level)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
 				return true;

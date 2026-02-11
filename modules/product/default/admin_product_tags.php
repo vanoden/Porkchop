@@ -11,6 +11,15 @@
     document.getElementById('removeSearchTagId').value = id;
     document.getElementById('adminProductTagsForm').submit();
   }
+
+  // When adding a tag with empty category, pass product_tag from the UI
+  document.getElementById('adminProductTagsForm').addEventListener('submit', function(ev) {
+    var catInput = document.getElementById('newSearchTagCategory');
+    var tagInput = document.getElementById('newSearchTag');
+    if (tagInput && tagInput.value && catInput && !catInput.value.trim()) {
+      catInput.value = 'product_tag';
+    }
+  });
 </script>
 
 <?= $page->showAdminPageInfo() ?>
@@ -56,17 +65,19 @@
 		<div class="tableCell tableCell-width-33">&nbsp;</div>
 	</div>
 <?php
-	foreach ($productSearchTags as $searchTag) {
+	foreach ($productSearchTags as $row) {
+		$searchTag = $row->searchTag;
+		$xrefId = $row->xrefId;
 ?>
 	<div class="tableRow">
 		<div class="tableCell">
-			<?= $searchTag->category ?>
+			<?= htmlspecialchars($searchTag->category ?: 'product_tag') ?>
 		</div>
 		<div class="tableCell">
-			<?= $searchTag->value ?>
+			<?= htmlspecialchars($searchTag->value) ?>
 		</div>
 		<div class="tableCell">
-			<img src="/img/icons/icon_tools_trash_active.svg" onclick="removeSearchTagById('<?= $searchTag->id ?>')" style="cursor: pointer; width: 20px; height: 20px;" alt="Remove" title="Remove" />
+			<img src="/img/icons/icon_tools_trash_active.svg" onclick="removeSearchTagById('<?= (int)$xrefId ?>')" style="cursor: pointer; width: 20px; height: 20px;" alt="Remove" title="Remove" />
 		</div>
 	</div>
 

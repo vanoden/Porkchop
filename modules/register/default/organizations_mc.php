@@ -7,7 +7,7 @@
 	###################################################
 	$porkchop = new \Porkchop();
 	$page = $porkchop->site()->page();
-	$page->requirePrivilege('manage customers',\Register\PrivilegeLevel::DISTRIBUTOR);
+	$page->requirePrivilegeOR('manage customers',[\Register\PrivilegeLevel::ADMINISTRATOR,\Register\PrivilegeLevel::ORGANIZATION_MANAGER]);
 
 	# Configure Pagination
     $pagination = new \Site\Page\Pagination();

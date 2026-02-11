@@ -80,59 +80,38 @@
 
 	$page->title = "Edit Site Content Block";
 
-	// add tag to Content Message
+	// add tag to Content Message (using BaseModel unified tag system)
 	if (!empty($_REQUEST['newSearchTag']) && empty($_REQUEST['removeSearchTag'])) {
-		$searchTag = new \Site\SearchTag();
-		$searchTagList = new \Site\SearchTagList();
-		$searchTagXref = new \Site\SearchTagXref();
-
-		if (!empty($_REQUEST['newSearchTag']) && !empty($_REQUEST['newSearchTagCategory']) && $searchTag->validName($_REQUEST['newSearchTag']) && $searchTag->validName($_REQUEST['newSearchTagCategory'])) {
-
-			// Check if the tag already exists (by both category and value)
-			$existingTag = $searchTagList->find(array('class' => 'Content::Message', 'category' => $_REQUEST['newSearchTagCategory'], 'value' => $_REQUEST['newSearchTag']));
-
-			if (empty($existingTag)) {
-
-				// Create a new tag
-				$searchTag->add(array('class' => 'Content::Message', 'category' => $_REQUEST['newSearchTagCategory'], 'value' => $_REQUEST['newSearchTag']));
-				if ($searchTag->error()) {
-					$page->addError("Error adding Content Message search tag");
-				}
-				else {
-					// Create a new cross-reference
-					$searchTagXref->add(array('tag_id' => $searchTag->id, 'object_id' => $message->id));
-					if ($searchTagXref->error()) {
-						$page->addError("Error adding Content Message tag cross-reference: " . $searchTagXref->error());
-					}
-					else {
-						$page->appendSuccess("Content Message Search Tag added Successfully");
-					}
-				}
+		if (!empty($_REQUEST['newSearchTag']) && !empty($_REQUEST['newSearchTagCategory']) && 
+			$message->validTagValue($_REQUEST['newSearchTag']) && 
+			$message->validTagCategory($_REQUEST['newSearchTagCategory'])) {
+			
+			if ($message->addTag($_REQUEST['newSearchTag'], $_REQUEST['newSearchTagCategory'])) {
+				$page->appendSuccess("Content Message Search Tag added Successfully");
+			} else {
+				$page->addError("Error adding Content Message search tag: " . $message->error());
 			}
-			else {
-				// Create a new cross-reference with the existing tag
-				$searchTagXref->add(array('tag_id' => $existingTag[0]->id, 'object_id' => $message->id));
-				if ($searchTagXref->error()) {
-					$page->addError("Error adding Content Message tag cross-reference: " . $searchTagXref->error());
-				}
-				else {
-					$page->appendSuccess("Content Message Search Tag added Successfully");
-				}
-			}
-		}
-		else {
+		} else {
 			$page->addError("Value for Content Message Tag and Category are required");
 		}
 	}
 
-	// remove tag from Content Message
+	// remove tag from Content Message (using BaseModel unified tag system)
 	if (!empty($_REQUEST['removeSearchTagId'])) {
-		$searchTagXrefItem = new \Site\SearchTagXref();
-		$searchTagXrefItem->deleteTagForObject($_REQUEST['removeSearchTagId'], "Content::Message", $message->id);
-		$page->appendSuccess("Content Message Search Tag removed Successfully");
+		$searchTagXrefItem = new \Site\SearchTagXref($_REQUEST['removeSearchTagId']);
+		if ($searchTagXrefItem->id) {
+			$searchTag = new \Site\SearchTag($searchTagXrefItem->tag_id);
+			if ($searchTag->id && $searchTag->class === 'Content::Message') {
+				if ($message->removeTag($searchTag->value, $searchTag->category)) {
+					$page->appendSuccess("Content Message Search Tag removed Successfully");
+				} else {
+					$page->addError("Error removing Content Message search tag: " . $message->error());
+				}
+			}
+		}
 	}
 
-	// get tags for Content Message
+	// get tags for Content Message (using BaseModel unified tag system)
 	$searchTagXref = new \Site\SearchTagXrefList();
 	$searchTagXrefs = $searchTagXref->find(array("object_id" => $message->id, "class" => "Content::Message"));
 
@@ -140,7 +119,7 @@
 	foreach ($searchTagXrefs as $searchTagXrefItem) {
 		$searchTag = new \Site\SearchTag();
 		$searchTag->load($searchTagXrefItem->tag_id);
-		$registerCustomerSearchTags[] = $searchTag;
+		$registerCustomerSearchTags[] = (object) array('searchTag' => $searchTag, 'xrefId' => $searchTagXrefItem->id);
 	}
 
 	// get unique categories and tags for autocomplete

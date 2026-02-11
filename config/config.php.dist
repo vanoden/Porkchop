@@ -15,7 +15,11 @@
         define ( 'APPLICATION_LOG_TYPE', 'file');
         define ( 'TEMPLATES', BASE.'/templates' );	
         define ( 'REPORTS',BASE.'/reports' );	
+        define ( 'SPECTROS_LOCATION_ID', 1);
+        define ( 'SPECTROS_VENDOR_ID', 0);
         define ( 'ENVIROMENT', 'QA'); // 'DEV' / 'QA' / 'PRODUCTION'
+        define ( 'QA_CAPTCHA_BYPASS', 'CHANGEME'); // Bypass key for automated testing
+        define ( 'USE_OTP', true); // enable OTP options for login
 
 	
         # Initialize config object
@@ -70,14 +74,14 @@
 
         # reCAPTCHA
         $_config->captcha = (object) array(
-                "public_key"    => 'CHANGME',
-                "private_key"   => 'CHANGME',
+                "public_key"    => 'CHANGEME',
+                "private_key"   => 'CHANGEME',
         );
 
         # Google Maps API
         $_config->google = (object) array(
                 "maps_api" => array(
-                        "key"   => "CHANGME"
+                        "key"   => "CHANGEME"
                 )
         );
 
@@ -86,6 +90,9 @@
         $_config->register->minimum_password_strength = 8;
         $_config->register->auth_target = '/_register/welcome';
         $_config->register->use_otp = USE_OTP;
+        $_config->register->requireCAPTCHA = (object) array(
+                "login" => true,  // Set to false to disable reCAPTCHA on login
+        );
 
         # Confirmation Email Info
         $_config->support = new stdClass();
@@ -96,7 +103,63 @@
         $_config->otp->uri = '';
         $_config->otp->label = 'CHANGEME';
 
-        # Email Template Configurations
+        $_config->register->contact_us_confirmation = (object) array(
+                "from"          => 'no-reply@CHANGEME',
+                "subject"       => 'Welcome to Spectros Instruments',
+                "channel"               => '',
+                "template"      => TEMPLATES."/contact_us_confirm.html"
+        );
+        $_config->register->contact_us_notification = (object) array(
+                "from"          => 'no-reply@CHANGEME',
+                "subject"       => 'Contact Form Submitted',
+                "channel"               => '',
+                "template"      => TEMPLATES."/contact_us_notify.html"
+        );
+        $_config->register->forgot_password = (object) array(
+                "from"          => 'no-reply@CHANGEME',
+                "subject"       => 'Spectros Account Management',
+                "channel"               => '',
+                "template"      => TEMPLATES."/forgot_password.html"
+        );
+        $_config->register->verify_email = (object) array(
+                "from"          => 'no-reply@CHANGEME',
+                "subject"       => 'Verify your Email',
+                "channel"               => '',
+                "template"      => TEMPLATES."/registration/verify_email.html"
+        );
+        $_config->register->registration_notification = (object) array(
+                "from"          => 'no-reply@CHANGEME',
+                "subject"       => '[REGISTER]New customer registration submitted',
+                "channel"       => '#support-testing',
+                "template"      => TEMPLATES."/registration/new_registration.slack"
+        );
+        $_config->register->account_activation_notification = (object) array(
+                "from"          => 'no-reply@CHANGEME',
+                "subject"       => 'Your account has been activated',
+                "channel"               => '',
+                "template"      => TEMPLATES."/registration/account_activated.html"
+        );
+        $_config->register->backup_codes = (object) array(
+                "template" => TEMPLATES . "/registration/backup_codes.html"
+        );
+        $_config->register->otp_recovery = (object) array(
+                "template" => TEMPLATES . "/registration/otp_recovery.html"
+        );
+        $_config->register->password_reset_notification = (object) array(
+                "from"          => 'no-reply@CHANGEME',
+                "subject"       => "Your Password Has Been Reset",
+                "template"      => TEMPLATES . "/registration/password_reset_notification.html"
+        );
+        $_config->register->otp_reset_notification = (object) array(
+                "from"          => 'no-reply@CHANGEME',
+                "subject"       => "Two-Factor Authentication Reset",
+                "template"      => TEMPLATES . "/registration/otp_reset_notification.html"
+        );
+        $_config->register->backup_code_used_notification = (object) array(
+                "from"          => 'no-reply@CHANGEME',
+                "subject"       => "Account Backup Code was used",
+                "template"      => TEMPLATES . "/registration/backup_code_used_notification.html"
+        );
         $_config->register->account_blocked_notification = (object) array(
                 "from"          => 'no-reply@CHANGEME',
                 "to"            => 'support@CHANGEME',
@@ -108,15 +171,113 @@
                 "subject"       => "Account Security Alert - Your Account Has Been Blocked",
                 "template"      => TEMPLATES . "/registration/account_blocked_user_notification.html"
         );
+        
+        $_config->engineering = new stdClass();
+        $_config->engineering->internal_notification = (object) array(
+                "from"          => 'no-reply@CHANGEME',
+                "subject"       => '',
+                "channel"               => '',
+                "template"      => TEMPLATES."/engineering/internal_notification.html"
+        );
+
+        $_config->support->return_notification = (object) array(
+                "from"          => 'no-reply@CHANGEME',
+                "subject"       => 'Return Materials Authorization',
+                "channel"               => '',
+                "template"  => TEMPLATES."/support/return_authorized.html"
+        );
+        $_config->support->unassigned_action = (object) array(
+            "from"      => 'no-reply@CHANGEME',
+            "subject"       => 'Unassigned support request created',
+            "channel"               => '',
+            "template"      => TEMPLATES."/support/unassigned_action.html"
+        );
+        $_config->support->admin_monitor_request = (object) array(
+            "from"      => 'no-reply@CHANGEME',
+            "subject"   => '!generated by application!',
+                "channel"               => '#support-testing',
+                "template"      => TEMPLATES."/support/admin_monitor_request.slack"
+        );
+        $_config->support->admin_other_request = (object) array(
+            "from"      => 'no-reply@CHANGEME',
+            "subject"   => '!generated by application!',
+                "channel"               => '#support-testing',
+                "template"      => TEMPLATES."/support/admin_other_request.slack"
+        );
+        $_config->support->monitor_request = (object) array(
+            "from"      => 'no-reply@CHANGEME',
+            "subject"   => '!generated by application!',
+                "channel"               => '',
+                "template"      => TEMPLATES."/support/monitor_request.html"
+        );
+        $_config->support->other_request = (object) array(
+            "from"      => 'no-reply@CHANGEME',
+            "subject"   => '!generated by application!',
+                "channel"               => '',
+                "template"      => TEMPLATES."/support/other_request.html"
+        );
+        $_config->support->admin_notify = (object) array(
+            "from"      => 'no-reply@CHANGEME',
+            "subject"   => '!generated by application!',
+            "template"  => TEMPLATES."/support/admin_notify.html",
+        );
+        $_config->support->new_request_notification = (object) array(
+            "from"      => 'no-reply@CHANGEME',
+            "subject"   => '!generated by application!',
+            "template"  => TEMPLATES."/support/new_request_notification.html",
+            "channel"   => '#support-requests',
+        );
+        $_config->support->ticket_update_notification = (object) array(
+            "from"      =>'no-reply@CHANGEME',
+            "subject"   => '!generated by application!',
+                "channel"               => '',
+                "template"      => TEMPLATES."/support/ticket_update_notification.html"
+        );
+        $_config->support->ticket_event_notification = (object) array(
+            "from"      =>'no-reply@CHANGEME',
+            "subject"   => '!generated by application!',
+                "channel"               => '',
+                "template"      => TEMPLATES."/support/ticket_event_notification.html"
+        );
+
+        # Monitor Module Configurations
+        $_config->monitor = new stdClass();
+        $_config->monitor->collection_meta_keys = array(
+                "name","location","customer","commodity","fumigant","temperature","temp_units","concentration","conc_units"
+        );
+        $_config->monitor->default_sensor_product = 'generic';
+        $_config->monitor->default_dashboard = 'concept';
+
+        # Spectros Module Configs
+        $_config->spectros = new stdClass();
+        $_config->spectros->calibration_product = 'cal_ver_credits';
+
+        # Styles for Modules
+        $_config->style = array(
+                "action"        => "spectros",
+                "monitor"       => "spectros",
+                "contact"       => "spectros",
+                "event"         => "spectros"
+       );
+
+        # Sales Config
+        $_config->sales = new stdClass();
+        $_config->sales->default_currency = 'Dollar';
 
         # Site Auditing Setup
         $_config->auditing = new stdClass();
         $_config->auditing->auditedClasses =  array (
+                "Monitor\\Asset",
+                "Monitor\\Dashboard",
+                "Monitor\\SensorDefinition",
                 "Product\\Item",
                 "Product\\Instance",
                 "Register\\Customer",
                 "Register\\Privilege",
                 "Register\\Role",
                 "Register\\Tag",
-                "Site\\Page"
+                "Sales\\Order",
+                "Sales\\Order\\Event",
+                "Site\\Page",
+                "Support\\Request\\Item"
         );

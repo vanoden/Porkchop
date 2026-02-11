@@ -56,17 +56,19 @@
 				<div class="tableCell tableCell-width-33">Search Tag</div>
 			</div>
 			<?php
-			foreach ($registerCustomerSearchTags as $searchTag) {
+			foreach ($registerCustomerSearchTags as $row) {
+				$searchTag = $row->searchTag;
+				$xrefId = $row->xrefId;
 			?>
 				<div class="tableRow">
 					<div class="tableCell">
-						<input type="button" onclick="removeSearchTagById('<?= $searchTag->id ?>')" name="removeSearchTag" value="Remove" class="button" /> 
+						<input type="button" onclick="removeSearchTagById('<?= (int)$xrefId ?>')" name="removeSearchTag" value="Remove" class="button" />
 					</div>
 					<div class="tableCell">
-						<?= $searchTag->category ?>
+						<?= htmlspecialchars($searchTag->category) ?>
 					</div>
 					<div class="tableCell">
-						<?= $searchTag->value ?>
+						<?= htmlspecialchars($searchTag->value) ?>
 					</div>
 				</div>
 			<?php
