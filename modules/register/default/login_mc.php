@@ -15,13 +15,19 @@
 	// Set CAPTCHA public key for template use
 	if (isset($GLOBALS['_config']->captcha->public_key)) $captcha_public_key = $GLOBALS['_config']->captcha->public_key;
 	else app_log("CAPTCHA Not Configured",'warn');
+
+	// reCAPTCHA configurable on/off for login
+	$rc = $GLOBALS['_config']->register->requireCAPTCHA ?? null;
+	$require_captcha_login = ($rc && isset($rc->login)) ? $rc->login : true;
 	
     // Check Risk Level from Host
 	$CAPTCHA_GO = false;
-	$remote_host = new \Network\Host();
-	if ($remote_host->getByIPAddress($GLOBALS['_REQUEST_']->client_ip ?? '')) {
-		if ($remote_host->CAPTCHARequired()) {
-			$CAPTCHA_GO = true;
+	if ($require_captcha_login) {
+		$remote_host = new \Network\Host();
+		if ($remote_host->getByIPAddress($GLOBALS['_REQUEST_']->client_ip ?? '')) {
+			if ($remote_host->CAPTCHARequired()) {
+				$CAPTCHA_GO = true;
+			}
 		}
 	}
 
@@ -130,7 +136,7 @@
 					elseif (!empty($GLOBALS['_config']->captcha->bypass_key) && !empty($_REQUEST['captcha_bypass_key']) && $GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key']) {
 						//Don't require catcha
 					}
-					elseif ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3) {
+					elseif ($require_captcha_login && ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3)) {
 						$CAPTCHA_GO = true;
 						if (!isset($_REQUEST['g-recaptcha-response'])) {
 							// CAPTCHA Required but not done
@@ -156,7 +162,7 @@
 						$counter = new \Site\Counter("auth_failed");
 						$counter->increment();
 						$page->addError("Authentication Failed");
-						if ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3) $CAPTCHA_GO = true;
+						if ($require_captcha_login && ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3)) $CAPTCHA_GO = true;
 					}
 					elseif ($customer->error()) {
 						app_log("Error in authentication: ".$customer->error(),'error',__FILE__,__LINE__);
