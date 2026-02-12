@@ -7,7 +7,7 @@
 		protected $namespacePrefix;
 
 		public function findAdvanced($parameters = [], $advanced = [], $controls = []): array {
-			$dir = new DirectoryIterator(CLASS_PATH . $this->directoryPath);
+			$dir = new DirectoryIterator(CLASS_PATH."/".$this->directoryPath);
 
 			$classes = [];
 			foreach ($dir as $fileinfo) {
