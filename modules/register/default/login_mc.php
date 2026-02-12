@@ -74,6 +74,13 @@
 
 	if (! preg_match('/^\//',$target)) $target = '/'.$target;
 
+	// Reject targets that point to login - prevents redirect loop when target=/_register/login?target=...
+	$target_stripped = preg_replace('/\?.*$/', '', $target);
+	if (preg_match('#^/_register/login/?$#', $target_stripped)) {
+		$target = '';
+		app_log("Rejected login-as-target to break redirect loop", 'notice');
+	}
+
 	if (($GLOBALS['_SESSION_']->customer_id) and ($target != '/'))	{
 		app_log("Redirecting ".$GLOBALS['_SESSION_']->customer->code." to ".PATH.$target,'notice',__FILE__,__LINE__);
 		header("Location: ".PATH.$target);
