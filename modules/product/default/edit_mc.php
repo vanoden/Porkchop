@@ -302,8 +302,15 @@ if ($imagelist->error() || !is_array($tables)) {
 	$tables = array();
 }
 
-// Monitor module not in FumeConnect; no dashboard list
-$dashboards = array();
+if (defined('MODULES') && is_dir(MODULES . '/Monitor')) {
+	$dashboardlist = new \Monitor\DashboardList();
+	$dashboards = $dashboardlist->find();
+	if ($dashboardlist->error() || !is_array($dashboards)) {
+		$dashboards = array();
+	}
+} else {
+	$dashboards = array();
+}
 
 $prices = $item->prices();
 if (!is_array($prices)) {
