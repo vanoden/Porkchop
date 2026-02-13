@@ -91,6 +91,36 @@
 				"edit"				=> $admin_template,
 			),
 		),
+		"Spectros"		=> array(
+			"templates"		=> array(
+				"outstanding_requests"	=> $admin_template,
+				"admin_products"		=> $admin_template,
+				"admin_product"			=> $admin_template,
+				"admin_credits"			=> $admin_template,
+				"cal_report"			=> $admin_template,
+				"transfer_ownership"	=> $admin_template,
+			),
+		),
+		"Engineering"	=> array(
+			"templates"		=> array(
+				"home"			=> $admin_template,
+				"tasks"			=> $admin_template,
+				"releases"		=> $admin_template,
+				"projects"		=> $admin_template,
+				"products"		=> $admin_template,
+				"event_report"	=> $admin_template,
+			),
+		),
+		"Support"		=> array(
+			"templates"		=> array(
+				"request_new"	=> $admin_template,
+				"requests"		=> $admin_template,
+				"request_items"	=> $admin_template,
+				"admin_actions"	=> $admin_template,
+				"admin_rmas"	=> $admin_template,
+				"summary"		=> $admin_template,
+			),
+		),
 		"Shipping"		=> array(
 			"templates"		=> array(
 				"admin_shipments"	=> $admin_template,
@@ -105,6 +135,21 @@
 			"roles"			=> array(
 			),
 		),
+		"Monitor"		=> array(
+			"roles"			=> array(
+				"monitor asset"		=> array(),
+			),
+			"templates"		=> array(
+				"admin_assets"		=> $admin_template,
+				"admin_details"		=> $admin_template,
+				"admin_collections"	=> $admin_template,
+				"comm_dashboard"	=> $admin_template,
+				"sensor_models"		=> $admin_template,
+				"sensor_model"		=> $admin_template,
+				"dashboards"		=> $admin_template,
+				"admin_dashboard"	=> $admin_template
+			),
+		)
 	);
 
 	$menus = array(
@@ -123,6 +168,13 @@
 		"admin"	=> array(
 			"title"	=> "Admin Left Nav",
 			"items"	=> array(
+				array(
+				    "title"			=> "Overview",
+				    "target"		=> "/_spectros/outstanding_requests",
+				    "view_order"	=> 1,
+				    "alt"			=> "Outstanding Task Tickler",
+				    "description"	=> "Outstanding Task Tickler"
+			    ),				
 				array(
 					"title"			=> "Customer",
 					"view_order"	=> 10,
@@ -188,6 +240,107 @@
 					),
 				),
 				array(
+					"title"			=> "Engineering",
+					"target"		=> "/_engineering/home",
+					"view_order"	=> 50,
+					"alt"			=> "Engineering Module",
+					"description"	=> "Engineering Module",
+					"items"			=> array(
+						array (
+							"title"	=> "Home",
+							"target"	=> "/_engineering/home",
+							"view_order"	=> 1,
+							"alt"			=> "Engineering Home",
+							"description"	=> "Engineering Summary Page"
+						),
+						array (
+							"title"	=> "Tasks",
+							"target"	=> "/_engineering/tasks",
+							"view_order"	=> 10,
+							"alt"			=> "Task Management",
+							"description"	=> "Task Management"
+						),
+						array (
+							"title"	=> "Releases",
+							"target"	=> "/_engineering/releases",
+							"view_order"	=> 10,
+							"alt"			=> "Release Management",
+							"description"	=> "Release Management"
+						),
+						array (
+							"title"	=> "Projects",
+							"target"	=> "/_engineering/projects",
+							"view_order"	=> 10,
+							"alt"			=> "Project Management",
+							"description"	=> "Project Management"
+						),
+						array (
+							"title"	=> "Products",
+							"target"	=> "/_engineering/products",
+							"view_order"	=> 10,
+							"alt"			=> "Product Management",
+							"description"	=> "Product Management"
+						),
+						array (
+							"title"	=> "Report",
+							"target"	=> "/_engineering/event_report",
+							"view_order"	=> 70,
+							"alt"			=> "Event Report",
+							"description"	=> "Event Report"
+						)
+					)
+				),
+				array(
+					"title"			=> "Support",
+					"view_order"	=> 60,
+					"alt"			=> "Support Home",
+					"description"	=> "Support Home",
+					"items"			=> array(
+						array (
+							"title"	=> "New Request",
+							"target"	=> "/_support/request_new",
+							"view_order"	=> 10,
+							"alt"			=> "New Request",
+							"description"	=> "New Support Request"
+						),
+						array (
+							"title"	=> "Requests",
+							"target"	=> "/_support/requests",
+							"view_order"	=> 10,
+							"alt"			=> "Requests",
+							"description"	=> "Requests"
+						),
+						array (
+							"title"	=> "Tickets",
+							"target"	=> "/_support/request_items",
+							"view_order"	=> 30,
+							"alt"			=> "Support Tickets",
+							"description"	=> "Support Tickets"
+						),
+						array (
+							"title"	=> "Actions",
+							"target"	=> "/_support/admin_actions",
+							"view_order"	=> 40,
+							"alt"			=> "Support Actions",
+							"description"	=> "Support Actions"
+						),
+						array (
+							"title"	=> "RMAs",
+							"target"	=> "/_support/admin_rmas",
+							"view_order"	=> 90,
+							"alt"			=> "RMAs",
+							"description"	=> "RMAs"
+						),
+						array (
+							"title"	=> "Summary",
+							"target"	=> "/_support/summary",
+							"view_order"	=> 100,
+							"alt"			=> "Summary",
+							"description"	=> "Summary"
+						)
+					)
+				),
+				array(
 					"title"			=> "Storage",
 					"view_order"	=> 70,
 					"alt"			=> "Storage Management",
@@ -201,6 +354,13 @@
 							"description"	=> "Storage Repositories"
 						)
 					)
+				),
+				array(
+					"title"			=> "Dashboard",
+					"target"		=> "/_spectros/outstanding_requests",    
+					"view_order"	=> 50,
+					"alt"			=> "Personal Dashboard",
+					"description"	=> "Personal Dashboard"
 				),
 				array(
 					"title"			=> "Packages",
@@ -265,6 +425,13 @@
 							"description"	=> "Audit Log",
 							"required_role"	=> "administrator"
 						),
+						array (
+							"title"	=> "API Sessions",
+							"target"	=> "/_monitor/comm_dashboard",
+							"view_order"	=> 90,
+							"alt"			=> "Session Report",
+							"description"	=> "Session Report"
+						),					
 					)
 				)
 			)
@@ -436,23 +603,6 @@
 				}
 			}
 			}
-		}
-		// FumeConnect: remove admin menu items for modules that don't exist (engineering, support, spectros, monitor)
-		if ($code === 'admin') {
-			$menu_id = (int) $nav_menu->id;
-			$database = new \Database\Service();
-			$database->Execute("
-				DELETE FROM navigation_items
-				WHERE menu_id = $menu_id
-				AND (target LIKE '/_engineering%' OR target LIKE '/_support%'
-					OR target LIKE '/_spectros%' OR target LIKE '/_monitor%')
-			");
-			$database->Execute("
-				DELETE FROM navigation_items
-				WHERE menu_id = $menu_id AND parent_id = 0
-				AND title IN ('Overview', 'Dashboard', 'Support')
-			");
-			install_log("Removed obsolete admin menu items (engineering, support, spectros, monitor)", 'notice');
 		}
 	}
 	install_log("Upgrade completed successfully",'notice');
