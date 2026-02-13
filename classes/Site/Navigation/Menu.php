@@ -278,20 +278,41 @@ class Menu Extends \BaseModel {
 		}
 
 		/**
-		 * Whether this admin menu item should be hidden in FumeConnect (module not present).
-		 * @param object $item Navigation item with target, title
-		 * @param bool $isTopLevel
+		 * Extract module name from a navigation target URL (e.g. /_spectros/admin_products -> spectros)
+		 * @param string $target URL target
+		 * @return string|null Module name or null if not a module URL
+		 */
+		private function extractModuleFromTarget($target) {
+			if (empty($target) || !is_string($target)) return null;
+			if (preg_match('#^/_([a-zA-Z0-9_]+)#', $target, $m)) return $m[1];
+			return null;
+		}
+
+		/**
+		 * Check if a module exists in the codebase (directory exists under MODULES)
+		 * @param string $module Module name
 		 * @return bool
 		 */
-		private function isObsoleteAdminItem($item, $isTopLevel = false) {
-			$target = isset($item->target) ? $item->target : '';
-			if ($target !== '' && (strpos($target, '/_engineering') === 0 || strpos($target, '/_support') === 0
-				|| strpos($target, '/_spectros') === 0 || strpos($target, '/_monitor') === 0)) {
-				return true;
+		private function moduleExists($module) {
+			if (empty($module) || !defined('MODULES')) return false;
+			return is_dir(MODULES . '/' . $module);
+		}
+
+		/**
+		 * Whether this menu item should be shown (its target module exists in the codebase)
+		 * @param object $item Navigation item with target, item (children)
+		 * @return bool
+		 */
+		private function shouldShowMenuItem($item) {
+			$target = isset($item->target) ? trim($item->target) : '';
+			if ($target !== '') {
+				$module = $this->extractModuleFromTarget($target);
+				if ($module !== null) return $this->moduleExists($module);
 			}
-			if ($isTopLevel && isset($item->title)
-				&& in_array($item->title, array('Overview', 'Dashboard', 'Support'), true)) {
-				return true;
+			if (!empty($item->item) && is_array($item->item)) {
+				foreach ($item->item as $child) {
+					if ($this->shouldShowMenuItem($child)) return true;
+				}
 			}
 			return false;
 		}
@@ -337,23 +358,15 @@ class Menu Extends \BaseModel {
 				// Nav Container
 				$html .= '<nav id="' . $parameters['nav_id'] . '">' . "\n";
 				$items = $this->cascade();
-				// FumeConnect: hide admin menu items for modules that don't exist
 				if (!empty($parameters['code']) && $parameters['code'] === 'admin') {
-					$items = array_values(array_filter($items, function ($item) {
-						return !$this->isObsoleteAdminItem($item, true);
-					}));
+					$items = array_values(array_filter($items, array($this, 'shouldShowMenuItem')));
 					foreach ($items as $item) {
 						if (!empty($item->item)) {
-							$item->item = array_values(array_filter($item->item, function ($sub) {
-								return !$this->isObsoleteAdminItem($sub, false);
-							}));
+							$item->item = array_values(array_filter($item->item, array($this, 'shouldShowMenuItem')));
 						}
 					}
-					// Skip parents that have no children left after filtering
 					$items = array_values(array_filter($items, function ($item) {
-						if ($item->hasChildren() && (empty($item->item) || count($item->item) === 0)) {
-							return false;
-						}
+						if ($item->hasChildren() && (empty($item->item) || count($item->item) === 0)) return false;
 						return true;
 					}));
 				}
@@ -405,15 +418,18 @@ class Menu Extends \BaseModel {
 
 		/** @method public asHTMLV2($parameters = array())
 		 * Render navigation menu as HTML - Version 2
+		 * When $_config->site->nav_v2_enhanced is true: enhanced toggle markup, "Firstname (Logout)" when logged in, My Account before Login/Logout.
 		 * @param $parameters, array of parameters for rendering
 		 * @return string HTML of navigation menu
 		*/
 		public function asHTMLV2($parameters = array()) {
 			$items = $this->items();
 			$buffer = '';
+			$enhanced = !empty($GLOBALS['_config']->site->nav_v2_enhanced);
 
 			if (count($items)) {
-				$buffer = <<<END
+				if ($enhanced) {
+					$buffer = <<<END
 <ul>
 	<li class="nav-toggle">
 		<input type="checkbox" id="collapse" aria-label="Toggle menu" aria-haspopup="true" aria-expanded="false" />
@@ -421,6 +437,14 @@ class Menu Extends \BaseModel {
 	</li>
 
 END;
+				} else {
+					$buffer = <<<END
+<ul>
+	<input type="checkbox" id="collapse" aria-haspopup="true" />
+	<label for="collapse"></label>
+
+END;
+				}
 				foreach ($items as $item) {
 					if ($item->authentication_required && ! $GLOBALS['_SESSION_']->customer->id) {
 						continue;
@@ -450,15 +474,20 @@ END;
 								}
 							}
 							elseif ($matches[2] == 'logout') {
-								if ($GLOBALS['_SESSION_']->customer->id) {
-									$name = !empty($GLOBALS['_SESSION_']->customer->first_name)
-										? $GLOBALS['_SESSION_']->customer->first_name
-										: (!empty($GLOBALS['_SESSION_']->customer->login) ? $GLOBALS['_SESSION_']->customer->login : 'Account');
-									$item->title = htmlspecialchars($name) . ' (Logout)';
-									$item->target = '/_register/logout?redirect='.urlencode($this->getCurrentURL());
+								if ($enhanced) {
+									if ($GLOBALS['_SESSION_']->customer->id) {
+										$name = !empty($GLOBALS['_SESSION_']->customer->first_name)
+											? $GLOBALS['_SESSION_']->customer->first_name
+											: (!empty($GLOBALS['_SESSION_']->customer->login) ? $GLOBALS['_SESSION_']->customer->login : 'Account');
+										$item->title = htmlspecialchars($name) . ' (Logout)';
+										$item->target = '/_register/logout?redirect='.urlencode($this->getCurrentURL());
+									} else {
+										$item->title = 'Login';
+										$item->target = '/_register/login';
+									}
 								} else {
-									$item->title = 'Login';
-									$item->target = '/_register/login';
+									$item->title = 'Logout';
+									$item->target = '/_register/logout?redirect='.urlencode($this->getCurrentURL());
 								}
 							}
 							else {
@@ -473,23 +502,25 @@ END;
 							}
 						}
 					}
-					// Also handle literal "Logout" link: show "Firstname (Logout)" when logged in, "Login" when logged out
-					if (strpos($item->target, '/_register/logout') !== false || (stripos($item->title, 'logout') !== false && strpos($item->target, '_register') !== false)) {
-						if ($GLOBALS['_SESSION_']->customer->id) {
-							$name = !empty($GLOBALS['_SESSION_']->customer->first_name)
-								? $GLOBALS['_SESSION_']->customer->first_name
-								: (!empty($GLOBALS['_SESSION_']->customer->login) ? $GLOBALS['_SESSION_']->customer->login : 'Account');
-							$item->title = htmlspecialchars($name) . ' (Logout)';
-							$item->target = '/_register/logout?redirect=' . urlencode($this->getCurrentURL());
-						} else {
-							$item->title = 'Login';
-							$item->target = '/_register/login';
+					if ($enhanced) {
+						// Literal "Logout" link: show "Firstname (Logout)" when logged in, "Login" when logged out
+						if (strpos($item->target, '/_register/logout') !== false || (stripos($item->title, 'logout') !== false && strpos($item->target, '_register') !== false)) {
+							if ($GLOBALS['_SESSION_']->customer->id) {
+								$name = !empty($GLOBALS['_SESSION_']->customer->first_name)
+									? $GLOBALS['_SESSION_']->customer->first_name
+									: (!empty($GLOBALS['_SESSION_']->customer->login) ? $GLOBALS['_SESSION_']->customer->login : 'Account');
+								$item->title = htmlspecialchars($name) . ' (Logout)';
+								$item->target = '/_register/logout?redirect=' . urlencode($this->getCurrentURL());
+							} else {
+								$item->title = 'Login';
+								$item->target = '/_register/login';
+							}
 						}
-					}
-					// When mainNav and logged in, add My Account link before the Logout/Login item
-					$is_logout_login = (strpos($item->target, '/_register/logout') !== false || (stripos($item->title, 'logout') !== false && strpos($item->target, '_register') !== false) || $item->target === '/_register/login');
-					if (!empty($parameters['code']) && $parameters['code'] === 'mainNav' && $GLOBALS['_SESSION_']->customer->id && $is_logout_login) {
-						$buffer .= "\t<li><a href=\"/_register/account\">My Account</a></li>\n";
+						// When mainNav and logged in, add My Account link before the Logout/Login item
+						$is_logout_login = (strpos($item->target, '/_register/logout') !== false || (stripos($item->title, 'logout') !== false && strpos($item->target, '_register') !== false) || $item->target === '/_register/login');
+						if (!empty($parameters['code']) && $parameters['code'] === 'mainNav' && $GLOBALS['_SESSION_']->customer->id && $is_logout_login) {
+							$buffer .= "\t<li><a href=\"/_register/account\">My Account</a></li>\n";
+						}
 					}
 					if (empty($item->target)) $buffer .= "\t<li><button aria-expanded=\"false\" aria-controls=\"m".$item->id."\">".$item->title."</button>\n";
 					else $buffer .= "\t<li><a href=\"".$item->target."\">".$item->title."</a>\n";
