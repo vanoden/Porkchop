@@ -4,11 +4,11 @@
 	$page->requirePrivilege('manage products');
 
 	// Initialize validation objects
-	$item = new \Spectros\Product\Item();
+	$item = new \Product\Item();
 
 	// Validate item by ID
 	if ($item->validInteger($_REQUEST['id'] ?? null)) {
-		$item = new \Spectros\Product\Item($_REQUEST['id']);
+		$item = new \Product\Item($_REQUEST['id']);
 		if (!$item->id) {
 			$page->addError("Item not found");
 		}

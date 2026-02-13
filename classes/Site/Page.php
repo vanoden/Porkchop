@@ -706,6 +706,8 @@
 		 */
 		public function load_template() {
 			$this->loadSiteHeaders();
+			// Ensure HTML is always served so scripts and markup render (override any text/plain from DB headers)
+			header('Content-Type: text/html; charset=UTF-8');
 			if ($this->module() == 'static') {
 				return $this->parse(file_get_contents(HTML."/".$this->view));
 			}
@@ -930,6 +932,12 @@
 								$buffer .= $menu->asHTML($parameter);
 							}
 						}
+						else {
+							app_log('Navigation menu not found: ' . $parameter['code'], 'notice', __FILE__, __LINE__);
+							$nav_id = isset($parameter['nav_id']) ? $parameter['nav_id'] : 'left_nav';
+							$buffer .= '<nav id="' . $nav_id . '">';
+							$buffer .= '<p style="padding:1rem;color:var(--color-light-one);font-size:0.9rem;">Admin menu not loaded. Run <a href="/_site/upgrade" style="color:var(--color-light-four);">upgrade</a> to create the navigation menu.</p></nav>';
+						}
 					}
 					else {
 						app_log("navigation menu references without code");
@@ -1143,6 +1151,27 @@
 					}
 					else {
 						$buffer .= "\t\t<a href=\"/_register/login\" id=\"myAccountLoginLink\">Log In</a>\n\t\t<a href=\"/_register/new_customer\" id=\"myAccountRegisterLink\">Register</a>";
+					}
+				}
+				elseif ($property == "myAccountNavLink") {
+					if ($GLOBALS['_SESSION_']->customer->id) {
+						$buffer .= '<li><a href="/_register/account">My Account</a></li>';
+					}
+				}
+				elseif ($property == "adminNavLink") {
+					if ($GLOBALS['_SESSION_']->customer->id && $GLOBALS['_SESSION_']->customer->has_role('administrator')) {
+						$buffer .= '<li><a href="/admin_home">Administration</a></li>';
+					}
+				}
+				elseif ($property == "logoutNavLink") {
+					$redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : urlencode('/_register/new_customer/');
+					if ($GLOBALS['_SESSION_']->customer->id) {
+						$name = !empty($GLOBALS['_SESSION_']->customer->first_name)
+							? htmlspecialchars($GLOBALS['_SESSION_']->customer->first_name)
+							: (!empty($GLOBALS['_SESSION_']->customer->login) ? htmlspecialchars($GLOBALS['_SESSION_']->customer->login) : 'Account');
+						$buffer .= '<li><a href="/_register/logout?redirect=' . $redirect . '">' . $name . ' (Logout)</a></li>';
+					} else {
+						$buffer .= '<li><a href="/_register/login">Login</a></li>';
 					}
 				}
 				else {

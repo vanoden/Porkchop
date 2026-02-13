@@ -3,24 +3,24 @@ $page = new \Site\Page();
 $page->requirePrivilege('manage products');
 
 // Validation Class
-$validationClass = new \Spectros\Product\Item();
+$validationClass = new \Product\Item();
 
 // Validate item by code
 if ($validationClass->validCode($_REQUEST['code'] ?? null)) {
-    $item = new \Spectros\Product\Item();
+    $item = new \Product\Item();
     $item->get($_REQUEST['code']);
     if (!$item->id) $page->addError("Item not found");
 }
 // Validate item by query vars
 elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0]) && $validationClass->validCode($GLOBALS['_REQUEST_']->query_vars_array[0])) {
-    $item = new \Spectros\Product\Item();
+    $item = new \Product\Item();
     $item->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
     if (!$item->id) $page->addError("Item not found");
 }
 
 // Initialize $item variable if not already set or not a valid object
 if (!isset($item) || !is_object($item)) {
-    $item = new \Spectros\Product\Item();
+    $item = new \Product\Item();
 }
 
 $metadataKeys = $item->getInstanceMetadataKeys();
@@ -171,8 +171,8 @@ $documentlist = new \Media\DocumentList();
 $manuals = $documentlist->find();
 $imagelist = new \Media\ImageList();
 $tables = $imagelist->find();
-$dashboardlist = new \Monitor\DashboardList();
-$dashboards = $dashboardlist->find();
+// Monitor module not in FumeConnect; no dashboard list
+$dashboards = array();
 
 $page->setAdminMenuSection("Products");  // Keep Products section open
 $page->addBreadcrumb("Products", "/_spectros/admin_products");

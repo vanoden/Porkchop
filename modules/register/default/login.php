@@ -1,10 +1,5 @@
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-<script language="Javascript">
-	function loginSubmitEnter(e) {
-		var code = (e.keyCode ? e.keyCode : e.which);
-		if (code == 13) document.loginForm.submit();
-	}
-</script>
+<script type="text/javascript" src="/includes/register-login.js"></script>
 
 <?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">

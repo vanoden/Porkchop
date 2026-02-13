@@ -8,7 +8,7 @@
     </section>
 <?php    } else {    ?>
     <section class="vcard">
-        <img class="vcard-logo" src="/img/vcard/logo_spectros.png" alt="Spectros Instruments logo">
+        <img class="vcard-logo" src="/img/_global/logo_fumeconnect.svg" alt="FumeConnect logo">
         <img class="vcard-profile" src="<?= $profileImage['src'] ?>" alt="<?= $profileImage['alt'] ?>">
         <div>
           <h1><?= $customer->first_name . ' ' . $customer->last_name ?></h1>

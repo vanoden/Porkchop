@@ -623,8 +623,8 @@
 			// Default Label to Image Code if not given
 			if (! isset($_REQUEST['label']) || ! strlen($_REQUEST['label'])) $_REQUEST['label'] = $image->name;
 
-            // Force object_type to Spectros\Product\Item for consistency in object_images
-            $product->addImage($image->id, 'Spectros\\Product\\Item', isset($_REQUEST['label']) ? $_REQUEST['label'] : '');
+            // Force object_type to Product\Item for consistency in object_images
+            $product->addImage($image->id, 'Product\\Item', isset($_REQUEST['label']) ? $_REQUEST['label'] : '');
 			if ($product->error()) app_log("Error adding image: ".$product->error(),'error',__FILE__,__LINE__);
 
 			// Assemble and Deliver Response

@@ -8,30 +8,30 @@ $item_types = array("inventory", "unique", "group", "kit", "note");
 // Fetch Code from Query String if not Posted
 $new_item = false;
 if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
-	$item = new \Spectros\Product\Item($_REQUEST['id']);
+	$item = new \Product\Item($_REQUEST['id']);
 	if (!$item->id && !empty($_REQUEST['code'])) {
 		// If ID didn't work, try codeq
-		$item = new \Spectros\Product\Item();
+		$item = new \Product\Item();
 		if ($item->validCode($_REQUEST['code'])) {
 			$item->get($_REQUEST['code']);
 		}
 	}
 } elseif (!empty($_REQUEST['code'])) {
-	$item = new \Spectros\Product\Item();
+	$item = new \Product\Item();
 	if ($item->validCode($_REQUEST['code'])) {
 		$item->get($_REQUEST['code']);
 		if ($item->id) $new_item = false;
 		else $new_item = true;
 	} else $page->addError("Invalid product code");
 } elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {
-	$item = new \Spectros\Product\Item();
+	$item = new \Product\Item();
 	if ($item->validCode($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$item->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
 		if ($item->id) $new_item = false;
 		else $new_item = true;
 	} else $page->addError("Invalid product code");
 } else {
-	$item = new \Spectros\Product\Item();
+	$item = new \Product\Item();
 	$new_item = true;
 }
 
@@ -161,9 +161,9 @@ if (isset($_REQUEST['addTag']) && !isset($_REQUEST['removeTag'])) {
 
 	// Ensure item is loaded from POST data if not already loaded
 	if (empty($item->id) && !empty($_REQUEST['id']) && $_REQUEST['id'] > 0) {
-		$item = new \Spectros\Product\Item($_REQUEST['id']);
+		$item = new \Product\Item($_REQUEST['id']);
 	} elseif (empty($item->id) && !empty($_REQUEST['code'])) {
-		$item = new \Spectros\Product\Item();
+		$item = new \Product\Item();
 		if ($item->validCode($_REQUEST['code'])) {
 			$item->get($_REQUEST['code']);
 		}
@@ -285,7 +285,7 @@ if (isset($_REQUEST['code']) && empty($item->id)) {
 	$item->get($_REQUEST['code']);
 	if ($item->error()) $page->addError("Error loading item '" . $_REQUEST['code'] . "': " . $item->error());
 } elseif (isset($_REQUEST['id']) && $_REQUEST['id'] > 0 && empty($item->id)) {
-	$item = new \Spectros\Product\Item($_REQUEST['id']);
+	$item = new \Product\Item($_REQUEST['id']);
 	if ($item->error()) $page->addError("Error loading item ID '" . $_REQUEST['id'] . "': " . $item->error());
 }
 
@@ -302,11 +302,8 @@ if ($imagelist->error() || !is_array($tables)) {
 	$tables = array();
 }
 
-$dashboardlist = new \Monitor\DashboardList();
-$dashboards = $dashboardlist->find();
-if ($dashboardlist->error() || !is_array($dashboards)) {
-	$dashboards = array();
-}
+// Monitor module not in FumeConnect; no dashboard list
+$dashboards = array();
 
 $prices = $item->prices();
 if (!is_array($prices)) {

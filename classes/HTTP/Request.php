@@ -281,6 +281,10 @@
 					// 'Home' Page
 					$this->module = "content";
 					$this->view = "index";
+					// Use default_index from config if available
+					if (isset($GLOBALS['_config']->site->default_index)) {
+						$this->index = $GLOBALS['_config']->site->default_index;
+					}
 				}
 				elseif (! file_exists(HTML."/".$matches[1])) {
 					// No Matching Static File, CMS Request
@@ -314,7 +318,14 @@
 					$this->view = "index";
 					$this->index = $matches[2];
 				}
-				if (! isset($this->index)) $this->index = '';
+				// Only set to empty if index is not already set and we don't have a default_index
+				if (! isset($this->index)) {
+					if (isset($GLOBALS['_config']->site->default_index) && $this->view == "index") {
+						$this->index = $GLOBALS['_config']->site->default_index;
+					} else {
+						$this->index = '';
+					}
+				}
 			}
 			elseif ($this->module == "static") {
 				$this->query_vars = '';
