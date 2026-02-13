@@ -34,7 +34,7 @@
         $_config->site->default_template = "default.html";
         $_config->site->support_email = 'service@CHANGEME';
         $_config->site->debug = true; // Enable debug mode to see detailed error information
-        // $_config->site->nav_v2_enhanced = true; // Optional: enable enhanced nav (nav-toggle wrapper, "Firstname (Logout)", My Account before Login/Logout)
+        // $_config->site->nav_v2_enhanced = true; // Optional: enhanced nav (Menu: nav-toggle, "Firstname (Logout)", My Account). Page: menu-not-found fallback + register myAccountNavLink/adminNavLink/logoutNavLink)
 
         # Session Info
         $_config->session = new stdClass();

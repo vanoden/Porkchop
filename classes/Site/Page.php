@@ -972,7 +972,7 @@
 								$buffer .= $menu->asHTML($parameter);
 							}
 						}
-						else {
+						elseif (!empty($GLOBALS['_config']->site->nav_v2_enhanced)) {
 							app_log('Navigation menu not found: ' . $parameter['code'], 'notice', __FILE__, __LINE__);
 							$nav_id = isset($parameter['nav_id']) ? $parameter['nav_id'] : 'left_nav';
 							$buffer .= '<nav id="' . $nav_id . '">';
@@ -1193,17 +1193,17 @@
 						$buffer .= "\t\t<a href=\"/_register/login\" id=\"myAccountLoginLink\">Log In</a>\n\t\t<a href=\"/_register/new_customer\" id=\"myAccountRegisterLink\">Register</a>";
 					}
 				}
-				elseif ($property == "myAccountNavLink") {
+				elseif (!empty($GLOBALS['_config']->site->nav_v2_enhanced) && $property == "myAccountNavLink") {
 					if ($GLOBALS['_SESSION_']->customer->id) {
 						$buffer .= '<li><a href="/_register/account">My Account</a></li>';
 					}
 				}
-				elseif ($property == "adminNavLink") {
+				elseif (!empty($GLOBALS['_config']->site->nav_v2_enhanced) && $property == "adminNavLink") {
 					if ($GLOBALS['_SESSION_']->customer->id && $GLOBALS['_SESSION_']->customer->has_role('administrator')) {
 						$buffer .= '<li><a href="/admin_home">Administration</a></li>';
 					}
 				}
-				elseif ($property == "logoutNavLink") {
+				elseif (!empty($GLOBALS['_config']->site->nav_v2_enhanced) && $property == "logoutNavLink") {
 					$redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : urlencode('/_register/new_customer/');
 					if ($GLOBALS['_SESSION_']->customer->id) {
 						$name = !empty($GLOBALS['_SESSION_']->customer->first_name)
