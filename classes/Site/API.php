@@ -1143,6 +1143,89 @@
 			$response->print();
 		}
 
+		###################################################
+		### Terms of Use									###
+		###################################################
+		public function addTermsOfUse() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+			$this->requirePrivilege('manage terms of use');
+
+			$params = array(
+				'name' => $_REQUEST['name'] ?? '',
+				'description' => $_REQUEST['description'] ?? ''
+			);
+			if (!empty($_REQUEST['code'])) $params['code'] = $_REQUEST['code'];
+
+			$tou = new \Site\TermsOfUse();
+			if (!$tou->add($params)) $this->error($tou->error());
+
+			$response = new \APIResponse();
+			$response->addElement('terms_of_use',$tou);
+			$response->print();
+		}
+
+		public function addTermsOfUseVersion() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+			$this->requirePrivilege('manage terms of use');
+
+			$tou = new \Site\TermsOfUse();
+			if (!$tou->getByCode($_REQUEST['tou_code'])) $this->invalidRequest("Terms of use not found for code: ".$_REQUEST['tou_code']);
+
+			$version = $tou->addVersion(array('content' => $_REQUEST['content']));
+			if ($tou->error()) $this->error($tou->error());
+			if (!$version || !$version->id) $this->error("Failed to create version");
+
+			if (!empty($_REQUEST['status']) && $_REQUEST['status'] == 'PUBLISHED') {
+				if (!$version->publish()) $this->error($version->error());
+			}
+
+			$response = new \APIResponse();
+			$response->addElement('version',$version);
+			$response->print();
+		}
+
+		public function activateTermsOfUseVersion() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+			$this->requirePrivilege('manage terms of use');
+
+			$version = new \Site\TermsOfUseVersion($_REQUEST['version_id']);
+			if (!$version->id) $this->notFound("Version not found");
+			if (!$version->publish()) $this->error($version->error());
+
+			$response = new \APIResponse();
+			$response->addElement('version',$version);
+			$response->print();
+		}
+
+		public function cancelTermsOfUseVersion() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+			$this->requirePrivilege('manage terms of use');
+
+			$version = new \Site\TermsOfUseVersion($_REQUEST['version_id']);
+			if (!$version->id) $this->notFound("Version not found");
+			if (!$version->retract()) $this->error($version->error());
+
+			$response = new \APIResponse();
+			$response->addElement('version',$version);
+			$response->print();
+		}
+
+		public function findTermsOfUse() {
+			$this->requirePrivilege('manage terms of use');
+
+			$params = array();
+			if (!empty($_REQUEST['name'])) $params['name'] = $_REQUEST['name'];
+			if (!empty($_REQUEST['code'])) $params['code'] = $_REQUEST['code'];
+
+			$list = new \Site\TermsOfUseList();
+			$terms = $list->find($params);
+			if ($list->error()) $this->error($list->error());
+
+			$response = new \APIResponse();
+			$response->addElement('terms_of_use',$terms);
+			$response->print();
+		}
+
 		public function getUUID() {
 			$porkchop = new \Porkchop();
 			print $porkchop->uuid();
@@ -1830,7 +1913,6 @@
 					'parameters'	=> array(
 						'tou_code'	=> array('required' => true),
 						'status'	=> array(
-							'required' => true,
 							'options'	=> array (
 								'NEW','CANCELLED','PUBLISHED'
 							)
@@ -1861,6 +1943,15 @@
 							'required' => true,
 							'content-type'	=> 'int',
 						),
+					)
+				),
+				'findTermsOfUse' => array(
+					'description'	=> 'Find terms of use by name or code',
+					'authentication_required'	=> true,
+					'privilege_required'	=> 'manage terms of use',
+					'parameters'	=> array(
+						'name'	=> array(),
+						'code'	=> array(),
 					)
 				),
 				'timestamp' => array(
@@ -1942,7 +2033,13 @@
 				'getSiteStatus' => array(),
 				'getNodeHealth' => array(),
 				'getTOULatestVersion'	=> array(
-					'tou_id'	=> array('required')
+					'description'	=> 'Get the latest published version of a terms of use',
+					'parameters'	=> array(
+						'tou_id'	=> array(
+							'required' => true,
+							'content-type'	=> 'int',
+						),
+					)
 				),
 				'getSiteAuditEvents'	=> array(
 					'description'				=> 'Get events related to an object instance',

@@ -22,6 +22,9 @@
 		private $_errors = array();
 		private $_warnings = array();
 
+		private static array $_authExemptViews = ['login', 'forgot_password', 'register', 'email_verify', 'resend_verify', 'invoice_login', 'thank_you'];
+		private static array $_touExemptViews = ['terms_of_use_form', 'terms_of_use_declined'];
+
 		/** @constructor */
 		public function __construct() {
 			$this->_tableName = "page_pages";
@@ -85,6 +88,26 @@
 			if (isset ( $GLOBALS ['_config']->style [$this->module()] )) $this->style = $GLOBALS['_config']->style[$this->module()];
 		}
 
+		/** @method private isAuthExemptRequest()
+		 * Returns true if the current request is on a page exempt from auth redirect (login, register, etc.).
+		 * Prevents users from getting stuck in redirect loops.
+		 */
+		private function isAuthExemptRequest(): bool {
+			if (!isset($GLOBALS['_REQUEST_'])) return false;
+			return $GLOBALS['_REQUEST_']->module == 'register'
+				&& in_array($GLOBALS['_REQUEST_']->view ?? '', self::$_authExemptViews);
+		}
+
+		/** @method private isToUExemptRequest()
+		 * Returns true if the current request is on the ToU acceptance flow (form or declined).
+		 * Any authenticated user must be able to reach these pages without privilege checks.
+		 */
+		private function isToUExemptRequest(): bool {
+			if (!isset($GLOBALS['_REQUEST_'])) return false;
+			return $GLOBALS['_REQUEST_']->module == 'site'
+				&& in_array($GLOBALS['_REQUEST_']->view ?? '', self::$_touExemptViews);
+		}
+
 		/** @method private buildTargetURL()
 		 * Builds the target URL from the parsed request to preserve path segments (like RMA codes).
 		 * This ensures that URL path parameters are not lost during authentication redirects.
@@ -107,6 +130,7 @@
 		 * Check if the user is authenticated.  If not, redirect to the login page.
 		 */
 		public function requireAuth(): bool {
+			if ($this->isAuthExemptRequest()) return true;
 			if ($this->module == 'register' && $this->view == 'login') return true;
 			if (! $GLOBALS['_SESSION_']->authenticated()) {
 				$counter = new \Site\Counter("auth_redirect");
@@ -145,6 +169,7 @@
 		 */
 		public function requireRole($role) {
 			$this->requireAuth();
+			if ($this->isToUExemptRequest()) return true;
 			if ($this->module == 'register' && $this->view == 'login') {
 				// Do Nothing, we're Here
 			}
@@ -176,6 +201,7 @@
 		 */
 		public function requirePrivilege($privilege, $level = \Register\PrivilegeLevel::ADMINISTRATOR) {
 			$this->requireAuth();
+			if ($this->isToUExemptRequest()) return true;
 			if ($GLOBALS['_SESSION_']->customer->can($privilege, $level)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
@@ -206,6 +232,7 @@
 		 */
 		public function requirePrivilegeOr($privilege, $levels = array()): true {
 			$this->requireAuth();
+			if ($this->isToUExemptRequest()) return true;
 			foreach ($levels as $level) {
 				if ($GLOBALS['_SESSION_']->customer->can($privilege, $level)) {
 					return true;
@@ -225,6 +252,7 @@
 		 */
 		public function requirePrivilegeAnd($privileges = array()): true {
 			$this->requireAuth();
+			if ($this->isToUExemptRequest()) return true;
 			foreach ($privileges as $privilege) {
 				if (! $GLOBALS['_SESSION_']->customer->can($privilege[0], $privilege[1])) {
 					$counter = new \Site\Counter("permission_denied");
@@ -245,6 +273,7 @@
 		 */
 		public function requirePrivilegeLevel($privilege, $required_level = \Register\PrivilegeLevel::CUSTOMER) {
 			$this->requireAuth();
+			if ($this->isToUExemptRequest()) return true;
 			if ($GLOBALS['_SESSION_']->customer->can($privilege, $required_level)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
@@ -282,9 +311,12 @@
 		/** @method public confirmTOUAcceptance()
 		 * Checks if the user has accepted the Terms of Use (TOU).
 		 * If not, redirects to the TOU acceptance form.
+		 * Only runs for authenticated users - must login first, then accept ToU.
 		 * @return bool True if the user has accepted the TOU, otherwise redirects.
 		 */
 		public function confirmTOUAcceptance() {
+			// Must login first; ToU form requires auth - skip check for unauthenticated users
+			if (! $GLOBALS['_SESSION_']->authenticated()) return true;
 			if ($this->tou_id > 0) {
 				$tou = $this->tou();
 				$latest_version = $tou->latestVersion();
@@ -313,9 +345,17 @@
 		public function getPage($module, $view, $index = null) {
 			$this->clearError();
 
-			$database = new \Database\Service();
-
+			// Set requested module/view immediately so requireAuth sees correct page even when lookup/add fails
+			if (!empty($module) && $this->validModule($module)) {
+				$this->module = $module;
+				if (!empty($view) && $this->validView($view)) {
+					$this->view = $view;
+				}
+			}
 			if (empty($index) || strlen($index) < 1) $index = null;
+			elseif ($this->validIndex($index)) $this->index = $index;
+
+			$database = new \Database\Service();
 
 			// Prepare Query
 			$get_object_query = "
@@ -626,8 +666,8 @@
 			}
 
 			// Make Sure Authentication Requirements are Met
-			if (($this->auth_required) and (! $GLOBALS ["_SESSION_"]->authenticated())) {
-				if (($this->module != "register") or (! in_array ( $this->view, array ('login', 'forgot_password', 'register', 'email_verify', 'resend_verify', 'invoice_login', 'thank_you' ) ))) {
+			if (($this->auth_required) and (! $GLOBALS ["_SESSION_"]->authenticated()) and (! $this->isAuthExemptRequest())) {
+				if (($this->module != "register") or (! in_array($this->view, self::$_authExemptViews))) {
 					// Clean Query Vars for this
 					$auth_query_vars = preg_replace ( "/\/$/", "", $GLOBALS['_REQUEST_']->query_vars );
 
@@ -1219,7 +1259,8 @@
 				if (role ( 'administrator' )) $buffer = "<div class=\"adminbar\" id=\"adminbar\" style=\"height:20px; width: 100%; position: absolute; top: 0px; left: 0px;\">Admin stuff goes here</div>\n";
 			}
 			else {
-				$buffer = $this->loadViewFiles($buffer);
+				// Use r7 object/property (e.g. site/terms_of_use) not $this - $this can be wrong from cache/prior state
+				$buffer = $this->loadViewFiles($buffer, $object, $property);
 			}
 			return $buffer;
 		}
@@ -1238,36 +1279,39 @@
 			}
 		}
 
-		/** @method public loadViewFiles(buffer)
+		/** @method public loadViewFiles(buffer, module_override, view_override)
 		 * Loads the view files for the current page, including both backend and frontend components.
 		 * It checks for the existence of specific view files based on the module, style, and view.
 		 * If the backend file exists, it is included first, followed by the frontend file.
-		 * The method captures the output into a buffer and returns it.
 		 * @param string $buffer The initial buffer content to append the view output to.
+		 * @param string|null $module_override Optional - use instead of $this->module() (e.g. from r7 object)
+		 * @param string|null $view_override Optional - use instead of $this->view (e.g. from r7 property)
 		 * @return string The combined output of the backend and frontend view files.
 		 */
-		public function loadViewFiles($buffer = "") {
+		public function loadViewFiles($buffer = "", $module_override = null, $view_override = null) {
 			ob_start ();
 			$be_file = null;
 			$fe_file = null;
+			$module = ($module_override !== null && $module_override !== '') ? $module_override : $this->module();
+			$view = ($view_override !== null && $view_override !== '') ? $view_override : $this->view;
 			
 			if (isset($this->style)) {
-				if (file_exists(MODULES.'/'.$this->module().'/'.$this->style.'/'.$this->view.'_mc.php'))
-					$be_file = MODULES.'/'.$this->module().'/'.$this->style.'/'.$this->view.'_mc.php';
-				elseif (file_exists(MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php'))
-					$be_file = MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php';
-				if (file_exists(MODULES . '/' . $this->module() . '/' . $this->style . '/' . $this->view . '.php'))
-					$fe_file = MODULES . '/' . $this->module() . '/' . $this->style . '/' . $this->view . '.php';
-				elseif (file_exists(MODULES . '/' . $this->module() . '/default/' . $this->view . '.php'))
-					$fe_file = MODULES . '/' . $this->module() . '/default/' . $this->view . '.php';
+				if (file_exists(MODULES.'/'.$module.'/'.$this->style.'/'.$view.'_mc.php'))
+					$be_file = MODULES.'/'.$module.'/'.$this->style.'/'.$view.'_mc.php';
+				elseif (file_exists(MODULES.'/'.$module.'/default/'.$view.'_mc.php'))
+					$be_file = MODULES.'/'.$module.'/default/'.$view.'_mc.php';
+				if (file_exists(MODULES . '/' . $module . '/' . $this->style . '/' . $view . '.php'))
+					$fe_file = MODULES . '/' . $module . '/' . $this->style . '/' . $view . '.php';
+				elseif (file_exists(MODULES . '/' . $module . '/default/' . $view . '.php'))
+					$fe_file = MODULES . '/' . $module . '/default/' . $view . '.php';
 			} else {
 				// If no style is set, check default directory
-				if (file_exists(MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php'))
-					$be_file = MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php';
-				if (file_exists(MODULES . '/' . $this->module() . '/default/' . $this->view . '.php'))
-					$fe_file = MODULES . '/' . $this->module() . '/default/' . $this->view . '.php';
+				if (file_exists(MODULES.'/'.$module.'/default/'.$view.'_mc.php'))
+					$be_file = MODULES.'/'.$module.'/default/'.$view.'_mc.php';
+				if (file_exists(MODULES . '/' . $module . '/default/' . $view . '.php'))
+					$fe_file = MODULES . '/' . $module . '/default/' . $view . '.php';
 			}
-			app_log ( "Loading view " . $this->view() . " of module " . $this->module(), 'debug', __FILE__, __LINE__ );
+			app_log ( "Loading view " . $view . " of module " . $module, 'debug', __FILE__, __LINE__ );
 			if (isset($be_file) && file_exists($be_file)) {
 				// Load Backend File
 				try {
@@ -1300,7 +1344,7 @@
 					return '<span class="label page_response_code">Resource not found</span>';
 				}
 			}
-			else app_log ( "Backend file for module " . $this->module() . " not found" );
+			else app_log ( "Backend file for module " . $module . " not found" );
 			if (isset($fe_file) && file_exists ( $fe_file )) {
 				try {
 					include ($fe_file);

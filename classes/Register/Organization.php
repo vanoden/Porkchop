@@ -15,10 +15,10 @@
 		public ?int $password_expiration_days = null;
 		public ?int $default_billing_location_id = null;
 		public ?int $default_shipping_location_id = null;
-	public string $website_url = "";
-	public ?int $time_based_password = 0;
-	public ?string $account_number = null;
-	private bool $_nocache = false;
+		public string $website_url = "";
+		public ?int $time_based_password = 0;
+		public ?string $account_number = null;
+		private bool $_nocache = false;
 
 		/** @constructor */
 		public function __construct($id = null,$options = array()) {
