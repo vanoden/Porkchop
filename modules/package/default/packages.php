@@ -1,5 +1,5 @@
-<div class="title">Packages</div>
-<a href="/_package/package">New Package</a>
+<?= $page->showAdminPageInfo() ?>
+<a class="button" href="/_package/package">New Package</a><br/><br/>
 <table class="body">
 <tr><th>Code</th>
 	<th>Name</th>
