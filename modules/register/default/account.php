@@ -234,10 +234,9 @@
 			</section>
 
 			<?php if ($customer->profile == "public") { ?>
-				<!-- Business Card Preview Link -->
+				<!-- Business Card Preview Button -->
 				<div class="register-account-margin">
-					<a href="/_register/businesscard?customer_id=<?= $customer->id ?>" class="button" target="_blank">Preview
-						Business Card</a>
+					<button type="button" class="button" onclick="window.open('/_register/businesscard?customer_id=<?= $customer->id ?>', '_blank')">Preview Business Card</button>
 				</div>
 			<?php } ?>
 

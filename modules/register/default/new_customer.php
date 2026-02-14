@@ -372,7 +372,9 @@
 
     <div id="registerSubmit" class="registerQuestion">
       <?php
-      if (!$captcha_ok) {
+      $rc = $GLOBALS['_config']->register->requireCAPTCHA ?? null;
+      $show_captcha_new_customer = ($rc && isset($rc->new_customer)) ? $rc->new_customer : true;
+      if (!$captcha_ok && $show_captcha_new_customer) {
       ?>
         <div class="register-new-customer-error-message">
           <?=$page->errorString()?>
@@ -380,7 +382,9 @@
       <?php    
       }
       ?>
+      <?php if ($show_captcha_new_customer) { ?>
       <div class="g-recaptcha" data-sitekey="<?=$GLOBALS['_config']->captcha->public_key?>"></div>
+      <?php } ?>
       <input type="submit" class="button" onclick="return submitForm();" value="Apply">
       <a class="button btn-secondary" href="/_register/login">Cancel</a>
     </div>

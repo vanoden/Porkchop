@@ -94,6 +94,7 @@
         $_config->register->requireCAPTCHA = (object) array(
                 "login" => true,  // Set to false to disable reCAPTCHA on login
                 "forgot_password" => true,  // Set to false to disable reCAPTCHA on forgot password
+                "new_customer" => true,  // Set to false to disable reCAPTCHA on new customer registration
         );
 
         # Confirmation Email Info

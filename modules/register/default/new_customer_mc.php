@@ -23,6 +23,10 @@
 			//Don't require catcha
 			$captcha_ok = true;
 		}
+		// Configurable: disable reCAPTCHA for new_customer (e.g. requireCAPTCHA->new_customer = false)
+		elseif (($rc = $GLOBALS['_config']->register->requireCAPTCHA ?? null) && isset($rc->new_customer) && $rc->new_customer === false) {
+			$captcha_ok = true;
+		}
 		// Check reCAPTCHA 2.0
 		else {
 			// CAPTCHA Required and Provided
