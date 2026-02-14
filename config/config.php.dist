@@ -93,6 +93,7 @@
         $_config->register->use_otp = USE_OTP;
         $_config->register->requireCAPTCHA = (object) array(
                 "login" => true,  // Set to false to disable reCAPTCHA on login
+                "forgot_password" => true,  // Set to false to disable reCAPTCHA on forgot password
         );
 
         # Confirmation Email Info

@@ -30,7 +30,12 @@
       <ul class="form-grid three-col copy_2">
 			  <li><label for="name">Your account email:</label><span class="value"><input id="autofocus" type="TEXT" name="email_address" SIZE="50" class="input"></span></li>
       </ul>
+      <?php
+      $rc = $GLOBALS['_config']->register->requireCAPTCHA ?? null;
+      $show_captcha_forgot = ($rc && isset($rc->forgot_password)) ? $rc->forgot_password : true;
+      if ($show_captcha_forgot) { ?>
       <div class="g-recaptcha register-forgot-password-recaptcha" data-sitekey="<?=$GLOBALS['_config']->captcha->public_key?>"></div>
+      <?php } ?>
       <div><input type="submit" name="btn_submit" value="Get Password" class="button"></div>
    </form>
 </section>

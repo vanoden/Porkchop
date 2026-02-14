@@ -26,4 +26,4 @@
 	$page->title = "Roles";
 	$page->setAdminMenuSection("Customer");  // Keep Customer section open
 	$page->addBreadcrumb("Customer");
-	$page->addBreadcrumb("Roles","/_register/roles");
+	$page->addBreadcrumb("Roles");  // current page, no link

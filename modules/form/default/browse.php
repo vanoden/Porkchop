@@ -1,6 +1,4 @@
-<?= $page->showBreadcrumbs(); ?>
-<?= $page->showTitle(); ?>
-<?= $page->showMessages(); ?>
+<?= $page->showAdminPageInfo(); ?>
 
 <a href="/_form/edit">Add New Form</a>
 <div class="table">

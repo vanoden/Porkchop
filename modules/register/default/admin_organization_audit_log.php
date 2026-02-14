@@ -2,14 +2,6 @@
 <?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
-<nav id="breadcrumb">
-	<ul>
-		<li><a href="/_register/organizations">Organizations</a></li>
-		<li><a href="/_register/admin_organization?organization_id=<?=$organization->id?>"><?=$organization->name?></a></li>
-		<li>Audit Log</li>
-	</ul>
-</nav>
-
 <?php $activeTab = 'audit'; ?>
 <?php
     // Show organization info container similar to product container

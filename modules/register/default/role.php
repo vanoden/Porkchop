@@ -1,45 +1,3 @@
-<style>
-  .role-column-cell {
-    text-align: center;
-    vertical-align: middle;
-  }
-
-  .bulk-buttons {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-  }
-
-  .bulk-buttons button {
-    font-size: 7px;
-    padding: 4px 8px;
-  }
-
-  /* Checkbox label styles */
-  .checkbox-label-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-  }
-
-  .checkbox-label-text {
-    margin-left: 4px;
-    font-size: 8px;
-  }
-  .small {
-    font-size: 8px;
-    min-width: 100px;
-  }
-
-  .unset-all {
-    background-color: #ff8c00;
-    color: white;
-  }
-</style>
-
-
 <script>
   // Toggle all checkboxes for a specific privilege level
   function setAllPrivilegeLevel(value) {
@@ -153,31 +111,36 @@
 <form method="post" action="/_register/role">
   <input type="hidden" name="name" value="<?= $role->name ?>" />
   <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
-  <div class="role-name-container">
-    <span class="label role-name-label">Role Name</span>
-    <?php if ($role->id) { ?>
-      <span class="value role-name-value"><?= $role->name ?></span>
-    <?php } else { ?>
-      <input class="role-name-input" type="text" name="name" value="" />
-    <?php } ?>
-  </div>
+  <input type="hidden" name="id" value="<?= $role->id ?>">
 
-  <div class="role-description-container">
-    <span class="label role-description-label">Description</span>
-    <input type="text" name="description" class="width-400px" value="<?= strip_tags($role->description) ?>" />
-    <input type="hidden" name="id" value="<?= $role->id ?>">
-  </div>
+  <section class="role-details-section" aria-labelledby="role-details-heading">
+    <h3 id="role-details-heading">Role details</h3>
 
-  <?php 
-  	$configuration = new \Site\Configuration();
-  	if ($configuration->getValueBool("use_otp")) { ?>
-    <div>
-      <label>Require Two-Factor Authentication</label>
-      <input type="checkbox" id="totpCB" name="time_based_password" value="1" <?php if (!empty($role->time_based_password))
-        echo "checked"; ?>>
-      <span class="note">If enabled, all users with this role will be required to use two-factor authentication</span>
+    <div class="role-name-container">
+      <span class="label role-name-label">Role name</span>
+      <?php if ($role->id) { ?>
+        <span class="value role-name-value"><?= htmlspecialchars($role->name) ?></span>
+      <?php } else { ?>
+        <input class="role-name-input" type="text" name="name" value="" required aria-required="true" />
+      <?php } ?>
     </div>
-  <?php } ?>
+
+    <div class="role-description-container">
+      <label class="label role-description-label" for="role-description">Description</label>
+      <input id="role-description" type="text" name="description" class="width-400px" value="<?= htmlspecialchars(strip_tags($role->description ?? '')) ?>" placeholder="e.g. Default Super User" aria-describedby="role-description-hint" />
+      <span id="role-description-hint" class="sr-only">Short description of what this role is for.</span>
+    </div>
+
+    <?php
+    $configuration = new \Site\Configuration();
+    if ($configuration->getValueBool("use_otp")) { ?>
+    <div class="role-twofactor-container">
+      <label for="totpCB" class="label">Require two-factor authentication</label>
+      <input type="checkbox" id="totpCB" name="time_based_password" value="1" <?= !empty($role->time_based_password) ? 'checked' : '' ?> aria-describedby="totp-note" />
+      <span id="totp-note" class="note">If enabled, all users with this role must use two-factor authentication when signing in.</span>
+    </div>
+    <?php } ?>
+  </section>
 
   <div id="rolePrivilegesContainer">
 

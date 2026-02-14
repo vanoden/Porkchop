@@ -1,6 +1,4 @@
-<?= $page->showTitle() ?>
-<?= $page->showBreadcrumbs() ?>
-<?= $page->showMessages() ?>
+<?= $page->showAdminPageInfo() ?>
 
 <?php
 	foreach ($weeks as $week) {

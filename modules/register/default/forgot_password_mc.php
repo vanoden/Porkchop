@@ -8,10 +8,16 @@
 	# Handle Actions
 	if (!empty($_REQUEST['email_address'])) {
 		$customer = new \Register\Customer();
-		// CAPTCHA Required and Provided
-		$reCAPTCHA = new \GoogleAPI\ReCAPTCHA();
-		if ($reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) {
-			app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
+		// reCAPTCHA configurable on/off for forgot_password
+		$rc = $GLOBALS['_config']->register->requireCAPTCHA ?? null;
+		$require_captcha_forgot = ($rc && isset($rc->forgot_password)) ? $rc->forgot_password : true;
+		$captcha_ok = true;
+		if ($require_captcha_forgot) {
+			$reCAPTCHA = new \GoogleAPI\ReCAPTCHA();
+			$captcha_ok = $reCAPTCHA->test($customer, $_REQUEST['g-recaptcha-response'] ?? '');
+			if ($captcha_ok) app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
+		}
+		if ($captcha_ok) {
 
 			if (!isset($_POST['csrfToken']) or !strlen($_POST['csrfToken'])) {
 				$page->addError("Invalid Request");

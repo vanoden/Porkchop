@@ -68,5 +68,6 @@
 	if ($privilegeList->error()) $page->addError($privilegeList->error());
 
 	$page->setAdminMenuSection("Customer");  // Keep Customer section open
+	$page->addBreadcrumb("Customer");
 	$page->addBreadcrumb("Roles", "/_register/roles");
 	$page->addBreadcrumb("Privileges");
