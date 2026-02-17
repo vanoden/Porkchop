@@ -11,12 +11,13 @@
 		public $zip_code;
 		public $notes;
 		public $country_id;
+		public $hidden;
 		public $province;
 		public $country;
 
 		public function __construct($id = 0,$parameters = array()) {		
 			$this->_tableName = 'register_locations';
-			$this->_addFields(array('id','name','address_1','address_2','city','province_id','zip_code', 'notes','country_id'));
+			$this->_addFields(array('id','name','address_1','address_2','city','province_id','zip_code', 'notes','country_id','hidden'));
 			parent::__construct($id);
 			if (isset($parameters['recursive']) && $parameters['recursive']) {
 				$this->province = new \Geography\Province($this->province_id);
@@ -248,6 +249,28 @@
             return true;
         }
         
+		/**
+		 * Check if this location has been used on any shipment (send or receive).
+		 * Locations used in shipments should not be edited to preserve history.
+		 *
+		 * @return bool
+		 */
+		public function usedInShipment(): bool {
+			if (!$this->id) {
+				return false;
+			}
+			$check_query = "
+				SELECT 1 FROM shipping_shipments
+				WHERE send_location_id = ? OR rec_location_id = ?
+				LIMIT 1
+			";
+			$rs = $GLOBALS['_database']->Execute($check_query, array($this->id, $this->id));
+			if (!$rs) {
+				return false;
+			}
+			return !$rs->EOF;
+		}
+
 		public function province() {
 			return new \Geography\Province($this->province_id);
 		}

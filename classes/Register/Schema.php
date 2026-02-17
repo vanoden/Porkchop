@@ -1631,6 +1631,23 @@
 			$database->CommitTrans();
 		}
 
+		if ($this->version() < 52) {
+			app_log("Upgrading schema to version 52", 'notice', __FILE__, __LINE__);
+
+			$table = new \Database\Schema\Table('register_locations');
+			if (!$table->has_column('hidden')) {
+				$alter_table_query = "
+					ALTER TABLE register_locations ADD COLUMN hidden TINYINT(1) NOT NULL DEFAULT 0
+				";
+				if (!$database->Execute($alter_table_query)) {
+					$this->SQLError("Error adding hidden column to register_locations: " . $database->ErrorMsg());
+					return false;
+				}
+			}
+
+			$this->setVersion(52);
+		}
+
 		return true;
 	}
 }
