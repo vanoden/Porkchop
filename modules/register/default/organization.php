@@ -98,7 +98,7 @@
         <?php	foreach ($members as $member) { ?>
 	        <div class="tableRow member_status_<?=strtolower($member->status)?>">
 		        <div class="tableCell">
-			        <a href="/_register/admin_account?customer_id=<?=$member->id?>"><?=$member->code?></a>
+			        <a href="/_register/account?customer_id=<?=$member->id?>"><?=$member->code?></a>
 		        </div>
 		        <div class="tableCell">
 			        <?=$member->first_name?>

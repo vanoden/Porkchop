@@ -61,10 +61,10 @@
 		}
   ?>
   <div class="tableRow">
-    <div class="tableCell"><label for="customer" class="display-none">Login</label><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->code?></a></div>
+    <div class="tableCell"><label for="customer" class="display-none">Login</label><a class="value<?=$greenbar?>" href="<?=PATH."/_register/account?customer_id=".$customer->id?>"><?=$customer->code?></a></div>
     <div class="tableCell"><label for="first" class="display-none">First Name</label><?=htmlspecialchars($customer->first_name)?></div>
     <div class="tableCell"><label for="last" class="display-none">Last Name</label><?=htmlspecialchars($customer->last_name)?></div>
-    <div class="tableCell"><label for="organization" class="display-none">Organization</label><a href="/_register/admin_organization?organization_id=<?=$organization_id?>"><?=$organization_name?></a></div>
+    <div class="tableCell"><label for="organization" class="display-none">Organization</label><a href="/_register/organization?organization_id=<?=$organization_id?>"><?=$organization_name?></a></div>
     <div class="tableCell"><label for="status" class="display-none">Status</label><?=htmlspecialchars($customer->status)?></div>
     <div class="tableCell"><label for="activity" class="display-none">Last Active</label><?=$customer->last_active()?></div>
   </div>
