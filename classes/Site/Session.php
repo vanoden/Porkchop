@@ -204,7 +204,7 @@ use Register\Customer;
 					$this->update($this->id,array("user_id" => $this->customer_id,"timezone" => $customer->timezone));
 
 					// Redirect to login target if provided
-					if ($_REQUEST['login_target']) {
+					if (! empty($_REQUEST['login_target'])) {
 						header("location: ".PATH.$_REQUEST['login_target']);
 						exit;
 					}
@@ -727,10 +727,14 @@ use Register\Customer;
 
 		/** @method update(parameters)
 		 * Update session details
-		 * @param array $parameters Key-value pairs of session attributes to update
+		 * @param array|int $id_or_parameters Session id (if two args) or key-value pairs of session attributes to update
+		 * @param array|null $parameters Optional; if provided, key-value pairs of session attributes to update
 		 * @return bool True if successful, false otherwise
 		 */
-		function update ($parameters = []): bool {
+		function update ($id_or_parameters = [], $parameters = null): bool {
+			// Support both update($params) and update($id, $params) for compatibility with callers that pass id first
+			$params = (func_num_args() >= 2 && is_array($parameters)) ? $parameters : (is_array($id_or_parameters) ? $id_or_parameters : []);
+
 			// Clear any existing errors
 			$this->clearError();
 
@@ -761,7 +765,7 @@ use Register\Customer;
 				UPDATE	session_sessions
 				SET		id = id";
 
-			foreach ($parameters as $parameter => $value) {
+			foreach ($params as $parameter => $value) {
 				if ($ok_params[$parameter]) {
 					$update_session_query .= ",
 						`$parameter` = ?";

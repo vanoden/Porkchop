@@ -783,8 +783,10 @@
 				$counter->increment();
 				$message = "Application Error";
 			}
-			if (!empty($this->template())) header("X-Template: ".$this->template());
-			if (!empty($this->module)) header("X-Module: ".$this->module());
+			if (! headers_sent()) {
+				if (!empty($this->template())) header("X-Template: ".$this->template());
+				if (!empty($this->module)) header("X-Module: ".$this->module());
+			}
 			return $message;
 		}
 
