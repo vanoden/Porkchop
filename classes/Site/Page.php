@@ -1500,6 +1500,16 @@
 			return "<div id='adminPageInfo'><div id='adminTitle'>".$this->showTitle()."\n".$this->showBreadcrumbs()."</div>".$this->showMessages()."</div>";
 		}
 
+		/** @method showSubHeading()
+		 * @brief Title, Breadcrumbs and messaging for page
+		 * Generate Default Subheading with Page Title, BreadCrumbs and Error/Info/Success Messaging.
+		 * @param string Class Prefix, ie 'admin' to return classes with 'admin' prefix instead of 'page'
+		 * @return string HTML for SubHeading
+		 */
+		public function showSubHeading($prefix = 'page'): string {
+			return "<div id='${prefix}SubHeading'><div id='${prefix}Title'>".$this->showTitle()."\n".$this->showBreadcrumbs()."</div>".$this->showMessages()."</div>";
+		}
+
 		public function addBreadcrumb($name,$target = '') {
 			$breadcrumb = array("name" => $name, "target" => $target);
 			array_push($this->_breadcrumbs,$breadcrumb);
