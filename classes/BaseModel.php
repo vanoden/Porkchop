@@ -199,8 +199,9 @@ class BaseModel extends \BaseClass {
 		}
 
 		$audit_message = "";
+		$validFieldPattern = '/^[a-z0-9_]+$/';
 		foreach ($parameters as $fieldKey => $fieldValue) {
-			if (in_array($fieldKey, $this->_fields)) {
+			if ($fieldKey !== '' && is_string($fieldKey) && preg_match($validFieldPattern, $fieldKey) && in_array($fieldKey, $this->_fields)) {
 				if ($this->$fieldKey != $fieldValue) {
 					$updateQuery .= ", `$fieldKey` = ?";
 					$database->AddParam($fieldValue);
@@ -280,11 +281,16 @@ class BaseModel extends \BaseClass {
 
 		$addQuery = "INSERT INTO `$this->_tableName` ";
 		$bindFields = array();
+		$validFieldPattern = '/^[a-z0-9_]+$/';
 		foreach ($parameters as $fieldKey => $fieldValue) {
-			if (in_array($fieldKey, $this->_fields())) {
+			if ($fieldKey !== '' && is_string($fieldKey) && preg_match($validFieldPattern, $fieldKey) && in_array($fieldKey, $this->_fields())) {
 				array_push($bindFields, $fieldKey);
 				$database->AddParam($fieldValue);
 			}
+		}
+		if (empty($bindFields)) {
+			$this->error("No valid fields to insert for " . $this->_getActualClass());
+			return false;
 		}
 		$addQuery .= '(`' . implode('`,`', $bindFields) . '`';
 		$addQuery .= ") VALUES (" . trim(str_repeat("?,", count($bindFields)), ',') . ")";
@@ -639,7 +645,11 @@ class BaseModel extends \BaseClass {
 	/********************************************/
 	protected function _addFields($fields) {
 		if (is_array($fields)) {
-			foreach ($fields as $field) array_push($this->_fields, $field);
+			foreach ($fields as $field) {
+				if ($field !== '' && is_string($field) && preg_match('/^[a-z0-9_]+$/', $field)) {
+					array_push($this->_fields, $field);
+				}
+			}
 		}
 	}
 

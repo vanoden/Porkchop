@@ -450,6 +450,35 @@
             # Send Response
             $response->print();
         }
+
+        ###################################################
+        ### Add a Privilege (create if not exists)		###
+        ###################################################
+        function addPrivilege() {
+            if (! $this->validCSRFToken()) $this->error("Invalid Request");
+            if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
+
+            $name = isset($_REQUEST['name']) ? trim((string) $_REQUEST['name']) : '';
+            if ($name === '') $this->error('name required');
+
+            $privilege = new \Register\Privilege();
+            if ($privilege->get($name)) {
+                $response = new \APIResponse();
+                $response->success(true);
+                $response->addElement('privilege', $privilege);
+                $response->print();
+                return;
+            }
+            $parameters = ['name' => $name];
+            if (isset($_REQUEST['description'])) $parameters['description'] = trim((string) $_REQUEST['description']);
+            if (isset($_REQUEST['module'])) $parameters['module'] = trim((string) $_REQUEST['module']);
+            if (! $privilege->add($parameters)) $this->error($privilege->error());
+
+            $response = new \APIResponse();
+            $response->success(true);
+            $response->addElement('privilege', $privilege);
+            $response->print();
+        }
         
         ###################################################
         ### Update an Existing Role						###
@@ -521,8 +550,9 @@
                 $this->error('role required');
             }
 
+            $level = isset($_REQUEST['level']) ? (int) $_REQUEST['level'] : \Register\PrivilegeLevel::ADMINISTRATOR;
             $response = new \APIResponse();
-            if ($role->addPrivilege($_REQUEST['privilege'])) {
+            if ($role->addPrivilege($_REQUEST['privilege'], $level)) {
                 $response->success(true);
             }
             else {
@@ -534,7 +564,7 @@
         }
         
         ###################################################
-        ### Assign Privilege to Role					###
+        ### Get Privileges for a Role					###
         ###################################################
         function getRolePrivileges() {
             if ($_REQUEST['role']) {
@@ -2028,6 +2058,26 @@
                             )
                         )
                     )
+                ),
+                'addPrivilege'	=> array(
+                    'description'	=> 'Create a privilege (or return existing if name exists)',
+                    'authentication_required'	=> true,
+                    'token_required' => true,
+                    'privilege_required'	=> 'manage privileges',
+                    'return_element'	=> 'privilege',
+                    'return_type'	=> 'Register::Privilege',
+                    'parameters'	=> array(
+                        'name'	=> array(
+                            'description'	=> 'Privilege name',
+                            'required' => true
+                        ),
+                        'description'	=> array(
+                            'description'	=> 'Privilege description'
+                        ),
+                        'module'	=> array(
+                            'description'	=> 'Module (e.g. Unspecified)'
+                        ),
+                    ),
                 ),
                 'getRole'    => array(
                     'description'	=> 'Get information about a role',

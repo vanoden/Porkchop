@@ -3,6 +3,7 @@ namespace Geography;
 
 class ProvinceList Extends \BaseListClass {
 	public function __construct() {
+		$this->_tableName = 'geography_provinces';
 		$this->_modelName = 'Geography\Province';
 	}
 	

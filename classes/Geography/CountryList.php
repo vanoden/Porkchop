@@ -17,36 +17,27 @@
 			$workingClass = new $this->_modelName();
 
 			// Build Query
-			$find_objects_query = "
-				SELECT	id
-				FROM	geography_countries
-			";
-
-			// Add Parameters
-			if (isset($parameters['name']) && $parameters['name']) {
-				// Handle Wildcards
-				if (preg_match('/[\*\?]/',$parameters['name']) && preg_match('/^[\*\?\w\-\.\s]+$/',$parameters['name'])) {
-					$parameters['name'] = str_replace('*','%',$parameters['name']);
-					$parameters['name'] = str_replace('?','_',$parameters['name']);
-					$find_objects_query .= "
-					AND	domain_name LIKE ?";
+			$find_objects_query = "SELECT id FROM geography_countries";
+			$has_where = false;
+			if (isset($parameters['name']) && $parameters['name'] !== '') {
+				if (preg_match('/[\*\?]/', $parameters['name']) && preg_match('/^[\*\?\w\-\.\s\-]+$/', $parameters['name'])) {
+					$parameters['name'] = str_replace('*', '%', $parameters['name']);
+					$parameters['name'] = str_replace('?', '_', $parameters['name']);
+					$find_objects_query .= " WHERE name LIKE ?";
 					$database->AddParam($parameters['name']);
-				}
-				// Handle Exact Match
-				elseif ($workingClass->validName($parameters['name'])) {
-					$find_objects_query .= "
-					WHERE	name = ?";
-					$database->AddParam($parameters['name']);
-				}
-				else {
+					$has_where = true;
+				} elseif ((method_exists($workingClass, 'validName') && $workingClass->validName($parameters['name'])) || preg_match('/^\w[\w\.\-\_\s\,]*$/', trim($parameters['name']))) {
+					$find_objects_query .= " WHERE name = ?";
+					$database->AddParam(trim($parameters['name']));
+					$has_where = true;
+				} else {
 					$this->error("Invalid Name");
 					return [];
 				}
 			}
+			if (! $has_where) $find_objects_query .= " WHERE 1=1";
 
-			// Sort Clause
-			$find_objects_query .= "
-				ORDER BY name";
+			$find_objects_query .= " ORDER BY view_order, name";
 
 			// Limit Clause
 			$find_objects_query .= $this->limitClause($controls);
