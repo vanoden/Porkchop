@@ -6,6 +6,9 @@
 		private $_connected;
 
 		public function __construct($properties) {
+			// prefix is optional; if unset or empty, no prefix is used (backward compatible)
+			$this->_prefix = (isset($properties->prefix) && $properties->prefix !== '')
+				? preg_replace('/[^a-zA-Z0-9_-]/', '_', $properties->prefix) : '';
 			if (empty($properties->path)) {
 				$this->_error = 'Cache path not defined';
 			}
@@ -77,6 +80,7 @@
 				return false;
 			}
 			else {
+				$internalKey = $this->prefixKey($key);
 				if (! preg_match('/^_/',$key)) $this->incrementStat("cmd_set");
 				$path = $this->_path;
 				if (!is_dir($path)) {
@@ -87,7 +91,7 @@
 					$this->_error = "Cache Directory Not Writable";
 					return false;
 				}
-				elseif ($fh = fopen($path."/".$key,'w')) {
+				elseif ($fh = fopen($path."/".$internalKey,'w')) {
 					$string = serialize($value);
 					fwrite($fh,$string);
 					fclose($fh);
@@ -108,7 +112,8 @@
 		public function delete($key) {
 			app_log("Deleting cache of ".$key,'trace');
 			if ($this->_connected) {
-				$filename = $GLOBALS['_config']->cache->path."/".$key;
+				$internalKey = $this->prefixKey($key);
+				$filename = $GLOBALS['_config']->cache->path."/".$internalKey;
 				if (file_exists($filename)) {
 					app_log("Cache file exists: ".$filename,'trace');
 					if (unlink($filename)) {
@@ -125,8 +130,9 @@
 
 		public function get($key) {
 			if ($this->_connected) {
+				$internalKey = $this->prefixKey($key);
 				if (! preg_match('/^_/',$key)) $this->incrementStat("cmd_get");
-				$filename = $this->_path."/".$key;
+				$filename = $this->_path."/".$internalKey;
 				if (! file_exists($filename)) {
 					if (! preg_match('/^_/',$key)) $this->incrementStat("get_misses");
 					return null;
@@ -172,6 +178,8 @@
 			if ($this->_connected) {
 				$keys = scandir($GLOBALS['_config']->cache->path."/");
 				foreach ($keys as $key) {
+					if (!$this->keyHasOurPrefix($key)) continue;
+					$key = $this->unprefixKey($key);
 					if (preg_match('/(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches)) {
 						if (is_null($object) || $object == $matches[1]) {
 							$key = sprintf("%s[%d]",$matches[1],$matches[2]);
@@ -187,6 +195,8 @@
 			$keyArray = array();
 			$keys = scandir($GLOBALS['_config']->cache->path."/");
 			foreach ($keys as $key) {
+				if (!$this->keyHasOurPrefix($key)) continue;
+				$key = $this->unprefixKey($key);
 				if (! preg_match('/^counter\.(\w[\w\.\_\-]*)/',$key,$matches)) continue;
 				array_push($keyArray,$matches[1]);
 			}
@@ -198,6 +208,8 @@
 			if ($this->_connected) {
 				$keys = scandir($GLOBALS['_config']->cache->path."/");
 				foreach ($keys as $key) {
+					if (!$this->keyHasOurPrefix($key)) continue;
+					$key = $this->unprefixKey($key);
 					if (preg_match('/(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches)) {
 						$keyNames[$matches[1]] ++;
 					}
@@ -210,7 +222,8 @@
 			if ($this->_connected) {
 				$keys = scandir($GLOBALS['_config']->cache->path."/");
 				foreach ($keys as $key) {
-					if (preg_match('/^[\w\-\.\_]+\[\d+\]$/',$key)) {
+					if (!$this->keyHasOurPrefix($key)) continue;
+					if (preg_match('/^[\w\-\.\_]+\[\d+\]$/',$this->unprefixKey($key))) {
 						unlink($GLOBALS['_config']->cache->path."/".$key);
 					}
 				}
@@ -257,7 +270,7 @@
 
 		public function exists($key) {
 			if ($this->_connected) {
-				return file_exists($this->_path."/".$key);
+				return file_exists($this->_path."/".$this->prefixKey($key));
 			}
 			return false;
 		}

@@ -50,6 +50,7 @@
 
         # Cache Mechanism (file, memcache, xcache)
         $_config->cache = new stdClass();
+        $_config->cache->prefix = ""; // optional: set to a site-specific string to share memcache/file cache across multiple sites (e.g. "spectros", "fumeconnect")
         $_config->cache->mechanism   = "memcached";
         $_config->cache->host   = "memcached";
         $_config->cache->port   = "11211";

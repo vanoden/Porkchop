@@ -9,6 +9,8 @@
 
 		public function __construct($properties = null) {
 			if (is_object($properties)) {
+				// prefix is optional; if unset or empty, no prefix is used (backward compatible)
+				$this->_prefix = (isset($properties->prefix) && $properties->prefix !== '') ? $properties->prefix : '';
 				if (isset($properties->host) && preg_match('/^\w[\w\.\-]+$/',$properties->host)) $this->_host = $properties->host;
 				if (isset($properties->port) && is_numeric($properties->port)) $this->_port = $properties->port;
 			}
@@ -24,6 +26,18 @@
 		}
 
 		public function flush() {
+			// When using a prefix, only delete this site's keys so other sites on shared memcache are unaffected
+			if ($this->_prefix !== '') {
+				$keys = $this->_service->getAllKeys();
+				if (is_array($keys)) {
+					foreach ($keys as $key) {
+						if ($this->keyHasOurPrefix($key)) {
+							$this->_service->delete($key);
+						}
+					}
+				}
+				return true;
+			}
 			return $this->_service->flush();
 		}
 
@@ -57,7 +71,8 @@
 			}
 			
 			if ($this->_connected) {
-				if ($this->_service->set($key,$value,$expires)) return true;
+				$internalKey = $this->prefixKey($key);
+				if ($this->_service->set($internalKey,$value,$expires)) return true;
 				else $this->error("Error storing cache value for '$key': ".$this->_service->getResultCode());
 			}
 			else {
@@ -68,7 +83,8 @@
 
 		public function delete($key) {
 			if ($this->_connected) {
-				if ($this->_service->delete($key)) return true;
+				$internalKey = $this->prefixKey($key);
+				if ($this->_service->delete($internalKey)) return true;
 				else {
 					$this->error("Unable to delete value from cache: ".$this->_service->getResultCode());
 					return false;
@@ -82,7 +98,8 @@
 
 		public function get($key) {
 			if ($this->_connected) {
-				$value = $this->_service->get($key);
+				$internalKey = $this->prefixKey($key);
+				$value = $this->_service->get($internalKey);
 				if (isset($value)) return $value;
 				else return null;
 			}
@@ -93,7 +110,8 @@
 
 		public function exists($key) {
 			if ($this->_connected) {
-				$value = $this->_service->get($key);
+				$internalKey = $this->prefixKey($key);
+				$value = $this->_service->get($internalKey);
 				if (isset($value)) return true;
 				else return false;
 			}
@@ -105,14 +123,15 @@
 
 		public function increment($key) {
 			if ($this->_connected) {
-                if (! $this->_service->get($key)) {
+				$internalKey = $this->prefixKey($key);
+                if (! $this->_service->get($internalKey)) {
                     if ($this->set($key,1)) $this->get($key);
                     else {
                             $this->error("Error incrementing key: ".$this->_service->getResultCode());
                             return null;
                     }
                 }
-				if ($this->_service->increment($key)) return $this->get($key);
+				if ($this->_service->increment($internalKey)) return $this->get($key);
 				else {
 					$this->error("Error incrementing key: ".$this->_service->getResultCode());
 					return null;
@@ -127,10 +146,12 @@
 			$keyArray = array();
 			$keys = $this->_service->getAllKeys();
 			foreach ($keys as $key) {
-				preg_match('/^(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches);
-				if (is_null($object) || $object == $matches[1]) {
-					$key = sprintf("%s[%d]",$matches[1],$matches[2]);
-					array_push($keyArray,$key);
+				if (!$this->keyHasOurPrefix($key)) continue;
+				$key = $this->unprefixKey($key);
+				if (preg_match('/^(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches)) {
+					if (is_null($object) || $object == $matches[1]) {
+						array_push($keyArray, sprintf("%s[%d]",$matches[1],$matches[2]));
+					}
 				}
 			}
 			return $keyArray;
@@ -140,6 +161,8 @@
 			$keyArray = array();
 			$keys = $this->_service->getAllKeys();
 			foreach ($keys as $key) {
+				if (!$this->keyHasOurPrefix($key)) continue;
+				$key = $this->unprefixKey($key);
 				if (! preg_match('/^counter\.(\w[\w\.\-\_]*)/',$key,$matches)) continue;
 				array_push($keyArray,$matches[1]);
 			}
@@ -150,6 +173,8 @@
 			$keyNames = array();
 			$keys = $this->_service->getAllKeys();
 			foreach ($keys as $key) {
+				if (!$this->keyHasOurPrefix($key)) continue;
+				$key = $this->unprefixKey($key);
 				if (preg_match('/^(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches)) $keyNames[$matches[1]] ++;
 			}
 			return $keyNames;
