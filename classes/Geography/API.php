@@ -156,6 +156,13 @@
 				$province = new \Geography\Province();
 				if (! $province->getProvince($country->id,$_REQUEST['name'])) $this->error("Province not found");
 			}
+			elseif (!empty($_REQUEST['country_name'])) {
+				$country = new \Geography\Country();
+				if (! $country->get($_REQUEST['country_name'])) $this->error("Country not found");
+	
+				$province = new \Geography\Province();
+				if (! $province->getProvince($country->id,$_REQUEST['name'])) $this->error("Province not found");
+			}
 			elseif (isset($_REQUEST['id'])) {
 				$province = new \Geography\Province($_REQUEST['id']);
 				if (! $province->id) $this->error("Province not found");
@@ -347,6 +354,11 @@
 							'description'	=> 'Province Name',
 							'requirement_group'	=> 1,
 							'validation_method'	=> 'Geography::Province::validName()',
+						),
+						'country_name'	=> array(
+							'description'	=> 'Country Name',
+							'requirement_group'	=> 1,
+							'validation_method'	=> 'Geography::Country::validName()',
 						),
 						'abbreviation' => array(
 							'description'	=> 'Province Abbreviation',
