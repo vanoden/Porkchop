@@ -17,7 +17,8 @@
 		###################################################
 		public function addCountry() {
 			$country = new \Geography\Country();
-	
+			if ($country->get($_REQUEST['name'])) $this->error("Country already exists");
+
 			$parameters = array();
 			if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
 			if (isset($_REQUEST['abbreviation'])) $parameters['abbreviation'] = $_REQUEST['abbreviation'];
@@ -94,9 +95,18 @@
 		### Add a Province or State						###
 		###################################################
 		public function addProvince() {
-			$country = new \Geography\Country($_REQUEST['country_id']);
-			if (! $country->id) $this->error("Country not found");
-	
+			if ($_REQUEST['country_id']) {
+				$country = new \Geography\Country($_REQUEST['country_id']);
+				if (! $country->id) $this->error("Country not found");				
+			}
+			elseif (isset($_REQUEST['country_name'])) {
+				$country = new \Geography\Country();
+				if (! $country->get($_REQUEST['country_name'])) $this->error("Country not found");
+			}
+			else {
+				$this->incompleteRequest("Not enough parameters");
+			}
+
 			$province = new \Geography\Province();
 	
 			$parameters = array();
@@ -283,7 +293,12 @@
 						'country_id'	=> array(
 							'description'	=> 'Country ID',
 							'validation_method'	=> 'Geography::Country::validCode()',
-							'required' => true
+							'requirement_group'	=> 0,
+						),
+						'country_name'	=> array(
+							'description'	=> 'Country Name',
+							'validation_method'	=> 'Geography::Country::validName()',
+							'requirement_group'	=> 1,
 						),
 						'name'			=> array(
 							'description'	=> 'Name of province',
