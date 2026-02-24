@@ -324,20 +324,25 @@
 						),
 						'name'			=> array(
 							'description'	=> 'Name of province',
-							'required' => true
+							'required' => true,
+							'validation_method'	=> 'Geography::Province::validName()',
 						),
 						'abbreviation'	=> array(
 							'description'	=> 'Abbreviation of province',
-							'required' => true
+							'required' => true,
+							'validation_method'	=> 'Geography::Province::validCode()',
 						),
 						'code'			=> array(
 							'description'	=> 'Unique code (optional; generated from country+name if omitted)',
+							'validation_method'	=> 'Geography::Province::validCode()',
 						),
 						'type'			=> array(
 							'description'	=> 'Type (e.g. state, province)',
+							'validation_method'	=> 'Geography::Province::validType()',
 						),
 						'label'			=> array(
 							'description'	=> 'Label',
+							'validation_method'	=> 'Geography::Province::validName()',
 						),
 					),
 				),
@@ -350,24 +355,33 @@
 					'parameters'	=> array(
 						'code'			=> array(
 							'description'	=> 'Province code (to find)',
+							'validation_method'	=> 'Geography::Province::validCode()',
+							'requirement_group'	=> 0,
 						),
 						'id'			=> array(
 							'description'	=> 'Province ID (to find)',
+							'type'			=> 'integer',
+							'requirement_group'	=> 1,
 						),
 						'name'			=> array(
 							'description'	=> 'Name of province',
+							'validation_method'	=> 'Geography::Province::validName()',
 						),
 						'abbreviation'	=> array(
 							'description'	=> 'Abbreviation of province',
+							'validation_method'	=> 'Geography::Province::validCode()',
 						),
 						'country_id'	=> array(
 							'description'	=> 'Country ID',
+							'validation_method'	=> 'Geography::Country::validCode()',
 						),
 						'type'			=> array(
 							'description'	=> 'Type',
+							'validation_method'	=> 'Geography::Province::validType()',
 						),
 						'label'			=> array(
 							'description'	=> 'Label',
+							'validation_method'	=> 'Geography::Province::validName()',
 						),
 					),
 				),

@@ -14,7 +14,21 @@
 			parent::__construct($id);
 		}
 
+		/** @method public add(array $parameters = [])
+		 * Add new country.
+		 * Required Parameters: name
+		 * Optional Parameters: abbreviation, view_order
+		 * @param array $parameters
+		 * @return bool
+		 */
 		public function add($parameters = []) {
+			// Clear Previous Errors
+			$this->clearErrors();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Validate Required Parameters
 			if (! isset($parameters['name']) || ! is_string($parameters['name']) || trim($parameters['name']) === '') {
 				$this->error("Country name required");
 				return false;
@@ -31,12 +45,15 @@
 				INSERT INTO geography_countries (name, abbreviation, view_order)
 				VALUES (?, ?, ?)
 			";
-			$GLOBALS['_database']->Execute($add_object_query, [$name, $abbreviation, $view_order]);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$database->AddParam($name);
+			$database->AddParam($abbreviation);
+			$database->AddParam($view_order);
+			$database->Execute($add_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			$this->id = (int) $GLOBALS['_database']->Insert_ID();
+			$this->id = (int) $database->Insert_ID();
 
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add([
@@ -49,27 +66,46 @@
 			return $this->update($parameters);
 		}
 
+		/** @method public update(array $parameters = [])
+		 * Update country.
+		 * Optional Parameters: name, abbreviation, view_order
+		 * @param array $parameters
+		 * @return bool
+		 */
 		public function update($parameters = []): bool {
+			// Clear Previous Errors
+			$this->clearErrors();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Validate ID
+			if (empty($this->id)) {
+				$this->error("id required for update");
+				return false;
+			}
+
+			// Prepare Query
 			$update_object_query = "UPDATE geography_countries SET id = id";
-			$bind_params = [];
+
 			if (isset($parameters['name'])) {
 				$update_object_query .= ", name = ?";
-				$bind_params[] = trim((string) $parameters['name']);
+				$database->AddParam(trim((string) $parameters['name']));
 			}
 			if (array_key_exists('abbreviation', $parameters)) {
 				$update_object_query .= ", abbreviation = ?";
-				$bind_params[] = $parameters['abbreviation'] === '' || $parameters['abbreviation'] === null ? null : trim((string) $parameters['abbreviation']);
+				$database->AddParam($parameters['abbreviation'] === '' || $parameters['abbreviation'] === null ? null : trim((string) $parameters['abbreviation']));
 			}
 			if (isset($parameters['view_order'])) {
 				$update_object_query .= ", view_order = ?";
-				$bind_params[] = (int) $parameters['view_order'];
+				$database->AddParam((int) $parameters['view_order']);
 			}
 			$update_object_query .= " WHERE id = ?";
-			$bind_params[] = $this->id;
+			$database->AddParam($this->id);
 
-			$GLOBALS['_database']->Execute($update_object_query, $bind_params);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$database->Execute($update_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
@@ -87,24 +123,68 @@
 
 		/** Load country by id, name, or abbreviation. */
 		public function get($idOrNameOrAbbrev) {
+			// Clear Previous Errors
+			$this->clearErrors();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Check if input is numeric ID
 			if (is_numeric($idOrNameOrAbbrev) && (int) $idOrNameOrAbbrev > 0) {
 				$this->id = (int) $idOrNameOrAbbrev;
 				return $this->details();
 			}
 			$s = trim((string) $idOrNameOrAbbrev);
 			if ($s === '') return false;
-			$get_query = "SELECT id FROM geography_countries WHERE name = ? OR abbreviation = ? LIMIT 1";
-			$rs = $GLOBALS['_database']->Execute($get_query, [$s, $s]);
-			if (! $rs || ! ($row = $rs->FetchRow())) return false;
+			$get_query = "
+				SELECT	id
+				FROM	geography_countries
+				WHERE	name = ?
+				OR		abbreviation = ?
+				LIMIT 1";
+			$database->AddParam($s);
+			$database->AddParam($s);
+			$rs = $database->Execute($get_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			if (! ($row = $rs->FetchRow())) return false;
 			$row = (array) $row;
 			$this->id = (int) ($row['id'] ?? $row[0]);
 			return $this->details();
 		}
 
+		/** @method public details()
+		 * Load country details by ID.
+		 * @return bool
+		 */
 		public function details(): bool {
+			// Clear Previous Errors
+			$this->clearErrors();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Validate ID
 			if (empty($this->id)) return false;
-			$rs = $GLOBALS['_database']->Execute("SELECT id, name, abbreviation, view_order FROM geography_countries WHERE id = ?", [$this->id]);
-			if (! $rs || ! ($row = $rs->FetchRow())) {
+
+			// Prepare Query
+			$query = "
+				SELECT	id,
+						name,
+						abbreviation,
+						view_order
+				FROM	geography_countries
+				WHERE	id = ?
+			";
+			$database->AddParam($this->id);
+			$rs = $database->Execute($query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			if (! ($row = $rs->FetchRow())) {
 				$this->id = null;
 				return false;
 			}
@@ -117,6 +197,10 @@
 			return true;
 		}
 
+		/** @method public provinces()
+		 * Get list of provinces for this country.
+		 * @return Province[]
+		 */
 		public function provinces() {
 			$provinceList = new \Geography\ProvinceList();
 			return $provinceList->find(array('country_id' => $this->id));

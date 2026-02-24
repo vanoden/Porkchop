@@ -14,7 +14,20 @@
 			parent::__construct($id);
 		}
 
+		/** @method public add(array $parameters = [])
+		 * Add New Province
+		 * Required Parameters: country_id, name, abbreviation
+		 * Optional Parameters: code, type, label
+		 * @param array $parameters
+		 */
 		public function add($parameters = []) {
+			// Clear Previous Errors
+			$this->clearErrors();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Validate Required Parameters
 			if (empty($parameters['country_id'])) {
 				$this->error("country_id required");
 				return false;
@@ -50,16 +63,23 @@
 			$type = isset($parameters['type']) && $parameters['type'] !== '' ? trim((string) $parameters['type']) : null;
 			$label = isset($parameters['label']) && $parameters['label'] !== '' ? trim((string) $parameters['label']) : null;
 
+			// Prepare Query
 			$add_object_query = "
 				INSERT INTO geography_provinces (code, country_id, name, type, abbreviation, label)
 				VALUES (?, ?, ?, ?, ?, ?)
 			";
-			$GLOBALS['_database']->Execute($add_object_query, [$code, $country->id, $name, $type, $abbreviation, $label]);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$database->AddParam($code);
+			$database->AddParam($country->id);
+			$database->AddParam($name);
+			$database->AddParam($type);
+			$database->AddParam($abbreviation);
+			$database->AddParam($label);
+			$database->Execute($add_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			$this->id = (int) $GLOBALS['_database']->Insert_ID();
+			$this->id = (int) $database->Insert_ID();
 
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add([
@@ -72,44 +92,57 @@
 			return $this->update($parameters);
 		}
 
+		/** @method public update(array $parameters = [])
+		 * Update Province
+		 * Optional Parameters: country_id, name, abbreviation, code, type, label
+		 * @param array $parameters
+		 */
 		public function update($parameters = []): bool {
+			// Clear Previous Errors
+			$this->clearErrors();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Validate ID
 			if (empty($this->id)) {
 				$this->error("id required for update");
 				return false;
 			}
 
+			// Prepare Query
 			$update_object_query = "UPDATE geography_provinces SET id = id";
-			$bind_params = [];
+
 			if (isset($parameters['name'])) {
 				$update_object_query .= ", name = ?";
-				$bind_params[] = trim((string) $parameters['name']);
+				$database->AddParam(trim((string) $parameters['name']));
 			}
 			if (isset($parameters['country_id'])) {
 				$update_object_query .= ", country_id = ?";
-				$bind_params[] = (int) $parameters['country_id'];
+				$database->AddParam((int) $parameters['country_id']);
 			}
 			if (isset($parameters['abbreviation'])) {
 				$update_object_query .= ", abbreviation = ?";
-				$bind_params[] = trim((string) $parameters['abbreviation']);
+				$database->AddParam(trim((string) $parameters['abbreviation']));
 			}
 			if (isset($parameters['code'])) {
 				$update_object_query .= ", code = ?";
-				$bind_params[] = trim((string) $parameters['code']);
+				$database->AddParam(trim((string) $parameters['code']));
 			}
 			if (array_key_exists('type', $parameters)) {
 				$update_object_query .= ", type = ?";
-				$bind_params[] = $parameters['type'] === '' || $parameters['type'] === null ? null : trim((string) $parameters['type']);
+				$database->AddParam($parameters['type'] === '' || $parameters['type'] === null ? null : trim((string) $parameters['type']));
 			}
 			if (array_key_exists('label', $parameters)) {
 				$update_object_query .= ", label = ?";
-				$bind_params[] = $parameters['label'] === '' || $parameters['label'] === null ? null : trim((string) $parameters['label']);
+				$database->AddParam($parameters['label'] === '' || $parameters['label'] === null ? null : trim((string) $parameters['label']));
 			}
 			$update_object_query .= " WHERE id = ?";
-			$bind_params[] = $this->id;
+			$database->AddParam($this->id);
 
-			$GLOBALS['_database']->Execute($update_object_query, $bind_params);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$database->Execute($update_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
@@ -124,6 +157,15 @@
 			return $this->details();
 		}
 
+		/** @method public __call(string $name, array $arguments)
+		 * Magic method to handle dynamic method calls for getting provinces by code or by country and name.
+		 * Usage:
+		 * - get($code): Get province by unique code.
+		 * - get($country_id, $name): Get province by country ID and name.
+		 * @param string $name
+		 * @param array $arguments
+		 * @return bool
+		 */
 		public function __call($name, $arguments) {
 			if ($name === 'get') {
 				if (count($arguments) === 1) {
@@ -147,9 +189,24 @@
 			return $this->details();
 		}
 
+		/** @method public getProvince(int $country_id, string $name)
+		 * Get province by country ID and name. If name is less than 3 characters, it will attempt to get by abbreviation instead.
+		 * @param int $country_id
+		 * @param string $name
+		 * @return bool
+		 */
 		public function getProvince($country_id, $name): bool {
+			// Clear Previous Errors
+			$this->clearErrors();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Validate Parameters
             app_log("Country $country_id Name $name");
 			if (strlen($name) < 3) return $this->getByAbbreviation($country_id,$name);
+
+			// Prepare Query
 			$get_object_query = "
 				SELECT	id
 				FROM	geography_provinces
@@ -157,9 +214,9 @@
 				AND		name = ?
 			";
 
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($country_id,$name));
+			$rs = $database->Execute($get_object_query,array($country_id,$name));
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
@@ -171,45 +228,88 @@
 			return false;
 		}
 
+		/** @method public getByAbbreviation(int $country_id, string $abbrev)
+		 * Get province by country ID and abbreviation.
+		 * @param int $country_id
+		 * @param string $abbrev
+		 * @return bool
+		 */
 		public function getByAbbreviation($country_id,$abbrev) {
+			// Clear Previous Errors
+			$this->clearErrors();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$get_object_query = "
 				SELECT	id
 				FROM	geography_provinces
 				WHERE	country_id = ?
 				AND		abbreviation = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($country_id,$abbrev));
+			$rs = $database->Execute($get_object_query,array($country_id,$abbrev));
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();
 			return $this->details();
 		}
+
+		/** @method public details()
+		 * Load province details by ID.
+		 * @return bool
+		 */
 		public function details(): bool {
+			// Clear Previous Errors
+			$this->clearErrors();
+
+			// Validate ID
 			if (empty($this->id)) return false;
-			$rs = $GLOBALS['_database']->Execute("SELECT id, code, country_id, name, type, abbreviation, label FROM geography_provinces WHERE id = ?", [$this->id]);
-			if (! $rs || ! ($row = $rs->FetchRow())) {
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$query = "
+				SELECT id, code, country_id, name, type, abbreviation, label
+				FROM geography_provinces
+				WHERE id = ?
+			";
+
+			// Add Parameters
+			$database->AddParam($this->id);
+
+			// Execute Query
+			$rs = $database->Execute($query);
+
+			// Check for Errors
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				$this->id = null;
-				$this->country_id = null;
-				$this->name = null;
-				$this->abbreviation = null;
-				$this->code = null;
-				$this->type = null;
-				$this->label = null;
 				return false;
 			}
-			$row = (array) $row;
-			$this->id = (int) ($row['id'] ?? $row[0]);
-			$this->country_id = (int) ($row['country_id'] ?? $row[1]);
-			$this->name = (string) ($row['name'] ?? $row[2]);
-			$this->type = isset($row['type']) ? (string) $row['type'] : null;
-			$this->abbreviation = (string) ($row['abbreviation'] ?? $row[5]);
-			$this->label = isset($row['label']) ? (string) $row['label'] : null;
-			$this->code = (string) ($row['code'] ?? $row[1]);
-			return true;
+
+			// Populate Object
+			if ($object = $rs->FetchNextObject(false)) {
+				$this->id = $object->id;
+				$this->country_id = (int) $object->country_id;
+				$this->name = (string) $object->name;
+				$this->type = isset($object->type) ? (string) $object->type : null;
+				$this->abbreviation = (string) $object->abbreviation;
+				$this->label = isset($object->label) ? (string) $object->label : null;
+				$this->code = (string) $object->code;
+				return true;
+			}
+
+			return false;
 		}
 
+		/** @method public country()
+		 * Get Country object for this province.
+		 * @return Country
+		 */
 		public function country() {
 			return new \Geography\Country($this->country_id);
 		}
