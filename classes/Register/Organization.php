@@ -479,8 +479,6 @@
 			$database->AddParam($organization_id);
 
 			// Execute Query
-			$database->trace(9);
-			$database->debug='screen';
 			$rs = $database->Execute($check_association_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
