@@ -200,8 +200,6 @@ $documentlist = new \Media\DocumentList();
 $manuals = $documentlist->find();
 $imagelist = new \Media\ImageList();
 $tables = $imagelist->find();
-$dashboardlist = new \Monitor\DashboardList();
-$dashboards = $dashboardlist->find();
 $vendors = $item->vendors();
 
 // Get unique categories and tags for autocomplete
