@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'geography';
-			$this->_version = '0.1.1';
-			$this->_release = '2020-01-21';
+			$this->_version = '0.2.2';
+			$this->_release = '2026-02-24';
 			$this->_schema = new Schema();
 			parent::__construct();
 		}
@@ -17,15 +17,45 @@
 		###################################################
 		public function addCountry() {
 			$country = new \Geography\Country();
-	
+			if ($country->get($_REQUEST['name'])) $this->error("Country already exists");
+
 			$parameters = array();
 			if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
 			if (isset($_REQUEST['abbreviation'])) $parameters['abbreviation'] = $_REQUEST['abbreviation'];
 			if (! $country->add($parameters)) $this->error("Error adding country: ".$country->error());
 	
+			$parameters = [];
+			if (isset($_REQUEST['name'])) $parameters['name'] = trim((string) $_REQUEST['name']);
+			if (isset($_REQUEST['abbreviation'])) $parameters['abbreviation'] = trim((string) $_REQUEST['abbreviation']);
+			if (isset($_REQUEST['view_order'])) $parameters['view_order'] = (int) $_REQUEST['view_order'];
+			$wasExisting = false;
+			// Check if country already exists (by name or abbreviation) so we can return existing: true
+			if (! empty($parameters['name'])) {
+				if ($country->get($parameters['name'])) {
+					$wasExisting = true;
+				} elseif (! empty($parameters['abbreviation']) && $country->get($parameters['abbreviation'])) {
+					$wasExisting = true;
+				}
+			}
+			if (! $wasExisting && ! $country->add($parameters)) {
+				$err = $country->error();
+				$isDuplicate = $err && (stripos($err, 'duplicate') !== false || stripos($err, 'uk_name') !== false);
+				if ($isDuplicate && ! empty($parameters['name'])) {
+					$existing = new \Geography\Country();
+					if ($existing->get($parameters['name']) || (! empty($parameters['abbreviation']) && $existing->get($parameters['abbreviation']))) {
+						$country = $existing;
+						$wasExisting = true;
+					} else {
+						$this->error("Error adding country: " . $err);
+					}
+				} else {
+					$this->error("Error adding country: " . $err);
+				}
+			}
 			$response = new \APIResponse();
 			$response->success(true);
-			$response->AddElement('country',$country);
+			$response->AddElement('country', $country);
+			if ($wasExisting) $response->AddElement('existing', true);
 			$response->print();
 		}
 
@@ -33,18 +63,19 @@
 		### Update a Country							###
 		###################################################
 		public function updateCountry() {
+			$idOrNameOrAbbrev = isset($_REQUEST['id']) ? $_REQUEST['id'] : (isset($_REQUEST['name']) ? $_REQUEST['name'] : (isset($_REQUEST['abbreviation']) ? $_REQUEST['abbreviation'] : (isset($_REQUEST['code']) ? $_REQUEST['code'] : null)));
+			if ($idOrNameOrAbbrev === null || $idOrNameOrAbbrev === '') $this->incompleteRequest("id, name, abbreviation, or code required");
 			$country = new \Geography\Country();
-			$country->get($_REQUEST['code']);
-			if ($country->error()) $this->error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
-			if (! $country->id) $this->error("Request not found");
-	
-			$parameters = array();
-			$country->update($parameters);
+			if (! $country->get($idOrNameOrAbbrev)) $this->notFound("Country not found");
+			$parameters = [];
+			if (isset($_REQUEST['name'])) $parameters['name'] = trim((string) $_REQUEST['name']);
+			if (isset($_REQUEST['abbreviation'])) $parameters['abbreviation'] = trim((string) $_REQUEST['abbreviation']);
+			if (isset($_REQUEST['view_order'])) $parameters['view_order'] = (int) $_REQUEST['view_order'];
+			if (! empty($parameters) && ! $country->update($parameters)) $this->error("Error updating country: " . $country->error());
 
-			if ($country->error()) $this->error("Error updating country: ".$country->error(),'error',__FILE__,__LINE__);
 			$response = new \APIResponse();
 			$response->success(true);
-			$response->AddElement('country',$country);
+			$response->AddElement('country', $country);
 			$response->print();
 		}
 
@@ -94,20 +125,57 @@
 		### Add a Province or State						###
 		###################################################
 		public function addProvince() {
-			$country = new \Geography\Country($_REQUEST['country_id']);
-			if (! $country->id) $this->error("Country not found");
-	
+			if ($_REQUEST['country_id']) {
+				$country = new \Geography\Country($_REQUEST['country_id']);
+				if (! $country->id) $this->error("Country not found");				
+			}
+			elseif (isset($_REQUEST['country_name'])) {
+				$country = new \Geography\Country();
+				if (! $country->get($_REQUEST['country_name'])) $this->error("Country not found");
+			}
+			else {
+				$this->incompleteRequest("Not enough parameters");
+			}
+
 			$province = new \Geography\Province();
-	
-			$parameters = array();
-			if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
-			if (isset($_REQUEST['abbreviation'])) $parameters['abbreviation'] = $_REQUEST['abbreviation'];
-			$parameters['country_id'] = $country->id;
-			if (! $province->add($parameters)) $this->error("Error adding province: ".$province->error());
-	
+			$parameters = ['country_id' => $country->id];
+			if (isset($_REQUEST['name'])) $parameters['name'] = trim((string) $_REQUEST['name']);
+			if (isset($_REQUEST['abbreviation'])) $parameters['abbreviation'] = trim((string) $_REQUEST['abbreviation']);
+			if (isset($_REQUEST['code'])) $parameters['code'] = trim((string) $_REQUEST['code']);
+			if (isset($_REQUEST['type'])) $parameters['type'] = trim((string) $_REQUEST['type']);
+			if (isset($_REQUEST['label'])) $parameters['label'] = trim((string) $_REQUEST['label']);
+			$wasExisting = false;
+			// Check if province already exists so we can return existing: true
+			if (! empty($parameters['code']) && $province->getByCode($parameters['code'])) {
+				$wasExisting = true;
+			} elseif (! empty($parameters['name']) && $province->getProvince($country->id, $parameters['name'])) {
+				$wasExisting = true;
+			} elseif (! empty($parameters['abbreviation']) && $province->getByAbbreviation($country->id, $parameters['abbreviation'])) {
+				$wasExisting = true;
+			}
+			if (! $wasExisting && ! $province->add($parameters)) {
+				$err = $province->error();
+				$isDuplicate = $err && (stripos($err, 'duplicate') !== false || stripos($err, 'already exists') !== false || stripos($err, 'uk_') !== false);
+				if ($isDuplicate) {
+					$existing = new \Geography\Province();
+					$found = false;
+					if (! empty($parameters['code']) && $existing->getByCode($parameters['code'])) $found = true;
+					elseif (! empty($parameters['name']) && $existing->getProvince($country->id, $parameters['name'])) $found = true;
+					elseif (! empty($parameters['abbreviation']) && $existing->getByAbbreviation($country->id, $parameters['abbreviation'])) $found = true;
+					if ($found) {
+						$province = $existing;
+						$wasExisting = true;
+					} else {
+						$this->error("Error adding province: " . $err);
+					}
+				} else {
+					$this->error("Error adding province: " . $err);
+				}
+			}
 			$response = new \APIResponse();
 			$response->success(true);
-			$response->AddElement('province',$province);
+			$response->AddElement('province', $province);
+			if ($wasExisting) $response->AddElement('existing', true);
 			$response->print();
 		}
 
@@ -115,22 +183,26 @@
 		### Update a Province							###
 		###################################################
 		public function updateProvince() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
+			if (empty($_REQUEST['code']) && empty($_REQUEST['id'])) $this->incompleteRequest("code or id required");
 			$province = new \Geography\Province();
-			$province->get($_REQUEST['code']);
-			if ($province->error()) $this->error("Error finding province: ".$province->error(),'error',__FILE__,__LINE__);
-			if (! $province->id) $this->error("Province not found");
-	
-			$parameters = array();
-			$province->update(
-				$parameters
-			);
-			if ($province->error()) $this->error("Error updating country: ".$province->error(),'error',__FILE__,__LINE__);
-	
+			if (! empty($_REQUEST['id'])) {
+				$province->id = (int) $_REQUEST['id'];
+				if (! $province->details()) $this->notFound("Province not found");
+			} else {
+				if (! $province->getByCode(trim((string) $_REQUEST['code']))) $this->notFound("Province not found");
+			}
+			$parameters = [];
+			if (isset($_REQUEST['name'])) $parameters['name'] = trim((string) $_REQUEST['name']);
+			if (isset($_REQUEST['abbreviation'])) $parameters['abbreviation'] = trim((string) $_REQUEST['abbreviation']);
+			if (isset($_REQUEST['code'])) $parameters['code'] = trim((string) $_REQUEST['code']);
+			if (isset($_REQUEST['country_id'])) $parameters['country_id'] = (int) $_REQUEST['country_id'];
+			if (isset($_REQUEST['type'])) $parameters['type'] = trim((string) $_REQUEST['type']);
+			if (isset($_REQUEST['label'])) $parameters['label'] = trim((string) $_REQUEST['label']);
+			if (! empty($parameters) && ! $province->update($parameters)) $this->error("Error updating province: " . $province->error());
+
 			$response = new \APIResponse();
 			$response->success(true);
-			$response->AddElement('province',$province);
+			$response->AddElement('province', $province);
 			$response->print();
 		}
 
@@ -142,6 +214,13 @@
 				$_REQUEST['country_id'] = (int) $_REQUEST['country_id'];
 				$country = new \Geography\Country($_REQUEST['country_id']);
 				if (! $country->id) $this->error("Country not found");
+	
+				$province = new \Geography\Province();
+				if (! $province->getProvince($country->id,$_REQUEST['name'])) $this->error("Province not found");
+			}
+			elseif (!empty($_REQUEST['country_name'])) {
+				$country = new \Geography\Country();
+				if (! $country->get($_REQUEST['country_name'])) $this->error("Country not found");
 	
 				$province = new \Geography\Province();
 				if (! $province->getProvince($country->id,$_REQUEST['name'])) $this->error("Province not found");
@@ -204,34 +283,37 @@
 					'parameters'	=> array(
 						'name'			=> array(
 							'description'	=> 'Name of country',
-							'validation_method'	=> 'Geography::Country::validName()',
 							'required' => true
 						),
 						'abbreviation'	=> array(
-							'description'	=> 'Abbreviation of country',
-							'validation_method'	=> 'Geography::Country::validCode()',
+							'description'	=> 'Abbreviation of country (optional)',
+						),
+						'view_order'	=> array(
+							'description'	=> 'Display order (default 500)',
 						),
 					),
 				),
 				'updateCountry'	=> array(
-					'description'	=> 'Update a country',
+					'description'	=> 'Update a country (identify by id, name, abbreviation, or code)',
 					'token_required'	=> true,
 					'privilege_required'	=> 'manage geographical data',
 					'return_element'	=> 'country',
 					'return_type'	=> 'Geography::Country',
 					'parameters'	=> array(
-						'code'			=> array(
-							'description'	=> 'Country code',
-							'validation_method'	=> 'Geography::Country::validCode()',
-							'required' => true
+						'id'			=> array(
+							'description'	=> 'Country ID',
 						),
 						'name'			=> array(
-							'description'	=> 'Name of country',
-							'validation_method'	=> 'Geography::Country::validName()',
+							'description'	=> 'Country name (to find) or new name (to set)',
 						),
 						'abbreviation'	=> array(
-							'description'	=> 'Abbreviation of country',
-							'validation_method'	=> 'Geography::Country::validCode()',
+							'description'	=> 'Abbreviation (to find or set)',
+						),
+						'code'			=> array(
+							'description'	=> 'Alias for name/abbreviation to find country',
+						),
+						'view_order'	=> array(
+							'description'	=> 'Display order',
 						),
 					),
 				),
@@ -283,30 +365,53 @@
 						'country_id'	=> array(
 							'description'	=> 'Country ID',
 							'validation_method'	=> 'Geography::Country::validCode()',
-							'required' => true
+							'requirement_group'	=> 0,
+						),
+						'country_name'	=> array(
+							'description'	=> 'Country Name',
+							'validation_method'	=> 'Geography::Country::validName()',
+							'requirement_group'	=> 1,
 						),
 						'name'			=> array(
 							'description'	=> 'Name of province',
+							'required' => true,
 							'validation_method'	=> 'Geography::Province::validName()',
-							'required' => true
 						),
 						'abbreviation'	=> array(
 							'description'	=> 'Abbreviation of province',
+							'required' => true,
 							'validation_method'	=> 'Geography::Province::validCode()',
+						),
+						'code'			=> array(
+							'description'	=> 'Unique code (optional; generated from country+name if omitted)',
+							'validation_method'	=> 'Geography::Province::validCode()',
+						),
+						'type'			=> array(
+							'description'	=> 'Type (e.g. state, province)',
+							'validation_method'	=> 'Geography::Province::validType()',
+						),
+						'label'			=> array(
+							'description'	=> 'Label',
+							'validation_method'	=> 'Geography::Province::validName()',
 						),
 					),
 				),
 				'updateProvince'	=> array(
-					'description'	=> 'Update a province or state',
+					'description'	=> 'Update a province or state (identify by code or id)',
 					'token_required'	=> true,
 					'privilege_required'	=> 'manage geographical data',
 					'return_element'	=> 'province',
 					'return_type'	=> 'Geography::Province',
 					'parameters'	=> array(
 						'code'			=> array(
-							'description'	=> 'Province code',
+							'description'	=> 'Province code (to find)',
 							'validation_method'	=> 'Geography::Province::validCode()',
-							'required' => true
+							'requirement_group'	=> 0,
+						),
+						'id'			=> array(
+							'description'	=> 'Province ID (to find)',
+							'type'			=> 'integer',
+							'requirement_group'	=> 1,
 						),
 						'name'			=> array(
 							'description'	=> 'Name of province',
@@ -315,6 +420,18 @@
 						'abbreviation'	=> array(
 							'description'	=> 'Abbreviation of province',
 							'validation_method'	=> 'Geography::Province::validCode()',
+						),
+						'country_id'	=> array(
+							'description'	=> 'Country ID',
+							'validation_method'	=> 'Geography::Country::validCode()',
+						),
+						'type'			=> array(
+							'description'	=> 'Type',
+							'validation_method'	=> 'Geography::Province::validType()',
+						),
+						'label'			=> array(
+							'description'	=> 'Label',
+							'validation_method'	=> 'Geography::Province::validName()',
 						),
 					),
 				),
@@ -332,6 +449,11 @@
 							'description'	=> 'Province Name',
 							'requirement_group'	=> 1,
 							'validation_method'	=> 'Geography::Province::validName()',
+						),
+						'country_name'	=> array(
+							'description'	=> 'Country Name',
+							'requirement_group'	=> 1,
+							'validation_method'	=> 'Geography::Country::validName()',
 						),
 						'abbreviation' => array(
 							'description'	=> 'Province Abbreviation',

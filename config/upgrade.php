@@ -67,7 +67,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 51,
+			"schema"		=> 53,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
@@ -193,6 +193,13 @@
 	include(MODULES."/support/default/_metadata.php");
 
 	$menus = array();
-	
+	// Include upgrade.local.php from any module that has one (e.g. site, spectros)
+	foreach (array_keys($modules) as $module) {
+		$path = MODULES."/".strtolower($module)."/default/upgrade.local.php";
+		if (file_exists($path)) {
+			include($path);
+		}
+	}
+
 	// Common shipping vendors
 	$shipping_vendors = array('Aramex','Australia Post','Bombino','Blue Dart','Canada Post','DB Schenker','Delhivery','DHL','DPD','DTDC','FedEx','Hermes','Nippon','OnTrac Logistics','Parcelforce','PostNL','Purolator','Royal Mail','Spee-dee Delivery','Startrack','TNT','UPS','USPS','Yodel','ZTO Express');

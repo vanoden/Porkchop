@@ -198,6 +198,12 @@
 	$counter = new \Site\Counter("view.".$page->module.".".$page->view);
 	$counter->increment();
 
+	// Module-specific template override (e.g. FumeConnect upgrade uses install.html)
+	$set_template = MODULES . '/' . $page->module() . '/default/set_template.php';
+	if (file_exists($set_template)) {
+		include $set_template;
+	}
+
 	print $page->load_template();
 
 	$stats_string = "PAGE STATS: ".$page->module."/".$page->view." executed ".$_page_query_count." queries in ".$_page_query_time." seconds";

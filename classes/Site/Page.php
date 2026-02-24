@@ -783,8 +783,10 @@
 				$counter->increment();
 				$message = "Application Error";
 			}
-			if (!empty($this->template())) header("X-Template: ".$this->template());
-			if (!empty($this->module)) header("X-Module: ".$this->module());
+			if (! headers_sent()) {
+				if (!empty($this->template())) header("X-Template: ".$this->template());
+				if (!empty($this->module)) header("X-Module: ".$this->module());
+			}
 			return $message;
 		}
 
@@ -1496,6 +1498,16 @@
 		/************************************/
 		public function showAdminPageInfo() {
 			return "<div id='adminPageInfo'><div id='adminTitle'>".$this->showTitle()."\n".$this->showBreadcrumbs()."</div>".$this->showMessages()."</div>";
+		}
+
+		/** @method showSubHeading()
+		 * @brief Title, Breadcrumbs and messaging for page
+		 * Generate Default Subheading with Page Title, BreadCrumbs and Error/Info/Success Messaging.
+		 * @param string Class Prefix, ie 'admin' to return classes with 'admin' prefix instead of 'page'
+		 * @return string HTML for SubHeading
+		 */
+		public function showSubHeading($prefix = 'page'): string {
+			return "<div id='${prefix}SubHeading'><div id='${prefix}Title'>".$this->showTitle()."\n".$this->showBreadcrumbs()."</div>".$this->showMessages()."</div>";
 		}
 
 		public function addBreadcrumb($name,$target = '') {

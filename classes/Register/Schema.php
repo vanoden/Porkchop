@@ -1512,125 +1512,171 @@
 				$database->CommitTrans();
 			}
 
-		if ($this->version() < 48) {
-			app_log("Upgrading schema to version 48", 'notice', __FILE__, __LINE__);
-			
-			# Start Transaction
-			if (!$database->BeginTrans())
-				app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
-			
-			$table = new \Database\Schema\Table('register_organizations');
-			if (! $table->has_column('account_number')) {
-				$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `account_number` varchar(255) NULL";
+			if ($this->version() < 48) {
+				app_log("Upgrading schema to version 48", 'notice', __FILE__, __LINE__);
+				
+				# Start Transaction
+				if (!$database->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				
+				$table = new \Database\Schema\Table('register_organizations');
+				if (! $table->has_column('account_number')) {
+					$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `account_number` varchar(255) NULL";
+					if (! $database->Execute($alter_table_query)) {
+						$this->SQLError("Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+						app_log($this->error(), 'error');
+						return false;
+					}
+				}
+
+				$this->setVersion(48);
+				$database->CommitTrans();
+			}
+
+			if ($this->version() < 49) {
+				app_log("Upgrading schema to version 49 - Adding privilege levels", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction
+				if (!$database->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+				// Add level column to register_roles_privileges table
+				$alter_table_query = "ALTER TABLE `register_roles_privileges` ADD COLUMN `level` tinyint(3) NOT NULL DEFAULT 0";
 				if (! $database->Execute($alter_table_query)) {
-					$this->SQLError("Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					$this->SQLError("Error adding level column to register_roles_privileges table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
 					app_log($this->error(), 'error');
+					$database->RollbackTrans();
 					return false;
 				}
+
+				// Update all existing records to administrator level (1)
+				$update_existing_query = "UPDATE `register_roles_privileges` SET `level` = 1";
+				if (! $database->Execute($update_existing_query)) {
+					$this->SQLError("Error updating existing privilege levels in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
+					$database->RollbackTrans();
+					return false;
+				}
+
+				$this->setVersion(49);
+				$database->CommitTrans();
 			}
 
-			$this->setVersion(48);
-			$database->CommitTrans();
+			if ($this->version() < 50) {
+				app_log("Upgrading schema to version 50 - Adding register_user_statistics", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction
+				if (!$database->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `register_user_statistics` (
+						`user_id` int(11) NOT NULL,
+						`last_login_date` datetime DEFAULT NULL,
+						`last_hit_date` datetime DEFAULT NULL,
+						`first_login_date` datetime DEFAULT NULL,
+						`session_count` int(11) NOT NULL DEFAULT 0,
+						`password_change_count` int(11) NOT NULL DEFAULT 0,
+						`failed_login_count` int(11) NOT NULL DEFAULT 0,
+						`last_failed_login_date` datetime DEFAULT NULL,
+						`last_password_change_date` datetime DEFAULT NULL,
+						PRIMARY KEY (`user_id`),
+						FOREIGN KEY `fk_user_stats_user` (`user_id`) REFERENCES `register_users` (`id`)
+					)
+				";
+
+				if (! $database->Execute($create_table_query)) {
+					$this->SQLError("Error creating register_user_statistics table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
+					$database->RollbackTrans();
+					return false;
+				}
+
+				$alter_table_query = "
+					ALTER TABLE `register_roles_privileges` MODIFY COLUMN `level` tinyint UNSIGNED NOT NULL DEFAULT 0
+				";
+
+				if (! $database->Execute($alter_table_query)) {
+					$this->SQLError("Error altering register_roles_privileges table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
+					$database->RollbackTrans();
+					return false;
+				}
+
+				$this->setVersion(50);
+				$database->CommitTrans();
+			}
+
+			if ($this->version() < 51) {
+				app_log("Upgrading schema to version 51", 'notice', __FILE__, __LINE__);
+				
+				# Start Transaction
+				if (!$database->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				
+				$alter_table_query = "
+					ALTER TABLE register_auth_failures
+					ADD COLUMN `user_agent` varchar(500) DEFAULT NULL AFTER `ip_address`
+				";
+
+				$database->Execute($alter_table_query);
+				if ($database->ErrorMsg()) {
+					$this->SQLError("Error altering register_auth_failures table in Register::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(51);
+				$database->CommitTrans();
+			}
+
+			if ($this->version() < 52) {
+				app_log("Upgrading schema to version 52", 'notice', __FILE__, __LINE__);
+
+				$table = new \Database\Schema\Table('register_locations');
+				if (!$table->has_column('hidden')) {
+					$alter_table_query = "
+						ALTER TABLE register_locations ADD COLUMN hidden TINYINT(1) NOT NULL DEFAULT 0
+					";
+					if (!$database->Execute($alter_table_query)) {
+						$this->SQLError("Error adding hidden column to register_locations: " . $database->ErrorMsg());
+						return false;
+					}
+				}
+
+				$this->setVersion(52);
+			}
+
+			if ($this->version() < 53) {
+				app_log("Upgrading schema to version 53", 'notice', __FILE__, __LINE__);
+
+				$add_table_query = "
+					CREATE TABLE IF NOT EXISTS `organization_products_provided` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`organization_id` int(11) NOT NULL,
+						`product_item_id` int(11) NOT NULL,
+						`date_added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						`current_price` decimal(10,2) NOT NULL,
+						`pack_quantity` decimal(10,2) NOT NULL DEFAULT 1,
+						`units` varchar(50) NOT NULL DEFAULT 'each',
+						`notes` varchar(255) DEFAULT NULL,
+						PRIMARY KEY (`id`),
+						FOREIGN KEY `fk_org_products_provided_org` (`organization_id`) REFERENCES `register_organizations` (`id`),
+						FOREIGN KEY `fk_org_products_provided_product` (`product_item_id`) REFERENCES `product_items` (`id`)
+					)
+				";
+
+				if (! $database->Execute($add_table_query)) {
+					$this->SQLError("Error creating organization_products_provided table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
+					$database->RollbackTrans();
+					return false;
+				}
+
+				$this->setVersion(53);
+				$database->CommitTrans();
+			}
+			return true;
 		}
-
-		if ($this->version() < 49) {
-			app_log("Upgrading schema to version 49 - Adding privilege levels", 'notice', __FILE__, __LINE__);
-
-			# Start Transaction
-			if (!$database->BeginTrans())
-				app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
-
-			// Add level column to register_roles_privileges table
-			$alter_table_query = "ALTER TABLE `register_roles_privileges` ADD COLUMN `level` tinyint(3) NOT NULL DEFAULT 0";
-			if (! $database->Execute($alter_table_query)) {
-				$this->SQLError("Error adding level column to register_roles_privileges table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
-				app_log($this->error(), 'error');
-				$database->RollbackTrans();
-				return false;
-			}
-
-			// Update all existing records to administrator level (1)
-			$update_existing_query = "UPDATE `register_roles_privileges` SET `level` = 1";
-			if (! $database->Execute($update_existing_query)) {
-				$this->SQLError("Error updating existing privilege levels in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
-				app_log($this->error(), 'error');
-				$database->RollbackTrans();
-				return false;
-			}
-
-			$this->setVersion(49);
-			$database->CommitTrans();
-		}
-
-		if ($this->version() < 50) {
-			app_log("Upgrading schema to version 50 - Adding register_user_statistics", 'notice', __FILE__, __LINE__);
-
-			# Start Transaction
-			if (!$database->BeginTrans())
-				app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
-
-			$create_table_query = "
-				CREATE TABLE IF NOT EXISTS `register_user_statistics` (
-					`user_id` int(11) NOT NULL,
-					`last_login_date` datetime DEFAULT NULL,
-					`last_hit_date` datetime DEFAULT NULL,
-					`first_login_date` datetime DEFAULT NULL,
-					`session_count` int(11) NOT NULL DEFAULT 0,
-					`password_change_count` int(11) NOT NULL DEFAULT 0,
-					`failed_login_count` int(11) NOT NULL DEFAULT 0,
-					`last_failed_login_date` datetime DEFAULT NULL,
-					`last_password_change_date` datetime DEFAULT NULL,
-					PRIMARY KEY (`user_id`),
-					FOREIGN KEY `fk_user_stats_user` (`user_id`) REFERENCES `register_users` (`id`)
-				)
-			";
-
-			if (! $database->Execute($create_table_query)) {
-				$this->SQLError("Error creating register_user_statistics table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
-				app_log($this->error(), 'error');
-				$database->RollbackTrans();
-				return false;
-			}
-
-			$alter_table_query = "
-				ALTER TABLE `register_roles_privileges` MODIFY COLUMN `level` tinyint UNSIGNED NOT NULL DEFAULT 0
-			";
-
-			if (! $database->Execute($alter_table_query)) {
-				$this->SQLError("Error altering register_roles_privileges table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
-				app_log($this->error(), 'error');
-				$database->RollbackTrans();
-				return false;
-			}
-
-			$this->setVersion(50);
-			$database->CommitTrans();
-		}
-
-		if ($this->version() < 51) {
-			app_log("Upgrading schema to version 51", 'notice', __FILE__, __LINE__);
-			
-			# Start Transaction
-			if (!$database->BeginTrans())
-				app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
-			
-			$alter_table_query = "
-				ALTER TABLE register_auth_failures
-				ADD COLUMN `user_agent` varchar(500) DEFAULT NULL AFTER `ip_address`
-			";
-
-			$database->Execute($alter_table_query);
-			if ($database->ErrorMsg()) {
-				$this->SQLError("Error altering register_auth_failures table in Register::Schema::upgrade(): " . $database->ErrorMsg());
-				app_log($this->error(), 'error', __FILE__, __LINE__);
-				$database->RollbackTrans();
-				return null;
-			}
-
-			$this->setVersion(51);
-			$database->CommitTrans();
-		}
-
-		return true;
 	}
-}

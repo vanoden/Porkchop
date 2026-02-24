@@ -195,9 +195,10 @@
             if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
             # Initiate Product Object
-            if ($_REQUEST["login"] && (! $_REQUEST["code"])) $_REQUEST['code'] = $_REQUEST['login'];
+            $code = $_REQUEST["code"] ?? $_REQUEST["login"] ?? null;
+            if (empty($code)) $this->incompleteRequest("code or login required");
             $customer = new \Register\Customer();
-            $customer->get($_REQUEST["code"]);
+            $customer->get($code);
 
             if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 # Can Get Anyone
@@ -450,6 +451,36 @@
             # Send Response
             $response->print();
         }
+
+        ###################################################
+        ### Add a Privilege (create if not exists)		###
+        ###################################################
+        function addPrivilege() {
+            if (! $this->validCSRFToken()) $this->error("Invalid Request");
+            if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
+
+            $name = isset($_REQUEST['name']) ? trim((string) $_REQUEST['name']) : '';
+            if ($name === '') $this->error('name required');
+
+            $privilege = new \Register\Privilege();
+            if ($privilege->get($name)) {
+                $response = new \APIResponse();
+                $response->success(true);
+                $response->addElement('privilege', $privilege);
+                $response->addElement('existing', true);
+                $response->print();
+                return;
+            }
+            $parameters = ['name' => $name];
+            if (isset($_REQUEST['description'])) $parameters['description'] = trim((string) $_REQUEST['description']);
+            if (isset($_REQUEST['module'])) $parameters['module'] = trim((string) $_REQUEST['module']);
+            if (! $privilege->add($parameters)) $this->error($privilege->error());
+
+            $response = new \APIResponse();
+            $response->success(true);
+            $response->addElement('privilege', $privilege);
+            $response->print();
+        }
         
         ###################################################
         ### Update an Existing Role						###
@@ -521,9 +552,17 @@
                 $this->error('role required');
             }
 
+            $level = isset($_REQUEST['level']) ? (int) $_REQUEST['level'] : \Register\PrivilegeLevel::ADMINISTRATOR;
+            $privilege = new \Register\Privilege();
+            $privilege_name = trim((string) $_REQUEST['privilege']);
+            $had_privilege = false;
+            if ($privilege->get($privilege_name) && $privilege->id) {
+                $had_privilege = $role->getPrivilegeLevel($privilege->id) !== null;
+            }
             $response = new \APIResponse();
-            if ($role->addPrivilege($_REQUEST['privilege'])) {
+            if ($role->addPrivilege($_REQUEST['privilege'], $level)) {
                 $response->success(true);
+                if ($had_privilege) $response->addElement('existing', true);
             }
             else {
                 $this->error($role->error());
@@ -534,7 +573,7 @@
         }
         
         ###################################################
-        ### Assign Privilege to Role					###
+        ### Get Privileges for a Role					###
         ###################################################
         function getRolePrivileges() {
             if ($_REQUEST['role']) {
@@ -656,7 +695,7 @@
                 $organization_id = $organization->id;
             }
 
-            if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['code'];
+            if (empty($_REQUEST['login'])) $_REQUEST['login'] = $_REQUEST['code'] ?? '';
 			if (! $user->validLogin($_REQUEST['login'])) $this->error("Login not valid");
 
             if (isset($_REQUEST['automation'])) {
@@ -665,9 +704,9 @@
             }
 
 			$params = array(
-				'login'				=> $_REQUEST['login'],
-				'custom_1'			=> $_REQUEST['custom_1'],
-				'custom_2'			=> $_REQUEST['custom_2'],
+				'login'				=> $_REQUEST['login'] ?? '',
+				'custom_1'			=> $_REQUEST['custom_1'] ?? '',
+				'custom_2'			=> $_REQUEST['custom_2'] ?? '',
 			);
 
 			if (!empty($_REQUEST['first_name'])) $params['first_name'] = noXSS($_REQUEST['first_name']);
@@ -2028,6 +2067,26 @@
                             )
                         )
                     )
+                ),
+                'addPrivilege'	=> array(
+                    'description'	=> 'Create a privilege (or return existing if name exists)',
+                    'authentication_required'	=> true,
+                    'token_required' => true,
+                    'privilege_required'	=> 'manage privileges',
+                    'return_element'	=> 'privilege',
+                    'return_type'	=> 'Register::Privilege',
+                    'parameters'	=> array(
+                        'name'	=> array(
+                            'description'	=> 'Privilege name',
+                            'required' => true
+                        ),
+                        'description'	=> array(
+                            'description'	=> 'Privilege description'
+                        ),
+                        'module'	=> array(
+                            'description'	=> 'Module (e.g. Unspecified)'
+                        ),
+                    ),
                 ),
                 'getRole'    => array(
                     'description'	=> 'Get information about a role',

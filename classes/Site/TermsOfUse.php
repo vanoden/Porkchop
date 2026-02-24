@@ -38,8 +38,9 @@
 			$this->clearError();
 
 			$termsList = new \Site\TermsOfUseList();
-			list($found) = $termsList->find(array('name' => $params['name']));
-			if ($found->id) {
+			$foundList = $termsList->find(array('name' => $params['name']));
+			$found = ! empty($foundList) ? $foundList[0] : null;
+			if ($found && $found->id) {
 				$this->error("Duplicate Name");
 				return false;
 			}
