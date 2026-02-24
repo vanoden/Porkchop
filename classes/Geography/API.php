@@ -28,11 +28,34 @@
 			if (isset($_REQUEST['name'])) $parameters['name'] = trim((string) $_REQUEST['name']);
 			if (isset($_REQUEST['abbreviation'])) $parameters['abbreviation'] = trim((string) $_REQUEST['abbreviation']);
 			if (isset($_REQUEST['view_order'])) $parameters['view_order'] = (int) $_REQUEST['view_order'];
-			if (! $country->add($parameters)) $this->error("Error adding country: " . $country->error());
-
+			$wasExisting = false;
+			// Check if country already exists (by name or abbreviation) so we can return existing: true
+			if (! empty($parameters['name'])) {
+				if ($country->get($parameters['name'])) {
+					$wasExisting = true;
+				} elseif (! empty($parameters['abbreviation']) && $country->get($parameters['abbreviation'])) {
+					$wasExisting = true;
+				}
+			}
+			if (! $wasExisting && ! $country->add($parameters)) {
+				$err = $country->error();
+				$isDuplicate = $err && (stripos($err, 'duplicate') !== false || stripos($err, 'uk_name') !== false);
+				if ($isDuplicate && ! empty($parameters['name'])) {
+					$existing = new \Geography\Country();
+					if ($existing->get($parameters['name']) || (! empty($parameters['abbreviation']) && $existing->get($parameters['abbreviation']))) {
+						$country = $existing;
+						$wasExisting = true;
+					} else {
+						$this->error("Error adding country: " . $err);
+					}
+				} else {
+					$this->error("Error adding country: " . $err);
+				}
+			}
 			$response = new \APIResponse();
 			$response->success(true);
 			$response->AddElement('country', $country);
+			if ($wasExisting) $response->AddElement('existing', true);
 			$response->print();
 		}
 
@@ -121,11 +144,38 @@
 			if (isset($_REQUEST['code'])) $parameters['code'] = trim((string) $_REQUEST['code']);
 			if (isset($_REQUEST['type'])) $parameters['type'] = trim((string) $_REQUEST['type']);
 			if (isset($_REQUEST['label'])) $parameters['label'] = trim((string) $_REQUEST['label']);
-			if (! $province->add($parameters)) $this->error("Error adding province: " . $province->error());
-
+			$wasExisting = false;
+			// Check if province already exists so we can return existing: true
+			if (! empty($parameters['code']) && $province->getByCode($parameters['code'])) {
+				$wasExisting = true;
+			} elseif (! empty($parameters['name']) && $province->getProvince($country->id, $parameters['name'])) {
+				$wasExisting = true;
+			} elseif (! empty($parameters['abbreviation']) && $province->getByAbbreviation($country->id, $parameters['abbreviation'])) {
+				$wasExisting = true;
+			}
+			if (! $wasExisting && ! $province->add($parameters)) {
+				$err = $province->error();
+				$isDuplicate = $err && (stripos($err, 'duplicate') !== false || stripos($err, 'already exists') !== false || stripos($err, 'uk_') !== false);
+				if ($isDuplicate) {
+					$existing = new \Geography\Province();
+					$found = false;
+					if (! empty($parameters['code']) && $existing->getByCode($parameters['code'])) $found = true;
+					elseif (! empty($parameters['name']) && $existing->getProvince($country->id, $parameters['name'])) $found = true;
+					elseif (! empty($parameters['abbreviation']) && $existing->getByAbbreviation($country->id, $parameters['abbreviation'])) $found = true;
+					if ($found) {
+						$province = $existing;
+						$wasExisting = true;
+					} else {
+						$this->error("Error adding province: " . $err);
+					}
+				} else {
+					$this->error("Error adding province: " . $err);
+				}
+			}
 			$response = new \APIResponse();
 			$response->success(true);
 			$response->AddElement('province', $province);
+			if ($wasExisting) $response->AddElement('existing', true);
 			$response->print();
 		}
 

@@ -195,9 +195,10 @@
             if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
             # Initiate Product Object
-            if ($_REQUEST["login"] && (! $_REQUEST["code"])) $_REQUEST['code'] = $_REQUEST['login'];
+            $code = $_REQUEST["code"] ?? $_REQUEST["login"] ?? null;
+            if (empty($code)) $this->incompleteRequest("code or login required");
             $customer = new \Register\Customer();
-            $customer->get($_REQUEST["code"]);
+            $customer->get($code);
 
             if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 # Can Get Anyone
@@ -466,6 +467,7 @@
                 $response = new \APIResponse();
                 $response->success(true);
                 $response->addElement('privilege', $privilege);
+                $response->addElement('existing', true);
                 $response->print();
                 return;
             }
@@ -551,9 +553,16 @@
             }
 
             $level = isset($_REQUEST['level']) ? (int) $_REQUEST['level'] : \Register\PrivilegeLevel::ADMINISTRATOR;
+            $privilege = new \Register\Privilege();
+            $privilege_name = trim((string) $_REQUEST['privilege']);
+            $had_privilege = false;
+            if ($privilege->get($privilege_name) && $privilege->id) {
+                $had_privilege = $role->getPrivilegeLevel($privilege->id) !== null;
+            }
             $response = new \APIResponse();
             if ($role->addPrivilege($_REQUEST['privilege'], $level)) {
                 $response->success(true);
+                if ($had_privilege) $response->addElement('existing', true);
             }
             else {
                 $this->error($role->error());
@@ -686,7 +695,7 @@
                 $organization_id = $organization->id;
             }
 
-            if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['code'];
+            if (empty($_REQUEST['login'])) $_REQUEST['login'] = $_REQUEST['code'] ?? '';
 			if (! $user->validLogin($_REQUEST['login'])) $this->error("Login not valid");
 
             if (isset($_REQUEST['automation'])) {
@@ -695,9 +704,9 @@
             }
 
 			$params = array(
-				'login'				=> $_REQUEST['login'],
-				'custom_1'			=> $_REQUEST['custom_1'],
-				'custom_2'			=> $_REQUEST['custom_2'],
+				'login'				=> $_REQUEST['login'] ?? '',
+				'custom_1'			=> $_REQUEST['custom_1'] ?? '',
+				'custom_2'			=> $_REQUEST['custom_2'] ?? '',
 			);
 
 			if (!empty($_REQUEST['first_name'])) $params['first_name'] = noXSS($_REQUEST['first_name']);

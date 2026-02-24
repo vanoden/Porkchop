@@ -202,7 +202,8 @@ class BaseModel extends \BaseClass {
 		$validFieldPattern = '/^[a-z0-9_]+$/';
 		foreach ($parameters as $fieldKey => $fieldValue) {
 			if ($fieldKey !== '' && is_string($fieldKey) && preg_match($validFieldPattern, $fieldKey) && in_array($fieldKey, $this->_fields)) {
-				if ($this->$fieldKey != $fieldValue) {
+				$current = property_exists($this, $fieldKey) ? $this->$fieldKey : null;
+				if ($current != $fieldValue) {
 					$updateQuery .= ", `$fieldKey` = ?";
 					$database->AddParam($fieldValue);
 					if (strlen($audit_message) > 0) $audit_message .= ", ";
