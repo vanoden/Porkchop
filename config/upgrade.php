@@ -77,7 +77,6 @@
 				"see register api"
 			),
 			"templates"		=> array(
-				"organizations"		=> $templates['admin'],
 				"organizations_report"	=> $templates['admin'],
 				"admin_organizations"	=> $templates['admin'],
 				"admin_organization"		=> $templates['admin'],
@@ -85,7 +84,6 @@
 				"admin_organization_tags"	=> $templates['admin'],
 				"admin_organization_locations"	=> $templates['admin'],
 				"admin_organization_audit_log"	=> $templates['admin'],
-				"accounts"			=> $templates['admin'],
 				"admin_account"		=> $templates['admin'],
 				"pending_customers"	=> $templates['admin'],
 				"privileges"		=> $templates['admin'],
