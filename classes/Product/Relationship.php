@@ -9,8 +9,7 @@
 		/** @constructor */
 		public function __construct() {
 			$this->_tableName = "product_relations";
-			$this->_tableUKColumns = ['parent_id', 'child_id'];
-    		parent::__construct();			
+			$this->_tableUKColumns = ['parent_id', 'child_id'];	
 		}
 
 		/** @method __call(name, parameters)

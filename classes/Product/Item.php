@@ -171,7 +171,7 @@
 			}
 
 			# Get Current Values for Audit
-			$current = new \Spectros\Product\Item($this->id);
+			$current = new \Product\Item($this->id);
 
 			# Bust Cache
 			$cache_key = "product[".$this->id."]";

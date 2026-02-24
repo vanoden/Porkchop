@@ -1648,35 +1648,6 @@
 				$this->setVersion(52);
 			}
 
-			if ($this->version() < 53) {
-				app_log("Upgrading schema to version 53", 'notice', __FILE__, __LINE__);
-
-				$add_table_query = "
-					CREATE TABLE IF NOT EXISTS `organization_products_provided` (
-						`id` int(11) NOT NULL AUTO_INCREMENT,
-						`organization_id` int(11) NOT NULL,
-						`product_item_id` int(11) NOT NULL,
-						`date_added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-						`current_price` decimal(10,2) NOT NULL,
-						`pack_quantity` decimal(10,2) NOT NULL DEFAULT 1,
-						`units` varchar(50) NOT NULL DEFAULT 'each',
-						`notes` varchar(255) DEFAULT NULL,
-						PRIMARY KEY (`id`),
-						FOREIGN KEY `fk_org_products_provided_org` (`organization_id`) REFERENCES `register_organizations` (`id`),
-						FOREIGN KEY `fk_org_products_provided_product` (`product_item_id`) REFERENCES `product_items` (`id`)
-					)
-				";
-
-				if (! $database->Execute($add_table_query)) {
-					$this->SQLError("Error creating organization_products_provided table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
-					app_log($this->error(), 'error');
-					$database->RollbackTrans();
-					return false;
-				}
-
-				$this->setVersion(53);
-				$database->CommitTrans();
-			}
 			return true;
 		}
 	}
