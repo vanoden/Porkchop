@@ -79,6 +79,7 @@
 			"templates"		=> array(
 				"organizations"		=> $templates['admin'],
 				"organizations_report"	=> $templates['admin'],
+				"admin_organizations"	=> $templates['admin'],
 				"admin_organization"		=> $templates['admin'],
 				"admin_organization_users"	=> $templates['admin'],
 				"admin_organization_tags"	=> $templates['admin'],
@@ -91,6 +92,7 @@
 				"roles"				=> $templates['admin'],
 				"role"				=> $templates['admin'],
 				"admin_location"	=> $templates['admin'],
+				"admin_accounts"		=> $templates['admin'],
 				"admin_account_contacts"	=> $templates['admin'],
 				"admin_account_password"	=> $templates['admin'],
 				"admin_account_roles"		=> $templates['admin'],
