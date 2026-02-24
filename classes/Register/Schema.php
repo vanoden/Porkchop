@@ -1648,6 +1648,32 @@
 				$this->setVersion(52);
 			}
 
+			if ($this->version() < 53) {
+				app_log("Upgrading schema to version 53", 'notice', __FILE__, __LINE__);
+
+				$add_table_query = "
+					CREATE TABLE IF NOT EXISTS `register_organization_associations` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`organization_id` int(11) NOT NULL,
+						`associated_organization_id` int(11) NOT NULL,
+						`association_type` enum('RESELLER','PARTNER','DISTRIBUTOR','CUSTOMER','VENDOR','OTHER') NOT NULL DEFAULT 'OTHER',
+						PRIMARY KEY (`id`),
+						FOREIGN KEY `fk_org_assoc_org` (`organization_id`) REFERENCES `register_organizations` (`id`),
+						FOREIGN KEY `fk_org_assoc_associated_org` (`associated_organization_id`) REFERENCES `register_organizations` (`id`)
+					)
+				";
+	
+				if (! $database->Execute($add_table_query)) {
+					$this->SQLError("Error creating register_organization_assocations table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
+					$database->RollbackTrans();
+					return false;
+				}
+
+				$this->setVersion(53);
+				$database->CommitTrans();
+			}
+
 			return true;
 		}
 	}

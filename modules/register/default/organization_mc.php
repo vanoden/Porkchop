@@ -8,7 +8,19 @@
 	$page = new \Site\Page();
 	$page->requireOrganization();
 
-	$organization = $GLOBALS['_SESSION_']->customer()->organization();
+	if ($_REQUEST['organization_id']) {
+		$associated_organization = new \Register\Organization($_REQUEST['organization_id']);
+		if ($associated_organization->associated_with($GLOBALS['_SESSION_']->customer()->organization_id)) {
+			$organization = $associated_organization;
+		}
+		else {
+			$page->addError("You do not have permission to view this organization.");
+			$organization = $GLOBALS['_SESSION_']->customer()->organization();
+		}
+	}
+	else {
+		$organization = $GLOBALS['_SESSION_']->customer()->organization();
+	}
 
 	$csrfOk = true;
 	if (isset($_REQUEST['method']) && $_REQUEST['method'] === 'Apply') {

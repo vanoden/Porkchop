@@ -46,7 +46,7 @@
 		foreach ($organizations as $organization) {
 	  ?>
 	<div class="tableRow">
-		<div class="tableCell"><a href="<?=PATH."/_register/admin_organization?organization_id=".$organization->id?>"><?=$organization->code?></a></div>
+		<div class="tableCell"><a href="<?=PATH."/_register/organization?organization_id=".$organization->id?>"><?=$organization->code?></a></div>
 		<div class="tableCell"><?=$organization->name?></div>
 		<div class="tableCell"><?=$organization->status?></div>
 		<div class="tableCell"><?=$organization->activeHumans()?></div>
