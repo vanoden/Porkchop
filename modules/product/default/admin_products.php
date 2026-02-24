@@ -7,7 +7,7 @@
 </script>
 
 <?=$totalRecords?> Products Found
-<a href="/_spectros/admin_product">New Product</a>
+<a href="/_product/admin_product">New Product</a>
 <div id="search_container">
     <form method="get">
         <input type="text" name="search" id="search" placeholder="search" value="<?=$_REQUEST['search'] ?? ''?>" />
@@ -38,8 +38,8 @@
 foreach ($products as $product) { 
     if (isset($greenbar) && $greenbar) $greenbar = ''; else $greenbar = ' greenbar';
 ?>
-	<div class="tableRow spectros-admin-products-table-row">
-        <div class="tableCell width-21per<?=$greenbar?>"><a href="/_spectros/admin_product/<?=$product->code?>"><?=$product->code?></a></div>
+	<div class="tableRow bandedRows">
+        <div class="tableCell width-21per<?=$greenbar?>"><a href="/_product/admin_product/<?=$product->code?>"><?=$product->code?></a></div>
 		<div class="tableCell width-7per<?=$greenbar?>"><?=isset($product->type) ? $product->type : ''?></div>
 		<div class="tableCell width-7per<?=$greenbar?>"><?=isset($product->status) ? $product->status : ''?></div>
 		<div class="tableCell width-35per<?=$greenbar?>"><?=$product->getMetadata('name')?></div>
