@@ -130,16 +130,6 @@
 		"Search"		=> array(
 			"schema"	=> 3
 		),
-		"Spectros"		=> array(
-			"templates"	=> array(
-				"outstanding_requests"	=> $templates['admin'],
-				"admin_products"		=> $templates['admin'],
-				"admin_product"			=> $templates['admin'],
-				"admin_credits"			=> $templates['admin'],
-				"cal_report"			=> $templates['admin'],
-				"transfer_ownership"	=> $templates['admin'],
-			)
-		),
 		"Engineering"	=> array(
 			"templates"	=> array(
 				"home"			=> $templates['admin'],

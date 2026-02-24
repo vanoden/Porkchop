@@ -12,6 +12,8 @@
 			"report"					=> $templates['admin'],
 			"edit"						=> $templates['admin'],
 			"admin_images"				=> $templates['admin'],
+			"admin_products"			=> $templates['admin'],
+			"admin_product"				=> $templates['admin'],
 			"admin_product_prices"		=> $templates['admin'],
 			"admin_vendors"				=> $templates['admin'],
 			"admin_product_vendors"		=> $templates['admin'],
