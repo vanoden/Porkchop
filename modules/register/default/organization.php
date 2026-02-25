@@ -76,7 +76,7 @@
 	    </div> <!-- end row header -->
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <input id="website_url" name="website_url" class="width-250px" placeholder="http://" value="<?=$organization->website_url?>"/>
+			    <input type="text" id="website_url" name="website_url" class="width-250px" placeholder="http://" value="<?=$organization->website_url?>"/>
 		    </div>
 	    </div>
     </div>	
@@ -87,7 +87,7 @@
         <input type="checkbox" id="showAllUsers" name="showAllUsers" value="showAllUsers" onclick="showHidden()" <?=(isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? 'checked' : ''?>> SHOW ALL (Expired/Hidden/Deleted)
         <h3>Current Users</h3>
         <!--	Start First Row-->
-        <div class="tableBody">
+        <div class="tableBody bandedRows">
 	        <div class="tableRowHeader">
 		        <div class="tableCell value tableCell-width-20">Username</div>
 		        <div class="tableCell value tableCell-width-20">First Name</div>
