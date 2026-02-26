@@ -157,15 +157,10 @@
 			}
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {
-				if (1) {
-					$organization = new Organization($id,array('nocache' => true));
-					$this->incrementCount();
-					array_push($organizations,$organization);
-				}
-				else {
-					array_push($organizations,$id);
-					$this->incrementCount();
-				}
+				if (false && $GLOBALS['_SESSION_']->customer()->organization_id != $id && !$GLOBALS['_SESSION_']->customer()->can('manage organizations',\Register\PrivilegeLevel::ORG_ADMINISTRATOR) && !$GLOBALS['_SESSION_']->customer()->organization()->associatedWith($id)) continue;
+				$organization = new Organization($id,array('nocache' => true));
+				$this->incrementCount();
+				array_push($organizations,$organization);
 			}
 			return $organizations;
 		}
@@ -354,6 +349,7 @@
 
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {
+				if (true && $GLOBALS['_SESSION_']->customer()->organization_id != $id && !$GLOBALS['_SESSION_']->customer()->can('manage organizations',\Register\PrivilegeLevel::ORGANIZATION_MANAGER) && !$GLOBALS['_SESSION_']->customer()->organization()->associatedWith($id)) continue;
 				if (isset($controls['id']) || isset($controls['count'])) {
 					array_push($organizations,$id);
 				}

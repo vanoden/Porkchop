@@ -67,7 +67,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 53,
+			"schema"		=> 54,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
@@ -77,20 +77,20 @@
 				"see register api"
 			),
 			"templates"		=> array(
-				"organizations"		=> $templates['admin'],
 				"organizations_report"	=> $templates['admin'],
+				"admin_organizations"	=> $templates['admin'],
 				"admin_organization"		=> $templates['admin'],
 				"admin_organization_users"	=> $templates['admin'],
 				"admin_organization_tags"	=> $templates['admin'],
 				"admin_organization_locations"	=> $templates['admin'],
 				"admin_organization_audit_log"	=> $templates['admin'],
-				"accounts"			=> $templates['admin'],
 				"admin_account"		=> $templates['admin'],
 				"pending_customers"	=> $templates['admin'],
 				"privileges"		=> $templates['admin'],
 				"roles"				=> $templates['admin'],
 				"role"				=> $templates['admin'],
 				"admin_location"	=> $templates['admin'],
+				"admin_accounts"		=> $templates['admin'],
 				"admin_account_contacts"	=> $templates['admin'],
 				"admin_account_password"	=> $templates['admin'],
 				"admin_account_roles"		=> $templates['admin'],
@@ -129,16 +129,6 @@
 		),
 		"Search"		=> array(
 			"schema"	=> 3
-		),
-		"Spectros"		=> array(
-			"templates"	=> array(
-				"outstanding_requests"	=> $templates['admin'],
-				"admin_products"		=> $templates['admin'],
-				"admin_product"			=> $templates['admin'],
-				"admin_credits"			=> $templates['admin'],
-				"cal_report"			=> $templates['admin'],
-				"transfer_ownership"	=> $templates['admin'],
-			)
 		),
 		"Engineering"	=> array(
 			"templates"	=> array(

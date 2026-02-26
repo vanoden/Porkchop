@@ -1,19 +1,19 @@
 <script language="JavaScript">
 	function addLocation() {
 		var organization_id = document.forms[0].organization_id.value;
-		window.location.href = "/_register/admin_location?organization_id="+organization_id;
+		window.location.href = "/_register/location?organization_id="+organization_id;
 		return true;
 	}
 	
 	function showHidden() {
 		var organization_id = document.forms[0].organization_id.value;
-		window.location.href = "/_register/admin_organization?organization_id="+organization_id+"&showAllUsers=<?=(isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? '0' : '1'?>";
+		window.location.href = "/_register/organization?organization_id="+organization_id+"&showAllUsers=<?=(isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? '0' : '1'?>";
 		return true;
 	}
 	
 	function submitDefaultLocation(type, value) {
 		var organization_id = document.forms[0].organization_id.value;
-		window.location.href = "/_register/admin_organization?organization_id="+organization_id+"&" + type + "=" + value;
+		window.location.href = "/_register/organization?organization_id="+organization_id+"&" + type + "=" + value;
 		return true;
 	}
 	
@@ -76,7 +76,7 @@
 	    </div> <!-- end row header -->
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <input id="website_url" name="website_url" class="width-250px" placeholder="http://" value="<?=$organization->website_url?>"/>
+			    <input type="text" id="website_url" name="website_url" class="width-250px" placeholder="http://" value="<?=$organization->website_url?>"/>
 		    </div>
 	    </div>
     </div>	
@@ -87,7 +87,7 @@
         <input type="checkbox" id="showAllUsers" name="showAllUsers" value="showAllUsers" onclick="showHidden()" <?=(isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? 'checked' : ''?>> SHOW ALL (Expired/Hidden/Deleted)
         <h3>Current Users</h3>
         <!--	Start First Row-->
-        <div class="tableBody">
+        <div class="tableBody bandedRows">
 	        <div class="tableRowHeader">
 		        <div class="tableCell value tableCell-width-20">Username</div>
 		        <div class="tableCell value tableCell-width-20">First Name</div>

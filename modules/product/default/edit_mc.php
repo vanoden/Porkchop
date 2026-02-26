@@ -3,7 +3,7 @@ $page = new \Site\Page();
 $page->requirePrivilege('manage products');
 
 // Valid Item Types
-$item_types = array("inventory", "unique", "group", "kit", "note");
+$item_types = array("inventory", "unique", "service", "group", "kit", "note");
 
 // Fetch Code from Query String if not Posted
 $new_item = false;

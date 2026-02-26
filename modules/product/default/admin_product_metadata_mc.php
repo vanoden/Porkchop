@@ -182,6 +182,6 @@ if (defined('MODULES') && is_dir(MODULES . '/Monitor')) {
 }
 
 $page->setAdminMenuSection("Products");  // Keep Products section open
-$page->addBreadcrumb("Products", "/_spectros/admin_products");
-if (isset($item->id)) $page->addBreadcrumb($item->code, "/_spectros/admin_product/" . $item->code);
+$page->addBreadcrumb("Products", "/_product/admin_products");
+if (isset($item->id)) $page->addBreadcrumb($item->code, "/_product/admin_product/" . $item->code);
 $page->addBreadcrumb("Metadata", "/_product/admin_product_metadata/" . $item->code);

@@ -1652,23 +1652,19 @@
 				app_log("Upgrading schema to version 53", 'notice', __FILE__, __LINE__);
 
 				$add_table_query = "
-					CREATE TABLE IF NOT EXISTS `organization_products_provided` (
+					CREATE TABLE IF NOT EXISTS `register_organization_associations` (
 						`id` int(11) NOT NULL AUTO_INCREMENT,
 						`organization_id` int(11) NOT NULL,
-						`product_item_id` int(11) NOT NULL,
-						`date_added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-						`current_price` decimal(10,2) NOT NULL,
-						`pack_quantity` decimal(10,2) NOT NULL DEFAULT 1,
-						`units` varchar(50) NOT NULL DEFAULT 'each',
-						`notes` varchar(255) DEFAULT NULL,
+						`associated_organization_id` int(11) NOT NULL,
+						`association_type` enum('RESELLER','PARTNER','DISTRIBUTOR','CUSTOMER','VENDOR','OTHER') NOT NULL DEFAULT 'OTHER',
 						PRIMARY KEY (`id`),
-						FOREIGN KEY `fk_org_products_provided_org` (`organization_id`) REFERENCES `register_organizations` (`id`),
-						FOREIGN KEY `fk_org_products_provided_product` (`product_item_id`) REFERENCES `product_items` (`id`)
+						FOREIGN KEY `fk_org_assoc_org` (`organization_id`) REFERENCES `register_organizations` (`id`),
+						FOREIGN KEY `fk_org_assoc_associated_org` (`associated_organization_id`) REFERENCES `register_organizations` (`id`)
 					)
 				";
 
 				if (! $database->Execute($add_table_query)) {
-					$this->SQLError("Error creating organization_products_provided table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					$this->SQLError("Error creating register_organization_assocations table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
 					app_log($this->error(), 'error');
 					$database->RollbackTrans();
 					return false;
@@ -1677,6 +1673,57 @@
 				$this->setVersion(53);
 				$database->CommitTrans();
 			}
+
+			if ($this->version() < 54) {
+				app_log("Upgrading schema to version 54", 'notice', __FILE__, __LINE__);
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `register_organization_association_invitations` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`user_id` int(11) NOT NULL,
+						`organization_id` int(11) NOT NULL,
+						`association_type` enum('RESELLER','PARTNER','DISTRIBUTOR','CUSTOMER','VENDOR','OTHER') NOT NULL DEFAULT 'OTHER',
+						`token` varchar(64) NOT NULL,
+						`date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						`date_expires` datetime NOT NULL,
+						`accepted` tinyint(1) NOT NULL DEFAULT 0,
+						`associated_organization_id` int(11) DEFAULT NULL,
+						`date_associated` datetime DEFAULT NULL,
+						`associated_customer_id` int(11) DEFAULT NULL,
+						PRIMARY KEY (`id`),
+						FOREIGN KEY `fk_org_assoc_invite_org` (`organization_id`) REFERENCES `register_organizations` (`id`),
+						FOREIGN KEY `fk_org_assoc_invite_user` (`user_id`) REFERENCES `register_users` (`id`),
+						FOREIGN KEY `fk_org_assoc_invite_associated_org` (`associated_organization_id`) REFERENCES `register_organizations` (`id`),
+						INDEX `idx_org_assoc_invite_token` (`token`),
+						INDEX `idx_org_assoc_invite_user` (`user_id`),
+						INDEX `idx_org_assoc_invite_org` (`organization_id`)
+					)
+				";
+
+				if (! $database->Execute($create_table_query)) {
+					$this->SQLError("Error creating register_organization_association_invitations table in ".$this->module."::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+
+				$alter_table_query = "
+					ALTER TABLE `register_organization_associations` 
+					ADD COLUMN `invitation_id` int(11) NOT NULL,
+					ADD FOREIGN KEY `fk_org_assoc_invite_link_org` (`invitation_id`) REFERENCES `register_organization_association_invitations` (`id`)
+				";
+
+				if (! $database->Execute($alter_table_query)) {
+					$this->SQLError("Error altering register_organization_associations table in ".$this->module."::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(54);
+				$database->CommitTrans();
+			}
+
 			return true;
 		}
 	}

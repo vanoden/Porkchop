@@ -6,28 +6,28 @@
 $item_types = array("inventory", "unique", "group", "kit", "note");
 
 // Validation Class
-$validationClass = new \Spectros\Product\Item();
+$validationClass = new \Product\Item();
 
 // Validate item by ID
 if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
-	$item = new \Spectros\Product\Item($_REQUEST['id']);
+	$item = new \Product\Item($_REQUEST['id']);
 	if (!$item->id) $page->addError("Item not found");
 }
 // Validate item by code
 elseif ($validationClass->validCode($_REQUEST['code'] ?? null)) {
 	// This is a New Item
-	$item = new \Spectros\Product\Item();
+	$item = new \Product\Item();
 }
 // Validate item by query vars
 elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0]) && $validationClass->validCode($GLOBALS['_REQUEST_']->query_vars_array[0])) {
-	$item = new \Spectros\Product\Item();
+	$item = new \Product\Item();
 	$item->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
 	if (!$item->id) $page->addError("Item not found");
 }
 
 // Initialize $item variable if not already set or not a valid object
 if (!isset($item) || !is_object($item)) {
-	$item = new \Spectros\Product\Item();
+	$item = new \Product\Item();
 }
 
 // Preserve form values for display (for new items or when there are errors)
@@ -105,7 +105,7 @@ if (!empty($_REQUEST['updateSubmit'])) {
 					}
 					$page->appendSuccess("Product added successfully");
 					// Redirect to the new product's page using the code from the form
-					header("Location: /_spectros/admin_product/" . $code);
+					header("Location: /_product/admin_product/" . $code);
 					exit;
 				}
 			} else {
@@ -200,13 +200,11 @@ $documentlist = new \Media\DocumentList();
 $manuals = $documentlist->find();
 $imagelist = new \Media\ImageList();
 $tables = $imagelist->find();
-$dashboardlist = new \Monitor\DashboardList();
-$dashboards = $dashboardlist->find();
 $vendors = $item->vendors();
 
 // Get unique categories and tags for autocomplete
 $searchTagList = new \Site\SearchTagList();
 $uniqueTagsData = $searchTagList->getUniqueCategoriesAndTagsJson();
 
-$page->addBreadcrumb("Products", "/_spectros/admin_products");
-if (isset($item->id)) $page->addBreadcrumb($item->code, "/_spectros/admin_product/" . $item->code);
+$page->addBreadcrumb("Products", "/_product/admin_products");
+if (isset($item->id)) $page->addBreadcrumb($item->code, "/_product/admin_product/" . $item->code);

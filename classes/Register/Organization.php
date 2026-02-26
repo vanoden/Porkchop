@@ -400,47 +400,92 @@
 			return $locations;
 		}
 
-	public function auditRecord($type,$notes,$admin_id = null) {
-		// Validate type and notes are not NULL
-		if (empty($type) || $type === null) {
-			$this->error("Audit type is required and cannot be NULL");
-			return false;
-		}
-		if ($notes === null) {
-			$notes = 'Value not found';
-		}
+		public function auditRecord($type,$notes,$admin_id = null) {
+			// Validate type and notes are not NULL
+			if (empty($type) || $type === null) {
+				$this->error("Audit type is required and cannot be NULL");
+				return false;
+			}
+			if ($notes === null) {
+				$notes = 'Value not found';
+			}
 
-		$audit = new \Register\OrganizationAuditEvent();
-		if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
+			$audit = new \Register\OrganizationAuditEvent();
+			if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
 
-		if (!isset($admin_id) || empty($admin_id)) {
-			$this->error("Admin User is not set");
-			return false;
-		}
+			if (!isset($admin_id) || empty($admin_id)) {
+				$this->error("Admin User is not set");
+				return false;
+			}
 
-		if (!isset($this->id)) {
-			$this->error("Organization is not set");
-			return false;
-		}
-		
-		// validate type
-		if ($audit->validClass($type) == false) {
-			$this->error("Invalid audit class: ".$type);
-			return false;
-		}
+			if (!isset($this->id)) {
+				$this->error("Organization is not set");
+				return false;
+			}
+			
+			// validate type
+			if ($audit->validClass($type) == false) {
+				$this->error("Invalid audit class: ".$type);
+				return false;
+			}
 
-		// add record if all good
-		$audit->add(array(
-			'organization_id'	=> $this->id,
-			'admin_id'			=> $admin_id,
-			'event_date'		=> date('Y-m-d H:i:s'),
-			'event_class'		=> $type,
-			'event_notes'		=> $notes
-		));
+			// add record if all good
+			$audit->add(array(
+				'organization_id'	=> $this->id,
+				'admin_id'			=> $admin_id,
+				'event_date'		=> date('Y-m-d H:i:s'),
+				'event_class'		=> $type,
+				'event_notes'		=> $notes
+			));
 			if ($audit->error()) {
 				$this->error($audit->error());
 				return false;
 			}
 			return true;
 		}
-    }
+
+		public function associatedWith($organization_id) {
+			// Clear any previous errors
+			$this->clearError();
+
+			// Validate organization_id
+			if (empty($organization_id) || !is_numeric($organization_id)) {
+				$this->error("Valid organization_id is required for associatedWith");
+				return false;
+			}
+			$associated_organization = new \Register\Organization($organization_id);
+			if ($associated_organization->error()) {
+				$this->error("Error loading associated organization: ".$associated_organization->error());
+				return false;
+			}
+			if (! $associated_organization->id) {
+				$this->error("Associated organization not found");
+				return false;
+			}
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$check_association_query = "
+				SELECT	1
+				FROM	register_organization_associations
+				WHERE	organization_id = ?
+				AND		associated_organization_id = ?
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($organization_id);
+
+			// Execute Query
+			$rs = $database->Execute($check_association_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			list($association_found) = $rs->FetchRow();
+			if ($association_found) return true;
+			else return false;
+		}
+	}
