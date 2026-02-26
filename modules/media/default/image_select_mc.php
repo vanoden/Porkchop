@@ -1,11 +1,17 @@
 <?php
+	/** @view /_media/image_select
+	 * @description Modal for selecting an image from a repository, used in media fields when adding/editing objects
+	 */
+	$porkchop = new Porkchop();
+	$site = $porkchop->site();
+	$page = $site->page();
+
+	$repositoryFactory = new \Storage\RepositoryFactory();
 	if (!empty($_REQUEST['repository_id'])) {
-		$repositoryBase = new \Storage\Repository($_REQUEST['repository_id']);
-		$repository = $repositoryBase->getInstance();
+		$repository = $repositoryFactory->createWithID($_REQUEST['repository_id']);
 	}
 	else if (!empty($_REQUEST['repository_code'])) {
-		$repositoryBase = new \Storage\Repository();
-		$repository = $repositoryBase->getByCode($_REQUEST['repository_code']);
+		$repository = $repositoryFactory->createWithCode($_REQUEST['repository_code']);
 	}
 
 	if (!empty($_REQUEST['path'])) {

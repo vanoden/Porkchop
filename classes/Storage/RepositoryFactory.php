@@ -10,7 +10,7 @@
          * @param int $id - Optional
 		 * @return Repository|NULL
          */
-		public function create($type, $id = null) {
+		public function create($type, $id = null): ?Repository {
 		
 			if (preg_match('/^(local|file|filesystem)$/i', $type)) {
 				return new Repository\Local($id);
@@ -20,44 +20,70 @@
 			}
             else if (preg_match('/^(google|google_drive|google drive|drive)$/i', $type)) {
 				$this->error("Google Drive not yet supported");
-				return false;
+				return null;
 			}
             else if (preg_match('/^dropbox$/i', $type)) {
 				$this->error("DropBox not yet supported");
-				return false;
+				return null;
+			}
+			else if (preg_match('/^virtual$/i', $type)) {
+				return new Repository\Validation($id);
+				// Virtual repository for validation purposes, not meant to be used as a real repository
 			}
             else {
 				$this->error("Unsupported Repository Type '$type'");
-				return false;
+				return null;
 			}
 		}
 
-        /**
-         * find by name
-         *
-         * @param string $name
-		 * @return Repository|NULL
-         */
-		public function find($name) {
-		
-			$repository = new Repository();
-			$repository->find($name);
-
+		/** @method createWithID($id)
+		 * Find the repository with the given ID and return an instance of the appropriate class
+		 */
+		public function createWithID($id) {
+			$repository = new Repository\Validation($id);
 			if (! $repository->id) {
 				$this->error("Repository not found");
-				return false;
+				return null;
 			}
-			
-			if ($repository->type == "local") {
-				return new Repository\Local($repository->id);
-            }
-            else if ($repository->type == "s3") {
-				return new Repository\S3($repository->id);
+			return $this->create($repository->type, $id);
+		}
+
+		/** @method createWithCode($code)
+		 * Find the repository with the given code and return an instance of the appropriate class
+		 */
+		public function createWithCode($code) {
+			$repository = new Repository\Validation();
+			$repository->get($code);
+			if (! $repository->id) {
+				$this->error("Repository not found");
+				return null;
 			}
-            else {
-				$this->error("Unsupported Repository Type");
-				return false;
+			return $this->create($repository->type, $repository->id);
+		}
+
+		/** @method createWithName($name)
+		 * Find the repository with the given name and return an instance of the appropriate class
+		 */
+		public function createWithName($name) {
+			$repositoryList = new RepositoryList();
+			$repositories = $repositoryList->find(['name' => $name]);
+			if (count($repositories) == 0) {
+				$this->error("Repository not found");
+				return null;
 			}
+			else if (count($repositories) > 1) {
+				$this->error("Multiple repositories found with that name");
+				return null;
+			}
+			$repository = $repositories[0];
+			return $this->create($repository->type, $repository->id);
+		}
+
+		/** @method find($name)
+		 * Find the repository with the given name and return an instance of the appropriate class
+		 */
+		public function find($name) {
+			return $this->createWithName($name);
 		}
 
 		/**

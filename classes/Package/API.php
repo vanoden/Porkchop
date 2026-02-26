@@ -25,8 +25,9 @@
 			if (! isset($_REQUEST['code'])) $this->error("unique code field required for addPackage");
 
 			# Identify Repository
-			$repository = new \Storage\Repository();
-			if (! $repository->get($_REQUEST['repository_code'])) $this->error("Repository ".$_REQUEST['repository_code']." not found");
+			$repositoryFactory = new \Storage\RepositoryFactory();
+			$repository = $repositoryFactory->createWithCode($_REQUEST['repository_code']);
+			if (empty($repository)) $this->error("Repository ".$_REQUEST['repository_code']." not found");
 			app_log("Repository ".$repository->id);
 	
 			$package = new \Package\Package();
@@ -77,7 +78,7 @@
 					$this->error("Repository not found");
 					return false;
 				}
-				$parameters['repository_id'] = $_REQUEST['repository_id'];
+				$parameters['repository_id'] = $repository->id;
 			}
 	
 			$package->update($parameters);
@@ -125,7 +126,7 @@
 					$this->error("Repository not found");
 					return false;
 				}
-				$parameters['repository_id'] = $_REQUEST['repository_id'];
+				$parameters['repository_id'] = $repository->id;
 			}
 	
 		

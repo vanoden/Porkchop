@@ -13,12 +13,13 @@
         else $parameters['status'] = $_REQUEST['status'];
     }
 	if (isset($_REQUEST['repository_code'])) {
-        $repository = new \Storage\Repository();
-        if (! $repository->validCode($_REQUEST['repository_code'])) {
+		$factory = new \Storage\RepositoryFactory();
+		$validation_class = new \Storage\Repository\Validation();
+        if (! $validation_class->validCode($_REQUEST['repository_code'])) {
             $page->addError("Invalid Repository Code");
             $_REQUEST['repository_code'] = null;
         }
-        elseif (! $repository->get($_REQUEST['repository_code'])) {
+        elseif (! $factory->createWithCode($_REQUEST['repository_code'])) {
             $page->addError("Repository not found");
         }
         else $parameters['repository_code'] = $_REQUEST['repository_code'];

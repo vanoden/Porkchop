@@ -11,12 +11,12 @@ $page->requirePrivilege('manage customers');
 $page->setAdminMenuSection("Customer");  // Keep Customer section open
 $customer = new \Register\Customer();
 
+// Load Repository for Image Uploads
 $site_config = new \Site\Configuration();
 $site_config->get('website_images');
+$repositoryFactory = new \Storage\RepositoryFactory();
 if (!empty($site_config->value)) {
-	$repository = new \Storage\Repository();
-	$repository->get($site_config->value);
-	$repository = $repository->getInstance();
+	$repository = $repositoryFactory->createWithCode($site_config->value);
 }
 
 if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id']))

@@ -60,9 +60,15 @@
 		 */
 		public function connect() {
 			$path = $this->getMetadata('path');
-			if (is_dir($path)) return true;
-			$this->error("Path '$path' doesn't exist or is not a directory");
-			return false;
+			if (is_dir($path)) {
+				$this->_connected = true;
+				return true;
+			}
+			else {
+				$this->error("Path doesn't exist or is not a directory");
+				$this->_connected = false;
+				return false;
+			}
 		}
 
 		/** @method _path($path = null)
@@ -100,6 +106,9 @@
 			return $this->getMetadata('endpoint');
 		}
 
+		/** @method details()
+		 * Get details for this repository, including path and endpoint
+		 */
 		public function details(): bool {
 			parent::details();
 			$this->path = $this->_path();
@@ -109,17 +118,67 @@
 
         /** @method addFile($file, $path)
          * Write contents to filesystem
-         *
          * @param $file
          * @param $path
          */
-		public function addFile($file, $path) {
-			return move_uploaded_file($path, $this->_path() . "/" . $file->code());
+		public function addFile($file, $path): bool {
+			if (!$this->validPath($this->_path())) {
+				$this->error("Invalid path for repository");
+				return false;
+			}
+			if (! file_exists($path)) {
+				$this->error("File not found at '$path'");
+				return false;
+			}
+			if (! is_dir($this->_path())) {
+				$this->error("Repository path doesn't exist");
+				return false;
+			}
+			if (! is_writable($this->_path())) {
+				$this->error("Repository path not writable");
+				return false;
+			}
+			if (is_uploaded_file($path)) {
+				if (move_uploaded_file($path, $this->_path() . "/" . $file->code())) {
+					return true;
+				}
+				else {
+					$this->error("Failed to move uploaded file from '$path' to '".$this->_path()."/".$file->code()."'");
+					return false;
+				}
+			}
+			else {
+				if (rename($path, $this->_path() . "/" . $file->code())) {
+					return true;
+				}
+				else {
+					$this->error("Failed to move file");
+					return false;
+				}
+			}
+		}
+
+		/** @method getFile($file_code)
+		 * Get a file from the repository by code
+		 * @param $file_code Unique code for the file to retrieve
+		 * @return File|null File object if found, null if not found or error
+		 */
+		public function getFile($file_code) {
+			if (!$this->validPath($this->_path())) {
+				$this->error("Invalid path for repository");
+				return null;
+			}
+			if (! file_exists($this->_path()."/".$file_code)) {
+				$this->error("File not found");
+				return null;
+			}
+			$file = new \Storage\File();
+			$file->code = $file_code;
+			return $file;
 		}
 
 		/** @method retrieveFile($file)
-		 * Retrieve file from filesystem
-		 *
+		 * Retrieve file from filesystem and output to browser for download
 		 * @param $file
 		 * @return bool
 		 */
@@ -156,24 +215,27 @@
 
 		/** @method content()
 		 * Get the content of specified file
+		 * @param $file
 		 * @return string
 		 */
 		public function content($file) {
 			if (!$this->validPath($this->_path())) {
 				$this->error("Invalid path for repository");
-				return false;
+				return "";
 			}
 
 			if (! file_exists($this->_path()."/".$file->code)) {
 				$this->error("File not found at ".$this->_path()."/".$file->code);
-				return false;
+				return "";
+
 			}
 
 			// Load contents from filesystem
+			app_log("Retrieving file content from ".$this->_path()."/".$file->code,'notice');
 			$data = file_get_contents($this->_path()."/".$file->code);
 			if ($data === false) {
 				$this->error("Failed to read file content");
-				return false;
+				return "";
 			}
 			return $data;
 		}

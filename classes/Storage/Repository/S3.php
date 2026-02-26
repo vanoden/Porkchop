@@ -14,7 +14,6 @@ class S3 extends \Storage\Repository {
 	public $region;
 	protected $credentials;
 	private $client;
-	private $_connected = false;
 
 	public function __construct($id = null) {
 		$this->type = 's3';
@@ -102,7 +101,7 @@ class S3 extends \Storage\Repository {
 		return true;
 	}
 
-	/**
+	/** @method add($parameters)
 	 * Update an existing S3 Repository
 	 * @param array $parameters
 	 * @return bool True if update successful
@@ -113,7 +112,7 @@ class S3 extends \Storage\Repository {
 		return true;
 	}
 
-	/**
+	/** @method _bucket($bucket = null)
 	 * Get/Set Name of S3 Bucket
 	 * @param string $bucket 
 	 * @return string 
@@ -124,7 +123,7 @@ class S3 extends \Storage\Repository {
 		return $this->getMetadata('bucket');
 	}
 
-	/**
+	/** @method accessKey($key = null)
 	 * Get/Set AWS Access Key
 	 * @param string $key 
 	 * @return string 
@@ -135,7 +134,7 @@ class S3 extends \Storage\Repository {
 		return $this->getMetadata('accessKey');
 	}
 
-	/**
+	/** @method secretKey($key = null)
 	 * Get/Set AWS Secret Key
 	 * @param string $key 
 	 * @return string 
@@ -146,7 +145,7 @@ class S3 extends \Storage\Repository {
 		return $this->getMetadata('secretKey');
 	}
 
-	/**
+	/** @method region($region = null)
 	 * Get/Set AWS Region
 	 * @param string $region 
 	 * @return string 
@@ -157,13 +156,13 @@ class S3 extends \Storage\Repository {
 		return $this->getMetadata('region');
 	}
 
-	/**
+	/** @method addFile($file, $path)
 	 * Write contents to S3 cloud storage
-	 *
-	 * @param $file
-	 * @param $path
+	 * @param \Storage\File $file - File object representing the file to be added
+	 * @param $path - Path to the file on the local filesystem to be uploaded
+	 * @return bool True on successful upload, false on failure
 	 */
-	public function addFile($file, $path) {
+	public function addFile($file, $path): bool {
 		if (!$this->_connected) {
 			if (!$this->connect()) {
 				$this->error("Failed to connect to S3 service: " . $this->error());
@@ -328,7 +327,7 @@ class S3 extends \Storage\Repository {
 		}
 	}
 
-	/**
+	/** @method checkFile($string)
 	 * See if file is present on S3
 	 * @param mixed $string 
 	 * @return null|void 
@@ -351,7 +350,7 @@ class S3 extends \Storage\Repository {
 	/********************************/
 	/* Validation Methods 			*/
 	/********************************/
-	/**
+	/** @method validAccessKey($string)
 	 * Access key must be empty or have 16-129
 	 * alphanumeric characters
 	 * @params string containing access key to check
@@ -366,7 +365,7 @@ class S3 extends \Storage\Repository {
 			return false;
 	}
 
-	/**
+	/** @method validSecretKey($string)
 	 * Secret key must be empty or have 20+ chars of 
 	 * alphanumeric, / or + characters
 	 * @param mixed string containing secret key to check 
@@ -381,7 +380,7 @@ class S3 extends \Storage\Repository {
 			return false;
 	}
 
-	/**
+	/** @method testWritePermissions()
 	 * Test S3 write permissions by attempting to upload a small test file
 	 * @return bool
 	 */
@@ -431,7 +430,7 @@ class S3 extends \Storage\Repository {
 		}
 	}
 
-	/**
+	/** @method validBucket($string)
 	 * Validate bucket names based on naming rules from 
 	 * https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
 	 * @param mixed string containing bucket name to check
@@ -482,7 +481,7 @@ class S3 extends \Storage\Repository {
 		return false;
 	}
 
-	/**
+	/** @method validRegion($string)
 	 * Validate AWS Region Names
 	 * @param mixed $string
 	 * @return bool True if valid, false if not

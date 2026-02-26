@@ -107,8 +107,8 @@ if ($can_proceed && $page->errorCount() < 1) {
 					$path = $_REQUEST['path'] ?? '';
 
 					if (!preg_match('/^\//', $path)) $path = '/' . $path;
-					$repositoryBase = new \Storage\Repository($repository_id);
-					$repository = $repositoryBase->getInstance();
+					$repositoryFactory = new \Storage\RepositoryFactory();
+					$repository = $repositoryFactory->createWithID($repository_id);
 
 					if ($repository->error()) {
 						$page->addError("Error loading repository: " . $repository->error());

@@ -117,8 +117,13 @@ class Commit extends \BaseModel {
 	}
 
 	public function get($repo_id, $hash) {
-		$repository = new \Storage\Repository($repo_id);
-		if (!$repository->id) {
+		$repositoryFactory = new \Storage\RepositoryFactory();
+		if ($repositoryFactory->error()) {
+			$this->_error = "Error initializing repository: ".$repositoryFactory->error();
+			return false;
+		}
+		$repository = $repositoryFactory->createWithID($repo_id);
+		if (!$repository || !$repository->id) {
 			$this->_error = "Repository not found";
 			return false;
 		}

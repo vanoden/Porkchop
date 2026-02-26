@@ -1,22 +1,20 @@
 <?php
-###################################################
-## admin_account_mc.php							###
-## This program handles the login/registration	###
-## functionality for customer account management.	###
-## A. Caravello 11/12/2002						###
-###################################################
-
-$page = new \Site\Page(array("module" => 'register', "view" => 'account'));
+/** @view /_register/default
+ * @description Admin account management page, allows admin users to view and edit customer account details, resend verification emails, and manage customer images.
+ */
+$porkchop = new Porkchop();
+$site = $porkchop->site();
+$page = $site->page(array("module" => 'register', "view" => 'account'));
 $page->requirePrivilege('manage customers');
 $page->setAdminMenuSection("Customer");  // Keep Customer section open
 $customer = new \Register\Customer();
 
+// Load Repository for Image Uploads
 $site_config = new \Site\Configuration();
 $site_config->get('website_images');
+$repositoryFactory = new \Storage\RepositoryFactory();
 if (!empty($site_config->value)) {
-	$repository = new \Storage\Repository();
-	$repository->get($site_config->value);
-	$repository = $repository->getInstance();
+	$repository = $repositoryFactory->createWithCode($site_config->value);
 }
 
 if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id']))

@@ -64,8 +64,9 @@ class File extends \BaseModel {
 			$this->error("Invalid repository_id '" . $parameters['repository_id'] . "'");
 			return false;
 		}
-		$repository = new \Storage\Repository($parameters['repository_id']);
-		if (! $repository->id) {
+		$repositoryFactory = new \Storage\RepositoryFactory();
+		$repository = $repositoryFactory->createWithID($parameters['repository_id']);
+		if (! $repository || ! $repository->id) {
 			app_log("Repository not found for file upload: " . $parameters['repository_id'], 'error');
 			app_log(print_r(debug_backtrace(), true), 'notice');
 			$this->error("Repository not found for file upload");
@@ -404,8 +405,9 @@ class File extends \BaseModel {
 	 * @return instance of file's Storage/Repository 
 	 */
 	public function repository() {
-		$repository = new \Storage\Repository($this->_repository_id);
-		return $repository->getInstance();
+		$factory = new \Storage\RepositoryFactory();
+		$repository = $factory->createWithID($this->_repository_id);
+		return $repository;
 	}
 
 	/**
@@ -708,25 +710,15 @@ class File extends \BaseModel {
 		if (! preg_match('/^\//', $parameters['path'])) $parameters['path'] = '/' . $parameters['path'];
 
 		// Load the repository based on the parameters provided
+		$repositoryFactory = new \Storage\RepositoryFactory();
 		if (!empty($parameters['repository_id'])) {
-			$repository = new \Storage\Repository($parameters['repository_id']);
+			$repository = $repositoryFactory->createWithID($parameters['repository_id']);
 		}
 		elseif (!empty($parameters['repository_code'])) {
-			$repository = new \Storage\Repository();
-			$repository->get($parameters['repository_code']);
+			$repository = $repositoryFactory->getRepositoryByCode($parameters['repository_code']);
 		}
 		elseif (!empty($parameters['repository_name'])) {
-			$repositoryBase = new \Storage\Repository();
-			$repositoryBase->get($parameters['repository_name']);
-			if ($repositoryBase->error()) {
-				$this->addError("Error finding repository: " . $repositoryBase->error());
-				return false;
-			}
-			$repository = $repositoryBase->getInstance();
-			if ($repositoryBase->error()) {
-				$this->addError("Error loading repository: " . $repositoryBase->error());
-				return false;
-			}
+			$repository = $repositoryFactory->getRepositoryByName($parameters['repository_name']);
 		}
 		else {
 			$this->addError("Repository not specified");

@@ -59,10 +59,9 @@
 			if (! $GLOBALS['_SESSION_']->customer->can('manage storage repositories')) error('storage manager role required');
 
 			// Fetch Specified Repository
-			$repository = new \Storage\Repository();
-			if ($repository->error()) $this->error("Error adding repository: ".$repository->error());
-			$repository->get($_REQUEST['code']);
-			if ($repository->error()) $this->app_error("Error finding repository: ".$repository->error(),__FILE__,__LINE__);
+			$repositoryFactory = new \Storage\RepositoryFactory();
+			$repository = $repositoryFactory->getRepositoryByCode($_REQUEST['code']);
+			if ($repositoryFactory->error()) $this->error("Error adding repository: ".$repositoryFactory->error());
 			if (! $repository->id) $this->error("Repository not found");
 
 			// Populate Update Parameters
@@ -137,11 +136,11 @@
 		### Get Repository Metadata						###
 		###################################################
 		public function getRepositoryMetadata() {
-			$repository = new \Storage\Repository();
-			if ($repository->error()) $this->app_error("Error initializing repository: ".$repository->error(),__FILE__,__LINE__);
+			$repositoryFactory = new \Storage\RepositoryFactory();
+			if ($repositoryFactory->error()) $this->app_error("Error initializing repository: ".$repositoryFactory->error(),__FILE__,__LINE__);
 
-			$repository->get($_REQUEST['code']);
-			if ($repository->error()) $this->app_error("Error finding repository: ".$repository->error(),__FILE__,__LINE__);
+			$repository = $repositoryFactory->getRepositoryByCode($_REQUEST['code']);
+			if ($repositoryFactory->error()) $this->app_error("Error finding repository: ".$repositoryFactory->error(),__FILE__,__LINE__);
 			if (! $repository->id) $this->error("Repository '".$_REQUEST['code']."' not found");
 
 			$metadata = $repository->getMetadata($_REQUEST['key']);
@@ -160,9 +159,10 @@
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
 			// Find Specified Repository
-			$repositoryBase = new \Storage\Repository();
-			$repository = $repositoryBase->get($_REQUEST['repository_code']);
-			if ($repositoryBase->error()) $this->error("Error loading repository: ".$repositoryBase->error());
+			$repositoryFactory = new \Storage\RepositoryFactory();
+			if ($repositoryFactory->error()) $this->app_error("Error initializing repository: ".$repositoryFactory->error(),__FILE__,__LINE__);
+			$repository = $repositoryFactory->getRepositoryByCode($_REQUEST['repository_code']);
+			if ($repositoryFactory->error()) $this->error("Error loading repository: ".$repositoryFactory->error());
 			if (! $repository->id) $this->error("Repository not found");
 			app_log("Identified repo '".$repository->name."'");
 
@@ -362,8 +362,9 @@
 				if (empty($_REQUEST['repository_code'])) {
 					$this->error("Must specify code or repository_code and path and name");
 				}
-				$repositoryBase = new \Storage\Repository();
-				$repository = $repositoryBase->getInstance($_REQUEST['repository_code']);
+				$repositoryFactory = new \Storage\RepositoryFactory();
+				if ($repositoryFactory->error()) $this->error("Error initializing repository: ".$repositoryFactory->error());
+				$repository = $repositoryFactory->createWithCode($_REQUEST['repository_code']);
 				if ($repository->error()) $this->error("Error loading repository: ".$repository->error());
 				if (!empty($repository->id) && !empty($_REQUEST['path']) && !empty($_REQUEST['name'])) {
 					$file->fromPathName($repository->id,$_REQUEST['path'],$_REQUEST['name']);

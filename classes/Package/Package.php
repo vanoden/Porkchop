@@ -50,7 +50,8 @@
 				return false;
 			}
 
-            $repository = new \Storage\Repository($parameters['repository_id']);
+			$factory = new \Storage\RepositoryFactory();
+			$repository = $factory->createWithID($parameters['repository_id']);
             if (! $repository->exists()) {
                 $this->error("Repository not found");
                 return false;
@@ -214,7 +215,8 @@
 		}
 
 		public function repository() {
-			return new \Storage\Repository($this->repository_id);
+			$factory = new \Storage\RepositoryFactory();
+			return $factory->createWithID($this->repository_id);
 		}
 
 		public function latestVersion() {

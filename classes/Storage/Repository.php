@@ -1,7 +1,7 @@
 <?php
 	namespace Storage;
 
-	class Repository Extends \BaseModel {
+	abstract class Repository Extends \BaseModel {
 		public string $name = "";						// Name of Repository
 		public string $type = "";						// Type of Repository - S3, Local, etc.
 		public ?string $code = null;					// Unique Code for Repository
@@ -11,6 +11,7 @@
 		public string $accessKey = "";					// Access Key for AWS Repository
 		public string $default_privileges_json = "";	// JSON string representing default privileges
 		public string $override_privileges_json = "";	// JSON string representing override privileges
+		protected bool $_connected = false;				// Whether or not the repository has been connected to (for remote repositories)
 
 		/**
 		 * Class Constructor
@@ -26,7 +27,7 @@
 			parent::__construct($id);
 		}
 
-		/** 
+		/** @method add($parameters)
 		 * Create a new Storage Repository
 		 * Parameters must include type
 		 * Parameters may include code, name, status, default_privileges_json, override_privileges_json
@@ -113,7 +114,7 @@
 			return $this->update($parameters);
 		}
 
-		/**
+		/** @method update($parameters)
 		 * Update Currently Selected Repository Record
 		 * Parameters can include name, status, default_privileges_json, override_privileges_json
 		 * @param array $parameters
@@ -217,7 +218,10 @@
 			return $this->details();
 		}
 
-		# Fetch Repository Record and Populate Object Variables
+		/** @method details()
+		 * Fetch Repository Record and Populate Object Variables
+		 * @return bool - True if successful, false if failed
+		 */
 		public function details(): bool {
 			// Clear any previous errors
 			$this->clearError();
@@ -262,6 +266,22 @@
 			return true;
 		}
 
+		/** @method connect()
+		 * Abstract method to connect to the repository (for remote repositories)
+		 * For local repositories, this will simply check that the path exists and is writable
+		 * For remote repositories, this will attempt to connect to the remote service and verify credentials
+		 * If connection is successful, set $this->_connected to true
+		 * @return bool - True if connection successful or not required, false if connection failed
+		 */
+		abstract public function connect();
+
+		/** @method connected()
+		 * Check if repository is connected (for remote repositories)
+		 */
+		public function connected() {
+			return $this->_connected;
+		}
+
 		/**
 		 * Get Files in Repository
 		 * @param string $path
@@ -277,25 +297,26 @@
 		 * @return \Storage\Repository - Current Repository instance
 		 */
 		public function getInstance(): \Storage\Repository {
+			$repositoryFactory = new RepositoryFactory();
 			if ($this->id) {
 				if (strtolower($this->type) == 'local') {
-					return new \Storage\Repository\Local($this->id);
+					return $repositoryFactory->createWithID($this->id);
 				}
 				elseif (strtolower($this->type) == 's3') {
-					return new \Storage\Repository\S3($this->id);
+					return $repositoryFactory->createWithID($this->id);
 				}
 				else {
 					$this->error("Invalid repository type: ". $this->type);
-					return new \Storage\Repository();
+					return $repositoryFactory->create('Validation');
 				}
 			}
 			else {
 				$this->error("Repository not found");
-				return new \Storage\Repository();
+				return $repositoryFactory->create('Validation');
 			}
 		}
 
-		/**
+		/** @method uploadFile($uploadedFile,$path)
 		 * Add File to Repository
 		 * @param PHP Uploaded File, single element of $_FILES array
 		 * @param string $source
@@ -397,6 +418,14 @@
 			}
 		}
 
+		/** @method addFile($file, $path)
+		 * Abstract method to add a file from the filesystem to the repository
+		 * @param \Storage\File $file - File object representing the file to be added
+		 * @param string $path - Path within the repository to add the file to
+		 * @return bool - True on successful addition, false on failure
+		*/
+		abstract public function addFile($file, $path): bool;
+
 		/**
 		 * Add File to Database
 		 * @param array $parameters
@@ -449,7 +478,7 @@
 			}
 		}
 
-		/**
+		/** @method directories(path)
 		 * List Existing Directories
 		 * @param string $path - Optional, defaults to '/'
 		 * @return array - Array of Directory Objects
@@ -459,24 +488,37 @@
 			return $directorylist->find(array('repository_id' => $this->id,'path' => $path));
 		}
 
+		/** @method getFileFromPath(path)
+		 * Get a file from the repository by its path.
+		 * @param string $path The path of the file.
+		 * @return \Storage\File The file object.
+		 */
 		public function getFileFromPath($path) {
 			$file = new \Storage\File();
 			return $file->fromPath($this->id,$path);
 		}
 
+		/** @method default_privileges()
+		 * Get the default privileges for the repository.
+		 * @return \Resource\PrivilegeList The default privileges.
+		 */
 		public function default_privileges() {
 			$privileges = new \Resource\PrivilegeList();
 			return $privileges->fromJSON($this->default_privileges_json);
 		}
 
+		/** @method override_privileges()
+		 * Get the override privileges for the repository.
+		 * @return \Resource\PrivilegeList The override privileges.
+		 */
 		public function override_privileges() {
 			$privileges = new \Resource\PrivilegeList();
 			return $privileges->fromJSON($this->override_privileges_json);
 		}
 
-		/************************************/
-		/* Repository Privileges			*/
-		/************************************/
+		/****************************************/
+		/** @section Access Control Functions	*/
+		/****************************************/
 		/**
 		 * Check if user has read access to repository
 		 * @param mixed $user_id 
@@ -568,9 +610,9 @@
 			return false;
 		}
 
-		/************************************/
-		/* Validation Functions             */
-		/************************************/
+		/****************************************/
+		/** @section Validation Functions 		*/
+		/****************************************/
 		public function validMetadata($key,$value) {
 			if (! in_array($key,$this->_metadataKeys())) {
 				$this->error("Invalid metadata key");

@@ -2113,10 +2113,10 @@ class BaseModel extends \BaseClass {
 		}
 
 		// Initialize the repository factory and load the repository
-		$repository = new \Storage\Repository();
-		$repository->get($repository_code);
+		$repositoryFactory = new \Storage\RepositoryFactory();
+		$repository = $repositoryFactory->getRepositoryByCode($repository_code);
 
-		if ($repository->error()) {
+		if ($repositoryFactory->error()) {
 			$this->error('Error loading repository: ' . $repository->error());
 			return false;
 		}
@@ -2150,7 +2150,8 @@ class BaseModel extends \BaseClass {
 		}
 
 		// Initialize the repository factory and load the repository
-		$repository = new \Storage\Repository($repository_id);
+		$repositoryFactory = new \Storage\RepositoryFactory();
+		$repository = $repositoryFactory->getRepositoryByID($repository_id);
 		if (! $repository->exists()) {
 			$this->error('Repository not found with ID ' . $repository_id);
 			return false;

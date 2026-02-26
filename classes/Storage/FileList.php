@@ -64,7 +64,16 @@
 
 			if (isset($parameters['repository_id'])) {
 				if (is_numeric($parameters['repository_id'])) {
-					$repository = new \Storage\Repository($parameters['repository_id']);
+					$repositoryFactory = new \Storage\RepositoryFactory();
+					if ($repositoryFactory->error()) {
+						$this->error("Error initializing repository: ".$repositoryFactory->error());
+						return [];
+					}
+					$repository = $repositoryFactory->getRepositoryByID($parameters['repository_id']);
+					if ($repositoryFactory->error()) {
+						$this->error("Error finding repository: ".$repositoryFactory->error());
+						return [];
+					}
 					if ($repository->exists()) {
 						$find_objects_query .= "
 							AND sf.repository_id = ?";

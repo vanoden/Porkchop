@@ -8,11 +8,10 @@
 	$item = new \Product\Item();
 
 	// Get Image Repository
-	$repository = new \Storage\Repository();
 	$site_config = new \Site\Configuration();
 	$site_config->get('website_images');
-	if (!empty($site_config->value)) $repository->get($site_config->value);
-	$repository = $repository->getInstance();
+	$repositoryFactory = new \Storage\RepositoryFactory();
+	if (!empty($site_config->value)) $repository = $repositoryFactory->createWithCode($site_config->value);
 
 	// Validate item by ID
 	if ($item->validInteger($_REQUEST['id'] ?? null)) {
