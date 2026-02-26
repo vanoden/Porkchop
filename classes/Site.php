@@ -233,6 +233,11 @@
 			flush();
 		}
 
+		/** @method install_log(message, level)
+		 * Log a message during the installation process.
+		 * @param string $message The message to log.
+		 * @param string $level The log level (e.g., 'trace', 'debug', 'info', 'warning', 'notice', 'error').
+		 */
 		public function install_log($message = '',$level = 'info') {
 			if (! $this->log_display($level)) return;
 			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[0] ?? null;
@@ -252,13 +257,17 @@
 				flush();
 			}
 		}
-	
+
+		/** @method install_fail(message)
+		 * Log a message indicating the installation has failed and exit the script.
+		 * @param string $message The failure message.
+		 */
 		public function install_fail($message) {
 			$this->install_log("Upgrade failed: $message",'error');
 			exit;
 		}
 
-		/**
+		/** @method logLevel(level)
 		 * Get/Set the log level - New CamelCase version
 		 * @param mixed $level 
 		 * @return string 
@@ -268,7 +277,7 @@
 			return $this->_log_level;
 		}
 
-		/**
+		/** @method log_level(level)
 		 * Get/Set the log level
 		 * @param mixed $level 
 		 * @return string 
@@ -277,7 +286,12 @@
 			if (isset($level)) $this->_log_level = $level;
 			return $this->_log_level;
 		}
-	
+
+		/** @method public log_display(level)
+		 * Determine if a log message should be displayed based on the current log level setting.
+		 * @param string $level The level of the log message (e.g., 'trace', 'debug', 'info', 'warning', 'notice', 'error').
+		 * @return bool True if the message should be displayed, false otherwise.
+		 */
 		public function log_display($level = 'info') {
 			if (isset($_REQUEST['log_level'])) $log_level = $_REQUEST['log_level'];
 			else $log_level = $this->_log_level;
@@ -291,15 +305,31 @@
 			return false;
 		}
 
+		/** @method url()
+		 * Get the base URL of the site, including protocol and hostname.
+		 * @return string The base URL of the site.
+		 */
 		public function url() {
 			if ($GLOBALS['_config']->site->https) return 'https://'.$GLOBALS['_config']->site->hostname;
 			else return 'http://'.$GLOBALS['_config']->site->hostname;
 		}
 
+		/** @method page(module, view, index)
+		 * Get a page object for the specified module, view, and index.
+		 * @param string $module The module name.
+		 * @param string $view The view name.
+		 * @param string $index The index name.
+		 * @return Site\Page The page object.
+		 */
 		public function page($module = null, $view = null, $index = null) {
 			return new \Site\Page($module,$view,$index);
 		}
 
+		/** @method configuration(key)
+		 * Get a configuration value by key.
+		 * @param string $key The configuration key.
+		 * @return mixed The configuration value.
+		 */
         public function configuration($key) {
             $config = new \Site\Configuration();
 			$config->get($key);
@@ -308,6 +338,10 @@
 			return null;
         }
 
+		/** @method module_list()
+		 * Get a list of all modules.
+		 * @return Site\ModuleList The list of modules.
+		 */
 		public function module_list() {
 			return new \Site\ModuleList();
 		}
