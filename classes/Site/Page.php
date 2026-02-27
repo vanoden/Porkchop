@@ -308,6 +308,35 @@
 			}
 		}
 
+		/** @method public requireProduct(product)
+		 * Checks if the user's organization has access to a specific product.
+		 * If not, redirects to the permission denied page.
+		 * @param int|Product\Item $product The product or product id to check access for.
+		 */
+		public function requireProduct($product): void {
+			if (is_numeric($product)) {
+				$product_id = $product;
+			}
+			elseif ($product instanceof \Product\Item) {
+				$product_id = $product->id;
+			}
+			else {
+				$productObj = new \Product\Item();
+				if (! $productObj->get($product)) {
+					app_log("Product '$product' not found when checking access requirement",'error',__FILE__,__LINE__);
+					header('location: /_register/permission_denied' );
+					exit;
+				}
+			}
+			$organization = $GLOBALS['_SESSION_']->customer->organization();
+			if (! $organization || ! $organization->has_product($product_id)) {
+				$counter = new \Site\Counter("product_required");
+				$counter->increment();
+				header('location: /_register/permission_denied' );
+				exit;
+			}
+		}
+
 		/** @method public confirmTOUAcceptance()
 		 * Checks if the user has accepted the Terms of Use (TOU).
 		 * If not, redirects to the TOU acceptance form.

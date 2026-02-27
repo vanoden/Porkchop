@@ -219,6 +219,14 @@
 		 * @return string
 		 */
 		public function content($file) {
+			if (empty($file)) {
+				$this->error("File not specified");
+				return "";
+			}
+			if (empty($file->code)) {
+				$this->error("File code not specified");
+				return "";
+			}
 			if (!$this->validPath($this->_path())) {
 				$this->error("Invalid path for repository");
 				return "";
@@ -231,7 +239,6 @@
 			}
 
 			// Load contents from filesystem
-			app_log("Retrieving file content from ".$this->_path()."/".$file->code,'notice');
 			$data = file_get_contents($this->_path()."/".$file->code);
 			if ($data === false) {
 				$this->error("Failed to read file content");

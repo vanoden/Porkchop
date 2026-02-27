@@ -42,7 +42,6 @@
     <div class="tableCell width-18per">Login</div>
     <div class="tableCell width-15per">First Name</div>
     <div class="tableCell width-15per">Last Name</div>
-    <div class="tableCell register-accounts-organization-cell">Organization</div>
     <div class="tableCell width-10per">Status</div>
     <div class="tableCell width-18per">Last Active</div>
   </div>
@@ -50,21 +49,11 @@
     if (! $page->errorCount()) {
     foreach ($customers as $customer) { 
         if (isset($greenbar)) $greenbar = ''; else $greenbar = " greenbar";
-		if (!empty($customer->organization_id)) {
-			$organization_id = $customer->organization_id;
-			$organization = $customer->organization();
-			$organization_name = $organization ? $organization->name : 'Unknown Organization';
-		}
-		else {
-			$organization_id = 0;
-			$organization_name = "";
-		}
   ?>
   <div class="tableRow">
     <div class="tableCell"><label for="customer" class="display-none">Login</label><a class="value<?=$greenbar?>" href="<?=PATH."/_register/account?customer_id=".$customer->id?>"><?=$customer->code?></a></div>
     <div class="tableCell"><label for="first" class="display-none">First Name</label><?=htmlspecialchars($customer->first_name)?></div>
     <div class="tableCell"><label for="last" class="display-none">Last Name</label><?=htmlspecialchars($customer->last_name)?></div>
-    <div class="tableCell"><label for="organization" class="display-none">Organization</label><a href="/_register/organization?organization_id=<?=$organization_id?>"><?=$organization_name?></a></div>
     <div class="tableCell"><label for="status" class="display-none">Status</label><?=htmlspecialchars($customer->status)?></div>
     <div class="tableCell"><label for="activity" class="display-none">Last Active</label><?=$customer->last_active()?></div>
   </div>
@@ -79,7 +68,7 @@
 </div>
 
 <?php
-  if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
+  if ($GLOBALS['_SESSION_']->customer->can('manage customers',\Register\PrivilegeLevel::ORGANIZATION_MANAGER)) {
 ?>
 
 <form action="<?=PATH?>/_register/register" method="get">

@@ -54,6 +54,10 @@
 					if (empty($GLOBALS['_SESSION_']->customer)) continue;
 					if (!$GLOBALS['_SESSION_']->customer->can("manage navigation menus") && !$GLOBALS['_SESSION_']->customer->has_role_id($item->required_role_id)) continue;
 				}
+				if ($item->required_product_id > 0) {
+					if (empty($GLOBALS['_SESSION_']->customer)) continue;
+					if (!$GLOBALS['_SESSION_']->customer->can("manage navigation menus") && !$GLOBALS['_SESSION_']->customer->hasProductID($item->required_product_id)) continue;
+				}
 				$this->incrementCount();
 				array_push($items,$item);
 			}

@@ -801,6 +801,23 @@
 				$database->CommitTrans();
 			}
 
+			if ($this->version() < 33) {
+				app_log("Upgrading ".$this->module." schema to version 33",'notice',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `navigation_menu_items`
+					ADD COLUMN `required_product_id` int(11) DEFAULT NULL,
+					ADD COLUMN `thumbnail_url` varchar(255) DEFAULT NULL
+				";
+				if (! $database->Execute($alter_table_query)) {
+					$this->SQLError("Altering navigation_menu_items table: ".$database->error());
+					return false;
+				}
+
+				$this->setVersion(33);
+				$database->CommitTrans();
+			}
+
 			return true;
 		}
 	}

@@ -23,7 +23,7 @@
 			)
 		),
 		"Site"			=> array(
-			"schema"	=> 32,
+			"schema"	=> 33,
 			"privileges"	=> array(
 				'send admin in-site message',
 				'edit site pages',

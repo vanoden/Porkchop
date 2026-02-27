@@ -328,6 +328,10 @@
 			return $customerlist->find(array('organization_id' => $this->id,'automation' => $automation, 'status' => $status));
 		}
 
+		/** @method product(id)
+		 * Get an owned product for this organization
+		 * @param int $product_id
+		 */
 		public function product($product_id) {
 			$product = new \Product\Item($product_id);
 			if ($product->error()) {
@@ -339,6 +343,30 @@
 				return null;
 			}
 			return new \Register\Organization\OwnedProduct($this->id,$product->id);
+		}
+
+		/** @method hasProductID(id)
+		 * Check if organization has an owned product
+		 * @param int $product_id
+		 * @return bool
+		 */
+		public function hasProductID($product_id) {
+			$owned_product = $this->product($product_id);
+			if ($owned_product->error()) {
+				$this->error($owned_product->error());
+				return false;
+			}
+			if ($owned_product->id) {
+				// See if they have any of the product in inventory
+				if ($owned_product->quantity > 0) {
+					if ($owned_product->expired()) return false;
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+			else return false;
 		}
 
 		public function activeCount() {

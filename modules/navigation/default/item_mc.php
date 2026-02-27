@@ -78,7 +78,9 @@
 					"required_role_id" => $_REQUEST['required_role_id'] ?? null,
 					"view_order" => filter_var($_REQUEST['view_order'] ?? 0, FILTER_VALIDATE_INT),
 					"description" => noXSS($_REQUEST['description'] ?? ''),
-					"authentication_required" => isset($_REQUEST['authentication_required']) ? 1 : 0
+					"authentication_required" => isset($_REQUEST['authentication_required']) ? 1 : 0,
+					"thumbnail_url" => noXSS($_REQUEST['thumbnail_url'] ?? ''),
+					"required_product_id" => $_REQUEST['required_product_id'] ?? null,
 				);
 				
 				if ($item->id > 0) {
@@ -123,6 +125,10 @@
 	// Load roles for dropdown
 	$roleList = new \Register\RoleList();
 	$roles = $roleList->find();
+
+	// Load products for dropdown
+	$productList = new \Product\ItemList();
+	$products = $productList->find(array("active" => 1, "order_by" => "code", "type" => "service"));
 
 	$page->title("Menu Item Details");
 	$page->setAdminMenuSection("Site");  // Keep Navigation section open
