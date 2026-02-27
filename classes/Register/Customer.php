@@ -977,22 +977,36 @@
 		 * @return \Register\Location[]|null List of locations or null on error
 		 */
 		public function locations($parameters = array()) {
-			$get_locations_query = "
-				SELECT	rol.location_id
-				FROM	register_organization_locations rol
-				WHERE	rol.organization_id = ?
-				UNION
-				SELECT	rul.location_id
-				FROM	register_user_locations rul
-				WHERE	rul.user_id = ?
-			";
 			$organization = $this->organization();
-		if (!$organization) {
-			$this->error("Customer has no associated organization");
-			return null;
-		}
-		$rs = $GLOBALS['_database']->Execute($get_locations_query,array($organization->id,$this->id));
-			
+			if (!$organization) {
+				$this->error("Customer has no associated organization");
+				return null;
+			}
+			$include_hidden = isset($parameters['include_hidden']) ? (bool)$parameters['include_hidden'] : true;
+			if ($include_hidden) {
+				$get_locations_query = "
+					SELECT	rol.location_id
+					FROM	register_organization_locations rol
+					WHERE	rol.organization_id = ?
+					UNION
+					SELECT	rul.location_id
+					FROM	register_user_locations rul
+					WHERE	rul.user_id = ?
+				";
+			} else {
+				$get_locations_query = "
+					SELECT	rol.location_id
+					FROM	register_organization_locations rol
+					INNER JOIN register_locations rl ON rl.id = rol.location_id
+					WHERE	rol.organization_id = ? AND rl.hidden = 0
+					UNION
+					SELECT	rul.location_id
+					FROM	register_user_locations rul
+					INNER JOIN register_locations rl ON rl.id = rul.location_id
+					WHERE	rul.user_id = ? AND rl.hidden = 0
+				";
+			}
+			$rs = $GLOBALS['_database']->Execute($get_locations_query, array($organization->id, $this->id));
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;

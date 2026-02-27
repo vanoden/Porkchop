@@ -66,7 +66,7 @@
 					}
 				}
 			}
-			
+		
 			// Handle package actions
 			if (!empty($_REQUEST['package_id'])) {
 				if (!$rma->validInteger($_REQUEST['package_id'])) {

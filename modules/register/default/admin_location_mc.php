@@ -2,14 +2,37 @@
 $page = new \Site\Page();
 $page->requirePrivilege('manage customer locations');
 $location = new \Register\Location(isset($_REQUEST['id']) ? $_REQUEST['id'] : 0);
+
+// Copy-from: prefill new location with data from an existing one
+if ($location->id == 0 && !empty($_REQUEST['copy_id']) && preg_match('/^\d+$/', $_REQUEST['copy_id'])) {
+	$copyFrom = new \Register\Location((int)$_REQUEST['copy_id']);
+	if ($copyFrom->id) {
+		// Base name: strip trailing " (copy)" or " (copy N)"
+		$baseName = trim(preg_replace('/\s*\(copy(?:\s+\d+)?\)\s*$/', '', $copyFrom->name));
+		if ($baseName === '') $baseName = $copyFrom->name;
+		$org_id = (!empty($_REQUEST['organization_id']) && preg_match('/^\d+$/', $_REQUEST['organization_id'])) ? (int)$_REQUEST['organization_id'] : null;
+		$nextNum = $copyFrom->nextCopyNumberForBaseName($baseName, $org_id);
+		$location->name = $baseName . ' (copy ' . $nextNum . ')';
+		$location->address_1 = $copyFrom->address_1;
+		$location->address_2 = $copyFrom->address_2;
+		$location->city = $copyFrom->city;
+		$location->province_id = $copyFrom->province_id;
+		$location->zip_code = $copyFrom->zip_code;
+	}
+}
+
 if (isset($_REQUEST['organization_id']))
 	$organization = new \Register\Organization($_REQUEST['organization_id']);
 if (isset($_REQUEST['user_id']))
 	$user = new \Register\Person($_REQUEST['user_id']);
 
+$locationReadOnly = ($location->id > 0);
+
 if (isset($_REQUEST['btn_submit'])) {
 	if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 		$page->addError("Invalid Request");
+	} elseif ($locationReadOnly) {
+		$page->addError("Existing addresses cannot be edited. Use \"Copy\" to create a new address with changes, or \"Hide\" if this address is no longer used.");
 	} else {
 		$province = new \Geography\Province($_REQUEST['province_id']);
 		if (!$province->id) {
@@ -128,6 +151,11 @@ if (isset($_REQUEST['btn_submit'])) {
 						$page->addError("Error associating user: " . $location->error());
 					if (!$page->errorCount()) {
 						$page->success = "Changes saved";
+						// Redirect back to account locations when adding from customer account
+						if (!empty($_REQUEST['customer_id']) && $location->id > 0) {
+							header('Location: /_register/admin_account_locations?customer_id=' . (int)$_REQUEST['customer_id']);
+							exit;
+						}
 						// Refresh organization object to get updated default location IDs
 						if (isset($_REQUEST['organization_id'])) {
 							$organization = new \Register\Organization($_REQUEST['organization_id']);
@@ -151,7 +179,7 @@ if (isset($organization->id)) {
 $page->addBreadcrumb("Add/Edit Location", "");
 
 $provinces = array();
-if (isset($_REQUEST['id']) && $_REQUEST['id']) {
+if ((isset($_REQUEST['id']) && $_REQUEST['id']) || ($location->id == 0 && !empty($location->province_id))) {
 	$selected_province = $location->province();
 	$selected_country = $selected_province->country();
 	$provinces = $selected_country->provinces();

@@ -48,5 +48,33 @@ $organization = $customer->organization();
 if (isset($organization->id)) $page->addBreadcrumb($organization->name, "/_register/admin_organization?id=" . $organization->id);
 if (isset($customer->id)) $page->addBreadcrumb($customer->full_name(), "/_register/admin_account?customer_id=" . $customer->id);
 
-// Get List of Locations
-$locations = $customer->locations();
+// Process Hide/Unhide before loading list (so list shows current state)
+if ($customer->id && (isset($_REQUEST['setHidden']) || isset($_REQUEST['setVisible'])) && is_numeric($_REQUEST['setHidden'] ?? $_REQUEST['setVisible'] ?? 0)) {
+	$loc_id = (int)($_REQUEST['setHidden'] ?? $_REQUEST['setVisible']);
+	$loc = new \Register\Location($loc_id);
+	if ($loc->id) {
+		$belongs_to_customer = ($organization->id && $loc->belongsToOrganization($organization->id)) || $loc->belongsToUser($customer->id);
+		if ($belongs_to_customer) {
+			$hidden = isset($_REQUEST['setHidden']) ? 1 : 0;
+			if ($loc->update(array('hidden' => $hidden)))
+				$page->appendSuccess($hidden ? "Address hidden." : "Address visible again.");
+			else
+				$page->addError("Could not update address.");
+		} else {
+			$page->addError("Address does not belong to this customer.");
+		}
+	} else {
+		$page->addError("Address not found.");
+	}
+}
+
+// Location IDs that belong to the customer's organization (show company name next to these)
+$org_location_ids = array();
+if ($customer->id && isset($organization->id) && $organization->id) {
+	$locHelper = new \Register\Location(0);
+	$org_location_ids = $locHelper->locationIdsForOrganization($organization->id);
+}
+
+// Get List of Locations (exclude hidden when show_hidden not set)
+$show_hidden = !empty($_REQUEST['show_hidden']);
+$locations = $customer->locations(array('include_hidden' => $show_hidden));

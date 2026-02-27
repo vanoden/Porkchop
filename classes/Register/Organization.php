@@ -383,11 +383,20 @@
 		}
 
 		public function locations($parameters = array()) {
-			$get_locations_query = "
-				SELECT	location_id
-				FROM	register_organization_locations
-				WHERE	organization_id = ?";
-			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->id));
+			$include_hidden = isset($parameters['include_hidden']) ? (bool)$parameters['include_hidden'] : true;
+			if ($include_hidden) {
+				$get_locations_query = "
+					SELECT	location_id
+					FROM	register_organization_locations
+					WHERE	organization_id = ?";
+			} else {
+				$get_locations_query = "
+					SELECT	rol.location_id
+					FROM	register_organization_locations rol
+					INNER JOIN register_locations rl ON rl.id = rol.location_id
+					WHERE	rol.organization_id = ? AND rl.hidden = 0";
+			}
+			$rs = $GLOBALS['_database']->Execute($get_locations_query, array($this->id));
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
