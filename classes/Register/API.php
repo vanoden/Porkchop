@@ -1048,6 +1048,10 @@
 			elseif (!empty($_REQUEST['organization_id'])) {
 				$organization = new \Register\Organization($_REQUEST['organization_id']);
 			}
+			else {
+				$organization = $GLOBALS['_SESSION_']->customer->organization();
+				if (!$organization->exists()) $this->error("Must be associated with an organization");
+			}
             if (!empty($_REQUEST['product_code'])) {
                 $product = new \Product\Item();
                 if (! $product->get($_REQUEST['product_code'])) $this->error("Product not found");
@@ -1073,9 +1077,12 @@
             $response->print();
         }
 
-        ###################################################
-        ### Get Organization Owned Product				###
-        ###################################################
+        /** @method getOrganizationOwnedProduct()
+		 * Get organization owned product
+		 * @param organization_id The ID of the organization
+		 * @param product_id The ID of the product
+		 * @return void
+		 */
         function getOrganizationOwnedProduct() {
 			$this->requireAuth();
 
@@ -1107,38 +1114,46 @@
             $response->print();
         }
         
-        ###################################################
-        ### Add Organization Owned Product				###
-        ###################################################
+		/** @method addOrganizationOwnedProduct()
+		 * Add organization owned product
+		 * @param organization_id The ID of the organization
+		 * @param product_id The ID of the product
+		 * @param quantity The quantity of the product
+		 * @param expires The expiration date of the product
+		 * @return void
+		 */
         function addOrganizationOwnedProduct() {
 			$this->requireAuth();
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-			if (!$GLOBALS['_SESSION_']->customer->can("manage customer credits")) $this->deny();
+			if (!$GLOBALS['_SESSION_']->customer->can("manage customer owned products")) $this->deny();
 
             # Default StyleSheet
             if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
             # Initiate Organization Object
             $organization = new \Register\Organization();
-            $organization->get($_REQUEST['organization']);
+            $organization->get($_REQUEST['organization_code']);
             if ($organization->error()) $this->app_error("Error getting organization: ".$organization->error(),__FILE__,__LINE__);
             if (! $organization->id) $this->notFound("Organization not found");
 
             $product = new \Product\Item();
-            $product->get($_REQUEST['product']);
+            $product->get($_REQUEST['product_code']);
             if ($product->error()) $this->app_error("Error getting product: ".$product->error(),__FILE__,__LINE__);
             if (! $product->id) $this->notFound("Product not found");
 
+			if (empty($_REQUEST['quantity']) || $_REQUEST['quantity'] <= 0) $this->error("Quantity must be greater than 0");
+
             # Get List of Matching Products
             $_orgproducts = new \Register\Organization\OwnedProduct($organization->id,$product->id);
-            $products = $_orgproducts->add(
-                $organization->id,
-                $product->id,
-                $_REQUEST['quantity']
-            );
+            $products = $_orgproducts->add(array(
+                'organization_id' => $organization->id,
+                'product_id' => $product->id,
+                'quantity' => $_REQUEST['quantity'],
+				'expires' => isset($_REQUEST['expires']) ? $_REQUEST['expires'] : null
+            ));
 
             # Error Handling
-            if ($_orgproducts->error()) $this->app_error($_orgproducts->error(),__FILE__,__LINE__);
+            if ($_orgproducts->error()) $this->error($_orgproducts->error(),__FILE__,__LINE__);
 
 			$response = new \APIResponse();
             $response->success(true);
@@ -1147,6 +1162,13 @@
             # Send Response
             $response->print();
         }
+
+		/** @method findOrganizationLocations()
+		 * Find organization locations
+		 * @param organization_id The ID of the organization to filter locations by
+		 * @param code The code of the organization to filter locations by
+		 * @return list of locations for the specified organization
+		 */
         function findOrganizationLocations() {
             if ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['organization_id'])) {
                 $organization = new \Register\Organization($_REQUEST['organization_id']);
@@ -1167,6 +1189,13 @@
             # Send Response
             $response->print();
         }
+
+		/** @method findOrganizationMembers()
+		 * Find organization members
+		 * @param organization_id The ID of the organization to filter members by
+		 * @param code The code of the organization to filter members by
+		 * @return list of members for the specified organization
+		 */
         function findOrganizationMembers() {
             if ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['organization_id'])) {
                 $organization = new \Register\Organization($_REQUEST['organization_id']);
@@ -1188,8 +1217,15 @@
             # Send Response
             $response->print();
         }
+
+		/** @method findCustomerLocations()
+		 * Find customer locations
+		 * @param customer_id The ID of the customer to filter locations by
+		 * @param login The login of the customer to filter locations by
+		 * @return list of locations for the specified customer
+		 */
         function findCustomerLocations() {
-            if ($GLOBALS['_SESSION_']->customer->canh('manage customers') && isset($_REQUEST['customer_id'])) {
+            if ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['customer_id'])) {
                 $customer = new \Register\Customer($_REQUEST['customer_id']);
             }
             elseif ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['login'])) {
@@ -1227,7 +1263,11 @@
             # Send Response
             $response->print();
         }
-        
+
+		/** @method expireInactiveOrganizations()
+		 * Expires organizations that have not had active users for 12 months
+		 * @return void
+		 */
         function expireInactiveOrganizations() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 			$this->requirePrivilege("manage customers");
@@ -1247,7 +1287,11 @@
             # Send Response
             $response->print();
         }
-        
+
+		/** @method flagActiveCustomers()
+		 * Calls the flagActive method on the CustomerList class to flag customers as active if they have logged in within the last 12 months
+		 * @return void
+		 */
         function flagActiveCustomers() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
@@ -1262,8 +1306,10 @@
             $response->print('json');
         }
 
-        /**
+        /** @method getMemberLastActive()
          * get last active date for member
+		 * @param memberId The ID of the member to get last active date for
+		 * @return last active date for member
          */
         function getMemberLastActive() {
 			$this->requireAuth();
@@ -1279,8 +1325,10 @@
             $response->print('json');
         }
 
-        /**
+        /** @method searchOrganizationsByName()
          * search registered organizations by name
+		 * @param term The search term to use for searching organization names
+		 * @return list of organizations matching search term
          */
         function searchOrganizationsByName() {
 			$this->requireAuth();
@@ -1302,7 +1350,7 @@
             print $this->formatOutput($results,'json');
         }
 
-        /**
+        /** @method shipmentFindBySerial()
          * get shipment by serial number
          */
         function shipmentFindBySerial() {
@@ -1311,6 +1359,11 @@
             print $this->formatOutput($shipmentDetails,'json');
         }
 
+		/** @apiMethod findLocations()
+		 * Find locations
+		 * @param organization The ID of the organization to filter locations by
+		 * @param organization_id The ID of the organization to filter locations by
+		 */
         function findLocations() {
             $parameters = array();
             if (isset($_REQUEST['organization']) && $GLOBALS['_SESSION_']->customer->can("manage customers")) {
@@ -1334,6 +1387,17 @@
 			$response->print();
         }
 
+		/** @apiMethod addLocation()
+		 * Add a new location
+		 * @param name The name of the location
+		 * @param address_1 The first line of the address
+		 * @param address_2 The second line of the address
+		 * @param city The city of the location
+		 * @param zip_code The zip code of the location
+		 * @param admin_id The ID of the admin (Province) for the location
+		 * @param admin_code The code of the admin (Province) for the location
+		 * @param province The province of the location
+		 */
         function addLocation() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 			$this->requireAuth();
@@ -1370,6 +1434,11 @@
             }
         }
 
+		/** @apiMethod findPrivileges()
+		 * Find privileges
+		 * @param module The module to filter privileges by
+		 * @param name The name of the privilege to filter by
+		 */
         public function findPrivileges() {
 			$this->requirePrivilege("manage customers");
 
@@ -1387,6 +1456,11 @@
             $response->print();
         }
 
+		/** @apiMethod findPrivilegePeers()
+		 * Find peers for a given privilege
+		 * @param privilege_name The name of the privilege to find peers for
+		 * @param privilege_id The ID of the privilege to find peers for
+		 */
 		public function findPrivilegePeers() {
 			$this->requirePrivilege('manage customers');
 			if (isset($_REQUEST['privilege_name'])) {
@@ -1414,6 +1488,10 @@
 
 		}
 
+		/** @apiMethod findPendingRegistrations()
+		 * Find pending registrations
+		 * @param status The status of the pending registrations to retrieve
+		 */
         public function findPendingRegistrations() {
 			$this->requirePrivilege("manage customers");
             $queue = new \Register\Queue();
@@ -1433,6 +1511,10 @@
 			$response->print();
         }
 
+		/** @apiMethod getPendingRegistration()
+		 * Get a pending registration by login
+		 * @param login The login of the pending registration to retrieve
+		 */
         public function getPendingRegistration() {
 			$this->requirePrivilege("manage customers");
             $queue = new \Register\Queue();
@@ -1447,6 +1529,10 @@
 			$response->print();
         }
 
+		/** @apiMethod getRegistrationVerificationURL()
+         * Get the registration verification URL for a customer
+         * @param login The login of the customer to get the verification URL for
+         */
         public function getRegistrationVerificationURL() {
 			$this->requirePrivilege("manage customers");
 
@@ -1461,6 +1547,10 @@
 			$response->print();
         }
 
+		/** @apiMethod getEmailValidationURL()
+         * Get the email validation URL for a customer
+         * @param login The login of the customer to get the validation URL for
+         */
         public function getEmailValidationURL() {
 			$this->requirePrivilege("manage customers");
             $person = new \Register\Customer();
@@ -1476,6 +1566,10 @@
 			$response->print();
         }
 
+		/** @apiMethod getPasswordResetURL()
+         * Get the password reset URL for a customer
+         * @param login The login of the customer to get the password reset URL for
+         */
         public function getPasswordResetURL() {
 			$this->requirePrivilege("manage customers");
             $person = new \Register\Customer();
@@ -1494,9 +1588,9 @@
         }
 
 
-        /**
+        /** @apiMethod setupTOTP()
          * Setup TOTP for the current user
-         * POST /totp/setup
+         * @param customer_id The ID of the customer to setup TOTP for
          */
         public function setupTOTP() {
             $this->requirePrivilege("time-based password administrator");
@@ -1546,9 +1640,10 @@
             $response->print();
         }
 
-        /**
+        /** @apiMethod verifyTOTP()
          * Verify TOTP code
-         * POST /totp/verify
+         * @param customer_id The ID of the customer to verify TOTP for
+		 * @param code The TOTP code to verify
          */
         public function verifyTOTP() {
             $this->requirePrivilege("time-based password administrator");
@@ -1591,9 +1686,9 @@
             }
         }
 
-        /**
+        /** @apiMethod getBackupCodes()
          * Get backup codes for the current user
-         * GET /totp/backup-codes
+         * @param customer_id The ID of the customer to get backup codes for
          */
         public function getBackupCodes() {
             $this->requirePrivilege("time-based password administrator");
@@ -1621,9 +1716,9 @@
             $response->print();
         }
 
-        /**
+        /** @apiMethod resetTOTP()
          * Reset TOTP setup for the current user
-         * POST /totp/reset
+		 * @param customer_id The ID of the customer to reset TOTP for
          */
         public function resetTOTP() {
             $this->requirePrivilege("time-based password administrator");
@@ -1682,7 +1777,7 @@
             $response->print();
         }
 
-        /** @method purgeUserSessions(start date)
+        /** @apiMethod purgeUserSessions(start date)
          * @brief Purge user sessions prior to a given date
          * @return void
          */
@@ -2023,17 +2118,55 @@
 						'organization_id' => array(
 							'description'	=> 'Organization ID',
 							'prompt'		=> 'Organization ID',
-							'content-type'	=> 'int'
+							'content-type'	=> 'int',
+							'hidden'		=> true,
+							'deprecated'	=> true
 						),
 						'product_code'	=> array(
 							'description'	=> 'Product Code/Sku',
 							'prompt'		=> 'Product Code/Sku',
-							'validation_method'	=> 'Product::Item::validCode',
+							'validation_method'	=> 'Product::Item::validCode()',
 						),
 						'product_id' => array(
 							'description'	=> 'Product ID',
 							'prompt'		=> 'Product ID',
-							'content-type'	=> 'int'
+							'content-type'	=> 'int',
+							'hidden'		=> true,
+							'deprecated'	=> true
+						)
+					)
+				),
+				'addOrganizationOwnedProduct'	=> array(
+					'description'	=> 'Associate an owned product or service with this organization',
+					'path'			=> '/api/register/addOrganizationOwnedProduct',
+					'authentication_required'	=> true,
+					'token_required' => true,
+					'privilege_required' => 'manage customer owned products',
+					'return_element'	=> 'success',
+					'parameters'	=> array(
+						'organization_code'	=> array(
+							'description'	=> 'Organization Code',
+							'prompt'		=> 'Organization Code',
+							'validation_method'	=> 'Register::Organization::validCode()',
+							'required'		=> true
+						),
+						'product_code'	=> array(
+							'description'	=> 'Product Code/Sku',
+							'prompt'		=> 'Product Code/Sku',
+							'validation_method'	=> 'Product::Item::validCode()',
+							'required'		=> true
+						),
+						'quantity'		=> array(
+							'description'	=> 'Quantity owned',
+							'prompt'		=> 'Quantity owned',
+							'content-type'	=> 'int',
+							'required'		=> true
+						),
+						'date_expires' => array(
+							'description'	=> 'Expiration date (YYYY-MM-DD)',
+							'prompt'		=> 'Expiration date (YYYY-MM-DD)',
+							'validation_method' => 'Porkchop::validDate()',
+							'required'		=> false
 						)
 					)
 				),
