@@ -84,6 +84,7 @@ if (!empty($locationReadOnly)) { ?>
     if (isset($_REQUEST['id']) && $_REQUEST['id']) $url_params[] = 'id=' . $_REQUEST['id'];
     if (isset($_REQUEST['user_id'])) $url_params[] = 'user_id=' . $_REQUEST['user_id'];
     if (!empty($_REQUEST['customer_id'])) $url_params[] = 'customer_id=' . $_REQUEST['customer_id'];
+    if (!empty($_REQUEST['return_for_shipment_id'])) $url_params[] = 'return_for_shipment_id=' . (int)$_REQUEST['return_for_shipment_id'];
     if (!empty($url_params)) echo '?' . implode('&', $url_params);
 ?>">
     <input type="hidden" name="id" value="<?= (int)$location->id ?>" />
@@ -93,6 +94,9 @@ if (!empty($locationReadOnly)) { ?>
     <?php	}
 	    if (!empty($_REQUEST['customer_id'])) { ?>
 	    <input type="hidden" name="customer_id" value="<?= (int)$_REQUEST['customer_id'] ?>" />
+    <?php	}
+	    if (!empty($_REQUEST['return_for_shipment_id'])) { ?>
+	    <input type="hidden" name="return_for_shipment_id" value="<?= (int)$_REQUEST['return_for_shipment_id'] ?>" />
     <?php	}
 	    if (isset($_REQUEST['user_id'])) { ?>
     <div class="tableBody min-tablet marginTop_20">

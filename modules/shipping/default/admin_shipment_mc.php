@@ -37,6 +37,22 @@
 		}
 	}
 
+	// Handle ship-from (send) address change (dropdown or from add-new flow)
+	if ($can_proceed && isset($_POST['send_location_id']) && $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) {
+		$new_send_id = preg_match('/^\d+$/', $_POST['send_location_id']) ? (int)$_POST['send_location_id'] : 0;
+		$send_contact = $shipment->send_contact();
+		$valid = false;
+		if ($new_send_id > 0 && $send_contact->id) {
+			$cust_locs = $send_contact->locations(array('include_hidden' => true));
+			foreach ($cust_locs as $l) { if ($l->id == $new_send_id) { $valid = true; break; } }
+		}
+		if ($valid && $shipment->setSendLocationId($new_send_id)) {
+			$page->appendSuccess("Ship-from address updated.");
+		} elseif (!$valid && $new_send_id > 0) {
+			$page->addError("Invalid ship-from address selection.");
+		}
+	}
+
 	// Handle form submission
 	if (isset($_REQUEST['action_type'])) {
 		// Validate CSRF token
@@ -190,6 +206,13 @@
 	// Get locations
 	$from_location = $shipment->send_location();
 	$to_location = $shipment->rec_location();
+	// Locations for ship-from dropdown (sender's org/customer locations)
+	$send_location_list = array();
+	if ($can_proceed && $shipment->send_contact()->id) {
+		$send_location_list = $shipment->send_contact()->locations(array('include_hidden' => true)) ?: array();
+	}
+	$send_contact = $can_proceed ? $shipment->send_contact() : null;
+	$send_org = ($send_contact && $send_contact->organization()) ? $send_contact->organization() : null;
 
 	// Set up page navigation
 	$page->title("Shipment Detail");

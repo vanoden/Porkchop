@@ -149,15 +149,31 @@
         <div class="tableRowHeader">
             <div class="tableCell">Ship From</div>
             <div class="tableCell">Ship To</div>
+            <div class="tableCell">Ship From</div>
         </div>
         <div class="tableRow">
             <div class="tableCell">
-                <a class="value"><a href="/_register/admin_location?id=<?=$from_location->id?>"><?=$from_location->name?></a><br>
-                <span class="value"><?=$from_location->HTMLBlockFormat()?></span>
+                <a class="value" href="/_register/admin_location?id=<?= $from_location->id ?>"><?= htmlspecialchars($from_location->name) ?></a><br>
+                <span class="value"><?= $from_location->HTMLBlockFormat() ?></span>
             </div>
             <div class="tableCell">
-                <a class="value"><a href="/_register/admin_location?id=<?=$to_location->id?>"><?=$to_location->name?></a><br>
-                <span class="value"><?=$to_location->HTMLBlockFormat()?></span>
+                <a class="value" href="/_register/admin_location?id=<?= $to_location->id ?>"><?= htmlspecialchars($to_location->name) ?></a><br>
+                <span class="value"><?= $to_location->HTMLBlockFormat() ?></span>
+            </div>
+            <div class="tableCell">
+                <form method="post" action="" style="margin-bottom:8px;">
+                    <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>" />
+                    <input type="hidden" name="id" value="<?= (int)$shipment->id ?>" />
+                    <select name="send_location_id" class="value input" onchange="this.form.submit()">
+                        <?php foreach ($send_location_list as $loc) { ?>
+                        <option value="<?= (int)$loc->id ?>"<?= ($shipment->send_location_id == $loc->id) ? ' selected' : '' ?>><?= htmlspecialchars($loc->name) ?></option>
+                        <?php } ?>
+                    </select>
+                </form><br />
+                <span class="value"><?= $from_location->HTMLBlockFormat() ?></span>
+                <?php if ($send_org && $send_org->id) { ?>
+                <p style="margin-top:8px;"><input type="button" class="button" value="Add address" onclick="window.location.href='/_register/admin_location?organization_id=<?= (int)$send_org->id ?>&amp;return_for_shipment_id=<?= (int)$shipment->id ?>';" /></p>
+                <?php } ?>
             </div>
         </div>
     </div>

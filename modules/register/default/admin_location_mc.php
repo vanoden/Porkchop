@@ -156,6 +156,14 @@ if (isset($_REQUEST['btn_submit'])) {
 							header('Location: /_register/admin_account_locations?customer_id=' . (int)$_REQUEST['customer_id']);
 							exit;
 						}
+						// Set as ship-from address for shipment and redirect to shipment when adding from shipping admin
+						if (!empty($_REQUEST['return_for_shipment_id']) && preg_match('/^\d+$/', $_REQUEST['return_for_shipment_id']) && $location->id > 0) {
+							$ship = new \Shipping\Shipment((int)$_REQUEST['return_for_shipment_id']);
+							if ($ship->id && $ship->setSendLocationId($location->id)) {
+								header('Location: /_shipping/admin_shipment?id=' . (int)$_REQUEST['return_for_shipment_id']);
+								exit;
+							}
+						}
 						// Refresh organization object to get updated default location IDs
 						if (isset($_REQUEST['organization_id'])) {
 							$organization = new \Register\Organization($_REQUEST['organization_id']);
