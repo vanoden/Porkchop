@@ -8,7 +8,8 @@ use Register\Organization;
 		protected int $id = 0;
 		protected int $organization_id;
 		public int $product_id;
-		protected int $quantity;
+		public int $quantity;
+		public ?string $date_expires;
 
 		/**
 		 * Constructor
@@ -37,6 +38,11 @@ use Register\Organization;
 			$product = new \Product\Item($this->product_id);
 			if ($product->id < 1) {
 				$this->error("Product not found");
+				return false;
+			}
+
+			if (empty($parameters['quantity']) || $parameters['quantity'] <= 0) {
+				$this->error("Quantity must be greater than 0");
 				return false;
 			}
 
@@ -147,7 +153,8 @@ use Register\Organization;
 			$get_details_query = "
 				SELECT  organization_id,
 						product_id,
-						quantity
+						quantity,
+						date_expires
 				FROM    register_organization_products
 				WHERE   organization_id = ?
 				AND		product_id = ?
@@ -169,6 +176,7 @@ use Register\Organization;
 				$this->organization_id = $object->organization_id;
 				$this->product_id = $object->product_id;
 				$this->quantity = $object->quantity;
+				$this->date_expires = $object->date_expires;
 			}
 			else {
 				$this->quantity = 0;
@@ -190,5 +198,16 @@ use Register\Organization;
 		 */
 		public function product(): \Product\Item {
 			return new \Product\Item($this->product_id);
+		}
+
+		/** @method expired()
+		 * Determine if the owned product is expired based on the date_expires field
+		 * @return bool True if expired, false if not expired or no expiration date set
+		 */
+		public function expired(): bool {
+			if (empty($this->date_expires)) return false;
+			$current_date = new \DateTime();
+			$expiration_date = new \DateTime($this->date_expires);
+			return $current_date > $expiration_date;
 		}
 	}
