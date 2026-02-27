@@ -10,9 +10,11 @@
 		public $description;
 		public $parent_id;
 		public $required_role_id;
+		public $required_product_id;
 		public $authentication_required = false;
 		public $external = false;
 		public $ssl = false;
+		public $thumbnail_url;
 		public $item; // Array of child navigation items
 
 		public function __construct($id = null) {
@@ -424,6 +426,41 @@
 					authentication_required = ?";
 				$database->AddParam($parameters['authentication_required'] ? 1 : 0);
 			}
+			if (isset($parameters['required_product_id'])) {
+				if ($parameters['required_product_id'] == "" || $parameters['required_product_id'] == 0 || $parameters['required_product_id'] === null) {
+					$update_object_query .= ",
+					required_product_id = NULL";
+				}
+				elseif (is_numeric($parameters['required_product_id'])) {
+					$product = new \Product\Item($parameters['required_product_id']);
+					if (! $product->exists()) {
+						// Product doesn't exist - set to NULL instead of failing (useful during imports)
+						// This allows the import to succeed even if products haven't been imported yet
+						$update_object_query .= ",
+						required_product_id = NULL";
+					}
+					else {
+						$update_object_query .= ",
+							required_product_id = ?";
+						$database->AddParam($parameters['required_product_id']);
+					}
+				}
+				else {
+					$this->error("Invalid required product id");
+					return false;
+				}
+			}
+			if (isset($parameters['thumbnail_url'])) {
+				if ($this->validTarget($parameters['thumbnail_url'])) {
+					$update_object_query .= ",
+						thumbnail_url = ?";
+					$database->AddParam($parameters['thumbnail_url']);
+				}
+				else {
+					$this->error("Invalid Thumbnail URL");
+					return false;
+				}
+			}
 
 			// Prepare Query
 			$update_object_query .= "
@@ -443,7 +480,11 @@
 		}
 
 		public function required_role() {
-				return new \Register\Role($this->required_role_id);
+			return new \Register\Role($this->required_role_id);
+		}
+
+		public function required_product() {
+			return new \Product\Item($this->required_product_id);
 		}
 
 		/** @method public details()
@@ -497,6 +538,8 @@
 				$this->description = $object->description;
 				$this->parent_id = $object->parent_id;
 				$this->required_role_id = $object->required_role_id;
+				$this->required_product_id = $object->required_product_id;
+				$this->thumbnail_url = $object->thumbnail_url;
 				if ($object->external) $this->external = true;
 				else $this->external = false;
 				if ($object->ssl) $this->ssl = true;
@@ -519,6 +562,8 @@
 				$this->external = null;
 				$this->ssl = null;
 				$this->authentication_required = false;
+				$this->required_role_id = null;
+				$this->required_product_id = null;
 				$this->exists(false);
 			}
 			return true;
@@ -529,14 +574,22 @@
 		}
 
 		public function hasChildren() {
+			// Clear Errors
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$get_children_query = "
 					SELECT  count(*)
 					FROM    navigation_menu_items
 					WHERE   parent_id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($get_children_query,array($this->id));
+			$database->AddParam($this->id);
+			$rs = $database->Execute($get_children_query);
 			if (! $rs) {
-					$this->SQLError($GLOBALS['_database']->ErrorMsg());
+					$this->SQLError($database->ErrorMsg());
 					return null;
 			}
 			list($count) = $rs->FetchRow();

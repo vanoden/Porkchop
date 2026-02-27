@@ -36,6 +36,7 @@
 	<th>Target</th>
 	<th>Alt</th>
 	<th>Required Role</th>
+	<th>Required Product</th>
 	<th>View Order</th>
 	<th>Actions</th>
 </tr>
@@ -44,6 +45,7 @@
 	<td><?=$item->target?></td>
 	<td><?=$item->alt?></td>
 	<td><?=$item->required_role() ? $item->required_role()->name : ''?></td>
+	<td><?=$item->required_product() ? $item->required_product()->code : ''?></td>
 	<td><?=$item->view_order?></td>
 	<td>
 		<input type="button" name="details[<?=$item->id?>]" class="button" value="Edit" onclick="edit(<?=$item->id?>,<?=isset($menu) ? $menu->id : ''?>,<?=isset($parent) ? $parent->id : 0?>);" />

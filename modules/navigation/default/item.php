@@ -10,14 +10,19 @@
 <tr><th>Title</th>
 	<th>Target</th>
 	<th>Alt</th>
-	<th>Requires Auth</th>
-	<th>Required Role</th>
-	<th>View Order</th>
+	<th>Thumbnail URL</th>
 </tr>
 <tr><td><input type="text" name="title" class="value input" value="<?=isset($item) ? $item->title : ''?>" /></td>
 	<td><input type="text" name="target" class="value input input-width-300" value="<?=isset($item) ? $item->target : ''?>" /></td>
 	<td><input type="text" name="alt" class="value input" value="<?=isset($item) ? $item->alt : ''?>" /></td>
-	<td><input type="checkbox" name="authentication_required" value="1" <?=isset($item) && $item->authentication_required ? 'checked' : ''?> /></td>
+	<td><input type="text" name="thumbnail_url" class="value input" value="<?=isset($item) ? $item->thumbnail_url : ''?>" /></td>
+</tr>
+<tr><th>Required Authentication</th>
+	<th>Required Role</th>
+	<th>Required Product</th>
+	<th>View Order</th>
+</tr>
+<tr><td><input type="checkbox" name="authentication_required" value="1" <?=isset($item) && $item->authentication_required ? 'checked' : ''?> /></td>
 	<td><select name="required_role_id" class="value input">
 			<option value="">None</option>
 <?php	foreach ($roles as $role) { ?>
@@ -25,11 +30,18 @@
 <?php	} ?>
 		</select>
 	</td>
+	<td><select name="required_product_id" class="value input">
+			<option value="">None</option>
+<?php	foreach ($products as $product) { ?>
+			<option value="<?=isset($product) ? $product->id : ''?>"<?php if (isset($product) && isset($item) && $product->id == $item->required_product_id) print " selected";?>><?=isset($product) ? $product->code : ''?></option>
+<?php	} ?>
+		</select>
+	</td>
 	<td><input type="text" name="view_order" class="value input input-width-80 input-text-right" value="<?=isset($item) ? $item->view_order : ''?>" /></td>
 </tr>
-<tr><th colspan="6">Description</th></tr>
-<tr><td colspan="6"><textarea name="description" class="value input textarea-width-100"><?=isset($item) ? strip_tags($item->description) : ''?></textarea></td></tr>
-<tr><td colspan="6"><input type="submit" class="button" name="btn_delete" value="Delete"/>
+<tr><th colspan="4">Description</th></tr>
+<tr><td colspan="4"><textarea name="description" class="value input textarea-width-100"><?=isset($item) ? strip_tags($item->description) : ''?></textarea></td></tr>
+<tr><td colspan="4"><input type="submit" class="button" name="btn_delete" value="Delete"/>
 					<input type="submit" class="button" name="btn_submit" value="Submit" />
 </table>
 </form>
