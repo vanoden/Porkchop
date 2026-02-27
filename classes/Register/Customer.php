@@ -516,6 +516,22 @@
 			return $products;
 		}
 
+		/** @method hasProductID(product_id)
+		 * Check if customer has a product by product ID.  Currently only through Organization ownership, but could be extended to direct ownership in the future.
+		 * @param int $product_id The product ID to check
+		 * @return bool True if customer has the product, otherwise false
+		 */
+		public function hasProductID($product_id): bool {
+			$this->clearError();
+			$organization = $this->organization();
+			if ($organization) {
+				if ($organization->hasProductID($product_id)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		/**
 		 * Magic method to handle can() calls with different parameter counts
 		 * @param string $name Method name
