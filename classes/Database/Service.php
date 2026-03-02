@@ -249,11 +249,12 @@
 		}
 
 		/**
-		 * Get the Error Message from the database
-		 * @return string 
+		 * Get the Error Message from the database (sanitized so SQL/schema is never exposed).
+		 * @return string
 		 */
 		public function ErrorMsg() {
-			return $this->_connection->ErrorMsg();
+			$msg = $this->_connection->ErrorMsg();
+			return parent::sanitizeSqlError($msg);
 		}
 
 		/**
