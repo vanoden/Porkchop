@@ -34,6 +34,17 @@ else {
 	}
 }
 
+$directories = $repository->directories($path);
+if ($repository->error()) {
+	$page->addError($repository->error());
+	$can_proceed = false;
+}
+$files = $repository->files($path);
+if ($repository->error()) {
+	$page->addError($repository->error());
+	$can_proceed = false;
+}
+
 /****************************************/
 /* Handle Form Actions					*/
 /****************************************/

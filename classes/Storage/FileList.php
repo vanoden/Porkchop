@@ -69,7 +69,7 @@
 						$this->error("Error initializing repository: ".$repositoryFactory->error());
 						return [];
 					}
-					$repository = $repositoryFactory->getRepositoryByID($parameters['repository_id']);
+					$repository = $repositoryFactory->createWithID($parameters['repository_id']);
 					if ($repositoryFactory->error()) {
 						$this->error("Error finding repository: ".$repositoryFactory->error());
 						return [];
