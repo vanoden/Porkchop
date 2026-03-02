@@ -487,11 +487,11 @@
 							REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
 								REPLACE(LOWER(name),'&','and'),
 							' ',''),'.',''),'-',''),';',''),':',''),CHAR(9),''),
-						1,{$match_length_int}) = ?
+						1,?) = ?
 				ORDER BY name
 			";
 			
-			$rs = $database->Execute($get_organizations_query, array($match_string));
+			$rs = $database->Execute($get_organizations_query, array($match_length_int, $match_string));
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
 				return null;

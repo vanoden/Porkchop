@@ -57,7 +57,7 @@
     <a href="/_register/admin_account_backup_codes?customer_id=<?= $cid ?>" class="tab">Backup Codes</a>
     <a href="/_register/admin_account_search_tags?customer_id=<?= $cid ?>" class="tab">Search Tags</a>
     <a href="/_register/admin_account_audit_log?customer_id=<?= $cid ?>" class="tab">Audit Log</a>
-    <a href="/_register/admin_account_register_audit?customer_id=<?= $cid ?>" class="tab">Register Audit</a>
+    <a href="/_register/admin_account_register_audit?customer_id=<?= $cid ?>" class="tab">Failed Logins</a>
 </div>
 <?php } ?>
 

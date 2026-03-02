@@ -106,7 +106,7 @@ if ($totalRecords == 0) {
 
 if (!isset($target)) $target = '';
 
-$page->title = "Customer Account Details - Register Audit";
+$page->title = "Customer Account Details - Failed Logins";
 $page->addBreadcrumb("Customer");
 $page->addBreadcrumb("Organizations", "/_register/organizations");
 $organization = $customer->organization();

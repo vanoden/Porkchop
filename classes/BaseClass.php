@@ -156,8 +156,25 @@ class BaseClass {
 	 * @param array|null $bind_params The bind parameters used in the query
 	 * @return string The formatted error message
 	 */
+	/**
+	 * Sanitize a database error message so SQL/schema is never exposed to end users.
+	 * @param string $message Raw error message from driver
+	 * @return string Safe message for display
+	 */
+	protected static function sanitizeSqlError($message) {
+		if (!is_string($message) || $message === '') return $message;
+		if (strpos($message, 'SQL Statement failed on preparation') === 0) {
+			return 'SQL Statement failed on preparation.';
+		}
+		if (preg_match('/Input array has \d+ params?, does not match query:/', $message)) {
+			return preg_replace('/^(Input array has \d+ params?, does not match query):.*/s', '$1.', $message);
+		}
+		return $message;
+	}
+
 	public function SQLError($message = '', $query = null, $bind_params = null) {
 		if (empty($message)) $message = $GLOBALS['_database']->ErrorMsg();
+		$message = self::sanitizeSqlError($message);
 		$trace = debug_backtrace();
 		$caller = $trace[1];
 		$class = $caller['class'];
