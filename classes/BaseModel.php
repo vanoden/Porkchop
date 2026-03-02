@@ -140,15 +140,15 @@ class BaseModel extends \BaseClass {
 		return $this->_tableName;
 	}
 
-	/**
-	 * Return the name of the table
+	/** @method _tableIDColumn()
+	 * Return the name of the primary key ID column, usually 'id'
 	 * @return string Name of Primary Key ID Column
 	 */
 	public function _tableIDColumn() {
 		return $this->_tableIDColumn;
 	}
 
-	/**
+	/** @method _fields()
 	 * Return List of Object Fields
 	 * Auto-populate if not provided by constructor
 	 * @return array Names of fields in object
@@ -165,7 +165,7 @@ class BaseModel extends \BaseClass {
 		return $this->_fields;
 	}
 
-	/**
+	/** @method hasField($name)
 	 * Does the table have specified field?
 	 * @param string $name
 	 * @return bool
@@ -174,10 +174,10 @@ class BaseModel extends \BaseClass {
 		return in_array($name, $this->_fields);
 	}
 
-	/**
-	 * update by params
-	 * 
+	/** @method update($parameters)
+	 * Update the object in the database using the given parameters and call details() to update the object properties
 	 * @param array $parameters, name value pairs to update object by
+	 * @return bool true if update successful, false otherwise
 	 */
 	public function update($parameters = []): bool {
 		$this->clearError();
@@ -233,17 +233,16 @@ class BaseModel extends \BaseClass {
 		return $this->details();
 	}
 
-	/**
-	 * Get ID of Object
+	/** @method id()
+	 * Get autoincremented ID of Object, usually the primary key in the database
 	 * @return int
 	 */
 	public function id() {
 		return $this->id;
 	}
 
-	/**
-	 * add by params
-	 * 
+	/** @method add($parameters)
+	 * Add an instance of the object to the database using the given parameters and return the new object
 	 * @param array $parameters, name value pairs to add and populate new object by
 	 */
 	public function add($parameters = []) {
@@ -641,9 +640,11 @@ class BaseModel extends \BaseClass {
 		return $rs;
 	}
 
-	/********************************************/
-	/* Track Fields Updateable in Table			*/
-	/********************************************/
+	/** @method _addFields($fields)
+	 * Add Fields to Fields Array - Generally called by class constructor with a suggested list of fields for the class
+	 * @param mixed $fields
+	 * @return void
+	 */
 	protected function _addFields($fields) {
 		if (is_array($fields)) {
 			foreach ($fields as $field) {
@@ -654,7 +655,7 @@ class BaseModel extends \BaseClass {
 		}
 	}
 
-	/**
+	/** @method _aliasField($real, $alias)
 	 * Add a field alias.  This allows standardization of field names where older tables may have different names for the same field.
 	 * Used primarily for unique keys such as code, name, etc.
 	 * @param mixed $real - Real field name in database
@@ -665,7 +666,7 @@ class BaseModel extends \BaseClass {
 		$this->_aliasFields[$alias] = $real;
 	}
 
-	/**
+	/** @method _addMetadataKeys($keys)
 	 * Add Keys to Metadata Keys Array - Generally called by class constructor with a suggested list of keys for the class
 	 * @param mixed $keys
 	 * @return void
@@ -1750,7 +1751,7 @@ class BaseModel extends \BaseClass {
 	 * @param string|null $category Optional category filter
 	 * @return array Array of tag values
 	 */
-	public function getTags(string $category = null): array {
+	public function getTags(?string $category = null): array {
 		$this->clearError();
 		
 		// Validate object ID
@@ -1844,7 +1845,7 @@ class BaseModel extends \BaseClass {
 	 * @param string|null $category Optional category filter
 	 * @return bool True if successful
 	 */
-	public function clearTags(string $category = null): bool {
+	public function clearTags(?string $category = null): bool {
 		$this->clearError();
 		
 		// Validate object ID
@@ -2114,7 +2115,7 @@ class BaseModel extends \BaseClass {
 
 		// Initialize the repository factory and load the repository
 		$repositoryFactory = new \Storage\RepositoryFactory();
-		$repository = $repositoryFactory->getRepositoryByCode($repository_code);
+		$repository = $repositoryFactory->createWithCode($repository_code);
 
 		if ($repositoryFactory->error()) {
 			$this->error('Error loading repository: ' . $repository->error());
@@ -2151,7 +2152,7 @@ class BaseModel extends \BaseClass {
 
 		// Initialize the repository factory and load the repository
 		$repositoryFactory = new \Storage\RepositoryFactory();
-		$repository = $repositoryFactory->getRepositoryByID($repository_id);
+		$repository = $repositoryFactory->createWithID($repository_id);
 		if (! $repository->exists()) {
 			$this->error('Repository not found with ID ' . $repository_id);
 			return false;
