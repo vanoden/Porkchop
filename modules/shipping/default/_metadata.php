@@ -6,8 +6,8 @@
 			"manage shipments"
         ),
         "templates"     => array(
-            "admin_shipments"           => $templates['admin'],
-            "admin_shipment"            => $templates['admin'],
-            "admin_receipt"             => $templates['admin'],
+            "admin_shipments"                    => $templates['admin'],
+            "admin_shipment"                     => $templates['admin'],
+            "admin_receipt"                      => $templates['admin'],
         ),
     );

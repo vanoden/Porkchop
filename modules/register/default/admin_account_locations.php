@@ -36,15 +36,41 @@
   <!-- LOCATIONS -->
   <!-- ============================================== -->
   <h3>Locations</h3>
+  <p>
+    <input type="button" class="button" value="Add Location" onclick="window.location.href='/_register/admin_location?user_id=<?= (int)$customer->id ?>&amp;customer_id=<?= (int)$customer_id ?>';" />
+    <form method="get" action="/_register/admin_account_locations" class="inline-form marginLeft_10" style="display:inline;">
+      <input type="hidden" name="customer_id" value="<?= (int)$customer_id ?>" />
+      <label><input type="checkbox" name="show_hidden" value="1" <?= !empty($show_hidden) ? 'checked' : '' ?> onchange="this.form.submit()" /> Show hidden addresses</label>
+    </form>
+  </p>
   <div class="table width-80per">
     <div class="tableRowHeader">
       <div class="tableCell width-20per">Name</div>
-      <div class="tableCell width-80per">Address</div>
+      <div class="tableCell width-50per">Address</div>
+      <div class="tableCell width-30per">Actions</div>
     </div>
-    <?php if (!empty($locations)) { foreach ($locations as $location) { ?>
-      <div class="tableRow">
-        <div class="tableCell width-20per"><?= $location->name ?></div>
-        <div class="tableCell width-80per"><?= $location->HTMLBlockFormat() ?></div>
+    <?php if (!empty($locations)) { foreach ($locations as $location) {
+      $is_org_location = isset($org_location_ids) && in_array($location->id, $org_location_ids);
+      $is_hidden = !empty($location->hidden);
+    ?>
+      <div class="tableRow"<?= $is_hidden ? ' style="color: #999;"' : '' ?>>
+        <div class="tableCell width-20per"><?php
+          if ($is_org_location && isset($organization) && $organization->id) {
+            $locLink = '/_register/admin_organization_locations/' . htmlspecialchars($organization->code) . '?organization_id=' . (int)$organization->id;
+            echo '<a href="' . $locLink . '">' . htmlspecialchars($location->name) . '</a> <span class="value">(' . htmlspecialchars($organization->name) . ')</span>';
+          } else {
+            echo htmlspecialchars($location->name);
+          }
+        ?></div>
+        <div class="tableCell width-50per"><?= $location->HTMLBlockFormat() ?></div>
+        <div class="tableCell width-30per">
+          <a href="/_register/admin_location?user_id=<?= (int)$customer->id ?>&amp;customer_id=<?= (int)$customer_id ?>&amp;copy_id=<?= $location->id ?>">Copy</a>
+          <?php if ($is_hidden) { ?>
+          | <a href="/_register/admin_account_locations?customer_id=<?= (int)$customer_id ?>&amp;setVisible=<?= $location->id ?>">Unhide</a>
+          <?php } else { ?>
+          | <a href="/_register/admin_account_locations?customer_id=<?= (int)$customer_id ?>&amp;setHidden=<?= $location->id ?>">Hide</a>
+          <?php } ?>
+        </div>
       </div>
     <?php   } } ?>
   </div>

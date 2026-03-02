@@ -28,15 +28,6 @@
 
 	$locations = array();
 	if ($organization->id) {
-		// get locations for organization
-		$locations = $organization->locations();
-		if ($organization->error()) {
-			$page->addError("Error finding organization locations: ".$organization->error());
-			app_log("Error finding organization locations: ".$organization->error(),'error',__FILE__,__LINE__);
-		}
-		if (!is_array($locations)) {
-			$locations = array();
-		}
 
 		// Update Existing Organization default billing
 		if (!empty($_REQUEST['setDefaultBilling']) && is_numeric($_REQUEST['setDefaultBilling'])) {
@@ -67,6 +58,27 @@
 		    }		
 		}
 		
+		// Hide or unhide a location (must belong to this organization)
+		if ((!empty($_REQUEST['setHidden']) || !empty($_REQUEST['setVisible'])) && is_numeric($_REQUEST['setHidden'] ?: $_REQUEST['setVisible'])) {
+		    $loc_id = (int)($_REQUEST['setHidden'] ?: $_REQUEST['setVisible']);
+		    $loc = new \Register\Location($loc_id);
+		    if ($loc->id) {
+		        if ($loc->belongsToOrganization($organization->id)) {
+		            $hidden = !empty($_REQUEST['setHidden']) ? 1 : 0;
+		            if ($loc->update(array('hidden' => $hidden))) {
+		                $page->appendSuccess($hidden ? "Address hidden." : "Address visible again.");
+		                $organization->auditRecord('ORGANIZATION_UPDATED', $hidden ? "Location '{$loc->name}' hidden" : "Location '{$loc->name}' unhidden");
+		            } else {
+		                $page->addError("Could not update location.");
+		            }
+		        } else {
+		            $page->addError("Location does not belong to this organization.");
+		        }
+		    } else {
+		        $page->addError("Location not found.");
+		    }
+		}
+
 		// Update Existing Organization default shipping
         if (!empty($_REQUEST['setDefaultShipping']) && is_numeric($_REQUEST['setDefaultShipping'])) {
 		    $old_shipping_location_id = $organization->default_shipping_location_id;
@@ -95,6 +107,19 @@
 			    $page->appendSuccess("Organization Updated Successfully");
 		    }
 		}
+
+		// get locations for organization (after actions so list shows current state; exclude hidden when show_hidden not set)
+		$show_hidden = !empty($_REQUEST['show_hidden']);
+		$locations = $organization->locations(array('include_hidden' => $show_hidden));
+		if ($organization->error()) {
+			$page->addError("Error finding organization locations: ".$organization->error());
+			app_log("Error finding organization locations: ".$organization->error(),'error',__FILE__,__LINE__);
+		}
+		if (!is_array($locations)) {
+			$locations = array();
+		}
+	} else {
+		$show_hidden = false;
 	}
 
 	// Set page title and admin menu section

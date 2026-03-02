@@ -321,4 +321,93 @@
             $address .= $this->country()->name;
             return $address;
         }
+
+		/**
+		 * Organization IDs associated with this location (register_organization_locations).
+		 * @return int[]
+		 */
+		public function getOrganizationIds(): array {
+			$ids = array();
+			if (!$this->id) return $ids;
+			$rs = $GLOBALS['_database']->Execute(
+				"SELECT organization_id FROM register_organization_locations WHERE location_id = ?",
+				array($this->id)
+			);
+			if ($rs) {
+				while (list($oid) = $rs->FetchRow()) $ids[] = (int)$oid;
+			}
+			return $ids;
+		}
+
+		/**
+		 * Location IDs associated with an organization (register_organization_locations).
+		 * @param int $organization_id
+		 * @return int[]
+		 */
+		public function locationIdsForOrganization(int $organization_id): array {
+			$ids = array();
+			$rs = $GLOBALS['_database']->Execute(
+				"SELECT location_id FROM register_organization_locations WHERE organization_id = ?",
+				array($organization_id)
+			);
+			if ($rs) {
+				while (list($lid) = $rs->FetchRow()) $ids[] = (int)$lid;
+			}
+			return $ids;
+		}
+
+		/**
+		 * Whether this location is linked to an organization.
+		 * @param int $organization_id
+		 * @return bool
+		 */
+		public function belongsToOrganization(int $organization_id): bool {
+			return in_array($organization_id, $this->getOrganizationIds(), true);
+		}
+
+		/**
+		 * Whether this location is linked to a user (register_user_locations).
+		 * @param int $user_id
+		 * @return bool
+		 */
+		public function belongsToUser(int $user_id): bool {
+			if (!$this->id) return false;
+			$rs = $GLOBALS['_database']->Execute(
+				"SELECT 1 FROM register_user_locations WHERE user_id = ? AND location_id = ? LIMIT 1",
+				array($user_id, $this->id)
+			);
+			return $rs && !$rs->EOF;
+		}
+
+		/**
+		 * Next copy number for a base name (e.g. "Site" -> 1, or 2 if "Site (copy 1)" exists).
+		 * Scopes by organization if provided.
+		 * @param string $baseName
+		 * @param int|null $organization_id
+		 * @return int
+		 */
+		public function nextCopyNumberForBaseName(string $baseName, ?int $organization_id = null): int {
+			$likePattern = $baseName . ' (copy%';
+			if ($organization_id !== null) {
+				$rs = $GLOBALS['_database']->Execute(
+					"SELECT rl.name FROM register_locations rl INNER JOIN register_organization_locations rol ON rol.location_id = rl.id WHERE rol.organization_id = ? AND rl.name LIKE ?",
+					array($organization_id, $likePattern)
+				);
+			} else {
+				$rs = $GLOBALS['_database']->Execute(
+					"SELECT name FROM register_locations WHERE name LIKE ?",
+					array($likePattern)
+				);
+			}
+			$maxNum = 0;
+			if ($rs) {
+				while (list($name) = $rs->FetchRow()) {
+					if (preg_match('/\s*\(copy\s+(\d+)\)\s*$/', $name, $m))
+						$maxNum = max($maxNum, (int)$m[1]);
+					elseif (preg_match('/\s*\(copy\)\s*$/', $name))
+						$maxNum = max($maxNum, 1);
+				}
+			}
+			return $maxNum + 1;
+		}
 	}
