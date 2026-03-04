@@ -133,15 +133,15 @@
 	$page->title("Menu Item Details");
 	$page->setAdminMenuSection("Site");  // Keep Navigation section open
 	$page->addBreadcrumb("Menus", "/_navigation/menus");
-	if (isset($parent)) {
+	if (isset($menu->code)) {
 		$page->addBreadcrumb($menu->title, "/_navigation/items/" . $menu->code);
-		if ($parent->parent_id) {
+		if (!empty($parent->parent_id) && $parent->parent_id != "0") {
 			$grandparent = new \Site\Navigation\Item($parent->parent_id);
 			$page->addBreadcrumb($grandparent->title, "/_navigation/items?parent_id=" . $grandparent->id);
 		}
-		$page->addBreadcrumb($parent->title, "/_navigation/items?parent_id=" . $parent->id);
+		//$page->addBreadcrumb($parent->title, "/_navigation/items?parent_id=" . $parent->id);
 	}
-	if (isset($item) && $item->id) {
+	if (!empty($item) && $item->id) {
 		$page->addBreadcrumb($item->title);
 	} else {
 		$page->addBreadcrumb('New Menu Item');
