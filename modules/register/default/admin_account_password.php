@@ -50,6 +50,7 @@
     <a href="/_register/admin_account_search_tags?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='search_tags'?'active':'' ?>">Search Tags</a>
     <a href="/_register/admin_account_audit_log?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
     <a href="/_register/admin_account_register_audit?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='register_audit'?'active':'' ?>">Failed Logins</a>
+	<a href="/_register/admin_privileges_assigned?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='privileges'?'active':'' ?>">Assigned Privileges</a>
 </div>
 
 <form id="admin-account-form" name="register" action="<?= PATH ?>/_register/admin_account_password?customer_id=<?= $customer_id ?>" method="POST">
