@@ -34,7 +34,10 @@
 			$this->_tableMetaFKColumn = "page_id";
 			$this->_tableMetaKeyColumn = "key";
 			parent::__construct();
-			
+
+			// Register our Shutdown Function to catch fatal parse errors and prevent blank pages
+			register_shutdown_function('shutDownFunction');
+
 			$args = func_get_args();
 			if (func_num_args() == 1 && gettype($args[0]) == "integer") {
 				$this->id = $args[0];
@@ -324,17 +327,33 @@
 				$productObj = new \Product\Item();
 				if (! $productObj->get($product)) {
 					app_log("Product '$product' not found when checking access requirement",'error',__FILE__,__LINE__);
-					header('location: /_register/permission_denied' );
-					exit;
+					$this->permissionDenied();
 				}
 			}
 			$organization = $GLOBALS['_SESSION_']->customer->organization();
 			if (! $organization || ! $organization->has_product($product_id)) {
 				$counter = new \Site\Counter("product_required");
 				$counter->increment();
-				header('location: /_register/permission_denied' );
-				exit;
+				$this->permissionDenied();
 			}
+		}
+
+		/** @method public notFound()
+		 * Handles the case when a requested page is not found.
+		 * Redirects to the not found page.
+		 */
+		public function notFound() {
+			header('location: /_site/not_found' );
+			return;
+		}
+
+		/** @method public permissionDenied()
+		 * Handles the case when a user does not have permission to access a page.
+		 * Redirects to the permission denied page.
+		 */
+		public function permissionDenied() {
+			header('location: /_site/permission_denied' );
+			exit;
 		}
 
 		/** @method public confirmTOUAcceptance()
