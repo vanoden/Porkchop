@@ -152,7 +152,7 @@
 					$queuedCustomerData['code'] = time();
 					$queuedCustomerData['is_reseller'] = 0;
 					$queuedCustomerData['assigned_reseller_id'] = NULL;
-					if (isset($_REQUEST['reseller']) && $_REQUEST['reseller'] == "yes") {
+					if (!empty($_REQUEST['reseller']) && $_REQUEST['reseller'] == "yes") {
 						$queuedCustomerData['is_reseller'] = 1;
 						$queuedCustomerData['assigned_reseller_id'] = $_REQUEST['assigned_reseller_id'];
 					}
@@ -276,8 +276,8 @@
 	}
 
 	// Load Data to Populate Form Inputs
-	$resellerList = new \Register\OrganizationList();
-	$resellers = $resellerList->find(array("is_reseller" => true));
+	//$resellerList = new \Register\OrganizationList();
+	//$resellers = $resellerList->find(array("is_reseller" => true));
 
 	$productList = new \Product\ItemList();
 	$productsAvailable = $productList->find(array('type' => 'unique','status' => 'active'));
