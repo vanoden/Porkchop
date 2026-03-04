@@ -139,7 +139,9 @@
 			$grandparent = new \Site\Navigation\Item($parent->parent_id);
 			$page->addBreadcrumb($grandparent->title, "/_navigation/items?parent_id=" . $grandparent->id);
 		}
-		//$page->addBreadcrumb($parent->title, "/_navigation/items?parent_id=" . $parent->id);
+		if (!empty($parent->title)) {
+			$page->addBreadcrumb($parent->title, "/_navigation/items?parent_id=" . $parent->id);
+		}
 	}
 	if (!empty($item) && $item->id) {
 		$page->addBreadcrumb($item->title);
