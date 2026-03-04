@@ -275,14 +275,12 @@ class BaseListClass extends \BaseClass {
 	 */
 	public function limitClause($controls) {
 		$limit = "";
-		if (!empty($controls['limit'])) {
-			if (is_numeric($controls['limit'])) {
-				if (!empty($controls['offset'])) {
-					if (is_numeric($controls['offset'])) {
-						$limit = " LIMIT " . $controls['offset'] . "," . $controls['limit'];
-					}
-				}
-				else $limit = " LIMIT " . $controls['limit'];
+		if (!empty($controls['limit']) && is_numeric($controls['limit'])) {
+			$offset = isset($controls['offset']) && is_numeric($controls['offset']) ? (int) $controls['offset'] : 0;
+			if ($offset > 0) {
+				$limit = " LIMIT " . $offset . "," . $controls['limit'];
+			} else {
+				$limit = " LIMIT " . $controls['limit'];
 			}
 		}
 		return $limit;

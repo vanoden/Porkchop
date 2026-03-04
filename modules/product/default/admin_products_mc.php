@@ -31,22 +31,26 @@
 	$productlist = new \Product\ItemList();
 	$allProducts = $productlist->find($parameters);
     $totalRecords = $productlist->count($parameters);
-	
+
+	// Pagination offset: ensure non-negative integer so "next page" advances correctly
+	$paginationOffset = isset($_REQUEST['pagination_start_id']) && is_numeric($_REQUEST['pagination_start_id']) ? max(0, (int) $_REQUEST['pagination_start_id']) : 0;
+
 	// Prepare controls for sorting and pagination
 	$controls = [
 		'limit' => $recordsPerPage,
-		'offset' => $_REQUEST['pagination_start_id'] ?? 0,
+		'offset' => $paginationOffset,
 		'sort' => $_REQUEST['sort'] ?? 'code'  // Default sort by code
 	];
-	
+
 	$products = $productlist->find($parameters, $controls);
 	if ($productlist->error()) $page->addError($productlist->error());
 
     $page->title("Products");
     $page->addBreadcrumb("Products");
 
-	// paginate results
-    $pagination = new \Site\Page\Pagination();
-    $pagination->forwardParameters(array('search','product_type','status_active','status_hidden','status_deleted','sort'));
-    $pagination->size($recordsPerPage);
-    $pagination->count($totalRecords);
+	// Paginate results: use current path so "Next" links go to same page with new offset
+	$pagination = new \Site\Page\Pagination();
+	$pagination->baseURI = isset($_SERVER['REQUEST_URI']) ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : ($_SERVER['SCRIPT_URI'] ?? '');
+	$pagination->forwardParameters(array('search','product_type','status_active','status_hidden','status_deleted','sort'));
+	$pagination->size($recordsPerPage);
+	$pagination->count($totalRecords);
