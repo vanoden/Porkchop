@@ -17,6 +17,15 @@
 			app_log("Porkchop autoloader found no class at '$path'",'error',__FILE__,__LINE__);
 		}
 	}
+
+	function shutDownFunction() {
+		$error = error_get_last();
+		if ($error && ($error['type'] == E_PARSE)) {
+			error_log("Fatal Parse Error: " . $error['message'] . " in " . $error['file'] . " on line " . $error['line']);
+			header('location: /_site/internal_error' );
+			exit;
+		}
+	}
 	function _debug_print($message) {
 		error_log("DEBUG: ".$message);
 	}
