@@ -929,6 +929,8 @@ class BaseModel extends \BaseClass {
 			return false;
 		}
 
+		if ($this->_auditEvents) $this->recordAuditEvent($this->id, 'Set metadata key ' . $key . ' to ' . $value . ' for ' . $this->_getActualClass());
+
 		return true;
 	}
 
