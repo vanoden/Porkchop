@@ -165,6 +165,13 @@
 			return $organizations;
 		}
 
+		/** @method public findAdvanced($parameters, $advanced, $controls)
+		 * Find organizations based on advanced search parameters and controls
+		 * @param array $parameters Associative array of search parameters (e.g. 'name', 'code', 'status', 'is_reseller', 'is_customer', 'is_vendor')
+		 * @param array $advanced Associative array of advanced search parameters (e.g. 'tags')
+		 * @param array $controls Associative array of search controls (e.g. 'sort', 'order', 'limit', 'offset')
+		 * @return array Array of matching Organization objects
+		 */
 		public function findAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
@@ -349,7 +356,7 @@
 
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {
-				if (true && $GLOBALS['_SESSION_']->customer()->organization_id != $id && !$GLOBALS['_SESSION_']->customer()->can('manage organizations',\Register\PrivilegeLevel::ORGANIZATION_MANAGER) && !$GLOBALS['_SESSION_']->customer()->organization()->associatedWith($id)) continue;
+				if ($GLOBALS['_SESSION_']->customer()?->organization_id != $id && !$GLOBALS['_SESSION_']->customer()?->can('manage organizations',\Register\PrivilegeLevel::ORGANIZATION_MANAGER) && !$GLOBALS['_SESSION_']->customer()?->organization()?->associatedWith($id)) continue;
 				if (isset($controls['id']) || isset($controls['count'])) {
 					array_push($organizations,$id);
 				}
