@@ -1,17 +1,17 @@
 <?php
+	/** @class Register\OwnedProduct
+	 * Represents a product owned by an organization, including quantity and expiration information
+	*/
 	namespace Register\Organization;
 
-use Register\Organization;
-
 	class OwnedProduct Extends \BaseClass {
-
-		protected int $id = 0;
-		protected int $organization_id;
+		public int $id = 0;
+		public int $organization_id;
 		public int $product_id;
 		public int $quantity;
 		public ?string $date_expires;
 
-		/**
+		/** @method __construct()
 		 * Constructor
 		 * @param int $org_id 
 		 * @param int $product_id 
@@ -22,7 +22,7 @@ use Register\Organization;
 			if ($this->organization_id > 0 && $this->product_id > 0) $this->details();
 		}
 
-		/**
+		/** @method add(parameters)
 		 * Add a quantity of the product to the organization's inventory
 		 * @param array $parameters 
 		 * @return bool 
