@@ -79,7 +79,7 @@
 					<li id="accountEmailQuestion" class="form-row">
 						<label for="status">Status:</label>
 						<span id="status" class="value"><?= $queuedCustomer->status ?></span>
-						<?php if ($queuedCustomer->status == "VERIFYING") { ?>
+						<?php if (! $readOnly &&$queuedCustomer->status == "VERIFYING") { ?>
 							<input type="submit" name="method" value="Resend Email" class="button" />
 						<?php } ?>
 					</li>
@@ -89,14 +89,20 @@
 					</li>
 					<li id="accountFirstNameQuestion" class="form-row">
 						<label for="first_name">*First Name:</label>
-						<input type="text" name="first_name" class="long-field" value="<?= $customer->first_name ?>" <?php if ($readOnly)
-							  echo 'disabled'; ?> />
+					<?php if ($readOnly) { ?>
+						<span class="value"><?= $customer->first_name ?></span>
+					<?php } else { ?>
+						<input type="text" name="first_name" class="long-field" value="<?= $customer->first_name ?>" />
+					<?php } ?>
 					</li>
 					<li id="accountLastNameQuestion" class="form-row">
 						<label for="last_name">*Last Name:</label>
+					<?php if ($readOnly) { ?>
+						<span class="value"><?= $customer->last_name ?></span>
+					<?php } else { ?>
 						<input type="text" class="value registerValue registerLastNameValue lowding-field" name="last_name"
-							value="<?= $customer->last_name ?>" <?php if ($readOnly)
-								  echo 'disabled'; ?> />
+							value="<?= $customer->last_name ?>" />
+					<?php } ?>
 					</li>
 					<li id="accountOrganizationQuestion" class="form-row">
 						<label for="">*Organization:</label>
@@ -104,8 +110,10 @@
 					</li>
 					<li id="accountTimeZoneQuestion" class="form-row">
 						<label for="timezone">*Time Zone:</label>
-						<select id="timezone" name="timezone" class="value input collectionField long-field" <?php if ($readOnly)
-							echo 'disabled'; ?>>
+					<?php if ($readOnly) { ?>
+						<span class="value"><?= $customer->timezone ?></span>
+					<?php } else { ?>
+						<select id="timezone" name="timezone" class="value input collectionField long-field">
 							<?php foreach (timezone_identifiers_list() as $timezone) {
 								if (isset($customer->timezone))
 									$selected_timezone = $customer->timezone;
@@ -118,16 +126,23 @@
 							<?php } ?>
 						</select>
 					</li>
+					<?php } ?>
 					<li id="accountJobTitleQuestion" class="form-row">
 						<label for="job_title">*Job Title:</label>
+					<?php if ($readOnly) { ?>
+						<span class="value"><?= $customer->getMetadata('job_title') ?></span>
+					<?php } else { ?>
 						<input type="text" name="job_title" class="long-field"
-							value="<?= $customer->getMetadata('job_title') ?>" <?php if ($readOnly)
-								  echo 'disabled'; ?> />
+							value="<?= $customer->getMetadata('job_title') ?>" />
+					<?php } ?>
 					</li>
 					<li id="accountJobDescriptionQuestion" class="form-row">
 						<label for="job_description">*Job Description:</label>
-						<textarea name="job_description" class="long-field register-account-textarea" <?php if ($readOnly)
-							echo 'disabled'; ?>><?= $customer->getMetadata('job_description') ?></textarea>
+					<?php if ($readOnly) { ?>
+						<span class="value"><?= $customer->getMetadata('job_description') ?></span>
+					<?php } else { ?>
+						<textarea name="job_description" class="long-field register-account-textarea"><?= $customer->getMetadata('job_description') ?></textarea>
+					<?php } ?>
 					</li>
 				</ul>
 			</section>

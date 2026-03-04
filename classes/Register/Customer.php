@@ -53,6 +53,8 @@
 		 * @return bool 
 		 */
 		public function update($parameters = []): bool {
+			// Collect Audit Messages
+			$audit_messages = [];
 
             // Password must be changed per Authentication Service
 			if (isset($parameters['password'])) {
@@ -71,6 +73,7 @@
 				else {
 					return false;
 				}
+				$audit_messages[] = "Password changed";
 			}
 
 			if ($_SERVER["SCRIPT_FILENAME"] == BASE."/core/install.php") app_log("Installer updating new admin account",'info');
@@ -78,17 +81,15 @@
 				if (!empty($parameters['organization_id']) && $this->organization_id != $parameters['organization_id']) {
 					$oldOrg = $this->organization();
 					$oldOrgName = $oldOrg ? $oldOrg->name : 'Unknown';
-					$this->auditRecord("ORGANIZATION_CHANGED","Organization changed from ".$oldOrgName." to ".$parameters['organization_id']);
+					$audit_messages[] = "Organization changed from ".$oldOrgName." to ".$parameters['organization_id'];
 				}
-				if (!empty($parameters['status']) && $this->status != $parameters['status']) $this->auditRecord("STATUS_CHANGED","Status changed from ".$this->status." to ".$parameters['status']);
-				if (!empty($parameters['first_name']) && $this->first_name != $parameters['first_name'] || !empty($parameters['last_name']) && $this->last_name != $parameters['last_name'])  $this->auditRecord("USER_UPDATED","Customer Name changed from " . $this->first_name . " " . $this->last_name . " to " . $parameters['first_name'] . " " . $parameters['last_name']);
-				if (isset($parameters['profile_visibility']) && $this->profile != $parameters['profile_visibility']) $this->auditRecord("PROFILE_VISIBILITY_CHANGED","Profile visibility changed from ".$this->profile." to ".$parameters['profile_visibility']);
+				if (!empty($parameters['status']) && $this->status != $parameters['status']) $audit_messages[] = "Status changed from ".$this->status." to ".$parameters['status'];
+				if (!empty($parameters['first_name']) && $this->first_name != $parameters['first_name'] || !empty($parameters['last_name']) && $this->last_name != $parameters['last_name'])  $audit_messages[] = "Customer Name changed from " . $this->first_name . " " . $this->last_name . " to " . $parameters['first_name'] . " " . $parameters['last_name'];
+				if (isset($parameters['profile_visibility']) && $this->profile != $parameters['profile_visibility']) $audit_messages[] = "Profile visibility changed from ".$this->profile." to ".$parameters['profile_visibility'];
 			}
 
 			parent::update($parameters);
 			if ($this->error()) return false;
-
-			$auditLog = new \Site\AuditLog\Event();
 
 			// roles
 			if (isset($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
@@ -97,23 +98,18 @@
 				foreach ($roles as $role) {
 					if (isset($parameters['roles']) && is_array($parameters['roles'])) {
 						if (array_key_exists($role['id'],$parameters['roles'])) {
-							$auditLog->appendDescription("Added role ".$role['name']);
+							$audit_messages[] = "ROLE_ADDED: Added role ".$role['name'];
 							$this->add_role($role['id']);
 						} else {
-							$auditLog->appendDescription("Added role ".$role['name']);
+							$audit_messages[] = "ROLE_REMOVED: Removed role ".$role['name'];
 							$this->drop_role($role['id']);
 						}
 					}
 				}
 			}
-			
+
 			// audit the update event
-			app_log("Well, log it already!");
-			$auditLog->addIfDescription(array(
-				'instance_id' => $this->id,
-				'class_name' => get_class($this),
-				'class_method' => 'update'
-			));
+			$this->recordAuditEvent($this->id, implode("; ", $audit_messages));
 
 			return $this->details();
 		}

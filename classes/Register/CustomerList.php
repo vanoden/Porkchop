@@ -132,11 +132,11 @@
 
 			if (isset($parameters['role'])) app_log("Don't use role as a filter for customers, use Register::Role::Members",'warning');
 
-		$validationclass = new \Register\Customer();
+			$validationclass = new \Register\Customer();
 
-		$database = new \Database\Service();
+			$database = new \Database\Service();
 
-		$find_person_query = "
+			$find_person_query = "
 				SELECT	id
 				FROM	register_users
 				WHERE	id = id";
@@ -165,6 +165,7 @@
 				)
 				";
 			}
+
 			if (isset($parameters['id']) && preg_match('/^\d+$/',$parameters['id'])) {
 				$find_person_query .= "
 				AND		id = ?";
@@ -174,6 +175,7 @@
 				$this->error("Invalid id");
 				return [];
 			}
+
 			if (!empty($parameters['code']) && empty($parameters['login'])) $parameters['login'] = $parameters['code'];
 
 			if (!empty($parameters['login'])) {
@@ -222,7 +224,7 @@
 				$find_person_query .= "
 				AND		status not in ('EXPIRED','HIDDEN','DELETED')";
 			}
-	
+		
 			if (isset($parameters['first_name'])) {
 				if ($validationclass->validName($parameters['first_name'])) {
 					$find_person_query .= "
@@ -234,7 +236,7 @@
 					return [];
 				}
 			}
-	
+
 			if (isset($parameters['last_name'])) {
 				if ($validationclass->validName($parameters['last_name'])) {
 					$find_person_query .= "
@@ -246,7 +248,7 @@
 					return [];
 				}
 			}
-	
+
 			if (isset($parameters['email_address'])) {
 				if ($validationclass->validEmail($parameters['email_address'])) {
 					$find_person_query .= "
@@ -266,8 +268,15 @@
 				$database->AddParam($parameters['department_id']);
 			}
 
+			// Filter by organization if organization_id is provided and user has permission to view that organization
 			if (!empty($parameters['organization_id']) && is_numeric($parameters['organization_id'])) {
-
+				if (! $GLOBALS['_SESSION_']->customer()->can('manage customers', \Register\PrivilegeLevel::ORGANIZATION_MANAGER)
+					&& !$GLOBALS['_SESSION_']->customer()->can('manage customers', \Register\PrivilegeLevel::ADMINISTRATOR)
+					&& $GLOBALS['_SESSION_']->customer()->organization_id != $parameters['organization_id']
+				) {
+					$this->error("You do not have permission to view customers in this organization");
+					return [];
+				}
 				$organization = new \Register\Organization($parameters['organization_id']);
 				if (!$organization->exists()) {
 					$this->error("Invalid organization");
@@ -277,6 +286,12 @@
 				AND		organization_id = ?";
 				$database->AddParam($organization->id);
 			}
+			elseif (!$GLOBALS['_SESSION_']->customer()->can('manage customers', \Register\PrivilegeLevel::ADMINISTRATOR)) {
+				$find_person_query .= "
+				AND		organization_id = ?";
+				$database->AddParam($GLOBALS['_SESSION_']->customer()->organization_id);
+			}
+
 			if (isset($parameters['automation'])) {
 				if (is_bool($parameters['automation'])) {
 					if ($parameters['automation']) $find_person_query .= "
@@ -335,43 +350,43 @@
 				return [];
 			}
 
-		// Get privilege name if privilege_id or privilege_name is provided
-		$privilege_name = null;
-		if (!empty($parameters['privilege_id']) && is_numeric($parameters['privilege_id'])) {
-			$privilege = new \Register\Privilege($parameters['privilege_id']);
-			if (!$privilege->id) {
-				$this->error("Invalid privilege_id");
-				return [];
-			}
-			$privilege_name = $privilege->name;
-		} elseif (!empty($parameters['privilege_name'])) {
-			$privilege_name = $parameters['privilege_name'];
-		}
-
-		$people = array();
-		while (list($id) = $rs->FetchRow()) {
-			// Always create customer object if we need it for role checking, privilege checking, or array building
-			if (isset($parameters['role']) || isset($privilege_name) || ! array_key_exists('ids',$controls) || ! $controls['ids']) {
-				$customer = new Customer($id);
-			}
-			
-			// Check role if required
-			if (isset($parameters['role']) && isset($customer) && ! $customer->has_role($parameters['role'])) continue;
-
-			// Check privilege if required
-			if (isset($privilege_name) && isset($customer)) {
-				// Check if customer has the privilege (using default administrator level)
-				if (!$customer->has_privilege($privilege_name)) continue;
+			// Get privilege name if privilege_id or privilege_name is provided
+			$privilege_name = null;
+			if (!empty($parameters['privilege_id']) && is_numeric($parameters['privilege_id'])) {
+				$privilege = new \Register\Privilege($parameters['privilege_id']);
+				if (!$privilege->id) {
+					$this->error("Invalid privilege_id");
+					return [];
+				}
+				$privilege_name = $privilege->name;
+			} elseif (!empty($parameters['privilege_name'])) {
+				$privilege_name = $parameters['privilege_name'];
 			}
 
-			// Don't build array if count is requested
-			if (array_key_exists('count', $controls) && isset($controls['count']) && !empty($controls['count'])) {}
-			elseif (isset($customer)) array_push($people,$customer);
+			$people = array();
+			while (list($id) = $rs->FetchRow()) {
+				// Always create customer object if we need it for role checking, privilege checking, or array building
+				if (isset($parameters['role']) || isset($privilege_name) || ! array_key_exists('ids',$controls) || ! $controls['ids']) {
+					$customer = new Customer($id);
+				}
+				
+				// Check role if required
+				if (isset($parameters['role']) && isset($customer) && ! $customer->has_role($parameters['role'])) continue;
 
-			$this->incrementCount();
-		}
+				// Check privilege if required
+				if (isset($privilege_name) && isset($customer)) {
+					// Check if customer has the privilege (using default administrator level)
+					if (!$customer->has_privilege($privilege_name)) continue;
+				}
 
-		return $people;
+				// Don't build array if count is requested
+				if (array_key_exists('count', $controls) && isset($controls['count']) && !empty($controls['count'])) {}
+				elseif (isset($customer)) array_push($people,$customer);
+
+				$this->incrementCount();
+			}
+
+			return $people;
 		}
 		
 		public function searchAdvanced($search_string, $advanced, $controls): array {

@@ -321,6 +321,17 @@
 						AND	ro.is_vendor = ?";
 				$database->AddParam($parameters['is_vendor']);
 			}
+
+			// Limit Access to Other Organizations for Non-Admin Users
+			if (   $GLOBALS['_SESSION_']->customer()?->organization_id != $id
+				&& !$GLOBALS['_SESSION_']->customer()?->can('manage organizations',\Register\PrivilegeLevel::ORGANIZATION_MANAGER)
+				&& !$GLOBALS['_SESSION_']->customer()?->can('manage organizations',\Register\PrivilegeLevel::ADMINISTRATOR)
+				&& !$GLOBALS['_SESSION_']->customer()?->organization()?->associatedWith($id)) {
+				$find_objects_query .= "
+				AND ro.id = ?";
+				$database->AddParam($GLOBALS['_SESSION_']->customer()->organization_id);
+			}
+				
             if (isset($controls['sort'])) {
                 if (!$workingClass->hasField($controls['sort'])) {
                     $this->error("Invalid sort field");
@@ -356,7 +367,6 @@
 
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {
-				if ($GLOBALS['_SESSION_']->customer()?->organization_id != $id && !$GLOBALS['_SESSION_']->customer()?->can('manage organizations',\Register\PrivilegeLevel::ORGANIZATION_MANAGER) && !$GLOBALS['_SESSION_']->customer()?->organization()?->associatedWith($id)) continue;
 				if (isset($controls['id']) || isset($controls['count'])) {
 					array_push($organizations,$id);
 				}
