@@ -269,19 +269,19 @@
 
 			$updates = [];
 
-			if (isset($parameters['code']) && $this->validCode($parameters['code'])) {
+			if (isset($parameters['code']) && $this->validCode($parameters['code']) && $parameters['code'] != $this->code) {
 				$update_object_query .= ",
 						asset_code = ?";
 				$database->AddParam($parameters['code']);
 				$updates[] = "Code changed to ".$parameters['code'].".";
 			}
-			if (isset($parameters['asset_name'])) {
+			if (isset($parameters['asset_name']) && $parameters['asset_name'] != $this->name) {
 				$update_object_query .= ",
 						asset_name = ?";
 				$database->AddParam($parameters['asset_name']);
 				$updates[] = "Name changed to ".$parameters['asset_name'].".";
 			}
-			if (isset($parameters['product_id']) && is_numeric($parameters['product_id'])) {
+			if (isset($parameters['product_id']) && is_numeric($parameters['product_id']) && $parameters['product_id'] != $this->product_id) {
 				$product = new \Product\Item($parameters['product_id']);
 				if (! $product->exists()) {
 					$this->error("Product not found");
@@ -292,7 +292,7 @@
 				$database->AddParam($parameters['product_id']);
 				$updates[] = "Product changed to ".$product->code.".";
 			}
-			if (!empty($parameters['organization_id']) && is_numeric($parameters['organization_id'])) {
+			if (!empty($parameters['organization_id']) && is_numeric($parameters['organization_id']) && $parameters['organization_id'] != $this->organization_id) {
 				if ($GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 					$organization = new \Register\Organization($parameters['organization_id']);
 					if (! $organization->exists()) {
@@ -327,6 +327,7 @@
 				if (isset($parameters['organization_id'])) $organization = new \Register\Organization($parameters['organization_id']);
 				else $organization = new \Register\Organization();
 
+				/* Replaced by audit log
 				if (isset($GLOBALS['_config']->action)) {
 				
 					# Record Event
@@ -343,11 +344,13 @@
 					);
 					if ($event->error()) app_log("Failed to add change to history: ".$event->error(),'error',__FILE__,__LINE__);
 				}
+				*/
 
                 $cache = $this->cache();
                 if (isset($cache)) $cache->delete();
 
 				// audit the update event
+				//$this->record_audit_event($this->id, implode(" ",$updates), __FUNCTION__);
 				$auditLog = new \Site\AuditLog\Event();
 				$auditLog->add(array(
 					'instance_id' => $this->id,

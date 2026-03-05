@@ -101,6 +101,14 @@ class EventList extends \BaseListClass {
 			$sort_direction_clause = " `" . $controls['sort'] . "` " . strtoupper($controls['order']);
 			$find_objects_query .= $order_by_clause . $sort_direction_clause;
 		}
+		elseif (!empty($controls['sort'])) {
+			$order_by_clause = " ORDER BY ";
+			$sort_direction_clause = " `" . $controls['sort'] . "` DESC";
+			$find_objects_query .= $order_by_clause . $sort_direction_clause;
+		}
+		else {
+			$find_objects_query .= " ORDER BY `".$this->_tableDefaultSortBy."` DESC";
+		}
 
 		// Limit Clause
 		$find_objects_query .= $this->limitClause($controls);

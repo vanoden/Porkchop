@@ -10,7 +10,7 @@
 	$auditClass = new \Site\AuditLog();
 	$classList = $auditClass->classes();
 
-	if (count($GLOBALS['_REQUEST_']->query_vars_array) > 0) {
+	if (count($GLOBALS['_REQUEST_']->query_vars_array) > 0 && !empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$parameters['class_name'] = preg_replace('/\:\:/','\\',$GLOBALS['_REQUEST_']->query_vars_array[0]);
 		$_REQUEST['class_name'] = $parameters['class_name'];
 		if (count($GLOBALS['_REQUEST_']->query_vars_array) > 1) {
@@ -22,8 +22,6 @@
 	// extract sort and order parameters from request
 	$sort_direction = $_REQUEST['sort_by'] ?? '';
 	$order_by = $_REQUEST['order_by'] ?? 'desc';
-	$parameters['order_by'] = $order_by;
-	$parameters['sort_direction']= $sort_direction;
 
 	// get audits based on current search
 	$btn_submit = $_REQUEST['btn_submit'] ?? null;
@@ -39,6 +37,7 @@
 			$parameters['class_name'] = $class_name;
 			$class = new $class_name();
 			$code = $_REQUEST['code'] ?? $parameters['code'] ?? null;
+			$parameters['code'] = $code;
 			if (empty($code)) {
 				$page->addError("Please enter an instance code");
 			}
@@ -60,8 +59,13 @@
 				if (!is_numeric($_REQUEST['pagination_start_id'])) $pagination_start_id = 0;
 
 				// find audits
+				$controls = array('sort' => $sort_direction, 'order' => $order_by, 'pagination_start_id' => $pagination_start_id);
 				$auditList = new \Site\AuditLog\EventList();
-				$audits = $auditList->find($parameters);
+				$audits = $auditList->find($parameters, $controls);
+				if ($auditList->error()) {
+					$page->addError("Error retrieving audits: " . $auditList->error());
+					$audits = [];
+				}
 
 				// paginate results
 				$pageNumber = isset($_GET['pagination_start_id']) && is_numeric($_GET['pagination_start_id']) ? (int)$_GET['pagination_start_id'] : 1;
