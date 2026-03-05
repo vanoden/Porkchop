@@ -216,6 +216,11 @@ class BaseModel extends \BaseClass {
 
 		$database->AddParam($this->id);
 
+		if (strlen($audit_message) <1) {
+			// Nothing to do, exit to avoid unnecessary update and audit event
+			return true;
+		}
+
 		$database->Execute($updateQuery);
 
 		if ($database->ErrorMsg()) {
@@ -2121,6 +2126,11 @@ class BaseModel extends \BaseClass {
 	 * @return int|null 1 if has image, 0 if not, null on error
 	 */
 	public function hasImage($image_id, $object_type = null) {
+		// Clear Previous Errors
+		$this->clearError();
+
+		// Initialize Database Service
+		$database = new \Database\Service();
 
 		if (!$object_type) $object_type = get_class($this);
 
@@ -2132,9 +2142,12 @@ class BaseModel extends \BaseClass {
 				AND		object_type = ?
 				AND		image_id = ?
 			";
-		$rs = $GLOBALS['_database']->Execute($get_image_query, array($this->id, $object_type, $image_id));
+		$database->AddParam($this->id);
+		$database->AddParam($object_type);
+		$database->AddParam($image_id);
+		$rs = $database->Execute($get_image_query);
 		if (! $rs) {
-			$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$this->SQLError($database->ErrorMsg());
 			return null;
 		}
 		list($found) = $rs->FetchRow();
