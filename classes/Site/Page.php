@@ -33,6 +33,7 @@
 			$this->_metaTableName = "page_metadata";
 			$this->_tableMetaFKColumn = "page_id";
 			$this->_tableMetaKeyColumn = "key";
+			$this->_auditEvents = true;
 			parent::__construct();
 
 			// Register our Shutdown Function to catch fatal parse errors and prevent blank pages
@@ -478,7 +479,8 @@
 			return true;
 		}
 
-		/**
+		/** @method public addByParameters(parameters)
+		 * THIS FEELS REDUNDANT?
 		 * Add a page by raw data parameters
 		 * @param array $parameters
 		 */
@@ -487,7 +489,7 @@
 			parent::add($parameters);
 		}
 
-		/**
+		/** @method public add(module, view, index)
 		 * Add a page by module, view, and index
 		 * @param string $module
 		 * @param string $view
@@ -545,7 +547,7 @@
 			return $this->details();
 		}
 
-		/**
+		/** @method public updateByParameters(parameters)
 		 * Update a page by raw data parameters
 		 * @param array $parameters
 		 * @return bool True if successful
@@ -599,7 +601,7 @@
 			} 
 		}
 
-		/**
+		/** @method public delete()
 		 * Delete a page
 		 * @return bool 
 		 */
@@ -640,8 +642,8 @@
 			return true;
 		}
 
-		/**
-		 * Get Page Details
+		/** @method public details()
+		 * Get details for the current page and populate the object properties.
 		 * @return bool 
 		 */
 		public function details(): bool {
@@ -736,14 +738,26 @@
 			return true;
 		}
 
+		/** @method public module()
+		 * Returns the module name of the page, ensuring it matches a valid pattern.
+		 * @return string|null The module name if valid, otherwise null.
+		 */
 		public function module() {
 			if (preg_match('/(\w[\w\_\.]*)/',$this->module,$matches)) return $matches[1];
 		}
 
+		/** @method public view()
+		 * Returns the view name of the page, ensuring it matches a valid pattern.
+		 * @return string|null The view name if valid, otherwise null.
+		 */
 		public function view() {
 			if (preg_match('/(\w[\w\_\.]*)/',$this->view,$matches)) return $matches[1];
 		}
 
+		/** @method public index()
+		 * Returns the index name of the page, ensuring it matches a valid pattern.
+		 * @return string|null The index name if valid, otherwise null.
+		 */
 		public function index() {
 			if (preg_match('/([\w\_\-]*)/',$this->index,$matches)) return $matches[1];
 		}

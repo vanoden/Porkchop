@@ -106,6 +106,7 @@ class BaseModel extends \BaseClass {
 			else return $this->setMetadataScalar($parameters[0], $parameters[1]);
 		}
 		elseif ($name == 'setMetadata') {
+			print_r("setMetadata called with parameters: " . json_encode($parameters) . "\n");
 			if (gettype($parameters[0]) == 'object') return $this->setMetadataObject($parameters[0], $parameters[1]);
 			else return $this->setMetadataScalar($parameters[0], $parameters[1]);
 		}
@@ -892,8 +893,9 @@ class BaseModel extends \BaseClass {
 	 */
 	public function setMetadataScalar(string $key, string $value): bool {
 		$this->clearError();
+
 		if (! isset($value)) return $this->unsetMetadata($key);
-		
+
 		// Validate that object has a valid ID before setting metadata
 		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
 			$this->error("Cannot set metadata: object ID is invalid or not set");
@@ -904,16 +906,14 @@ class BaseModel extends \BaseClass {
 		$existing_value = $this->getMetadata($key);
 
 		// Compare to New Value and Audit if Changed, exit if not changed to avoid unnecessary audit events
-		if ($this->_auditEvents && $existing_value !== $value) {
+		if ($existing_value !== $value) {
 			if (isset($existing_value)) {
 				$audit_message = 'Updated metadata key ' . $key . ' to ' . $value . ' for ' . $this->_getActualClass();
 			} else {
 				$audit_message = 'Set metadata key ' . $key . ' to ' . $value . ' for ' . $this->_getActualClass();
 			}
 		}
-		else {
-			return true;
-		}
+		else return true;
 
 		// Initialize Database Service
 		$database = new \Database\Service();
@@ -973,12 +973,12 @@ class BaseModel extends \BaseClass {
 				$audit_message = 'Set metadata key ' . $key . ' to ' . json_encode($value) . ' for ' . $this->_getActualClass();
 			}
 		}
-		elseif ($this->_auditEvents) {
-			$this->recordAuditEvent($this->id, $audit_message);
-		}
-		else {
+
+		if ($existing_value == json_encode($value)) {
 			app_log("No change to metadata key " . $key . " for " . $this->_getActualClass() . ", so no audit event recorded", 'trace');
-		} 
+			return true;
+		}
+
 		// Validate that object has a valid ID before setting metadata
 		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
 			$this->error("Cannot set metadata: object ID is invalid or not set");
@@ -1042,10 +1042,8 @@ class BaseModel extends \BaseClass {
 		// Confirm there is an existing value to unset for audit purposes
 		// Leave if there is nothing to unset to avoid unnecessary audit events
 		$existing_value = $this->getMetadata($key);
-		if ($this->_auditEvents && !empty($existing_value)) {
-			$audit_message = 'Deleted metadata key ' . $key . ' with value '. $existing_value . ' from ' . $this->_getActualClass();
-			$this->recordAuditEvent($this->id, $audit_message);
-		} else {
+		if ($existing_value == false) {
+			// Nothing to do
 			return true;
 		}
 

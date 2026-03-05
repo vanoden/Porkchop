@@ -67,7 +67,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 55,
+			"schema"		=> 54,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
@@ -103,7 +103,8 @@
 				"admin_account_audit_log"	=> $templates['admin'],
 				"admin_account_register_audit"	=> $templates['admin'],
 				"ent_accounts"			=> $templates['support'],
-				"admin_account_privileges"	=> $templates['admin']
+				"admin_account_privileges"	=> $templates['admin'],
+				"admin_organization_plans"	=> $templates['admin'],
 			),
 		),
 		"Contact"		=> array(
