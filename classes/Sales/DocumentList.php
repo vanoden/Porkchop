@@ -70,8 +70,12 @@
 								return [];
 							}
 						}
+						$placeholders = implode(',', array_fill(0, count($statii), '?'));
 						$find_objects_query .= "
-							AND status in ('".implode("','",$statii)."')";
+							AND status in ({$placeholders})";
+						foreach ($statii as $s) {
+							$database->AddParam($s);
+						}
 					}
 					else {
 						$find_objects_query .= "
