@@ -90,7 +90,7 @@
 				if ($next_offset > $totalResults) $next_offset = $pagination_start_id + $totalResults;
 
 				$pagination = new \Site\Page\Pagination();
-				$pagination->forwardParameters(array('add','update','delete','btn_submit','sort_by','order_by'));
+				$pagination->forwardParameters(array('class_name','code','btn_submit','sort_by','order_by'));
 				$pagination->size($recordsPerPage);
 				$pagination->count($totalResults);
 				$display_results = true;
