@@ -19,6 +19,7 @@
 			$_REQUEST['btn_submit'] = 'Apply Filter';
 		}
 	}
+
 	// extract sort and order parameters from request
 	$sort_direction = $_REQUEST['sort_by'] ?? '';
 	$order_by = $_REQUEST['order_by'] ?? 'desc';
