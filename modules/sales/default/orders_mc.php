@@ -16,21 +16,20 @@
 		$can_proceed = false;
 	}
 
-	// extract sort and order parameters from request
-	$controls['order'] = $_REQUEST['sort_by'] ?? '';
-	$controls['sort'] = $_REQUEST['order_by'] ?? 'desc';
+	// extract sort and order parameters from request (sort = column, order = direction for DocumentList)
+	$controls['sort'] = $_REQUEST['sort_by'] ?? 'id';
+	$controls['order'] = $_REQUEST['order_by'] ?? 'desc';
 	$controls['limit'] = $recordsPerPage;
 	$controls['offset'] = $_REQUEST['pagination_start_id'];
 
 	// Validate sort and order parameters
-	$valid_sort_fields = ['date', 'status', 'customer'];
-	if (!empty($controls['order']) && !in_array($controls['order'], $valid_sort_fields)) {
+	$valid_sort_fields = ['id', 'code', 'status', 'customer_id', 'salesperson_id'];
+	if (!empty($controls['sort']) && !in_array($controls['sort'], $valid_sort_fields)) {
 		$page->addError("Invalid sort field");
 		$can_proceed = false;
 	}
-	if (!in_array($controls['sort'], ['asc', 'desc'])) {
-		$page->addError("Invalid sort direction");
-		$can_proceed = false;
+	if (!in_array(strtolower($controls['order'] ?? ''), ['asc', 'desc'])) {
+		$controls['order'] = 'desc';
 	}
 
 	// get orders based on current search
