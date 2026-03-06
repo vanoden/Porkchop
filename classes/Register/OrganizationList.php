@@ -157,7 +157,7 @@
 			}
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {
-				if (false && $GLOBALS['_SESSION_']->customer()->organization_id != $id && !$GLOBALS['_SESSION_']->customer()->can('manage organizations',\Register\PrivilegeLevel::ORG_ADMINISTRATOR) && !$GLOBALS['_SESSION_']->customer()->organization()->associatedWith($id)) continue;
+				if (false && $GLOBALS['_SESSION_']->customer()->organization_id != $id && !$GLOBALS['_SESSION_']->customer()->can('manage organizations',\Register\PrivilegeLevel::ORGANIZATION_MANAGER) && !$GLOBALS['_SESSION_']->customer()->organization()->associatedWith($id)) continue;
 				$organization = new Organization($id,array('nocache' => true));
 				$this->incrementCount();
 				array_push($organizations,$organization);
@@ -323,10 +323,8 @@
 			}
 
 			// Limit Access to Other Organizations for Non-Admin Users
-			if (   $GLOBALS['_SESSION_']->customer()?->organization_id != $id
-				&& !$GLOBALS['_SESSION_']->customer()?->can('manage organizations',\Register\PrivilegeLevel::ORGANIZATION_MANAGER)
-				&& !$GLOBALS['_SESSION_']->customer()?->can('manage organizations',\Register\PrivilegeLevel::ADMINISTRATOR)
-				&& !$GLOBALS['_SESSION_']->customer()?->organization()?->associatedWith($id)) {
+			if (!$GLOBALS['_SESSION_']->customer()?->can('manage organizations',\Register\PrivilegeLevel::ADMINISTRATOR)
+			) {
 				$find_objects_query .= "
 				AND ro.id = ?";
 				$database->AddParam($GLOBALS['_SESSION_']->customer()->organization_id);
@@ -379,29 +377,40 @@
 			
 			return $organizations;
 		}
-		
+
+		/** @method expire(threshold)
+		 * Expire organizations that have been inactive for a specified threshold
+		 * @param int $threshold Number of days of inactivity before expiration
+		 * @return int|null Number of organizations expired, or null on error
+		 */
 		public function expire($threshold = 365) {
-		
+			// Clear any existing errors
+			$this->clearError();
+
+			// Validate threshold parameter
 			if (! is_numeric($threshold)) {
 				$this->error("threshold must be numeric");
 				return null;
 			}
 
-			# Find Existing Active Organizations
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Find Existing Active Organizations
 			$find_organizations_query = "
 				SELECT	id
 				FROM	register_organizations
 				WHERE	status in ('NEW','ACTIVE')
 				AND		date_created < date_sub(sysdate(),interval 3 month)
 			";
-			$rs = $GLOBALS['_database']->Execute($find_organizations_query);
+			$rs = $database->Execute($find_organizations_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			$counter = 0;
 			while (list($id) = $rs->FetchRow()) {
-				# Get Active Accounts
+				// Get Active Accounts
 				$organization = new Organization($id);
 				$active = $organization->activeCount();
 				app_log("Organization ".$organization->name." has $active members",'debug',__FILE__,__LINE__);

@@ -40,7 +40,7 @@ class Event Extends \BaseModel {
 	 * @param array $params 
 	 * @return bool 
 	 */
-	public function add($params = []) {
+	public function add($params = [], $force = false) {
 		$this->clearError();
 
 		// Create a new database object
@@ -57,7 +57,7 @@ class Event Extends \BaseModel {
 			return true;
 		}
 
-		if (! property_exists($callingClassName, '_auditEvents')) return true;
+		if (! $force && ! property_exists($callingClassName, '_auditEvents')) return true;
 
 		// if no classes set to be audited, return true
 		if (!empty($GLOBALS['_config']->auditing->auditedClasses) && is_array($GLOBALS['_config']->auditing->auditedClasses)) {
@@ -70,11 +70,13 @@ class Event Extends \BaseModel {
 			$this->error("Instance ID is required.");
 			return false;
 		}
+
 		// Allow NULL descriptions but add a message about "value not found"
 		if (empty($params['description']) || $params['description'] === 'NULL' || $params['description'] === 'Updated NULL' || $params['description'] === 'Added new NULL' || $params['description'] === 'Deleted NULL') {
 			$params['description'] = 'Value not found - ' . ($params['class_name'] ?? 'unknown class') . '::' . ($params['class_method'] ?? 'unknown method');
 			app_log("Audit event with NULL description replaced with 'value not found' message. Class: " . ($params['class_name'] ?? 'unknown') . ", Method: " . ($params['class_method'] ?? 'unknown'), 'warning');
 		}
+
 		if (empty($GLOBALS['_SESSION_']->customer->id)) {
 			if (!empty($params['customer_id'])) $customer_id = $params['customer_id'];
 			elseif ($_SERVER['SCRIPT_FILENAME'] == BASE."/core/install.php") {

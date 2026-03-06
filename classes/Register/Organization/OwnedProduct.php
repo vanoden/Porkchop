@@ -81,11 +81,86 @@
 			// audit the add event
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Added new '.$this->_objectName(),
+				'instance_id' => $organization->id,
+				'description' => 'Added quantity ' . $parameters['quantity'] . ' of product ID ' . $product->code.', expires: '.($parameters['date_expires'] ?? 'N/A'),
 				'class_name' => get_class($this),
 				'class_method' => 'add'
-			));
+			),true);
+
+			return $this->details();
+		}
+
+		/** @method public update($parameters)
+		 * Update the owned product with new information such as quantity or expiration date
+		 * @param array $parameters
+		 */
+		public function update($parameters = []): bool {
+			// Clear any existing errors
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			$organization = new \Register\Organization($this->organization_id);
+			if ($organization->id < 1) {
+				$this->error("Organization not found");
+				return false;
+			}
+
+			$product = new \Product\Item($this->product_id);
+			if ($product->id < 1) {
+				$this->error("Product not found");
+				return false;
+			}
+
+			// Prepare Query
+			$update_query = "
+				UPDATE  register_organization_products
+				SET     id = id
+			";
+
+			$audit_events = [];
+
+			// Add Parameters
+			if (isset($parameters['quantity']) && $parameters['quantity'] >= 0) {
+				$update_query .= ",
+						quantity = ?";
+				$database->AddParam($parameters['quantity']);
+				$audit_events[] = "Updated quantity from " . $this->quantity . " to " . $parameters['quantity'];
+			}
+			if (isset($parameters['date_expires']) && !empty($parameters['date_expires']) && $parameters['date_expires'] != $this->date_expires) {
+				$update_query .= ",
+						date_expires = ?";
+				$database->AddParam($parameters['date_expires']);
+				$audit_events[] = "Updated expiration date from " . $this->date_expires . " to " . $parameters['date_expires'];
+			}
+
+			if (empty($audit_events)) {
+				$this->error("No valid fields to update");
+				return false;
+			}
+
+			// Prepare Query
+			$update_query .= "
+				WHERE   organization_id = ?
+				AND     product_id = ?
+			";
+			$database->AddParam($this->organization_id);
+			$database->AddParam($this->product_id);
+
+			$rs = $database->Execute($update_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			$audit_record = new \Site\AuditLog\Event();
+			$audit_record->add(array(
+				'instance_id' => $organization->id,
+				'description' => "Product ".$product->code." updated: ".implode("; ", $audit_events),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			),true);
 
 			return $this->details();
 		}
@@ -100,6 +175,18 @@
 
 			// Initialize Database Service
 			$database = new \Database\Service();
+
+			$organization = new \Register\Organization($this->organization_id);
+			if ($organization->id < 1) {
+				$this->error("Organization not found");
+				return false;
+			}
+
+			$product = new \Product\Item($this->product_id);
+			if ($product->id < 1) {
+				$this->error("Product not found");
+				return false;
+			}
 
 			// Validate Quantity
 			$on_hand = $this->count();
@@ -127,6 +214,17 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+
+			$audit_events = ["Consumed $quantity of product ID " . $this->product_id];
+
+			$audit_record = new \Site\AuditLog\Event();
+			$audit_record->add(array(
+				'instance_id' => $organization->id,
+				'description' => "Product ".$product->code." consumed: ".implode("; ", $audit_events),
+				'class_name' => get_class($this),
+				'class_method' => 'consume'
+			),true);
+
 			return $this->details();
 		}
 

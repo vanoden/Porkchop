@@ -1,6 +1,8 @@
 <?php
 	namespace Register;
 
+use Register\Organization\OwnedProduct;
+
 	class Organization Extends \BaseModel {
 
 		public string $name = "";
@@ -332,7 +334,7 @@
 		 * Get an owned product for this organization
 		 * @param int $product_id
 		 */
-		public function product($product_id) {
+		public function product($product_id): ?OwnedProduct {
 			$product = new \Product\Item($product_id);
 			if ($product->error()) {
 				$this->error($product->error());
@@ -350,13 +352,13 @@
 		 * @param int $product_id
 		 * @return bool
 		 */
-		public function hasProductID($product_id) {
+		public function hasProductID($product_id): bool {
 			$owned_product = $this->product($product_id);
 			if ($owned_product->error()) {
 				$this->error($owned_product->error());
 				return false;
 			}
-			if ($owned_product->id) {
+			if ($owned_product->product_id) {
 				// See if they have any of the product in inventory
 				if ($owned_product->quantity > 0) {
 					if ($owned_product->expired()) return false;
@@ -367,6 +369,58 @@
 				}
 			}
 			else return false;
+		}
+
+		/** @method addProduct(id,quantity,expiration_date = '9999-12-31')
+		 * Add a product to this organization
+		 */
+		public function addProduct($product_id,$quantity,$expiration_date = '9999-12-31'): bool {
+			$owned_product = $this->product($product_id);
+			if ($owned_product->error()) {
+				$this->error($owned_product->error());
+				return false;
+			}
+			if ($owned_product->id) {
+				// They already have this product, update quantity and expiration if needed
+				$new_quantity = $owned_product->quantity + $quantity;
+				if ($expiration_date < $owned_product->date_expires) {
+					$new_expiration_date = $expiration_date;
+				}
+				else {
+					$new_expiration_date = $owned_product->date_expires;
+				}
+				if (!$owned_product->update(array('quantity' => $new_quantity,'expiration_date' => $new_expiration_date))) {
+					$this->error($owned_product->error());
+					return false;
+				}
+			}
+			else {
+				// They don't have this product, add it
+				if (!$owned_product->add(array('quantity' => $quantity,'expiration_date' => $expiration_date))) {
+					$this->error($owned_product->error());
+					return false;
+				}
+			}
+			return true;
+		}
+
+		public function updateProduct($product_id,$quantity,$expiration_date = '9999-12-31'): bool {
+			$owned_product = $this->product($product_id);
+			if ($owned_product->error()) {
+				$this->error($owned_product->error());
+				return false;
+			}
+			if ($owned_product->product_id) {
+				if (!$owned_product->update(array('quantity' => $quantity,'expiration_date' => $expiration_date))) {
+					$this->error($owned_product->error());
+					return false;
+				}
+			}
+			else {
+				$this->error("Product not found in organization");
+				return false;
+			}
+			return true;
 		}
 
 		public function activeCount() {
