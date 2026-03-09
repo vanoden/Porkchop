@@ -21,11 +21,13 @@
 			return;
 		}
 	}
-	elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0]) && is_numeric($GLOBALS['_REQUEST_']->query_vars_array[0])) {
-		$organization = new \Register\Organization($GLOBALS['_REQUEST_']->query_vars_array[0]);
-		if (! $organization->exists()) {
-			$page->addError("Organization not found");
-			return;
+	elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0]) && preg_match('/^\w[\w\-\.\_]*$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {
+		$organization = new \Register\Organization();
+		if ($organization->get($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+			if (! $organization->exists()) {
+				$page->addError("Organization not found");
+				return;
+			}
 		}
 	}
 	else {
