@@ -541,7 +541,24 @@ END;
 					}
 				}
 				if (empty($item->target)) $buffer .= "\t<li><button aria-expanded=\"false\" aria-controls=\"m".$item->id."\">".$item->title."</button>\n";
-				else $buffer .= "\t<li><a href=\"".$item->target."\">".$item->title."</a>\n";
+				else {
+					$target = $item->target;
+					if (preg_match('/\[organization.code\]/', $target)) {
+						if ($GLOBALS['_SESSION_']->customer->organization()->code) {
+							$target = str_replace('[organization.code]', $GLOBALS['_SESSION_']->customer->organization()->code, $target);
+						} else {
+							continue; // skip this item if organization code is required but not available
+						}
+					}
+					if (preg_match('/\[customer.code\]/', $target)) {
+						if ($GLOBALS['_SESSION_']->customer->id) {
+							$target = str_replace('[customer.code]', $GLOBALS['_SESSION_']->customer->code, $target);
+						} else {
+							continue; // skip this item if customer id is required but not available
+						}
+					}
+					$buffer .= "\t<li><a href=\"".$target."\">".$item->title."</a>\n";
+				}
 				$children = $item->children();
 				if (count($children)) {
 					$buffer .= "\t<ul>\n";
@@ -552,6 +569,21 @@ END;
 						if ($child->required_role_id > 0) {
 							if (! $GLOBALS['_SESSION_']->customer->has_role_id($child->required_role_id)) {
 								continue;
+							}
+						}
+						$target = isset($child->target) ? $child->target : '';
+						if (preg_match('/\[organization.code\]/', $target)) {
+							if ($GLOBALS['_SESSION_']->customer->organization()->code) {
+								$child->target = str_replace('[organization.code]', $GLOBALS['_SESSION_']->customer->organization()->code, $target);
+							} else {
+								continue; // skip this item if organization code is required but not available
+							}
+						}
+						if (preg_match('/\[customer.code\]/', $target)) {
+							if ($GLOBALS['_SESSION_']->customer->id) {
+								$child->target = str_replace('[customer.code]', $GLOBALS['_SESSION_']->customer->code, $target);
+							} else {
+								continue; // skip this item if customer id is required but not available
 							}
 						}
 						$buffer .= "\t\t<li><a href=\"".$child->target."\">".$child->title."</a></li>\n";
