@@ -715,10 +715,10 @@ class File extends \BaseModel {
 			$repository = $repositoryFactory->createWithID($parameters['repository_id']);
 		}
 		elseif (!empty($parameters['repository_code'])) {
-			$repository = $repositoryFactory->getRepositoryByCode($parameters['repository_code']);
+			$repository = $repositoryFactory->createWithCode($parameters['repository_code']);
 		}
 		elseif (!empty($parameters['repository_name'])) {
-			$repository = $repositoryFactory->getRepositoryByName($parameters['repository_name']);
+			$repository = $repositoryFactory->createWithCode($parameters['repository_name']);
 		}
 		else {
 			$this->addError("Repository not specified");
