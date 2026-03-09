@@ -55,5 +55,6 @@
 			}
 		}
 	}
+	$customer_id = $customer->id;
 
 	$page->title("Privilege Assignment Report");
