@@ -16,32 +16,19 @@
 <?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
-<?php $activeTab = 'locations'; ?>
-<?php
-    // Show organization info container similar to product container
-    $title = htmlspecialchars($organization->name ?: $organization->code);
-?>
-<div class="product-container">
-    <div class="product-title"><?=$title?></div>
-</div>
-<?php
-?>
 <div class="tabs">
     <a href="/_register/admin_organization/<?= $organization->code ?>" class="tab <?= $activeTab==='details'?'active':'' ?>">Details</a>
     <a href="/_register/admin_organization_users/<?= $organization->code ?>" class="tab <?= $activeTab==='users'?'active':'' ?>">Users</a>
     <a href="/_register/admin_organization_tags/<?= $organization->code ?>" class="tab <?= $activeTab==='tags'?'active':'' ?>">Tags</a>
     <a href="/_register/admin_organization_locations/<?= $organization->code ?>" class="tab <?= $activeTab==='locations'?'active':'' ?>">Locations</a>
     <a href="/_register/admin_organization_audit_log/<?= $organization->code ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
+	<a href="/_register/admin_organization_plans/<?= $organization->code ?>" class="tab <?= $activeTab==='plans'?'active':'' ?>">Plans</a>
 </div>
 
 <form id="orgLocations" name="orgLocations" method="POST">
     <input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-    
-    <div class="form_instruction">Manage locations for this organization. Existing addresses are view-only; use Copy to create a new address with changes, or Hide/Unhide for addresses no longer used.</div>
 
-    <h3>Locations</h3>
-    <p>
     <form method="get" action="/_register/admin_organization_locations/<?= htmlspecialchars($organization->code) ?>" class="inline-form" style="display:inline;">
       <input type="hidden" name="organization_id" value="<?= (int)$organization->id ?>" />
       <label><input type="checkbox" name="show_hidden" value="1" <?= !empty($show_hidden) ? 'checked' : '' ?> onchange="this.form.submit()" /> Show hidden addresses</label>

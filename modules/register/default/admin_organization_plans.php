@@ -1,7 +1,17 @@
-<?=$page->showSubHeading()?>
+<?=$page->showAdminPageInfo()?>
 <form method="post" action="/_register/admin_organization_plans/<?=$organization->id?>">
 <input type="hidden" name="csrf_token" value="<?=$GLOBALS['_SESSION_']->csrf_token?>">
 <input type="hidden" name="organization_id" value="<?=$organization->id?>">
+
+<div class="tabs">
+    <a href="/_register/admin_organization/<?= $organization->code ?>" class="tab <?= $activeTab==='details'?'active':'' ?>">Details</a>
+    <a href="/_register/admin_organization_users/<?= $organization->code ?>" class="tab <?= $activeTab==='users'?'active':'' ?>">Users</a>
+    <a href="/_register/admin_organization_tags/<?= $organization->code ?>" class="tab <?= $activeTab==='tags'?'active':'' ?>">Tags</a>
+    <a href="/_register/admin_organization_locations/<?= $organization->code ?>" class="tab <?= $activeTab==='locations'?'active':'' ?>">Locations</a>
+    <a href="/_register/admin_organization_audit_log/<?= $organization->code ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
+	<a href="/_register/admin_organization_plans/<?= $organization->code ?>" class="tab <?= $activeTab==='plans'?'active':'' ?>">Plans</a>
+</div>
+
 <div class="tableBody">
 	<div class="tableRowHeader">
 		<div class="tableCell">Code</div>

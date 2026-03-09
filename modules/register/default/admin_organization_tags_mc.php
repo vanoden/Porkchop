@@ -92,3 +92,4 @@
 		$page->addBreadcrumb($organization->name, "/_register/admin_organization?organization_id=".$organization->id);
 	}
 	$page->addBreadcrumb("Tags");
+	$page->instructions = "Manage tags for this organization.";

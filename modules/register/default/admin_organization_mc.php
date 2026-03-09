@@ -242,3 +242,6 @@
 	if (isset($organization->id)) {
 		$page->addBreadcrumb($organization->name,"/_register/admin_organization?organization_id=".$organization->id);
 	}
+	$page->instructions = "Make changes and click 'Apply' to complete.";
+
+	$activeTab = 'details';

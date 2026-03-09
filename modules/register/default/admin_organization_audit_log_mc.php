@@ -54,3 +54,6 @@
 		$page->addBreadcrumb($organization->name, "/_register/admin_organization?organization_id=".$organization->id);
 	}
 	$page->addBreadcrumb("Audit Log");
+	$page->instructions = "View audit log records for this organization.";
+
+	$activeTab = 'audit';

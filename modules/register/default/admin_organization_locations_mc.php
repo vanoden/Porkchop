@@ -131,3 +131,6 @@
 		$page->addBreadcrumb($organization->name, "/_register/admin_organization?organization_id=".$organization->id);
 	}
 	$page->addBreadcrumb("Locations");
+	$page->instructions = "Manage locations for this organization. Existing addresses are view-only; use Copy to create a new address with changes, or Hide/Unhide for addresses no longer used.";
+	
+	$activeTab = 'locations';

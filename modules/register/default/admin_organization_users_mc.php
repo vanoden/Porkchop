@@ -91,3 +91,5 @@
 		$page->addBreadcrumb($organization->name, "/_register/admin_organization?organization_id=".$organization->id);
 	}
 	$page->addBreadcrumb("Users");
+	$page->instructions = "Add and manage users associated with this organization. Click on a username to view account details.";
+	$activeTab = 'users';
