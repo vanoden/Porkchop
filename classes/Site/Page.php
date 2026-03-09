@@ -320,22 +320,29 @@
 		public function requireProduct($product): void {
 			if (is_numeric($product)) {
 				$product_id = $product;
+				$productObj = new \Product\Item($product_id);
 			}
 			elseif ($product instanceof \Product\Item) {
 				$product_id = $product->id;
+				$productObj = $product;
 			}
 			else {
 				$productObj = new \Product\Item();
 				if (! $productObj->get($product)) {
 					app_log("Product '$product' not found when checking access requirement",'error',__FILE__,__LINE__);
-					$this->permissionDenied();
+					$this->notFound();
 				}
 			}
-			$organization = $GLOBALS['_SESSION_']->customer->organization();
-			if (! $organization || ! $organization->has_product($product_id)) {
-				$counter = new \Site\Counter("product_required");
-				$counter->increment();
-				$this->permissionDenied();
+			if (! $productObj->exists()) {
+				$this->notFound("Required plan not found");
+			}
+			else {
+				$organization = $GLOBALS['_SESSION_']->customer->organization();
+				if (! $organization || ! $organization->hasProduct($productObj->code)) {
+					$counter = new \Site\Counter("product_required");
+					$counter->increment();
+					$this->permissionDenied();
+				}
 			}
 		}
 
@@ -789,7 +796,12 @@
 		 */
 		public function template() {
 			$template = $this->getMetadata('template');
+			$redirect = $this->getMetadata('redirect');
 			if (preg_match('/(\w[\w\_\-\.]*\.html)/',$template,$matches)) return $matches[1];
+			elseif (!empty($redirect)) {
+				header("Location: $redirect");
+				exit;
+			}
 			elseif (file_exists(HTML . "/" . $this->module() . "." . $this->view() . ".html")) return $this->module() . "." . $this->view() . ".html";
 			elseif ($this->view == 'api' && file_exists ( HTML . "/_api.html")) return "_api.html";
 			elseif (file_exists ( HTML . "/" . $this->module() . ".html")) return $this->module() . ".html";
