@@ -148,6 +148,7 @@
 				}
 			}
 			else {
+				app_log("Moving file from '$path' to Repository location '".$this->_path()."/".$file->code()."'",'debug');
 				if (rename($path, $this->_path() . "/" . $file->code())) {
 					return true;
 				}
