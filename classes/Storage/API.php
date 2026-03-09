@@ -60,7 +60,7 @@
 
 			// Fetch Specified Repository
 			$repositoryFactory = new \Storage\RepositoryFactory();
-			$repository = $repositoryFactory->getRepositoryByCode($_REQUEST['code']);
+			$repository = $repositoryFactory->createWithCode($_REQUEST['code']);
 			if ($repositoryFactory->error()) $this->error("Error adding repository: ".$repositoryFactory->error());
 			if (! $repository->id) $this->error("Repository not found");
 
@@ -139,7 +139,7 @@
 			$repositoryFactory = new \Storage\RepositoryFactory();
 			if ($repositoryFactory->error()) $this->app_error("Error initializing repository: ".$repositoryFactory->error(),__FILE__,__LINE__);
 
-			$repository = $repositoryFactory->getRepositoryByCode($_REQUEST['code']);
+			$repository = $repositoryFactory->createWithCode($_REQUEST['code']);
 			if ($repositoryFactory->error()) $this->app_error("Error finding repository: ".$repositoryFactory->error(),__FILE__,__LINE__);
 			if (! $repository->id) $this->error("Repository '".$_REQUEST['code']."' not found");
 
@@ -161,7 +161,7 @@
 			// Find Specified Repository
 			$repositoryFactory = new \Storage\RepositoryFactory();
 			if ($repositoryFactory->error()) $this->app_error("Error initializing repository: ".$repositoryFactory->error(),__FILE__,__LINE__);
-			$repository = $repositoryFactory->getRepositoryByCode($_REQUEST['repository_code']);
+			$repository = $repositoryFactory->createWithCode($_REQUEST['repository_code']);
 			if ($repositoryFactory->error()) $this->error("Error loading repository: ".$repositoryFactory->error());
 			if (! $repository->id) $this->error("Repository not found");
 			app_log("Identified repo '".$repository->name."'");
