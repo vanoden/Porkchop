@@ -329,6 +329,19 @@
 			$this->vertical_scale = (float) $this->verticalRange() / (float) $this->graphHeight();
 			$this->horizontal_scale = (float) $this->horizontalRange() / (float) $this->graphWidth();
 
+			if (!is_array($this->data) || count($this->data) == 0) {
+				$this->error("No data to plot.");
+				return false;
+			}
+			if ($this->vertical_scale == 0) {
+				$this->error("Not enough vertical range to plot graph.");
+				return false;
+			}
+			if ($this->horizontal_scale == 0) {
+				$this->error("Not enough horizontal range to plot graph.");
+				return false;
+			}
+
 			// Calculate Grid Spacing aligned to "nice" numbers
 			// Use the first digit of the range to determine the spacing
 			$vertical_spacing = pow(10, floor(log10((float) $this->verticalRange())));
