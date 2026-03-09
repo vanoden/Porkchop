@@ -8,7 +8,7 @@
 		public int $id = 0;
 		public int $organization_id;
 		public int $product_id;
-		public int $quantity;
+		public int $quantity = 0;
 		public ?string $date_expires;
 
 		/** @method __construct()
