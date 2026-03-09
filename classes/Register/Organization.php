@@ -347,6 +347,20 @@ use Register\Organization\OwnedProduct;
 			return new \Register\Organization\OwnedProduct($this->id,$product->id);
 		}
 
+		/** @method hasProduct(product_code)
+		 * Check if organization has an owned product by product code
+		 * @param string $product_code
+		 * @return bool
+		 */
+		public function hasProduct($product_code): bool {
+			$product = new \Product\Item();
+			if (! $product->get($product_code)) {
+				$this->error("Product not found for code: ".$product_code);
+				return false;
+			}
+			return $this->hasProductID($product->id);
+		}
+
 		/** @method hasProductID(id)
 		 * Check if organization has an owned product
 		 * @param int $product_id
