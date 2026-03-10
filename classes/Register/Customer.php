@@ -628,7 +628,7 @@
 		 * @param string Privilege Name
 		 * @return bool True if customer has privilege, otherwise false
 		 */
-		public function has_privilege($privilege_name, ?int $required_level = \Register\PrivilegeLevel::ADMINISTRATOR) {
+		public function has_privilege($privilege_name, ?int $required_level = \Register\PrivilegeLevel::ADMINISTRATOR): bool {
 			$this->clearError();
 			$database = new \Database\Service();
 			$privilege = new \Register\Privilege();
@@ -637,12 +637,15 @@
 			if (! $privilege->get($privilege_name)) $privilege->add(array('name' => $privilege_name));
 
 			$check_privilege_query = "
-				SELECT	rrp.level
+				SELECT	rrp.level,
+						rp.name
 				FROM	register_users_roles rur,
-						register_roles_privileges rrp
+						register_roles_privileges rrp,
+						register_privileges rp
 				WHERE	rur.user_id = ?
 				AND		rrp.role_id = rur.role_id
 				AND		rrp.privilege_id = ?
+				AND		rp.id = rrp.privilege_id
 			";
 			$database->AddParam($this->id);
 			$database->AddParam($privilege->id);
@@ -653,12 +656,11 @@
 				return false;
 			}
 
-			while (list($level) = $rs->FetchRow()) {
-				//print_r("Privilege ID: ".var_export($privilege->id,true)." User Level: ".var_export($level,true)." Required Level: ".var_export($required_level,true)."\n");
+			while (list($level,$levelname) = $rs->FetchRow()) {
+				//print_r("Privilege ".$privilege->name."[".$privilege->id."]:  User Level: ".var_export($level,true)." Required Level: ".var_export($required_level,true)."\n");
 				// Is the required level present in user's privilege level?
 				// Use bitwise check for privilege levels
 				if (inMatrix($level,$required_level)) {
-					//print_r("Matched!\n");
 					return true;
 				}
 			}

@@ -211,6 +211,7 @@
 			// Add Parameters and Execute Query
 			$database->AddParam($code);
 			$database->AddParam($product->id);
+
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());

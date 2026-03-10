@@ -106,7 +106,6 @@ class BaseModel extends \BaseClass {
 			else return $this->setMetadataScalar($parameters[0], $parameters[1]);
 		}
 		elseif ($name == 'setMetadata') {
-			print_r("setMetadata called with parameters: " . json_encode($parameters) . "\n");
 			if (gettype($parameters[0]) == 'object') return $this->setMetadataObject($parameters[0], $parameters[1]);
 			else return $this->setMetadataScalar($parameters[0], $parameters[1]);
 		}
