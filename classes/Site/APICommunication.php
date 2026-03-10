@@ -100,17 +100,26 @@
 		}
 
 		public function details(): bool {
+			// Clear any existing error
+			$this->clearError();
+
+			// Initialize database connection
 			$database = new \Database\Service();
 
+			// Validate session_id before querying
+			if (!is_numeric($this->session_id)) {
+				$this->error("Invalid session ID: " . $this->session_id);
+				return false;
+			}
+
+			// Fetch communication record for the given session_id
 			$get_event_query = "
 				SELECT	*
 				FROM	monitor_communications
 				WHERE	session_id = ?
 			";
-			$rs = $database->Execute(
-				$get_event_query,
-				array($this->session_id)
-			);
+			$database->AddParam($this->session_id);
+			$rs = $database->Execute($get_event_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
