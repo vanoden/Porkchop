@@ -51,13 +51,13 @@
 			while(list($id) = $rs->FetchRow()) {
 				$item = new Item($id);
 				if ($item->required_role_id > 0) {
-					if (empty($GLOBALS['_SESSION_']->customer)) continue;
+					if (empty($GLOBALS['_SESSION_']->customer->id)) continue;
 					if (!$GLOBALS['_SESSION_']->customer->can("manage navigation menus") && !$GLOBALS['_SESSION_']->customer->has_role_id($item->required_role_id)) continue;
 				}
 				if ($item->required_product_id > 0) {
-					if (empty($GLOBALS['_SESSION_']->customer)) continue;
+					if (empty($GLOBALS['_SESSION_']->customer->id)) continue;
 					if (!$GLOBALS['_SESSION_']->customer->can("manage navigation menus") || !$GLOBALS['_SESSION_']->customer->hasProductID($item->required_product_id)) {
-						if (! $GLOBALS['_session_']->customer->hasProductID($item->required_product_id)) print_r("<!-- Ain't got product '".$item->required_product_id."' -->");
+						if (! $GLOBALS['_SESSION_']->customer->hasProductID($item->required_product_id)) print_r("<!-- Ain't got product '".$item->required_product_id."' -->");
 						continue;
 					}
 				}
