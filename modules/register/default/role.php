@@ -207,27 +207,27 @@
           </div>
            <div class="tableCell role-column-cell">
              <label class="checkbox-label-container">
-               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][0]" value="1" <?php if ($role->has_privilege($privilege->id, 0)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::CUSTOMER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::CUSTOMER)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
              </label>
            </div>
            <div class="tableCell role-column-cell">
              <label class="checkbox-label-container">
-               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][2]" value="1" <?php if ($role->has_privilege($privilege->id, 2)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
              </label>
            </div>
           <div class="tableCell role-column-cell">
             <label class="checkbox-label-container">
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][3]" value="1" <?php if ($role->has_privilege($privilege->id, 3)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::ORGANIZATION_MANAGER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::ORGANIZATION_MANAGER)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
             </label>
           </div>
           <div class="tableCell role-column-cell">
             <label class="checkbox-label-container">
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][5]" value="1" <?php if ($role->has_privilege($privilege->id, 5)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::DISTRIBUTOR ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::DISTRIBUTOR)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
             </label>
           </div>
           <div class="tableCell role-column-cell">
             <label class="checkbox-label-container">
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][7]" value="1" <?php if ($role->has_privilege($privilege->id, 7)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::ADMINISTRATOR ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::ADMINISTRATOR)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
             </label>
           </div>
         </div>

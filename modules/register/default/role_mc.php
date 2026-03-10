@@ -85,7 +85,7 @@
 		            foreach ($privileges as $privilege) {
 						$new_level = $role->getPrivilegeLevel($privilege->id);
 						$old_level = $new_level;
-						$levels = array(0,2,3,5,7);
+						$levels = \Register\PrivilegeLevel::LEVEL_IDS;
 						foreach ($levels as $level) {
 							// Remove if unselected
 							if ($role->has_privilege($privilege->id,$level) && ! $_REQUEST['privilege_level'][$privilege->id][$level]) {

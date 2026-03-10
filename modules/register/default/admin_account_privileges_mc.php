@@ -38,7 +38,7 @@
 	}
 	
 	$roleList = new \Register\RoleList();
-	$roles = $roleList->find();
+	$roles = $customer->roles();
 
 	$privileges = [];
 	foreach ($roles as $role) {
@@ -48,9 +48,6 @@
 			foreach ($role->privileges() as $privilege) {
 				if ($customer->has_privilege($privilege->name,$level)) {
 					array_push($privileges,["role" => $role->name, "level" => $levelName, "privilege" => $privilege->name]);
-				}
-				else {
-					//echo "Customer does NOT have level: " . $levelName . "<br>\n";
 				}
 			}
 		}

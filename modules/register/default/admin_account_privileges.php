@@ -25,8 +25,7 @@
 		<div class="tableCell">Privilege</div>
 	</div>
 	<?php
-	foreach ($privileges as $privilege) {
-	?>
+	foreach ($privileges as $privilege) {	?>
 	<div class="tableRow">
 		<div class="tableCell"><?=$privilege['role']?></div>
 		<div class="tableCell"><?=$privilege['level']?></div>
