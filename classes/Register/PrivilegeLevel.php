@@ -15,7 +15,7 @@
 	class PrivilegeLevel {
 
 	// Level constants
-	const CUSTOMER = 0;
+	const CUSTOMER = 1;
 	const SUB_ORGANIZATION_MANAGER = 2;
 	const ORGANIZATION_MANAGER = 3;
 	const DISTRIBUTOR = 5;
