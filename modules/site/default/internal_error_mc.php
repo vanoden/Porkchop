@@ -10,8 +10,6 @@
 	$counter = new \Site\Counter('internal_error');
 	$counter->increment();
 
-	app_log("Internal server error occurred: " . $_SERVER['REQUEST_URI'], 'error');
-
 	http_response_code(500);
 	$page->addError("An internal server error occurred.");
 	$page->title("Internal Server Error");
