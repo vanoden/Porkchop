@@ -47,11 +47,16 @@ class BaseModel extends \BaseClass {
 	// Should we always audit events for this class?
 	protected $_auditEvents = false;
 
+	// Configuration option for controlling whether to automatically load related objects when loading details of this object.  Can be overridden by passing 'recursive' parameter to find() and get() methods.
+	protected $_flat = false;
+
 	/** @constructor($id = 0)
 	 * Load object base on ID if given
 	 * @param int $id
+	 * @param bool $flat Optional parameter to load object with only fields and no related objects.  Less DB load, response size and memory usage for list views, but requires additional calls to load related objects if needed.
 	 */
-	public function __construct($id = 0) {
+	public function __construct($id = 0, $flat = false) {
+		$this->_flat = $flat;
 		if (empty($this->_tableName)) {
 			$calledClass = get_called_class();
 			$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
