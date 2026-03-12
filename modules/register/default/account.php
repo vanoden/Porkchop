@@ -3,23 +3,10 @@
 
 <section id="reg_form" class="body">
 	<div class="organization-page-wrapper" style="display: flex; flex-direction: column; width: 100%;">
-	<h1 class="pageSect_full">My Account</h1>
 	
 	<!-- Success/Error Messages Section -->
-	<?php if ($page->errorCount() > 0) { ?>
-		<section id="form-message" class="message error pageSect_full" style="margin-top: 0.5rem;">
-			<ul class="connectBorder errorText">
-				<li><?= $page->errorString() ?></li>
-			</ul>
-		</section>
-	<?php }
-	if ($page->success) { ?>
-		<section id="form-message" class="message success pageSect_full" style="margin-top: 0.5rem;">
-			<ul class="connectBorder progressText">
-				<li><?= $page->success ?></li>
-			</ul>
-		</section>
-	<?php }
+	<?=$page->showSubHeading()?>
+	<?php 
 	if ($canView) {
 		?>
 		<form name="register" id="register_form" action="<?= PATH ?>/_register/account" method="POST">
@@ -149,7 +136,7 @@
 
 			<!-- Contact Methods Section -->
 			<section class="form-group contact-methods">
-				<h4>Add Methods of Contact</h4>
+				<h4>Methods of Contact</h4>
 				<div id="contact-main-table" class="tableBody bandedRows">
 					<div class="tableRowHeader">
 						<div class="tableCell">Types</div>
@@ -160,7 +147,8 @@
 						<div class="tableCell">Public</div>
 						<div class="tableCell">Drop</div>
 					</div>
-					<?php foreach ($contacts as $contact) { ?>
+					<?php if (count($contacts) > 0) {
+						foreach ($contacts as $contact) { ?>
 						<div class="tableRow">
 							<div class="tableCell">
 								<span class="display-none value">Types: </span>
@@ -213,8 +201,11 @@
 								</span>
 							</div>
 						</div>
-					<?php } ?>
+					<?php }}
+						else { ?>
+						No contact methods available <?php } ?>
 					<!-- New Contact Row -->
+					<?php if ($my_account) { ?>
 					<div class="tableRow new-contact">
 						<div class="tableCell">
 							<select class="value input" name="type[0]" <?php if ($readOnly)
@@ -245,6 +236,7 @@
 						</div>
 						<div class="tableCell"></div>
 					</div>
+					<?php } ?>
 				</div>
 			</section>
 

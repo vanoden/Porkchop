@@ -1,124 +1,136 @@
 <?php
-###################################################
-### account_mc.php								###
-### This program collects registration info		###
-### for the user.								###
-### A. Caravello 10/23/2024						###
-###################################################
-$site = new \Site();
-$page = $site->page();
-$page->requireAuth();
+	/** @view /_register/account
+	 *  Interface for viewing/editing a users account information
+	*/
+	$porkchop = new \Porkchop();
+	$site = $porkchop->site();
+	$page = $site->page();
+	$page->requireAuth();
 
-// Check if a customer_id is provided
-if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id'])) {
-	$customer = new \Register\Customer($_REQUEST['customer_id']);
-} elseif ($GLOBALS['_SESSION_']->customer->id) {
-	$customer = new \Register\Customer($GLOBALS['_SESSION_']->customer->id);
-} else {
-	// If no customer_id is provided, redirect to login
-	header("location: /_register/login?target=_register/account");
-	exit;
-}
+	$my_account = false;
 
-// Check if the logged-in user is in the same organization as the customer
-$canView = true;
-if ($GLOBALS['_SESSION_']->customer->organization_id != $customer->organization_id) {
-	$page->addError("You do not have permission to view this customer's account.");
-	$canView = false;
-}
-
-// Check if the logged-in user is the same as the customer being viewed
-if ($GLOBALS['_SESSION_']->customer->id != $customer->id && $canView) {
-	$readOnly = true;
-	$page->appendSuccess("You are currrently viewing another user in your organization");
-} else {
-	$readOnly = false;
-}
-
-app_log($GLOBALS['_SESSION_']->customer->code . " accessing account of customer " . $customer->id, 'notice', __FILE__, __LINE__);
-
-#######################################
-### Handle Actions					###
-#######################################
-
-$repositoryFactory = new \Storage\RepositoryFactory();
-$site_config = new \Site\Configuration();
-$site_config->get('website_images');
-if (!empty($site_config->value)) {
-	$repository = $repositoryFactory->createWithCode($site_config->value);
-}
-
-$image = new \Media\Image();
-if (!empty($_REQUEST['new_image_code'])) {
-	$image->get($_REQUEST['new_image_code']);
-	$customer->addImage($image->id, 'Register\Customer');
-}
-
-if (!empty($_REQUEST['deleteImage'])) {
-	$image->get($_REQUEST['deleteImage']);
-	$customer->dropImage($image->id, 'Register\Customer');
-}
-
-if (isset($_REQUEST['updateImage']) && $_REQUEST['updateImage'] == 'true') {
-			$defaultImageId = $_REQUEST['default_image_id'] ?? '';
-	$customer->setMetadataScalar('default_image', $defaultImageId);
-	if ($customer->error()) {
-		$page->addError("Error setting default image: " . $customer->error());
-	} else {
-		$page->appendSuccess('Default image updated successfully.', 'success');
+	// Check if a customer_id is provided
+	if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id'])) {
+		$customer = new \Register\Customer($_REQUEST['customer_id']);
 	}
-}
-
-// File Upload Form Submitted
-if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
-	if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
-		$page->addError("Invalid Token");
+	elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+		$customer = new \Register\Customer();
+		if (! $customer->get($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+			$page->notFound("Account not found");
+		}
+	}
+	elseif ($GLOBALS['_SESSION_']->customer->id) {
+		$customer = new \Register\Customer($GLOBALS['_SESSION_']->customer->id);
 	} else {
-		$page->requirePrivilege('upload storage files');
+		// If no customer_id is provided, redirect to login
+		header("location: /_register/login?target=_register/account");
+		exit;
+	}
 
-        $imageUploaded = $customer->uploadImage($_FILES['uploadFile'], $repository->id, 'spectros_user_image', 'Register\Customer');
-		if ($imageUploaded) {
-			$page->success = "File uploaded";
+	if ($customer->id == $GLOBALS['_SESSION_']->customer->id) {
+		$canEdit = true;
+		$my_account = true;
+	}
+
+	// Check if the logged-in user is in the same organization as the customer
+	$canView = true;
+	if ($GLOBALS['_SESSION_']->customer->organization_id != $customer->organization_id) {
+		$page->addError("You do not have permission to view this customer's account.");
+		$canView = false;
+	}
+
+	// If Requested Account is not the user's account, must have ORGANIZATION_ADMIN Rights for managing customers
+	if (!$my_account && $canView) {
+		$page->requirePrivilege('manage customers',\Register\PrivilegeLevel::ORGANIZATION_MANAGER);
+		$readOnly = true;
+		$page->instructions = "You are currrently viewing another user in your organization";
+	}
+	elseif ($canView) {
+		$readOnly = false;
+	}
+	app_log($GLOBALS['_SESSION_']->customer->code . " accessing account of customer " . $customer->id, 'notice', __FILE__, __LINE__);
+
+	/** @section Image Management
+	 */
+	$repositoryFactory = new \Storage\RepositoryFactory();
+	$site_config = new \Site\Configuration();
+	$site_config->get('website_images');
+	if (!empty($site_config->value)) {
+		$repository = $repositoryFactory->createWithCode($site_config->value);
+	}
+
+	$image = new \Media\Image();
+	if (!empty($_REQUEST['new_image_code'])) {
+		$image->get($_REQUEST['new_image_code']);
+		$customer->addImage($image->id, 'Register\Customer');
+	}
+
+	if (!empty($_REQUEST['deleteImage'])) {
+		$image->get($_REQUEST['deleteImage']);
+		$customer->dropImage($image->id, 'Register\Customer');
+	}
+
+	if (isset($_REQUEST['updateImage']) && $_REQUEST['updateImage'] == 'true') {
+		$defaultImageId = $_REQUEST['default_image_id'] ?? '';
+		$customer->setMetadataScalar('default_image', $defaultImageId);
+		if ($customer->error()) {
+			$page->addError("Error setting default image: " . $customer->error());
 		} else {
-			$page->addError("Error uploading file: " . $customer->error());
+			$page->appendSuccess('Default image updated successfully.', 'success');
 		}
 	}
-}
 
-$customerImages = $customer->images('Register\Customer');
-
-// handle form "delete" submit
-if (isset($_REQUEST['submit-type']) && $_REQUEST['submit-type'] == "delete-contact" && !$readOnly) {
-	if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
-		$page->addError("Invalid Request");
-	} else {
-		$contact = new \Register\Contact($_REQUEST['register-contacts-id'] ?? 0);
-		$contact->delete();
-		$page->success = 'Contact Entry ' . ($_REQUEST['register-contacts-id'] ?? 0) . ' has been removed.';
-		$contact->auditRecord('USER_UPDATED', 'Contact Entry ' . $contact->type . ' ' . $contact->value . ' ' . $contact->notes . ' ' . $contact->description . ' has been removed.');
-	}
-}
-
-// handle form "apply" submit
-if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply" && !$readOnly) {
-	if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
-		$page->addError("Invalid Request");
-	} else {
-		app_log("Account form submitted", 'debug', __FILE__, __LINE__);
-		$parameters = array();
-
-		if (! validTimezone($_REQUEST['timezone'] ?? '')) $_REQUEST['timezone'] = 'America/New_York';
-
-		if (isset($_REQUEST["first_name"])) 	$parameters['first_name']	= noXSS($_REQUEST["first_name"]);
-		if (isset($_REQUEST["last_name"]))		$parameters['last_name']	= noXSS($_REQUEST["last_name"]);
-		if (isset($_REQUEST["timezone"]))		$parameters['timezone']		= $_REQUEST["timezone"];
-		if (isset($_REQUEST["password"]) and ($_REQUEST["password"])) {
-			if ($_REQUEST["password"] != ($_REQUEST["password_2"] ?? '')) {
-				$page->addError("Passwords do not match");
-				goto load;
-			} else
-				$parameters["password"] = $_REQUEST["password"];
+	// File Upload Form Submitted
+	if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+			$page->addError("Invalid Token");
+		} else {
+			$page->requirePrivilege('upload storage files');
+        		$imageUploaded = $customer->uploadImage($_FILES['uploadFile'], $repository->id, 'spectros_user_image', 'Register\Customer');
+			if ($imageUploaded) {
+				$page->success = "File uploaded";
+			} else {
+				$page->addError("Error uploading file: " . $customer->error());
+			}
 		}
+	}
+
+	// Reload Images
+	$customerImages = $customer->images('Register\Customer');
+
+	// handle form "delete" submit
+	if (isset($_REQUEST['submit-type']) && $_REQUEST['submit-type'] == "delete-contact" && !$readOnly) {
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+			$page->addError("Invalid Request");
+		} else {
+			$contact = new \Register\Contact($_REQUEST['register-contacts-id'] ?? 0);
+			$contact->delete();
+			$page->success = 'Contact Entry ' . ($_REQUEST['register-contacts-id'] ?? 0) . ' has been removed.';
+			$contact->auditRecord('USER_UPDATED', 'Contact Entry ' . $contact->type . ' ' . $contact->value . ' ' . $contact->notes . ' ' . $contact->description . ' has been removed.');
+		}
+	}
+
+	// handle form "apply" submit
+	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply" && !$readOnly) {
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+			$page->addError("Invalid Request");
+		} else {
+			app_log("Account form submitted", 'debug', __FILE__, __LINE__);
+			$parameters = array();
+
+			if (! validTimezone($_REQUEST['timezone'] ?? '')) $_REQUEST['timezone'] = 'America/New_York';
+
+			if (isset($_REQUEST["first_name"])) 	$parameters['first_name']	= noXSS($_REQUEST["first_name"]);
+			if (isset($_REQUEST["last_name"]))		$parameters['last_name']	= noXSS($_REQUEST["last_name"]);
+			if (isset($_REQUEST["timezone"]))		$parameters['timezone']		= $_REQUEST["timezone"];
+			if (isset($_REQUEST["password"]) and ($_REQUEST["password"])) {
+				if ($_REQUEST["password"] != ($_REQUEST["password_2"] ?? '')) {
+					$page->addError("Passwords do not match");
+					goto load;
+				}
+				else
+					$parameters["password"] = $_REQUEST["password"];
+				}
 		if (isset($_REQUEST["profile"])) $parameters["profile"] = $_REQUEST["profile"];
 
 		// time_based_password required or not
@@ -126,7 +138,6 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply" && !$readOnly) 
 		if (isset($_REQUEST["time_based_password"]) && !empty($_REQUEST["time_based_password"])) $parameters['time_based_password'] = 1;
 
 		if ($customer->id) {
-
 			app_log("Updating customer " . $customer->id, 'debug', __FILE__, __LINE__);
 			$customer->update($parameters);
 
@@ -406,3 +417,14 @@ $queuedCustomer = new \Register\Queue();
 $queuedCustomer->getByQueuedLogin($customer->id);
 
 if (! isset($target)) $target = '';
+
+if ($GLOBALS['_SESSION_']->customer_id == $customer->id) {
+	$page->title('My Account');
+}
+else {
+	$page->title($customer->full_name());
+}
+
+$page->addBreadcrumb("Registration");
+$page->addBreadcrumb($customer->organization()->name,"/_register/organization?organization_id=" . $customer->organization_id);
+$page->addBreadcrumb($customer->code,"/_register/account/".$customer->code);
