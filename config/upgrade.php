@@ -105,7 +105,9 @@
 				"ent_accounts"			=> $templates['support'],
 				"admin_account_privileges"	=> $templates['admin'],
 				"admin_organization_plans"	=> $templates['admin'],
-				"organization"				=> $templates['support']
+				"organization"				=> $templates['support'],
+				"organizations"			=> $templates['support'],
+				"accounts"				=> $templates['support']
 			),
 		),
 		"Contact"		=> array(
