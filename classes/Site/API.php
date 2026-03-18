@@ -1026,6 +1026,30 @@
 			$response->print();
 		}
 
+		public function getSiteAvailability() {
+			// Check the Database and Cache and return 500 if either is not available
+			$database = new \Database\Service();
+			if (! $database->version()) {
+				$response = new \APIResponse();
+				$response->code(500);
+				$response->addElement('available',false);
+				$response->print();
+				return;
+			}
+			$cache = $GLOBALS['_CACHE_'];
+			if (! $cache->stats()) {
+				$response = new \APIResponse();
+				$response->code(500);
+				$response->addElement('available',false);
+				$response->print();
+				return;
+			}
+			$response = new \APIResponse();
+			$response->code(200);
+			$response->addElement('available',true);
+			$response->print();
+		}
+
 		public function getSiteStatus() {
 			$this->requirePrivilege("monitor site status");
 
@@ -2030,6 +2054,7 @@
 					'name'  => array('required' => true),
 					'value' => array('required' => true)
 				),
+				'getSiteAvailability' => array(),
 				'getSiteStatus' => array(),
 				'getNodeHealth' => array(),
 				'getTOULatestVersion'	=> array(
