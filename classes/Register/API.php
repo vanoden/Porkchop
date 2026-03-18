@@ -203,8 +203,8 @@
             if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 # Can Get Anyone
             }
-            elseif ($GLOBALS['_SESSION_']->customer->organization_id == $customer->organization_id) {
-                # Can Get Other Members of Your Organization
+			elseif ($GLOBALS['_SESSION_']->customer->can('manage customers',\Register\PrivilegeLevel::ORGANIZATION_MANAGER) && ($GLOBALS['_SESSION_']->customer->organization_id == $customer->organization_id)) {
+               	# Can Get Other Members of Your Organization
             }
             else {
                 $this->deny();
@@ -311,12 +311,19 @@
                     $parameters['organization_id'] = $organization->id;
                 }
             }
+			elseif ($GLOBALS['_SESSION_']->customer->can('manage customers',\Register\PrivilegeLevel::ORGANIZATION_MANAGER)) {
+				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization_id;
+			}
             elseif (isset($GLOBALS['_SESSION_']->customer->organization_id) && $GLOBALS['_SESSION_']->customer->organization_id > 0) {
                 $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
             }
-			else {
+			elseif (!empty($_REQUEST["organization_code"]) || !empty($_REQUEST["organization_id"])) {
                 $this->deny();
             }
+			else {
+				$parameters['id'] = $GLOBALS['_SESSION_']->customer->id;
+			}
+
             if ($_REQUEST["code"]) $parameters["code"] = $_REQUEST["code"];
             elseif ($_REQUEST["login"]) $parameters["code"] = $_REQUEST["login"];
             if (!empty($_REQUEST["first_name"])) $parameters["first_name"] = $_REQUEST["first_name"];
