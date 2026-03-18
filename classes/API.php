@@ -420,7 +420,10 @@
 			}
 
 			$method = $this->fullMethods()[$function_name];
-			if (isset($method['privilege_required']) && !(preg_match('/^\[\w+\]$/',$method['privilege_required']))) {
+			if (isset($method['privilege_required']) && $method['privilege_required'] == '[CONDITIONAL]') {
+				print_r("LEAVE IT TO THE CODE");
+			}
+			elseif (isset($method['privilege_required'])) {
 				$this->requirePrivilege($method['privilege_required']);
 			}
 			if (isset($method['role_required']) && !(preg_match('/^\[\w+\]$/',$method['role_required']))) {
