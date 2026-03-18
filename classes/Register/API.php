@@ -64,15 +64,15 @@
 			parent::auth_failed($reason, $message);
 		}
 
-        ###################################################
-        ### Get Details regarding Current Customer		###
-        ###################################################
-        function me() {
-            # Default StyleSheet
-            if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
-            if (!empty($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('see admin tools')) $GLOBALS['_SESSION_']->customer->admin = 1;
+		###################################################
+		### Get Details regarding Current Customer		###
+		###################################################
+		function me() {
+			# Default StyleSheet
+			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
+			if (!empty($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('see admin tools')) $GLOBALS['_SESSION_']->customer->admin = 1;
  
-            $siteMessageDeliveryList = new \Site\SiteMessageDeliveryList();
+			$siteMessageDeliveryList = new \Site\SiteMessageDeliveryList();
 			if (! empty($GLOBALS['_SESSION_']->customer)) {
 				$siteMessageDeliveryList->find(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'acknowledged' => false));
 				$siteMessagesUnread = $siteMessageDeliveryList->count();
@@ -127,588 +127,588 @@
 			unset($responseObj->password);
 			unset($responseObj->secret_key);
 
-            $response = new \APIResponse();
+			$response = new \APIResponse();
 			$response->success(true);
-            $response->addElement('customer',$responseObj);
+			$response->addElement('customer',$responseObj);
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
  
-        ###################################################
-        ### Authenticate Session						###
-        ###################################################
-        function authenticateSession() {
-            # Default StyleSheet
-            if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
+		###################################################
+		### Authenticate Session						###
+		###################################################
+		function authenticateSession() {
+			# Default StyleSheet
+			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
-            # Initiate Product Object
-            $checkCustomer = new \Register\Customer();
-            if (! $checkCustomer->validLogin($_REQUEST['login'])) $this->invalidRequest("valid login required");
-            $checkCustomer->get($_REQUEST['login']);
-            if ($checkCustomer->status == 'BLOCKED') $this->auth_failed("blocked_account","Your account has been blocked");
-            if ($checkCustomer->status == 'EXPIRED') $this->auth_failed("expired_account","Your account has expired.  Please use 'forgot password' on the website to restore.");
-            if ($checkCustomer->auth_failures() >= 3) $this->auth_failed("too_many_failures","Too many auth failures.  Please use 'forget password' on the website to restore");
+			# Initiate Product Object
+			$checkCustomer = new \Register\Customer();
+			if (! $checkCustomer->validLogin($_REQUEST['login'])) $this->invalidRequest("valid login required");
+			$checkCustomer->get($_REQUEST['login']);
+			if ($checkCustomer->status == 'BLOCKED') $this->auth_failed("blocked_account","Your account has been blocked");
+			if ($checkCustomer->status == 'EXPIRED') $this->auth_failed("expired_account","Your account has expired.  Please use 'forgot password' on the website to restore.");
+			if ($checkCustomer->auth_failures() >= 3) $this->auth_failed("too_many_failures","Too many auth failures.  Please use 'forget password' on the website to restore");
 
-            $customer = new \Register\Customer();
-            $result = $customer->authenticate($_REQUEST["login"], $_REQUEST["password"]);
-            if ($customer->error()) $this->error($customer->error());
-            if ($result && $customer->isActive()) {
-                // Create session first
-                app_log("Assigning session ".$GLOBALS['_SESSION_']->id." to customer ".$customer->id,'debug',__FILE__,__LINE__);
-                $GLOBALS['_SESSION_']->assign($customer->id);
-                $GLOBALS['_SESSION_']->touch();
-                $GLOBALS['_SESSION_']->setOTPVerified(false);
+			$customer = new \Register\Customer();
+			$result = $customer->authenticate($_REQUEST["login"], $_REQUEST["password"]);
+			if ($customer->error()) $this->error($customer->error());
+			if ($result && $customer->isActive()) {
+				// Create session first
+				app_log("Assigning session ".$GLOBALS['_SESSION_']->id." to customer ".$customer->id,'debug',__FILE__,__LINE__);
+				$GLOBALS['_SESSION_']->assign($customer->id);
+				$GLOBALS['_SESSION_']->touch();
+				$GLOBALS['_SESSION_']->setOTPVerified(false);
 
-                // Then check if TOTP is required
-                if ($customer->requiresOTP()) {
-                    $response = new \APIResponse();
-                    $response->success(false);
-                    $response->addElement('error', "TOTP code is required for this account.");
-                    $response->addElement('reason', "totp_required");
-                    $response->addElement('requires_otp', true);
-                    $response->print();
-                    exit;
-                }
-            }
-            elseif ($result) {
-                $this->auth_failed("inactive_account","This account is not active");
-            }
-            else {
-                $this->auth_failed("incorrect_password","Invalid login password combination");
-            }
+				// Then check if TOTP is required
+				if ($customer->requiresOTP()) {
+					$response = new \APIResponse();
+					$response->success(false);
+					$response->addElement('error', "TOTP code is required for this account.");
+					$response->addElement('reason', "totp_required");
+					$response->addElement('requires_otp', true);
+					$response->print();
+					exit;
+				}
+			}
+			elseif ($result) {
+				$this->auth_failed("inactive_account","This account is not active");
+			}
+			else {
+				$this->auth_failed("incorrect_password","Invalid login password combination");
+			}
 
-            $response = new \APIResponse();
-            $response->success(true);
+			$response = new \APIResponse();
+			$response->success(true);
 
-            # Send Response
-            $response->print();
-        }
-        
-        ###################################################
-        ### Get Details regarding Specified Customer	###
-        ###################################################
-        function getCustomer() {
-            $this->requireAuth();
+			# Send Response
+			$response->print();
+		}
+		
+		###################################################
+		### Get Details regarding Specified Customer	###
+		###################################################
+		function getCustomer() {
+			$this->requireAuth();
 
-            # Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
+			# Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
-            # Initiate Product Object
-            $code = $_REQUEST["code"] ?? $_REQUEST["login"] ?? null;
-            if (empty($code)) $this->incompleteRequest("code or login required");
-            $customer = new \Register\Customer();
-            $customer->get($code);
+			# Initiate Product Object
+			$code = $_REQUEST["code"] ?? $_REQUEST["login"] ?? null;
+			if (empty($code)) $this->incompleteRequest("code or login required");
+			$customer = new \Register\Customer();
+			$customer->get($code);
 
-            if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
-                # Can Get Anyone
-            }
+			if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
+				# Can Get Anyone
+			}
 			elseif ($GLOBALS['_SESSION_']->customer->can('manage customers',\Register\PrivilegeLevel::ORGANIZATION_MANAGER) && ($GLOBALS['_SESSION_']->customer->organization_id == $customer->organization_id)) {
-               	# Can Get Other Members of Your Organization
-            }
-            else {
-                $this->deny();
-            }
+			   	# Can Get Other Members of Your Organization
+			}
+			else {
+				$this->deny();
+			}
 
-            # Error Handling
+			# Error Handling
 			if (!$customer->exists()) $this->notFound();
-            elseif ($customer->error()) $this->error($customer->error());
-            else{
-                $response = new \APIResponse();
+			elseif ($customer->error()) $this->error($customer->error());
+			else{
+				$response = new \APIResponse();
 				if ($customer->cached()) $customer->_cached = true;
-                $response->addElement('customer',$customer);
-                $response->success = 1;
-            }
+				$response->addElement('customer',$customer);
+				$response->success = 1;
+			}
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
  
-        ###################################################
-        ### Update Specified Customer					###
-        ###################################################
-        function updateCustomer() {
-            # Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
+		###################################################
+		### Update Specified Customer					###
+		###################################################
+		function updateCustomer() {
+			# Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
-            if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
-                # Can Update Anyone
-            }
-            elseif ($GLOBALS['_SESSION_']->customer->code = $_REQUEST['code']) {
-                # Can Update Yourself
-            }
-            else {
-                $this->deny();
-            }
+			if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
+				# Can Update Anyone
+			}
+			elseif ($GLOBALS['_SESSION_']->customer->code = $_REQUEST['code']) {
+				# Can Update Yourself
+			}
+			else {
+				$this->deny();
+			}
 
-            # Initiate Product Object
-            $customer = new \Register\Customer();
+			# Initiate Product Object
+			$customer = new \Register\Customer();
 
-            # Find Customer
-            $customer->get($_REQUEST['code']);
-            if ($customer->error()) $this->app_error("Error getting customer: ".$customer->error(),__FILE__,__LINE__);
-            if (! $customer->id) $this->notFound();
+			# Find Customer
+			$customer->get($_REQUEST['code']);
+			if ($customer->error()) $this->app_error("Error getting customer: ".$customer->error(),__FILE__,__LINE__);
+			if (! $customer->id) $this->notFound();
 
-            if (isset($_REQUEST['organization']) && !isset($_REQUEST['organization_code'])) {
-		        $_REQUEST['organization_code'] = $_REQUEST['organization'];
-            }
-            if (isset($_REQUEST['organization_code']) && !empty($_REQUEST['organization_code'])) {
-                $organization = new \Register\Organization();
-                if ($organization->get($_REQUEST['organization_code'])) {
-			        $parameters['organization_id'] = $organization->id;
-		        }
-		        elseif(!empty($organization->error())) {
-                    $this->app_error("Error getting organization: ".$organization->error(),__FILE__,__LINE__);
-                }
-	            else {
-                    $this->error("Organization not found");
-	            }
-            }
-            
-            if (!empty($_REQUEST['first_name'])) $parameters['first_name'] = noXSS($_REQUEST['first_name']);
-            if (!empty($_REQUEST['last_name'])) $parameters['last_name'] = noXSS($_REQUEST['last_name']);
-            if (!empty($_REQUEST['password'])) {
+			if (isset($_REQUEST['organization']) && !isset($_REQUEST['organization_code'])) {
+				$_REQUEST['organization_code'] = $_REQUEST['organization'];
+			}
+			if (isset($_REQUEST['organization_code']) && !empty($_REQUEST['organization_code'])) {
+				$organization = new \Register\Organization();
+				if ($organization->get($_REQUEST['organization_code'])) {
+					$parameters['organization_id'] = $organization->id;
+				}
+				elseif(!empty($organization->error())) {
+					$this->app_error("Error getting organization: ".$organization->error(),__FILE__,__LINE__);
+				}
+				else {
+					$this->error("Organization not found");
+				}
+			}
+			
+			if (!empty($_REQUEST['first_name'])) $parameters['first_name'] = noXSS($_REQUEST['first_name']);
+			if (!empty($_REQUEST['last_name'])) $parameters['last_name'] = noXSS($_REQUEST['last_name']);
+			if (!empty($_REQUEST['password'])) {
 				if (!strongPassword($_REQUEST['password'])) $this->error("Password is not complex enough");
 				$parameters['password'] = $_REQUEST['password'];
 			}
-            if (isset($_REQUEST['automation'])) {
-                if ($_REQUEST['automation'] == 1) $parameters['automation'] = true;
-                else $parameters['automation'] = false;
-            }
+			if (isset($_REQUEST['automation'])) {
+				if ($_REQUEST['automation'] == 1) $parameters['automation'] = true;
+				else $parameters['automation'] = false;
+			}
 			if (!empty($_REQUEST['timezone'])) {
 				if (!in_array($_REQUEST['timezone'], \DateTimeZone::listIdentifiers())) $this->error("Invalid timezone provided");
 				$parameters['timezone'] = $_REQUEST['timezone'];
 			}
 
-            # Update Customer
-            if (!$customer->update($parameters)) $this->error($customer->error());
+			# Update Customer
+			if (!$customer->update($parameters)) $this->error($customer->error());
 
-            # Error Handling
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('customer',$customer);
+			# Error Handling
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('customer',$customer);
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
 
-        ###################################################
-        ### Find Customers								###
-        ###################################################
-        function findCustomers() {
-            # Default StyleSheet
-            if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customers.xsl';
+		###################################################
+		### Find Customers								###
+		###################################################
+		function findCustomers() {
+			# Default StyleSheet
+			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customers.xsl';
 
-            # Build Query Parameters
-            $parameters = array();
-            if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
-                if (!empty($_REQUEST["organization_code"])) {
-                    app_log("Getting organization '".$_REQUEST['organization_code']."'",'debug',__FILE__,__LINE__);
-                    $organization = new \Register\Organization();
-                    $organization->get($_REQUEST["organization_code"]);
-                    if ($organization->error()) $this->app_error("Error finding organization: ".$organization->error(),'error',__FILE__,__LINE__);
-                    if (! $organization->id) $this->error("Could not find organization '".$_REQUEST["organization_code"]."'");
-                    $parameters['organization_id'] = $organization->id;
-                }
-            }
+			# Build Query Parameters
+			$parameters = array();
+			if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
+				if (!empty($_REQUEST["organization_code"])) {
+					app_log("Getting organization '".$_REQUEST['organization_code']."'",'debug',__FILE__,__LINE__);
+					$organization = new \Register\Organization();
+					$organization->get($_REQUEST["organization_code"]);
+					if ($organization->error()) $this->app_error("Error finding organization: ".$organization->error(),'error',__FILE__,__LINE__);
+					if (! $organization->id) $this->error("Could not find organization '".$_REQUEST["organization_code"]."'");
+					$parameters['organization_id'] = $organization->id;
+				}
+			}
 			elseif ($GLOBALS['_SESSION_']->customer->can('manage customers',\Register\PrivilegeLevel::ORGANIZATION_MANAGER)) {
 				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization_id;
 			}
-            elseif (isset($GLOBALS['_SESSION_']->customer->organization_id) && $GLOBALS['_SESSION_']->customer->organization_id > 0) {
-                $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
-            }
+			elseif (isset($GLOBALS['_SESSION_']->customer->organization_id) && $GLOBALS['_SESSION_']->customer->organization_id > 0) {
+				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
+			}
 			elseif (!empty($_REQUEST["organization_code"]) || !empty($_REQUEST["organization_id"])) {
-                $this->deny();
-            }
+				$this->deny();
+			}
 			else {
 				$parameters['id'] = $GLOBALS['_SESSION_']->customer->id;
 			}
 
-            if ($_REQUEST["code"]) $parameters["code"] = $_REQUEST["code"];
-            elseif ($_REQUEST["login"]) $parameters["code"] = $_REQUEST["login"];
-            if (!empty($_REQUEST["first_name"])) $parameters["first_name"] = $_REQUEST["first_name"];
-            if (!empty($_REQUEST["last_name"])) $parameters["last_name"] = $_REQUEST["last_name"];
+			if ($_REQUEST["code"]) $parameters["code"] = $_REQUEST["code"];
+			elseif ($_REQUEST["login"]) $parameters["code"] = $_REQUEST["login"];
+			if (!empty($_REQUEST["first_name"])) $parameters["first_name"] = $_REQUEST["first_name"];
+			if (!empty($_REQUEST["last_name"])) $parameters["last_name"] = $_REQUEST["last_name"];
 			if (!empty($_REQUEST["automation"])) $parameters["automation"] = $_REQUEST["automation"];
 
-            # Get List of Matching Customers
-            $customerlist = new \Register\CustomerList();
-            $customers = $customerlist->find($parameters);
+			# Get List of Matching Customers
+			$customerlist = new \Register\CustomerList();
+			$customers = $customerlist->find($parameters);
 
-            # Error Handling
-            if ($customerlist->error()) $this->error($customerlist->error());
-
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('customer',$customers);
-
-            # Send Response
-            $response->print();
-        }
-
-        /**
-         * check if a login exists already for user creating a new account
-         */
-        function checkLoginNotTaken() {
-            $customer = new \Register\Customer();    	
-            if ($customer->get($_REQUEST["login"])) print "0";
-            else print "1";
-        }
-
-        /**
-         * check if password is strong enought
-         */
-        function checkPasswordStrength() {
-            $person = new \Register\Customer();    	
-            $strength = $person->password_strength($_REQUEST["password"]);
-            $minPasswordStrength = 8;
-            if (isset($GLOBALS['_config']->register->minimum_password_strength)) $minPasswordStrength = $GLOBALS['_config']->register->minimum_password_strength;
-            if ($strength >= $minPasswordStrength) {
-                print "1";
-            } else {
-                print "0";
-            }
-        }
-
-        /** @method getRole()
-         * Get Role Details
-         * @param name - Role Name
-        */
-        function getRole() {
-            $role = new \Register\Role();
-            $role->get($_REQUEST['code']);
-            if ($role->error()) $this->error($role->error());
-
-            if (! $role->exists()) {
-                $this->notFound();
-            }
-
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('role',$role);
-
-            # Send Response
-            $response->print();
-        }
-
-        ###################################################
-        ### Find Roles									###
-        ###################################################
-        function findRoles() {
-            if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
-
-            $roleList = new \Register\RoleList();
-            $roles = $roleList->find();
-            
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('role',$roles);
-
-            # Send Response
-            $response->print();
-        }
-        
-        ###################################################
-        ### Find Role Members							###
-        ###################################################
-        function findRoleMembers() {
-            # Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.rolemembers.xsl';
-
-            if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
-
-            # Initiate Role Object
-            $role = new \Register\Role();
-            $role->get($_REQUEST['code']);
-
-            # Get List of Matching Admins
-            $admins = $role->members();
-
-            # Error Handling
-            if ($role->error()) $this->error($role->error());
+			# Error Handling
+			if ($customerlist->error()) $this->error($customerlist->error());
 
 			$response = new \APIResponse();
-            $response->success(1);
-            $response->addElement('admin',$admins);
+			$response->success(true);
+			$response->addElement('customer',$customers);
 
-            # Send Response
-            $response->print();
-        }
-        
-        ###################################################
-        ### Add a User Role								###
-        ###################################################
-        function addRole() {
+			# Send Response
+			$response->print();
+		}
+
+		/**
+		 * check if a login exists already for user creating a new account
+		 */
+		function checkLoginNotTaken() {
+			$customer = new \Register\Customer();    	
+			if ($customer->get($_REQUEST["login"])) print "0";
+			else print "1";
+		}
+
+		/**
+		 * check if password is strong enought
+		 */
+		function checkPasswordStrength() {
+			$person = new \Register\Customer();    	
+			$strength = $person->password_strength($_REQUEST["password"]);
+			$minPasswordStrength = 8;
+			if (isset($GLOBALS['_config']->register->minimum_password_strength)) $minPasswordStrength = $GLOBALS['_config']->register->minimum_password_strength;
+			if ($strength >= $minPasswordStrength) {
+				print "1";
+			} else {
+				print "0";
+			}
+		}
+
+		/** @method getRole()
+		 * Get Role Details
+		 * @param name - Role Name
+		*/
+		function getRole() {
+			$role = new \Register\Role();
+			$role->get($_REQUEST['code']);
+			if ($role->error()) $this->error($role->error());
+
+			if (! $role->exists()) {
+				$this->notFound();
+			}
+
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('role',$role);
+
+			# Send Response
+			$response->print();
+		}
+
+		###################################################
+		### Find Roles									###
+		###################################################
+		function findRoles() {
+			if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
+
+			$roleList = new \Register\RoleList();
+			$roles = $roleList->find();
+			
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('role',$roles);
+
+			# Send Response
+			$response->print();
+		}
+		
+		###################################################
+		### Find Role Members							###
+		###################################################
+		function findRoleMembers() {
+			# Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.rolemembers.xsl';
+
+			if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
+
+			# Initiate Role Object
+			$role = new \Register\Role();
+			$role->get($_REQUEST['code']);
+
+			# Get List of Matching Admins
+			$admins = $role->members();
+
+			# Error Handling
+			if ($role->error()) $this->error($role->error());
+
+			$response = new \APIResponse();
+			$response->success(1);
+			$response->addElement('admin',$admins);
+
+			# Send Response
+			$response->print();
+		}
+		
+		###################################################
+		### Add a User Role								###
+		###################################################
+		function addRole() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
+			if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
-            $role = new \Register\Role();
-            $result = $role->add(
-                array(
-                    'name'	=> $_REQUEST['name'],
-                    'description'	=> $_REQUEST['description']
-                )
-            );
-            if ($role->error()) $this->error($role->error());
+			$role = new \Register\Role();
+			$result = $role->add(
+				array(
+					'name'	=> $_REQUEST['name'],
+					'description'	=> $_REQUEST['description']
+				)
+			);
+			if ($role->error()) $this->error($role->error());
 
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('role',$result);
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('role',$result);
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
 
-        ###################################################
-        ### Add a Privilege (create if not exists)		###
-        ###################################################
-        function addPrivilege() {
-            if (! $this->validCSRFToken()) $this->error("Invalid Request");
-            if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
+		###################################################
+		### Add a Privilege (create if not exists)		###
+		###################################################
+		function addPrivilege() {
+			if (! $this->validCSRFToken()) $this->error("Invalid Request");
+			if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
-            $name = isset($_REQUEST['name']) ? trim((string) $_REQUEST['name']) : '';
-            if ($name === '') $this->error('name required');
+			$name = isset($_REQUEST['name']) ? trim((string) $_REQUEST['name']) : '';
+			if ($name === '') $this->error('name required');
 
-            $privilege = new \Register\Privilege();
-            if ($privilege->get($name)) {
-                $response = new \APIResponse();
-                $response->success(true);
-                $response->addElement('privilege', $privilege);
-                $response->addElement('existing', true);
-                $response->print();
-                return;
-            }
-            $parameters = ['name' => $name];
-            if (isset($_REQUEST['description'])) $parameters['description'] = trim((string) $_REQUEST['description']);
-            if (isset($_REQUEST['module'])) $parameters['module'] = trim((string) $_REQUEST['module']);
-            if (! $privilege->add($parameters)) $this->error($privilege->error());
+			$privilege = new \Register\Privilege();
+			if ($privilege->get($name)) {
+				$response = new \APIResponse();
+				$response->success(true);
+				$response->addElement('privilege', $privilege);
+				$response->addElement('existing', true);
+				$response->print();
+				return;
+			}
+			$parameters = ['name' => $name];
+			if (isset($_REQUEST['description'])) $parameters['description'] = trim((string) $_REQUEST['description']);
+			if (isset($_REQUEST['module'])) $parameters['module'] = trim((string) $_REQUEST['module']);
+			if (! $privilege->add($parameters)) $this->error($privilege->error());
 
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('privilege', $privilege);
-            $response->print();
-        }
-        
-        ###################################################
-        ### Update an Existing Role						###
-        ###################################################
-        function updateRole() {
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('privilege', $privilege);
+			$response->print();
+		}
+		
+		###################################################
+		### Update an Existing Role						###
+		###################################################
+		function updateRole() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
+			if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
-            $response = new \APIResponse();
+			$response = new \APIResponse();
 
-            $role = new \Register\Role();
-            $role->get($_REQUEST['name']);
-            if ($role->error()) $this->error($role->error());
-            if (! $role->id) $this->error("Role not found");
-            $parameters = array();
-            if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
-            if ($role->update($parameters)) {
-                $response->success(true);
-            }
-            else $this->error($role->error());
+			$role = new \Register\Role();
+			$role->get($_REQUEST['name']);
+			if ($role->error()) $this->error($role->error());
+			if (! $role->id) $this->error("Role not found");
+			$parameters = array();
+			if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
+			if ($role->update($parameters)) {
+				$response->success(true);
+			}
+			else $this->error($role->error());
 
-            print $this->formatOutput($response);
-        }
-        
-        ###################################################
-        ### Add a User to a Role						###
-        ###################################################
-        function addRoleMember() {
+			print $this->formatOutput($response);
+		}
+		
+		###################################################
+		### Add a User to a Role						###
+		###################################################
+		function addRoleMember() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
+			if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
-            $role = new Role();
-            $role->get($_REQUEST['name']);
-            if ($role->error()) $this->app_error("Error getting role: ".$role->error(),'error',__FILE__,__LINE__);
-            if (! $role->id) $this->error("Role not found");
-            
-            $person = new \Register\Customer();
-            $person->get($_REQUEST['login']);
-            if ($person->error()) $this->app_error("Error getting person: ".$person->error(),'error',__FILE__,__LINE__);
-            if (! $person->id) $this->error("Person not found");
+			$role = new Role();
+			$role->get($_REQUEST['name']);
+			if ($role->error()) $this->app_error("Error getting role: ".$role->error(),'error',__FILE__,__LINE__);
+			if (! $role->id) $this->error("Role not found");
+			
+			$person = new \Register\Customer();
+			$person->get($_REQUEST['login']);
+			if ($person->error()) $this->app_error("Error getting person: ".$person->error(),'error',__FILE__,__LINE__);
+			if (! $person->id) $this->error("Person not found");
 
-            $result = $role->addMember($person->id);
-            if ($role->error()) $this->error($role->error());
+			$result = $role->addMember($person->id);
+			if ($role->error()) $this->error($role->error());
 
-            $response = new \APIResponse();
-            $response->success(true);
+			$response = new \APIResponse();
+			$response->success(true);
 
-            # Send Response
-            $response->print();
-        }
-        
-        ###################################################
-        ### Assign Privilege to Role					###
-        ###################################################
-        function addRolePrivilege() {
+			# Send Response
+			$response->print();
+		}
+		
+		###################################################
+		### Assign Privilege to Role					###
+		###################################################
+		function addRolePrivilege() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
+			if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
-            if ($_REQUEST['role']) {
-                $role = new \Register\Role();
-                $role->get($_REQUEST['role']);
-                if ($role->error()) $this->error($role->error());
-                if (! $role->id) $this->error("Role not found");
-            }
-            else {
-                $this->error('role required');
-            }
+			if ($_REQUEST['role']) {
+				$role = new \Register\Role();
+				$role->get($_REQUEST['role']);
+				if ($role->error()) $this->error($role->error());
+				if (! $role->id) $this->error("Role not found");
+			}
+			else {
+				$this->error('role required');
+			}
 
-            $level = isset($_REQUEST['level']) ? (int) $_REQUEST['level'] : \Register\PrivilegeLevel::ADMINISTRATOR;
-            $privilege = new \Register\Privilege();
-            $privilege_name = trim((string) $_REQUEST['privilege']);
-            $had_privilege = false;
-            if ($privilege->get($privilege_name) && $privilege->id) {
-                $had_privilege = $role->getPrivilegeLevel($privilege->id) !== null;
-            }
-            $response = new \APIResponse();
-            if ($role->addPrivilege($_REQUEST['privilege'], $level)) {
-                $response->success(true);
-                if ($had_privilege) $response->addElement('existing', true);
-            }
-            else {
-                $this->error($role->error());
-            }
+			$level = isset($_REQUEST['level']) ? (int) $_REQUEST['level'] : \Register\PrivilegeLevel::ADMINISTRATOR;
+			$privilege = new \Register\Privilege();
+			$privilege_name = trim((string) $_REQUEST['privilege']);
+			$had_privilege = false;
+			if ($privilege->get($privilege_name) && $privilege->id) {
+				$had_privilege = $role->getPrivilegeLevel($privilege->id) !== null;
+			}
+			$response = new \APIResponse();
+			if ($role->addPrivilege($_REQUEST['privilege'], $level)) {
+				$response->success(true);
+				if ($had_privilege) $response->addElement('existing', true);
+			}
+			else {
+				$this->error($role->error());
+			}
 
-            # Send Response
-            $response->print();
-        }
-        
-        ###################################################
-        ### Get Privileges for a Role					###
-        ###################################################
-        function getRolePrivileges() {
-            if ($_REQUEST['role']) {
-                $role = new \Register\Role();
-                $role->get($_REQUEST['role']);
-                if ($role->error()) $this->error ($role->error());
-                if (! $role->id) $this->error ("Role not found");
-            }
-            else {
-                $this->error('role required');
-            }
+			# Send Response
+			$response->print();
+		}
+		
+		###################################################
+		### Get Privileges for a Role					###
+		###################################################
+		function getRolePrivileges() {
+			if ($_REQUEST['role']) {
+				$role = new \Register\Role();
+				$role->get($_REQUEST['role']);
+				if ($role->error()) $this->error ($role->error());
+				if (! $role->id) $this->error ("Role not found");
+			}
+			else {
+				$this->error('role required');
+			}
 
-            $privileges = $role->privileges();
+			$privileges = $role->privileges();
 
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('privilege',$privileges);
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('privilege',$privileges);
 
-            # Send Response
-            $response->print();
-        }
-        
-        ###################################################
-        ### Does Customer Have Privilege				###
-        ###################################################
-        function customerHasPrivilege() {
-            if ($_REQUEST['login']) {
-                $customer = new \Register\Customer();
-                $customer->get($_REQUEST['login']);
-                if ($customer->error()) $this->error ($customer->error());
-                if (! $customer->id) $this->error ("Customer not found");
-            }
-            else {
-                $this->error('login required');
-            }
+			# Send Response
+			$response->print();
+		}
+		
+		###################################################
+		### Does Customer Have Privilege				###
+		###################################################
+		function customerHasPrivilege() {
+			if ($_REQUEST['login']) {
+				$customer = new \Register\Customer();
+				$customer->get($_REQUEST['login']);
+				if ($customer->error()) $this->error ($customer->error());
+				if (! $customer->id) $this->error ("Customer not found");
+			}
+			else {
+				$this->error('login required');
+			}
 
-            $response = new \APIResponse();
-            $response->success = 1;
-            if ($customer->can($_REQUEST['privilege'])) $can = 'yes';
-            else $can = 'no';
+			$response = new \APIResponse();
+			$response->success = 1;
+			if ($customer->can($_REQUEST['privilege'])) $can = 'yes';
+			else $can = 'no';
 			$response->addElement('can',$can);
 
-            # Send Response
-            $response->print();
-        }
-        
-        ###################################################
-        ### Create Customer Image						###
-        ###################################################
-        function addImage() {
+			# Send Response
+			$response->print();
+		}
+		
+		###################################################
+		### Create Customer Image						###
+		###################################################
+		function addImage() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            # Authenticated Customer Required
-            $this->requireAuth();
+			# Authenticated Customer Required
+			$this->requireAuth();
 
-            # Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'gallery.image.xsl';
+			# Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'gallery.image.xsl';
 
-            # Initiate Image Object
-            $_image = new \Media\Image();
+			# Initiate Image Object
+			$_image = new \Media\Image();
 
-            # Add Event
-            $_image->add(
-                array(
-                    "name"			=> $_FILES["upload"]["name"],
-                    "description"	=> $_REQUEST["description"],
-                    "tmp_name"		=> $_FILES["upload"]["tmp_name"],
-                    "category"		=> $_REQUEST["category"]
-                )
-            );
+			# Add Event
+			$_image->add(
+				array(
+					"name"			=> $_FILES["upload"]["name"],
+					"description"	=> $_REQUEST["description"],
+					"tmp_name"		=> $_FILES["upload"]["tmp_name"],
+					"category"		=> $_REQUEST["category"]
+				)
+			);
 
-            # Error Handling
-            if ($_image->error()) $this->error($_image->error());
-            else{
+			# Error Handling
+			if ($_image->error()) $this->error($_image->error());
+			else{
 				$response = new \APIResponse();
-                $response->addElement('image',$_image);
-                $response->success(true);
-            }
+				$response->addElement('image',$_image);
+				$response->success(true);
+			}
 
-            # Send Response
-            $response->print();
-        }
-        
-        ###################################################
-        ### Add a New Customer via Registration			###
-        ###################################################
-        function addCustomer() {
+			# Send Response
+			$response->print();
+		}
+		
+		###################################################
+		### Add a New Customer via Registration			###
+		###################################################
+		function addCustomer() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            # Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
+			# Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
 
-            # Initiate Image Object
-            $user = new \Register\Customer();
-            $user->get($_REQUEST['login']);
-            if ($user->id) {
-                $this->error("Duplicate Login");
-            }
+			# Initiate Image Object
+			$user = new \Register\Customer();
+			$user->get($_REQUEST['login']);
+			if ($user->id) {
+				$this->error("Duplicate Login");
+			}
 
-            $organization_id = 0;
-            if (!empty($_REQUEST['organization_id'])) {
-                $organization = new \Register\Organization($_REQUEST['organization_id']);
-                if ($organization->error()) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
-                if (! $organization->id) $this->error("Could not find organization by id");
-                $organization_id = $organization->id;
-            }
-            elseif (!empty($_REQUEST['organization_code'])) {
-                $organization = new \Register\Organization();
-                $organization->get($_REQUEST['organization_code']);
-                if ($organization->error()) $this->app_error("Error finding organization: ".$organization->error(),'error',__FILE__,__LINE__);
-                if (! $organization->id) $this->error("Could not find organization by code");
-                $organization_id = $organization->id;
-            }
-            elseif (!empty($_REQUEST['organization'])) {
-                $organization = new \Register\Organization();
-                $organization->get($_REQUEST['organization']);
-                if ($organization->error()) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
-                if (! $organization->id) $this->error("Could not find organization");
-                $organization_id = $organization->id;
-            }
+			$organization_id = 0;
+			if (!empty($_REQUEST['organization_id'])) {
+				$organization = new \Register\Organization($_REQUEST['organization_id']);
+				if ($organization->error()) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
+				if (! $organization->id) $this->error("Could not find organization by id");
+				$organization_id = $organization->id;
+			}
+			elseif (!empty($_REQUEST['organization_code'])) {
+				$organization = new \Register\Organization();
+				$organization->get($_REQUEST['organization_code']);
+				if ($organization->error()) $this->app_error("Error finding organization: ".$organization->error(),'error',__FILE__,__LINE__);
+				if (! $organization->id) $this->error("Could not find organization by code");
+				$organization_id = $organization->id;
+			}
+			elseif (!empty($_REQUEST['organization'])) {
+				$organization = new \Register\Organization();
+				$organization->get($_REQUEST['organization']);
+				if ($organization->error()) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
+				if (! $organization->id) $this->error("Could not find organization");
+				$organization_id = $organization->id;
+			}
 
-            if (empty($_REQUEST['login'])) $_REQUEST['login'] = $_REQUEST['code'] ?? '';
+			if (empty($_REQUEST['login'])) $_REQUEST['login'] = $_REQUEST['code'] ?? '';
 			if (! $user->validLogin($_REQUEST['login'])) $this->error("Login not valid");
 
-            if (isset($_REQUEST['automation'])) {
-                if (preg_match('/^(yes|true|1)$/i',$_REQUEST['automation'])) $automation = true;
-                else $automation = false;
-            }
+			if (isset($_REQUEST['automation'])) {
+				if (preg_match('/^(yes|true|1)$/i',$_REQUEST['automation'])) $automation = true;
+				else $automation = false;
+			}
 
 			$params = array(
 				'login'				=> $_REQUEST['login'] ?? '',
@@ -727,150 +727,150 @@
 			if (!empty($_REQUEST['custom_1'])) $params['custom_1'] = $_REQUEST['custom_1'];
 			if (!empty($_REQUEST['custom_2'])) $params['custom_2'] = $_REQUEST['custom_2'];
 
-            # Add Event
-            $user->add($params);
+			# Add Event
+			$user->add($params);
 
-            # Error Handling
-            if ($user->error()) $this->error($user->error());
+			# Error Handling
+			if ($user->error()) $this->error($user->error());
 			$response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('customer',$user);
+			$response->success(true);
+			$response->addElement('customer',$user);
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
  
-        function findContacts() {
+		function findContacts() {
 			$this->requireAuth();
 
-            if (isset($_REQUEST['person'])) {
-                $customer = new \Register\Customer();
-                $customer->get($_REQUEST['person']);
-                if ($customer->error()) $this->error($customer->error());
-                if (! $customer->id) $this->app_error("Customer not found");
-            }
+			if (isset($_REQUEST['person'])) {
+				$customer = new \Register\Customer();
+				$customer->get($_REQUEST['person']);
+				if ($customer->error()) $this->error($customer->error());
+				if (! $customer->id) $this->app_error("Customer not found");
+			}
 
-            $parameters = array();
+			$parameters = array();
 			if ($GLOBALS['_SESSION_']->customer->can("manage customers")) {
 				if (isset($customer->id) and $customer->id) $parameters['person_id'] = $customer->id;
 			}
 			else $parameters['person_id'] = $GLOBALS['_SESSION_']->customer->id;
-            if (isset($_REQUEST['type']) and $_REQUEST['type']) $parameters['type'] = $_REQUEST['type'];
-            if (isset($_REQUEST['value']) and $_REQUEST['value']) $parameters['value'] = $_REQUEST['value'];
-            
-            $contactList = new \Register\ContactList();
-            $contacts = $contactList->find($parameters);
-            if ($contactList->error()) $this->error($contactList->error());
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('contact',$contacts);
+			if (isset($_REQUEST['type']) and $_REQUEST['type']) $parameters['type'] = $_REQUEST['type'];
+			if (isset($_REQUEST['value']) and $_REQUEST['value']) $parameters['value'] = $_REQUEST['value'];
+			
+			$contactList = new \Register\ContactList();
+			$contacts = $contactList->find($parameters);
+			if ($contactList->error()) $this->error($contactList->error());
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('contact',$contacts);
 
-            # Send Response
-            $response->print();
-        }
-        
-        ###################################################
-        ### Verify Users Email Address					###
-        ###################################################
-        function verifyEmail() {
-        
-            # Initiate Response
-            $response = new \APIResponse();
-            $response->header('session',$GLOBALS['_SESSION_']->code);
-            $response->header('method',$_REQUEST["method"]);
+			# Send Response
+			$response->print();
+		}
+		
+		###################################################
+		### Verify Users Email Address					###
+		###################################################
+		function verifyEmail() {
+		
+			# Initiate Response
+			$response = new \APIResponse();
+			$response->header('session',$GLOBALS['_SESSION_']->code);
+			$response->header('method',$_REQUEST["method"]);
 
-            # Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.verify.xsl';
+			# Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.verify.xsl';
 
-            # Initiate Image Object
-            $user = new Customer();
+			# Initiate Image Object
+			$user = new Customer();
 
-            if ($user->get($_REQUEST['login'])) {
-                if ($user->verify_email($_REQUEST['validation_key'])) {
-                    $response->success = 1;
-                } else $this->error("Invalid validation key");
-            } elseif ($user->error()) $this->error($user->error());
-            
-            else $this->error("Invalid validation key");
+			if ($user->get($_REQUEST['login'])) {
+				if ($user->verify_email($_REQUEST['validation_key'])) {
+					$response->success = 1;
+				} else $this->error("Invalid validation key");
+			} elseif ($user->error()) $this->error($user->error());
+			
+			else $this->error("Invalid validation key");
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
 
-        ###################################################
-        ### Verify Users Email Address with Queue Update ###
-        ###################################################
-        function verifyEmailWithQueue() {
-            # Initiate Response
-            $response = new \APIResponse();
-            
-            if (empty($_REQUEST['login'])) $this->error("login required");
-            if (empty($_REQUEST['access'])) $this->error("access key required");
-            
-            app_log("Verifying customer ".$_REQUEST['login']." with key ".$_REQUEST['access'],'notice');
-            
-            // Initialize Customer Object
-            $customer = new \Register\Customer();
-            if ($customer->get($_REQUEST['login'])) {
-                app_log("Found customer ".$customer->id);
-                if ($customer->verify_email($_REQUEST['access'])) {
-                    // update the queued organization to "PENDING" because the email has been verified
-                    app_log("Validation key confirmed, updating queue record");
-                    $queuedCustomer = new \Register\Queue(); 
-                    $queuedCustomer->getByQueuedLogin($customer->id);
-                    
-                    if ($queuedCustomer->status == "VERIFYING") $queuedCustomer->update(array('status'=>'PENDING'));
-                    
-                    // create the notify support reminder email for the new verified customer
-                    app_log("Generating notification email");
-                    $url = $GLOBALS['_config']->site->hostname . '/_register/pending_customers';
-                    if ($GLOBALS['_config']->site->https) $url = "https://$url";
-                    else $url = "http://$url";
-                    
-                    $template = new \Content\Template\Shell($GLOBALS['_config']->register->registration_notification->template);
-                    $template->addParams(array(
-                        'ORGANIZATION.NAME'		=> $queuedCustomer->organization() ? $queuedCustomer->organization()->name : 'Unknown Organization',
-                        'CUSTOMER.FIRST_NAME'	=> $customer->first_name,
-                        'CUSTOMER.LAST_NAME'	=> $customer->last_name,
-                        'EMAIL'					=> $customer->notify_email(),
-                        'CUSTOMER.LOGIN'		=> $customer->code,
-                        'SITE.LINK'				=> 'http://'.$GLOBALS['_config']->site->hostname.'/_register/pending_customers',
-                        'COMPANY.NAME'			=> $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
-                    ));
-                    
-                    $message = new \Email\Message($GLOBALS['_config']->register->registration_notification);
-                    $message->body($template->output());
-                    
-                    app_log("Sending Admin Confirm new customer reminder",'debug');
-                    $slackClient = new \Slack\Client();
-                    $slackClient->send($GLOBALS['_config']->register->registration_notification->channel,$template->render());
-                    
-                    $response->success(true);
-                    $response->addElement('verified', true);
-                } else {
-                    app_log("Key not matched",'notice');
-                    $this->error("Invalid key");
-                }
-            } else {
-                app_log("Login not matched",'notice');
-                $this->error("Invalid key");
-            }
-            
-            # Send Response
-            $response->print();
-        }
+		###################################################
+		### Verify Users Email Address with Queue Update ###
+		###################################################
+		function verifyEmailWithQueue() {
+			# Initiate Response
+			$response = new \APIResponse();
+			
+			if (empty($_REQUEST['login'])) $this->error("login required");
+			if (empty($_REQUEST['access'])) $this->error("access key required");
+			
+			app_log("Verifying customer ".$_REQUEST['login']." with key ".$_REQUEST['access'],'notice');
+			
+			// Initialize Customer Object
+			$customer = new \Register\Customer();
+			if ($customer->get($_REQUEST['login'])) {
+				app_log("Found customer ".$customer->id);
+				if ($customer->verify_email($_REQUEST['access'])) {
+					// update the queued organization to "PENDING" because the email has been verified
+					app_log("Validation key confirmed, updating queue record");
+					$queuedCustomer = new \Register\Queue(); 
+					$queuedCustomer->getByQueuedLogin($customer->id);
+					
+					if ($queuedCustomer->status == "VERIFYING") $queuedCustomer->update(array('status'=>'PENDING'));
+					
+					// create the notify support reminder email for the new verified customer
+					app_log("Generating notification email");
+					$url = $GLOBALS['_config']->site->hostname . '/_register/pending_customers';
+					if ($GLOBALS['_config']->site->https) $url = "https://$url";
+					else $url = "http://$url";
+					
+					$template = new \Content\Template\Shell($GLOBALS['_config']->register->registration_notification->template);
+					$template->addParams(array(
+						'ORGANIZATION.NAME'		=> $queuedCustomer->organization() ? $queuedCustomer->organization()->name : 'Unknown Organization',
+						'CUSTOMER.FIRST_NAME'	=> $customer->first_name,
+						'CUSTOMER.LAST_NAME'	=> $customer->last_name,
+						'EMAIL'					=> $customer->notify_email(),
+						'CUSTOMER.LOGIN'		=> $customer->code,
+						'SITE.LINK'				=> 'http://'.$GLOBALS['_config']->site->hostname.'/_register/pending_customers',
+						'COMPANY.NAME'			=> $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
+					));
+					
+					$message = new \Email\Message($GLOBALS['_config']->register->registration_notification);
+					$message->body($template->output());
+					
+					app_log("Sending Admin Confirm new customer reminder",'debug');
+					$slackClient = new \Slack\Client();
+					$slackClient->send($GLOBALS['_config']->register->registration_notification->channel,$template->render());
+					
+					$response->success(true);
+					$response->addElement('verified', true);
+				} else {
+					app_log("Key not matched",'notice');
+					$this->error("Invalid key");
+				}
+			} else {
+				app_log("Login not matched",'notice');
+				$this->error("Invalid key");
+			}
+			
+			# Send Response
+			$response->print();
+		}
 
-        ###################################################
-        ### Verify Users Email Address					###
-        ###################################################
-        function notifyContact() {
+		###################################################
+		### Verify Users Email Address					###
+		###################################################
+		function notifyContact() {
 			$this->requireAuth();
 
-            # Initiate Response
+			# Initiate Response
 			$response = new \APIResponse();
 
-            # Initiate Customer Object
-            $user = new \Register\Customer($_REQUEST['id']);
+			# Initiate Customer Object
+			$user = new \Register\Customer($_REQUEST['id']);
 
 			if ($GLOBALS['_SESSION_']->customer->can("manage customers")) {
 				// Go Ahead and Send
@@ -880,8 +880,8 @@
 			}
 			else $this->notFound();
 
-            # Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.contact.xsl';
+			# Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.contact.xsl';
 
 			$message = new \Email\Message();
 			$message->html(true);
@@ -889,169 +889,169 @@
 			$message->subject($_REQUEST['subject']);
 			$message->body($_REQUEST['body']);
 
-            # Add Event
-            $user->notify($message);
+			# Add Event
+			$user->notify($message);
 
-            # Error Handling
-            if ($user->error()) $this->error($user->error());
+			# Error Handling
+			if ($user->error()) $this->error($user->error());
 
-            $response->success(true);
+			$response->success(true);
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
 
-        ###################################################
-        ### Add a New Organization						###
-        ###################################################
-        function addOrganization() {
+		###################################################
+		### Add a New Organization						###
+		###################################################
+		function addOrganization() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            // Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
+			// Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
+			if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
-            // Initiate Object
-            $organization = new \Register\Organization();
+			// Initiate Object
+			$organization = new \Register\Organization();
 
-            // Add Object
-            $organization->add(
-                array(
-                    "name"		=> $_REQUEST['name'],
-                    "code"		=> $_REQUEST['code'],
-                )
-            );
+			// Add Object
+			$organization->add(
+				array(
+					"name"		=> $_REQUEST['name'],
+					"code"		=> $_REQUEST['code'],
+				)
+			);
 
-            // Error Handling
-            if ($organization->error()) $this->error($organization->error());
+			// Error Handling
+			if ($organization->error()) $this->error($organization->error());
 
-            // Initiate Response
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('organization',$organization);
+			// Initiate Response
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('organization',$organization);
 
-            // Send Response
-            $response->print();
-        }
-        
-        ###################################################
-        ### Get Organization							###
-        ###################################################
-        function getOrganization() {
-            # Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organization.xsl';
+			// Send Response
+			$response->print();
+		}
+		
+		###################################################
+		### Get Organization							###
+		###################################################
+		function getOrganization() {
+			# Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organization.xsl';
 
-            if (isset($_REQUEST['code']))
-                if ($GLOBALS['_SESSION_']->customer->can('manage customers') || $GLOBALS['_SESSION_']->customer->organization()->code == $_REQUEST['code'])
-                    $org_code = $_REQUEST['code'];
-                else
-                    $this->deny();
-            else $org_code = $GLOBALS['_SESSION_']->customer->organization()->code;
+			if (isset($_REQUEST['code']))
+				if ($GLOBALS['_SESSION_']->customer->can('manage customers') || $GLOBALS['_SESSION_']->customer->organization()->code == $_REQUEST['code'])
+					$org_code = $_REQUEST['code'];
+				else
+					$this->deny();
+			else $org_code = $GLOBALS['_SESSION_']->customer->organization()->code;
 
-            # Initiate Organization Object
-            $organization = new \Register\Organization();
+			# Initiate Organization Object
+			$organization = new \Register\Organization();
 
-            # Get Matching Organization
-            $organization->get($org_code);
+			# Get Matching Organization
+			$organization->get($org_code);
 
-            # Error Handling
-            if ($organization->error()) $this->error($organization->error());
+			# Error Handling
+			if ($organization->error()) $this->error($organization->error());
 
-            if (! $organization->exists()) $this->notFound();
+			if (! $organization->exists()) $this->notFound();
 
-            $response = new \APIResponse();
-            $response->success = 1;
-            $response->addElement('organization',$organization);
+			$response = new \APIResponse();
+			$response->success = 1;
+			$response->addElement('organization',$organization);
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
 
-        ###################################################
-        ### Find Organizations							###
-        ###################################################
-        function findOrganizations() {
-            # Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
+		###################################################
+		### Find Organizations							###
+		###################################################
+		function findOrganizations() {
+			# Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
+			if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
-            # Initiate Organization Object
-            $organizationList = new \Register\OrganizationList();
+			# Initiate Organization Object
+			$organizationList = new \Register\OrganizationList();
 
-            # Build Query Parameters
-            $parameters = array();
-            if (!empty($_REQUEST["code"])) $parameters["code"] = $_REQUEST["code"];
-            if (!empty($_REQUEST["name"])) $parameters["name"] = $_REQUEST["name"];
-            if (!empty($_REQUEST["status"])) $parameters["status"] = $_REQUEST["status"];
+			# Build Query Parameters
+			$parameters = array();
+			if (!empty($_REQUEST["code"])) $parameters["code"] = $_REQUEST["code"];
+			if (!empty($_REQUEST["name"])) $parameters["name"] = $_REQUEST["name"];
+			if (!empty($_REQUEST["status"])) $parameters["status"] = $_REQUEST["status"];
 			if (!empty($_REQUEST["is_reseller"])) $parameters["is_reseller"] = $_REQUEST["is_reseller"];
 			if (!empty($_REQUEST["is_vendor"])) $parameters["is_vendor"] = $_REQUEST["is_vendor"];
 			if (!empty($_REQUEST["is_customer"])) $parameters["is_customer"] = $_REQUEST["is_customer"];
 
-            # Get List of Matching Organizations
-            $organizations = $organizationList->find($parameters);
+			# Get List of Matching Organizations
+			$organizations = $organizationList->find($parameters);
 
-            # Error Handling
-            if ($organizationList->error()) $this->error($organizationList->error());
-
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('count',count($organizations));
-            $response->addElement('organization',$organizations);
-
-            # Send Response
-            $response->print();
-        }
-
-        ###################################################
-        ### Search Organizations						###
-        ###################################################
-        function searchOrganizations() {
-            # Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
-
-            if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
-
-            # Initiate Organization Object
-            $organizationList = new \Register\OrganizationList();
-
-            # Build Query Parameters
-            $parameters = array();
-            $parameters["string"] = $_REQUEST["string"];
-
-            # Get List of Matching Organizations
-            $organizations = $organizationList->search($parameters);
-
-            # Error Handling
-            if ($organizationList->error()) $this->error($organizationList->error());
+			# Error Handling
+			if ($organizationList->error()) $this->error($organizationList->error());
 
 			$response = new \APIResponse();
-            $response->success(1);
-            $response->addElement('organization',$organizations);
+			$response->success(true);
+			$response->addElement('count',count($organizations));
+			$response->addElement('organization',$organizations);
 
-            # Send Response
-            $response->print();
-        }
-        
-        ###################################################
-        ### Find Organization Owned Products			###
-        ###################################################
-        function findOrganizationOwnedProducts() {
-            # Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
+			# Send Response
+			$response->print();
+		}
 
-            # Build Query Parameters
+		###################################################
+		### Search Organizations						###
+		###################################################
+		function searchOrganizations() {
+			# Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
+
+			if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
+
+			# Initiate Organization Object
+			$organizationList = new \Register\OrganizationList();
+
+			# Build Query Parameters
+			$parameters = array();
+			$parameters["string"] = $_REQUEST["string"];
+
+			# Get List of Matching Organizations
+			$organizations = $organizationList->search($parameters);
+
+			# Error Handling
+			if ($organizationList->error()) $this->error($organizationList->error());
+
+			$response = new \APIResponse();
+			$response->success(1);
+			$response->addElement('organization',$organizations);
+
+			# Send Response
+			$response->print();
+		}
+		
+		###################################################
+		### Find Organization Owned Products			###
+		###################################################
+		function findOrganizationOwnedProducts() {
+			# Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
+
+			# Build Query Parameters
 			if (! $GLOBALS['_SESSION_']->customer->can("manage customer products")) {
 				$organization = new \Register\Organization($GLOBALS['_SESSION_']->customer->organization_id);
 				if (!$organization->exists()) $this->error("Must be associated with an organization");
 			}
-            elseif (!empty($_REQUEST['organization_code'])) {
-                # Initiate Organization Object
-                $organization = new \Register\Organization();
-                if (! $organization->get($_REQUEST['organization_code'])) $this->error("Organization not found");
-                if ($organization->error()) $this->app_error("Error getting organization: ".$organization->error(),__FILE__,__LINE__);
-            }
+			elseif (!empty($_REQUEST['organization_code'])) {
+				# Initiate Organization Object
+				$organization = new \Register\Organization();
+				if (! $organization->get($_REQUEST['organization_code'])) $this->error("Organization not found");
+				if ($organization->error()) $this->app_error("Error getting organization: ".$organization->error(),__FILE__,__LINE__);
+			}
 			elseif (!empty($_REQUEST['organization_id'])) {
 				$organization = new \Register\Organization($_REQUEST['organization_id']);
 			}
@@ -1059,68 +1059,68 @@
 				$organization = $GLOBALS['_SESSION_']->customer->organization();
 				if (!$organization->exists()) $this->error("Must be associated with an organization");
 			}
-            if (!empty($_REQUEST['product_code'])) {
-                $product = new \Product\Item();
-                if (! $product->get($_REQUEST['product_code'])) $this->error("Product not found");
-                if ($product->error()) $this->app_error("Error getting product: ".$product->error(),__FILE__,__LINE__);
-            }
+			if (!empty($_REQUEST['product_code'])) {
+				$product = new \Product\Item();
+				if (! $product->get($_REQUEST['product_code'])) $this->error("Product not found");
+				if ($product->error()) $this->app_error("Error getting product: ".$product->error(),__FILE__,__LINE__);
+			}
 			elseif (!empty($_REQUEST['product_id'])) {
 				$product = new \Product\Item($_REQUEST['product_id']);
 				if (! $product->exists()) $this->error("Product not found");
 			}
 
-            $response = new \APIResponse();
+			$response = new \APIResponse();
 
-            # Get List of Matching Products
-            $products = new \Register\Organization\OwnedProduct($organization->id,$product->id);
+			# Get List of Matching Products
+			$products = new \Register\Organization\OwnedProduct($organization->id,$product->id);
 
-            # Error Handling
-            if ($products->error()) $this->app_error($products->error(),__FILE__,__LINE__);
+			# Error Handling
+			if ($products->error()) $this->app_error($products->error(),__FILE__,__LINE__);
 
-            $response->success(true);
-            $response->addElement('product',$products);
+			$response->success(true);
+			$response->addElement('product',$products);
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
 
-        /** @method getOrganizationOwnedProduct()
+		/** @method getOrganizationOwnedProduct()
 		 * Get organization owned product
 		 * @param organization_id The ID of the organization
 		 * @param product_id The ID of the product
 		 * @return void
 		 */
-        function getOrganizationOwnedProduct() {
+		function getOrganizationOwnedProduct() {
 			$this->requireAuth();
 
-            # Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
+			# Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
-            # Initiate Organization Object
-            $organization = new \Register\Organization();
-            $organization->get($_REQUEST['organization']);
-            if (! $organization->id) $this->error("Organization not found");
-            if ($organization->error()) $this->app_error("Error getting organization: ".$organization()->error,__FILE__,__LINE__);
+			# Initiate Organization Object
+			$organization = new \Register\Organization();
+			$organization->get($_REQUEST['organization']);
+			if (! $organization->id) $this->error("Organization not found");
+			if ($organization->error()) $this->app_error("Error getting organization: ".$organization()->error,__FILE__,__LINE__);
 
-            $product = new \Product\Item();
-            $product->get($_REQUEST['product']);
-            if ($product->error()) $this->app_error("Error getting product: ".$product->error(),__FILE__,__LINE__);
-            if (! $product->id) $this->error("Product not found");
+			$product = new \Product\Item();
+			$product->get($_REQUEST['product']);
+			if ($product->error()) $this->app_error("Error getting product: ".$product->error(),__FILE__,__LINE__);
+			if (! $product->id) $this->error("Product not found");
 
-            # Get List of Matching Products
-            $product = new \Register\Organization\OwnedProduct($organization->id,$product->id);
+			# Get List of Matching Products
+			$product = new \Register\Organization\OwnedProduct($organization->id,$product->id);
 
-            # Error Handling
-            if ($product->error()) $this->app_error($product->error(),__FILE__,__LINE__);
+			# Error Handling
+			if ($product->error()) $this->app_error($product->error(),__FILE__,__LINE__);
 
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('product',$product);
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('product',$product);
 
-            # Send Response
-            $response->print();
-        }
-        
+			# Send Response
+			$response->print();
+		}
+		
 		/** @method addOrganizationOwnedProduct()
 		 * Add organization owned product
 		 * @param organization_id The ID of the organization
@@ -1129,46 +1129,46 @@
 		 * @param expires The expiration date of the product
 		 * @return void
 		 */
-        function addOrganizationOwnedProduct() {
+		function addOrganizationOwnedProduct() {
 			$this->requireAuth();
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 			if (!$GLOBALS['_SESSION_']->customer->can("manage customer owned products")) $this->deny();
 
-            # Default StyleSheet
-            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
+			# Default StyleSheet
+			if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
-            # Initiate Organization Object
-            $organization = new \Register\Organization();
-            $organization->get($_REQUEST['organization_code']);
-            if ($organization->error()) $this->app_error("Error getting organization: ".$organization->error(),__FILE__,__LINE__);
-            if (! $organization->id) $this->notFound("Organization not found");
+			# Initiate Organization Object
+			$organization = new \Register\Organization();
+			$organization->get($_REQUEST['organization_code']);
+			if ($organization->error()) $this->app_error("Error getting organization: ".$organization->error(),__FILE__,__LINE__);
+			if (! $organization->id) $this->notFound("Organization not found");
 
-            $product = new \Product\Item();
-            $product->get($_REQUEST['product_code']);
-            if ($product->error()) $this->app_error("Error getting product: ".$product->error(),__FILE__,__LINE__);
-            if (! $product->id) $this->notFound("Product not found");
+			$product = new \Product\Item();
+			$product->get($_REQUEST['product_code']);
+			if ($product->error()) $this->app_error("Error getting product: ".$product->error(),__FILE__,__LINE__);
+			if (! $product->id) $this->notFound("Product not found");
 
 			if (empty($_REQUEST['quantity']) || $_REQUEST['quantity'] <= 0) $this->error("Quantity must be greater than 0");
 
-            # Get List of Matching Products
-            $_orgproducts = new \Register\Organization\OwnedProduct($organization->id,$product->id);
-            $products = $_orgproducts->add(array(
-                'organization_id' => $organization->id,
-                'product_id' => $product->id,
-                'quantity' => $_REQUEST['quantity'],
+			# Get List of Matching Products
+			$_orgproducts = new \Register\Organization\OwnedProduct($organization->id,$product->id);
+			$products = $_orgproducts->add(array(
+				'organization_id' => $organization->id,
+				'product_id' => $product->id,
+				'quantity' => $_REQUEST['quantity'],
 				'expires' => isset($_REQUEST['expires']) ? $_REQUEST['expires'] : null
-            ));
+			));
 
-            # Error Handling
-            if ($_orgproducts->error()) $this->error($_orgproducts->error(),__FILE__,__LINE__);
+			# Error Handling
+			if ($_orgproducts->error()) $this->error($_orgproducts->error(),__FILE__,__LINE__);
 
 			$response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('product',$products);
+			$response->success(true);
+			$response->addElement('product',$products);
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
 
 		/** @method findOrganizationLocations()
 		 * Find organization locations
@@ -1176,26 +1176,26 @@
 		 * @param code The code of the organization to filter locations by
 		 * @return list of locations for the specified organization
 		 */
-        function findOrganizationLocations() {
-            if ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['organization_id'])) {
-                $organization = new \Register\Organization($_REQUEST['organization_id']);
-            }
-            elseif ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['code'])) {
-                $organization = new \Register\Organization();
-                $organization->get($_REQUEST['code']);
-            }
-            else {
-                $organization = $GLOBALS['_SESSION_']->customer->organization();
-            }
-            if (! $organization->id) $this->notFound();
+		function findOrganizationLocations() {
+			if ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['organization_id'])) {
+				$organization = new \Register\Organization($_REQUEST['organization_id']);
+			}
+			elseif ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['code'])) {
+				$organization = new \Register\Organization();
+				$organization->get($_REQUEST['code']);
+			}
+			else {
+				$organization = $GLOBALS['_SESSION_']->customer->organization();
+			}
+			if (! $organization->id) $this->notFound();
 
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('location',$organization->locations(array('recursive' => true)));
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('location',$organization->locations(array('recursive' => true)));
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
 
 		/** @method findOrganizationMembers()
 		 * Find organization members
@@ -1203,27 +1203,27 @@
 		 * @param code The code of the organization to filter members by
 		 * @return list of members for the specified organization
 		 */
-        function findOrganizationMembers() {
-            if ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['organization_id'])) {
-                $organization = new \Register\Organization($_REQUEST['organization_id']);
-            }
-            elseif ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['code'])) {
-                $organization = new \Register\Organization();
-                $organization->get($_REQUEST['code']);
-            }
-            else {
-                $organization = $GLOBALS['_SESSION_']->customer->organization();
-            }
-            if (! $organization->id) $this->error("Organization required");
+		function findOrganizationMembers() {
+			if ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['organization_id'])) {
+				$organization = new \Register\Organization($_REQUEST['organization_id']);
+			}
+			elseif ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['code'])) {
+				$organization = new \Register\Organization();
+				$organization->get($_REQUEST['code']);
+			}
+			else {
+				$organization = $GLOBALS['_SESSION_']->customer->organization();
+			}
+			if (! $organization->id) $this->error("Organization required");
 
-            $automation = null;
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('member',$organization->members($_REQUEST['type']));
+			$automation = null;
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('member',$organization->members($_REQUEST['type']));
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
 
 		/** @method findCustomerLocations()
 		 * Find customer locations
@@ -1231,168 +1231,168 @@
 		 * @param login The login of the customer to filter locations by
 		 * @return list of locations for the specified customer
 		 */
-        function findCustomerLocations() {
-            if ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['customer_id'])) {
-                $customer = new \Register\Customer($_REQUEST['customer_id']);
-            }
-            elseif ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['login'])) {
-                $customer = new \Register\Customer();
-                $customer->get($_REQUEST['login']);
-            }
-            else {
-                $customer = $GLOBALS['_SESSION_']->customer;
-            }
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('location',$customer->locations(array('recursive' => true)));
-
-            # Send Response
-            $response->print();
-        }
-
-        /** @method expireAgingCustomers()
-         * @brief Expires customers who have not logged in for 12 months
-         * @return void
-         */
-        function expireAgingCustomers() {
-            $expires = strtotime("-12 month", time());
-            $date = date('m/d/Y',$expires);
-        
-            # Initialize Customers
-            $customerlist = new \Register\CustomerList();
-        
-            # Expire Aged Customers
+		function findCustomerLocations() {
+			if ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['customer_id'])) {
+				$customer = new \Register\Customer($_REQUEST['customer_id']);
+			}
+			elseif ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['login'])) {
+				$customer = new \Register\Customer();
+				$customer->get($_REQUEST['login']);
+			}
+			else {
+				$customer = $GLOBALS['_SESSION_']->customer;
+			}
 			$response = new \APIResponse();
-            $count = $customerlist->expire($date);
-            if ($customerlist->error()) $this->error("Error expiring customers: ".$customerlist->error());
-            else $response->addElement('message',"$count Customers Expired");
+			$response->success(true);
+			$response->addElement('location',$customer->locations(array('recursive' => true)));
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
+
+		/** @method expireAgingCustomers()
+		 * @brief Expires customers who have not logged in for 12 months
+		 * @return void
+		 */
+		function expireAgingCustomers() {
+			$expires = strtotime("-12 month", time());
+			$date = date('m/d/Y',$expires);
+		
+			# Initialize Customers
+			$customerlist = new \Register\CustomerList();
+		
+			# Expire Aged Customers
+			$response = new \APIResponse();
+			$count = $customerlist->expire($date);
+			if ($customerlist->error()) $this->error("Error expiring customers: ".$customerlist->error());
+			else $response->addElement('message',"$count Customers Expired");
+
+			# Send Response
+			$response->print();
+		}
 
 		/** @method expireInactiveOrganizations()
 		 * Expires organizations that have not had active users for 12 months
 		 * @return void
 		 */
-        function expireInactiveOrganizations() {
+		function expireInactiveOrganizations() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 			$this->requirePrivilege("manage customers");
 
-            $expires = strtotime("-12 month", time());
-            $date = date('m/d/Y',$expires);
+			$expires = strtotime("-12 month", time());
+			$date = date('m/d/Y',$expires);
 
-            # Initialize Organizations
-            $organizationlist = new \Register\OrganizationList();
+			# Initialize Organizations
+			$organizationlist = new \Register\OrganizationList();
 
-            # Expire Organizations w/o Active Users
-            $count = $organizationlist->expire();
+			# Expire Organizations w/o Active Users
+			$count = $organizationlist->expire();
 			$response = new \APIResponse();
-            if ($organizationlist->error()) $response->error("Error expiring organizations: ".$organizationlist->error());
-            else $response->addElement('message',"$count Organizations Expired");
+			if ($organizationlist->error()) $response->error("Error expiring organizations: ".$organizationlist->error());
+			else $response->addElement('message',"$count Organizations Expired");
 
-            # Send Response
-            $response->print();
-        }
+			# Send Response
+			$response->print();
+		}
 
 		/** @method flagActiveCustomers()
 		 * Calls the flagActive method on the CustomerList class to flag customers as active if they have logged in within the last 12 months
 		 * @return void
 		 */
-        function flagActiveCustomers() {
+		function flagActiveCustomers() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
 			$this->requirePrivilege("manage customers");
 
-            $list = new \Register\CustomerList();
-            $counter = $list->flagActive();
-            $response = new \APIResponse();
-            $response->addElement('activated',$counter);
+			$list = new \Register\CustomerList();
+			$counter = $list->flagActive();
+			$response = new \APIResponse();
+			$response->addElement('activated',$counter);
 
-            # Send Response
-            $response->print('json');
-        }
+			# Send Response
+			$response->print('json');
+		}
 
-        /** @method getMemberLastActive()
-         * get last active date for member
+		/** @method getMemberLastActive()
+		 * get last active date for member
 		 * @param memberId The ID of the member to get last active date for
 		 * @return last active date for member
-         */
-        function getMemberLastActive() {
+		 */
+		function getMemberLastActive() {
 			$this->requireAuth();
-            $user = new \Register\Customer($_REQUEST['memberId']);
+			$user = new \Register\Customer($_REQUEST['memberId']);
 			if ($user->error()) $this->error($user->error());
 			if (! $user->exists()) $this->notFound();
 
-            $response = new \APIResponse();
-            $response->addElement('memberId',$_REQUEST['memberId']);
-            $response->addElement('lastActive',$user->last_active());
+			$response = new \APIResponse();
+			$response->addElement('memberId',$_REQUEST['memberId']);
+			$response->addElement('lastActive',$user->last_active());
 
-            # Send Response
-            $response->print('json');
-        }
+			# Send Response
+			$response->print('json');
+		}
 
-        /** @method searchOrganizationsByName()
-         * search registered organizations by name
+		/** @method searchOrganizationsByName()
+		 * search registered organizations by name
 		 * @param term The search term to use for searching organization names
 		 * @return list of organizations matching search term
-         */
-        function searchOrganizationsByName() {
+		 */
+		function searchOrganizationsByName() {
 			$this->requireAuth();
-            $organizationList = new \Register\OrganizationList();
-            $search = array();
-            $search['string'] = $_REQUEST['term'];
-            $search['_like'] = array('name');
-            $search['status'] = array('NEW','ACTIVE','EXPIRED');
-            $organizationsFound = $organizationList->search($search);
+			$organizationList = new \Register\OrganizationList();
+			$search = array();
+			$search['string'] = $_REQUEST['term'];
+			$search['_like'] = array('name');
+			$search['status'] = array('NEW','ACTIVE','EXPIRED');
+			$organizationsFound = $organizationList->search($search);
 
-            $results = array();
-            foreach ($organizationsFound as $organization) {
-                $newOrganization = new \stdClass();
-                $newOrganization->id = $organization->id;
-                $newOrganization->label = (($organization->status == "EXPIRED") ? " * EXPIRED * " : "") . $organization->name;
-                $newOrganization->value = $organization->name;
-                $results[] = $newOrganization;
-            }
-            print $this->formatOutput($results,'json');
-        }
+			$results = array();
+			foreach ($organizationsFound as $organization) {
+				$newOrganization = new \stdClass();
+				$newOrganization->id = $organization->id;
+				$newOrganization->label = (($organization->status == "EXPIRED") ? " * EXPIRED * " : "") . $organization->name;
+				$newOrganization->value = $organization->name;
+				$results[] = $newOrganization;
+			}
+			print $this->formatOutput($results,'json');
+		}
 
-        /** @method shipmentFindBySerial()
-         * get shipment by serial number
-         */
-        function shipmentFindBySerial() {
-            $supportShipmentItem = new \Support\ShipmentItem();
-            $shipmentDetails = $supportShipmentItem->findBySerial($_REQUEST['serialNumber']);
-            print $this->formatOutput($shipmentDetails,'json');
-        }
+		/** @method shipmentFindBySerial()
+		 * get shipment by serial number
+		 */
+		function shipmentFindBySerial() {
+			$supportShipmentItem = new \Support\ShipmentItem();
+			$shipmentDetails = $supportShipmentItem->findBySerial($_REQUEST['serialNumber']);
+			print $this->formatOutput($shipmentDetails,'json');
+		}
 
 		/** @apiMethod findLocations()
 		 * Find locations
 		 * @param organization The ID of the organization to filter locations by
 		 * @param organization_id The ID of the organization to filter locations by
 		 */
-        function findLocations() {
-            $parameters = array();
-            if (isset($_REQUEST['organization']) && $GLOBALS['_SESSION_']->customer->can("manage customers")) {
-                $organization = new \Register\Organization();
-                if (!$organization->get($_REQUEST['organization'])) $this->notFound("Organization not found");
-                $_REQUEST['organization_id'] = $organization->id;
-            }
-            elseif (isset($_REQUEST['organization_id']) && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
-                $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
-            }
-            else {
-                $parameters['organization_id'] = $_REQUEST['organization_id'];
-            }
-            $parameters['recursive'] = true;
+		function findLocations() {
+			$parameters = array();
+			if (isset($_REQUEST['organization']) && $GLOBALS['_SESSION_']->customer->can("manage customers")) {
+				$organization = new \Register\Organization();
+				if (!$organization->get($_REQUEST['organization'])) $this->notFound("Organization not found");
+				$_REQUEST['organization_id'] = $organization->id;
+			}
+			elseif (isset($_REQUEST['organization_id']) && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
+				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
+			}
+			else {
+				$parameters['organization_id'] = $_REQUEST['organization_id'];
+			}
+			$parameters['recursive'] = true;
 
-            $locationList = new \Register\LocationList();
-            $locations = $locationList->find($parameters);
+			$locationList = new \Register\LocationList();
+			$locations = $locationList->find($parameters);
 
 			$response = new \APIResponse();
-            $response->addElement('location',$locations);
+			$response->addElement('location',$locations);
 			$response->print();
-        }
+		}
 
 		/** @apiMethod addLocation()
 		 * Add a new location
@@ -1405,63 +1405,63 @@
 		 * @param admin_code The code of the admin (Province) for the location
 		 * @param province The province of the location
 		 */
-        function addLocation() {
+		function addLocation() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 			$this->requireAuth();
 
-            $parameters = new \stdClass;
-            $parameters->name = $_REQUEST['name'];
-            $parameters->address_1 = $_REQUEST['address_1'];
-            $parameters->address_2 = $_REQUEST['address_2'];
-            $parameters->city = $_REQUEST['city'];
-            $parameters->zip_code = $_REQUEST['zip_code'];
+			$parameters = new \stdClass;
+			$parameters->name = $_REQUEST['name'];
+			$parameters->address_1 = $_REQUEST['address_1'];
+			$parameters->address_2 = $_REQUEST['address_2'];
+			$parameters->city = $_REQUEST['city'];
+			$parameters->zip_code = $_REQUEST['zip_code'];
 
-            if ($_REQUEST['admin_id']) {
-                $parameters->admin_id = $_REQUEST['admin_id'];
-            }
-            elseif ($_REQUEST['admin_code']) {
-                $admin = new Admin();
-                if (! $admin->get($_REQUEST['admin_code'])) {
-                    $this->notFound("Province not found");
-                    return false;
-                }
-            }
-            $province = new \Geography\Province();
-            if (! $province->get($admin->id,$_REQUEST['province'])) $this->error("Province not found");
-            $parameters->province_id = $province->id;
+			if ($_REQUEST['admin_id']) {
+				$parameters->admin_id = $_REQUEST['admin_id'];
+			}
+			elseif ($_REQUEST['admin_code']) {
+				$admin = new Admin();
+				if (! $admin->get($_REQUEST['admin_code'])) {
+					$this->notFound("Province not found");
+					return false;
+				}
+			}
+			$province = new \Geography\Province();
+			if (! $province->get($admin->id,$_REQUEST['province'])) $this->error("Province not found");
+			$parameters->province_id = $province->id;
 
-            $location = new \Register\Location();
-            if ($location->add($parameters)) {
+			$location = new \Register\Location();
+			if ($location->add($parameters)) {
 				$response = new \APIResponse();
-                $response->addElement('location',$location);
-                $response->print();
-            }
-            else {
-                $this->error("Cannot add location: ".$location->error());
-            }
-        }
+				$response->addElement('location',$location);
+				$response->print();
+			}
+			else {
+				$this->error("Cannot add location: ".$location->error());
+			}
+		}
 
 		/** @apiMethod findPrivileges()
 		 * Find privileges
 		 * @param module The module to filter privileges by
 		 * @param name The name of the privilege to filter by
 		 */
-        public function findPrivileges() {
+		public function findPrivileges() {
 			$this->requirePrivilege("manage customers");
 
 			$parameters = [];
 			if (!empty($_REQUEST['module'])) $parameters['module'] = $_REQUEST['module'];
 			if (!empty($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
 
-            $privilegeList = new \Register\PrivilegeList();
-            $privileges = $privilegeList->find($parameters);
+			$privilegeList = new \Register\PrivilegeList();
+			$privileges = $privilegeList->find($parameters);
 			if ($privilegeList->error()) $this->error($privilegeList->error());
 
 			$response = new \APIResponse();
 			$response->addElement('privilege',$privileges);
 
-            $response->print();
-        }
+			$response->print();
+		}
 
 		/** @apiMethod findPrivilegePeers()
 		 * Find peers for a given privilege
@@ -1499,12 +1499,12 @@
 		 * Find pending registrations
 		 * @param status The status of the pending registrations to retrieve
 		 */
-        public function findPendingRegistrations() {
+		public function findPendingRegistrations() {
 			$this->requirePrivilege("manage customers");
-            $queue = new \Register\Queue();
-            $parameters = array();
+			$queue = new \Register\Queue();
+			$parameters = array();
 
-            if (!empty($_REQUEST['status'])) {
+			if (!empty($_REQUEST['status'])) {
 				if (! $queue->validStatus($_REQUEST['status'])) $this->error("Invalid status");
 				else $parameters['status'] = $_REQUEST['status'];
 			}
@@ -1516,35 +1516,35 @@
 			$response = new \APIResponse();
 			$response->addElement('registration',$pendingCustomers);
 			$response->print();
-        }
+		}
 
 		/** @apiMethod getPendingRegistration()
 		 * Get a pending registration by login
 		 * @param login The login of the pending registration to retrieve
 		 */
-        public function getPendingRegistration() {
+		public function getPendingRegistration() {
 			$this->requirePrivilege("manage customers");
-            $queue = new \Register\Queue();
-            $parameters = array();
+			$queue = new \Register\Queue();
+			$parameters = array();
 
-            if (empty($_REQUEST['login'])) $this->error("login required");
+			if (empty($_REQUEST['login'])) $this->error("login required");
 			if (! $queue->validCode($_REQUEST['login'])) $this->error("invalid login");
 			if (! $queue->get($_REQUEST['login'])) $this->error("Registration not found");
 
 			$response = new \APIResponse();
 			$response->addElement('registration',$queue);
 			$response->print();
-        }
+		}
 
 		/** @apiMethod getRegistrationVerificationURL()
-         * Get the registration verification URL for a customer
-         * @param login The login of the customer to get the verification URL for
-         */
-        public function getRegistrationVerificationURL() {
+		 * Get the registration verification URL for a customer
+		 * @param login The login of the customer to get the verification URL for
+		 */
+		public function getRegistrationVerificationURL() {
 			$this->requirePrivilege("manage customers");
 
 			$person = new \Register\Customer();
-            if (empty($_REQUEST['login'])) $this->error("login required");
+			if (empty($_REQUEST['login'])) $this->error("login required");
 			if (! $person->validCode($_REQUEST['login'])) $this->error("invalid login");
 			if (! $person->get($_REQUEST['login'])) $this->notFound("Registration not found");
 
@@ -1552,18 +1552,18 @@
 			$response->addElement('url',"/_register/new_customer?method=verify&login=".$person->code."&access=".$person->validationKey());
 			if ($person->error()) $this->error($person->error());
 			$response->print();
-        }
+		}
 
 		/** @apiMethod getEmailValidationURL()
-         * Get the email validation URL for a customer
-         * @param login The login of the customer to get the validation URL for
-         */
-        public function getEmailValidationURL() {
+		 * Get the email validation URL for a customer
+		 * @param login The login of the customer to get the validation URL for
+		 */
+		public function getEmailValidationURL() {
 			$this->requirePrivilege("manage customers");
-            $person = new \Register\Customer();
-            $parameters = array();
+			$person = new \Register\Customer();
+			$parameters = array();
 
-            if (empty($_REQUEST['login'])) $this->error("login required");
+			if (empty($_REQUEST['login'])) $this->error("login required");
 			if (! $person->validCode($_REQUEST['login'])) $this->error("invalid login");
 			if (! $person->get($_REQUEST['login'])) $this->notFound("Registration not found");
 
@@ -1571,17 +1571,17 @@
 			$response->addElement('url',"/_register/validate?login=".$person->code."&validation_key=".$person->validationKey());
 			if ($person->error()) $this->error($person->error());
 			$response->print();
-        }
+		}
 
 		/** @apiMethod getPasswordResetURL()
-         * Get the password reset URL for a customer
-         * @param login The login of the customer to get the password reset URL for
-         */
-        public function getPasswordResetURL() {
+		 * Get the password reset URL for a customer
+		 * @param login The login of the customer to get the password reset URL for
+		 */
+		public function getPasswordResetURL() {
 			$this->requirePrivilege("manage customers");
-            $person = new \Register\Customer();
+			$person = new \Register\Customer();
 
-            if (empty($_REQUEST['login'])) $this->error("login required");
+			if (empty($_REQUEST['login'])) $this->error("login required");
 			if (! $person->validCode($_REQUEST['login'])) $this->error("invalid login");
 			if (! $person->get($_REQUEST['login'])) $this->notFound("Registration not found");
 			$key = $person->resetKey();
@@ -1592,223 +1592,223 @@
 			$response->addElement('url',"/_register/reset_password?token=$key");
 			if ($person->error()) $this->error($person->error());
 			$response->print();
-        }
+		}
 
 
-        /** @apiMethod setupTOTP()
-         * Setup TOTP for the current user
-         * @param customer_id The ID of the customer to setup TOTP for
-         */
-        public function setupTOTP() {
-            $this->requirePrivilege("time-based password administrator");
+		/** @apiMethod setupTOTP()
+		 * Setup TOTP for the current user
+		 * @param customer_id The ID of the customer to setup TOTP for
+		 */
+		public function setupTOTP() {
+			$this->requirePrivilege("time-based password administrator");
 
-            if (empty($_REQUEST['customer_id'])) $this->incompleteRequest("customer_id required");
-            if (!is_numeric($_REQUEST['customer_id'])) $this->invalidRequest("Invalid customer_id format");
+			if (empty($_REQUEST['customer_id'])) $this->incompleteRequest("customer_id required");
+			if (!is_numeric($_REQUEST['customer_id'])) $this->invalidRequest("Invalid customer_id format");
 
-            // Check if TOTP is already set up
-            $customer = new \Register\Customer($_REQUEST['customer_id']);
-            if ($customer->error()) $this->error($customer->error());
-            if (!$customer->id) $this->notFound("Customer not found");
+			// Check if TOTP is already set up
+			$customer = new \Register\Customer($_REQUEST['customer_id']);
+			if ($customer->error()) $this->error($customer->error());
+			if (!$customer->id) $this->notFound("Customer not found");
 
-            if (!empty($customer->otp_secret_key())) {
-                $this->invalidRequest("TOTP is already set up for this account");
-            }
+			if (!empty($customer->otp_secret_key())) {
+				$this->invalidRequest("TOTP is already set up for this account");
+			}
 
-            // Create new TOTP instance
-            $tfa = new \Register\AuthenticationService\TwoFactorAuth(
-                null, 
-                $customer->code,
-                $GLOBALS['_config']->site->hostname
-            );
+			// Create new TOTP instance
+			$tfa = new \Register\AuthenticationService\TwoFactorAuth(
+				null, 
+				$customer->code,
+				$GLOBALS['_config']->site->hostname
+			);
 
-            // Generate new secret and store it
-            $secret = $tfa->getSecret();
-            $result = $customer->update(array(
-                'secret_key' => $secret,
-                'time_based_password' => 1
-            ));
-            if (!$result) $this->error("Failed to store TOTP secret");
+			// Generate new secret and store it
+			$secret = $tfa->getSecret();
+			$result = $customer->update(array(
+				'secret_key' => $secret,
+				'time_based_password' => 1
+			));
+			if (!$result) $this->error("Failed to store TOTP secret");
 
-            // Generate QR code
-            $qrCode = $tfa->getQRCodeImage();
+			// Generate QR code
+			$qrCode = $tfa->getQRCodeImage();
 
-            // Generate backup codes
-            $customer->deleteAllBackupCodes();
-            $backupCodes = $customer->generateBackupCodes();
+			// Generate backup codes
+			$customer->deleteAllBackupCodes();
+			$backupCodes = $customer->generateBackupCodes();
 
-            // Audit the setup
-            $customer->auditRecord('OTP_SETUP', 'TOTP setup initiated via API', $GLOBALS['_SESSION_']->customer->id);
+			// Audit the setup
+			$customer->auditRecord('OTP_SETUP', 'TOTP setup initiated via API', $GLOBALS['_SESSION_']->customer->id);
 
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('secret', $secret);
-            $response->addElement('qr_code', $qrCode);
-            $response->addElement('backup_codes', $backupCodes);
-            $response->print();
-        }
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('secret', $secret);
+			$response->addElement('qr_code', $qrCode);
+			$response->addElement('backup_codes', $backupCodes);
+			$response->print();
+		}
 
-        /** @apiMethod verifyTOTP()
-         * Verify TOTP code
-         * @param customer_id The ID of the customer to verify TOTP for
+		/** @apiMethod verifyTOTP()
+		 * Verify TOTP code
+		 * @param customer_id The ID of the customer to verify TOTP for
 		 * @param code The TOTP code to verify
-         */
-        public function verifyTOTP() {
-            $this->requirePrivilege("time-based password administrator");
+		 */
+		public function verifyTOTP() {
+			$this->requirePrivilege("time-based password administrator");
 
-            if (empty($_REQUEST['customer_id'])) $this->incompleteRequest("customer_id required");
-            if (!is_numeric($_REQUEST['customer_id'])) $this->invalidRequest("Invalid customer_id format");
-            if (empty($_REQUEST['code'])) $this->incompleteRequest("code required");
-            if (!preg_match('/^[0-9]{6}$/', $_REQUEST['code'])) $this->invalidRequest("Invalid code format");
+			if (empty($_REQUEST['customer_id'])) $this->incompleteRequest("customer_id required");
+			if (!is_numeric($_REQUEST['customer_id'])) $this->invalidRequest("Invalid customer_id format");
+			if (empty($_REQUEST['code'])) $this->incompleteRequest("code required");
+			if (!preg_match('/^[0-9]{6}$/', $_REQUEST['code'])) $this->invalidRequest("Invalid code format");
 
-            $customer = new \Register\Customer($_REQUEST['customer_id']);
-            if ($customer->error()) $this->error($customer->error());
-            if (!$customer->id) $this->notFound("Customer not found");
+			$customer = new \Register\Customer($_REQUEST['customer_id']);
+			if ($customer->error()) $this->error($customer->error());
+			if (!$customer->id) $this->notFound("Customer not found");
 
-            if (empty($customer->otp_secret_key())) {
-                $this->invalidRequest("TOTP is not set up for this account");
-            }
+			if (empty($customer->otp_secret_key())) {
+				$this->invalidRequest("TOTP is not set up for this account");
+			}
 
-            // Get stored secret and verify code
-            $tfa = new \Register\AuthenticationService\TwoFactorAuth(
-                $customer->otp_secret_key(),
-                $customer->code,
-                $GLOBALS['_config']->site->hostname
-            );
+			// Get stored secret and verify code
+			$tfa = new \Register\AuthenticationService\TwoFactorAuth(
+				$customer->otp_secret_key(),
+				$customer->code,
+				$GLOBALS['_config']->site->hostname
+			);
 
-            if ($tfa->verifyCode($_REQUEST['code'])) {
-                // Update session state if verifying for current user
-                if ($customer->id == $GLOBALS['_SESSION_']->customer->id) {
-                    $GLOBALS['_SESSION_']->setOTPVerified(true);
-                }
-                
-                // Audit successful verification
-                $customer->auditRecord('OTP_VERIFIED', 'TOTP code verified via API', $GLOBALS['_SESSION_']->customer->id);
+			if ($tfa->verifyCode($_REQUEST['code'])) {
+				// Update session state if verifying for current user
+				if ($customer->id == $GLOBALS['_SESSION_']->customer->id) {
+					$GLOBALS['_SESSION_']->setOTPVerified(true);
+				}
+				
+				// Audit successful verification
+				$customer->auditRecord('OTP_VERIFIED', 'TOTP code verified via API', $GLOBALS['_SESSION_']->customer->id);
 
-                $response = new \APIResponse();
-                $response->success(true);
-                $response->print();
-            }
-            else {
-                $this->auth_failed("invalid_code", "Invalid verification code");
-            }
-        }
+				$response = new \APIResponse();
+				$response->success(true);
+				$response->print();
+			}
+			else {
+				$this->auth_failed("invalid_code", "Invalid verification code");
+			}
+		}
 
-        /** @apiMethod getBackupCodes()
-         * Get backup codes for the current user
-         * @param customer_id The ID of the customer to get backup codes for
-         */
-        public function getBackupCodes() {
-            $this->requirePrivilege("time-based password administrator");
+		/** @apiMethod getBackupCodes()
+		 * Get backup codes for the current user
+		 * @param customer_id The ID of the customer to get backup codes for
+		 */
+		public function getBackupCodes() {
+			$this->requirePrivilege("time-based password administrator");
 
-            if (empty($_REQUEST['customer_id'])) $this->incompleteRequest("customer_id required");
-            if (!is_numeric($_REQUEST['customer_id'])) $this->invalidRequest("Invalid customer_id format");
+			if (empty($_REQUEST['customer_id'])) $this->incompleteRequest("customer_id required");
+			if (!is_numeric($_REQUEST['customer_id'])) $this->invalidRequest("Invalid customer_id format");
 
-            $customer = new \Register\Customer($_REQUEST['customer_id']);
-            if ($customer->error()) $this->error($customer->error());
-            if (!$customer->id) $this->notFound("Customer not found");
+			$customer = new \Register\Customer($_REQUEST['customer_id']);
+			if ($customer->error()) $this->error($customer->error());
+			if (!$customer->id) $this->notFound("Customer not found");
 
-            if (empty($customer->otp_secret_key())) {
-                $this->invalidRequest("TOTP is not set up for this account");
-            }
+			if (empty($customer->otp_secret_key())) {
+				$this->invalidRequest("TOTP is not set up for this account");
+			}
 
-            $codes = $customer->getAllBackupCodes();
-            if ($customer->error()) $this->error($customer->error());
+			$codes = $customer->getAllBackupCodes();
+			if ($customer->error()) $this->error($customer->error());
 
-            // Audit the backup codes access
-            $customer->auditRecord('OTP_BACKUP_CODES_ACCESSED', 'Backup codes retrieved via API', $GLOBALS['_SESSION_']->customer->id);
+			// Audit the backup codes access
+			$customer->auditRecord('OTP_BACKUP_CODES_ACCESSED', 'Backup codes retrieved via API', $GLOBALS['_SESSION_']->customer->id);
 
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('backup_codes', $codes);
-            $response->print();
-        }
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('backup_codes', $codes);
+			$response->print();
+		}
 
-        /** @apiMethod resetTOTP()
-         * Reset TOTP setup for the current user
+		/** @apiMethod resetTOTP()
+		 * Reset TOTP setup for the current user
 		 * @param customer_id The ID of the customer to reset TOTP for
-         */
-        public function resetTOTP() {
-            $this->requirePrivilege("time-based password administrator");
+		 */
+		public function resetTOTP() {
+			$this->requirePrivilege("time-based password administrator");
 
-            if (empty($_REQUEST['customer_id'])) $this->incompleteRequest("customer_id required");
-            if (!is_numeric($_REQUEST['customer_id'])) $this->invalidRequest("Invalid customer_id format");
+			if (empty($_REQUEST['customer_id'])) $this->incompleteRequest("customer_id required");
+			if (!is_numeric($_REQUEST['customer_id'])) $this->invalidRequest("Invalid customer_id format");
 
-            $customer = new \Register\Customer($_REQUEST['customer_id']);
-            if ($customer->error()) $this->error($customer->error());
-            if (!$customer->id) $this->notFound("Customer not found");
+			$customer = new \Register\Customer($_REQUEST['customer_id']);
+			if ($customer->error()) $this->error($customer->error());
+			if (!$customer->id) $this->notFound("Customer not found");
 
-            if (empty($customer->otp_secret_key())) {
-                $this->invalidRequest("TOTP is not set up for this account");
-            }
+			if (empty($customer->otp_secret_key())) {
+				$this->invalidRequest("TOTP is not set up for this account");
+			}
 
-            // Check if TOTP is required by role or organization
-            if ($customer->requiresOTP()) {
-                $roles = $customer->roles();
-                $requiresTOTP = false;
-                $rolesRequiringTOTP = [];
-                foreach ($roles as $role) {
-                    if ($role->time_based_password) {
-                        $requiresTOTP = true;
-                        $rolesRequiringTOTP[] = $role->name;
-                    }
-                }
-                
-                if ($requiresTOTP) {
-                    $this->deny("Cannot disable TOTP - required by roles: " . implode(", ", $rolesRequiringTOTP));
-                }
-                elseif ($customer->organization()->time_based_password) {
-                    $this->deny("Cannot disable TOTP - required by organization: " . $customer->organization()->name);
-                }
-            }
+			// Check if TOTP is required by role or organization
+			if ($customer->requiresOTP()) {
+				$roles = $customer->roles();
+				$requiresTOTP = false;
+				$rolesRequiringTOTP = [];
+				foreach ($roles as $role) {
+					if ($role->time_based_password) {
+						$requiresTOTP = true;
+						$rolesRequiringTOTP[] = $role->name;
+					}
+				}
+				
+				if ($requiresTOTP) {
+					$this->deny("Cannot disable TOTP - required by roles: " . implode(", ", $rolesRequiringTOTP));
+				}
+				elseif ($customer->organization()->time_based_password) {
+					$this->deny("Cannot disable TOTP - required by organization: " . $customer->organization()->name);
+				}
+			}
 
-            // Reset TOTP setup
-            if (!$customer->resetOTPSetup()) {
-                $this->error($customer->error() ?: "Failed to reset TOTP setup");
-            }
+			// Reset TOTP setup
+			if (!$customer->resetOTPSetup()) {
+				$this->error($customer->error() ?: "Failed to reset TOTP setup");
+			}
 
-            // Clear session OTP verification if resetting current user
-            if ($customer->id == $GLOBALS['_SESSION_']->customer->id) {
-                $GLOBALS['_SESSION_']->setOTPVerified(false);
-            }
+			// Clear session OTP verification if resetting current user
+			if ($customer->id == $GLOBALS['_SESSION_']->customer->id) {
+				$GLOBALS['_SESSION_']->setOTPVerified(false);
+			}
 
-            // Generate new backup codes
-            $customer->deleteAllBackupCodes();
-            $newCodes = $customer->generateBackupCodes();
+			// Generate new backup codes
+			$customer->deleteAllBackupCodes();
+			$newCodes = $customer->generateBackupCodes();
 
-            // Audit the reset
-            $customer->auditRecord('OTP_RESET', 'TOTP configuration reset via API', $GLOBALS['_SESSION_']->customer->id);
+			// Audit the reset
+			$customer->auditRecord('OTP_RESET', 'TOTP configuration reset via API', $GLOBALS['_SESSION_']->customer->id);
 
-            $response = new \APIResponse();
-            $response->success(true);
-            $response->addElement('backup_codes', $newCodes);
-            $response->print();
-        }
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('backup_codes', $newCodes);
+			$response->print();
+		}
 
-        /** @apiMethod purgeUserSessions(start date)
-         * @brief Purge user sessions prior to a given date
-         * @return void
-         */
-        public function purgeUserSessions() {
-            $this->requirePrivilege("manage customers");
+		/** @apiMethod purgeUserSessions(start date)
+		 * @brief Purge user sessions prior to a given date
+		 * @return void
+		 */
+		public function purgeUserSessions() {
+			$this->requirePrivilege("manage customers");
 
-            $_REQUEST['date_start'] = get_mysql_date($_REQUEST['date_start']);
-            if (empty($_REQUEST['date_start'])) $_REQUEST['date_start'] = date('Y-m-d',strtotime('-6 months'));
+			$_REQUEST['date_start'] = get_mysql_date($_REQUEST['date_start']);
+			if (empty($_REQUEST['date_start'])) $_REQUEST['date_start'] = date('Y-m-d',strtotime('-6 months'));
 
-            // Find User
-            if ($_REQUEST['customer_id']) {
-                $customer = new \Register\Customer($_REQUEST['customer_id']);
-                if ($customer->error()) $this->error("Error loading customer: ".$customer->error());
-                if (! $customer->exists()) $this->notFound("Customer not found");
-            }
-            elseif ($_REQUEST['login']) {
-                $customer = new \Register\Customer();
-                if (! $customer->get($_REQUEST['login'])) $this->notFound("Customer not found");
-                if ($customer->error()) $this->error("Error loading customer: ".$customer->error());
-            }
+			// Find User
+			if ($_REQUEST['customer_id']) {
+				$customer = new \Register\Customer($_REQUEST['customer_id']);
+				if ($customer->error()) $this->error("Error loading customer: ".$customer->error());
+				if (! $customer->exists()) $this->notFound("Customer not found");
+			}
+			elseif ($_REQUEST['login']) {
+				$customer = new \Register\Customer();
+				if (! $customer->get($_REQUEST['login'])) $this->notFound("Customer not found");
+				if ($customer->error()) $this->error("Error loading customer: ".$customer->error());
+			}
 
-            $customer->purgeAgingSessions();
+			$customer->purgeAgingSessions();
 
-        }
+		}
 
 		public function _methods() {
 			$queue = new \Register\Queue();
@@ -1846,54 +1846,54 @@
 						)
 					)
 				),
-                'addCustomer'    => array(
-                    'description'	=> 'Add a new customer',
-                    'authentication_required'	=> true,
-                    'token_required' 			=> true,
-                    'privilege_required' => 'manage customers',
-                    'return_element' => 'customer',
-                    'return_type' => 'Register::Customer',
-                    'parameters'	=> array(
-                        'organization_code'	=> array(
-                            'description'	=> 'Organization Code',
-                            'prompt' => 'Organization Code',
-                            'validation_method'	=> 'Register::Organization::validCode()'
-                        ),
-                        'first_name'	=> array(
-                            'description'	=> 'Customer First Name',
-                            'prompt' => 'Customer First Name',
-                            'validation_method' => 'Register::Customer::validFirstName()'
-                        ),
-                        'last_name'		=> array(
-                            'description'	=> 'Customer Last Name',
-                            'prompt' => 'Customer Last Name',
-                            'validation_method' => 'Register::Customer::validLastName()'
-                        ),
-                        'code'			=> array(
-                            'description'	=> 'Customer Login',
-                            'prompt' => 'Customer Login',
-                            'validation_method' => 'Register::Customer::validLogin()'
-                        ),
-                        'password'  	=> array(
-                            'description'	=> 'Customer Password',
-                            'prompt' => 'Customer Password',
-                            'validation_method' => 'Register::Customer::validPassword()'
-                        ),
-                        'automation'	=> array(
-                            'description'	=> 'Human or Machine.  True for machine.',
-                            'type'			=> 'radio',
-                            'options' => array(
-                                'true',
-                                'false'
-                            )
-                        ),
-                        'timezone'		=> array(
-                            'description'	=> 'Customer Timezone.  See https://www.php.net/manual/en/timezones.php for valid list.',
-                            'prompt' => 'Customer Timezone',
-                            'validation_method' => 'Porkchop::validTimezone()'
-                        )
-                    )
-                ),
+				'addCustomer'    => array(
+					'description'	=> 'Add a new customer',
+					'authentication_required'	=> true,
+					'token_required' 			=> true,
+					'privilege_required' => 'manage customers',
+					'return_element' => 'customer',
+					'return_type' => 'Register::Customer',
+					'parameters'	=> array(
+						'organization_code'	=> array(
+							'description'	=> 'Organization Code',
+							'prompt' => 'Organization Code',
+							'validation_method'	=> 'Register::Organization::validCode()'
+						),
+						'first_name'	=> array(
+							'description'	=> 'Customer First Name',
+							'prompt' => 'Customer First Name',
+							'validation_method' => 'Register::Customer::validFirstName()'
+						),
+						'last_name'		=> array(
+							'description'	=> 'Customer Last Name',
+							'prompt' => 'Customer Last Name',
+							'validation_method' => 'Register::Customer::validLastName()'
+						),
+						'code'			=> array(
+							'description'	=> 'Customer Login',
+							'prompt' => 'Customer Login',
+							'validation_method' => 'Register::Customer::validLogin()'
+						),
+						'password'  	=> array(
+							'description'	=> 'Customer Password',
+							'prompt' => 'Customer Password',
+							'validation_method' => 'Register::Customer::validPassword()'
+						),
+						'automation'	=> array(
+							'description'	=> 'Human or Machine.  True for machine.',
+							'type'			=> 'radio',
+							'options' => array(
+								'true',
+								'false'
+							)
+						),
+						'timezone'		=> array(
+							'description'	=> 'Customer Timezone.  See https://www.php.net/manual/en/timezones.php for valid list.',
+							'prompt' => 'Customer Timezone',
+							'validation_method' => 'Porkchop::validTimezone()'
+						)
+					)
+				),
 				'getCustomer'	=> array(
 					'description'	=> 'Get information about a customer',
 					'path' => '/api/register/getCustomer/{code}',
@@ -2010,29 +2010,29 @@
 						)
 					)
 				),
-                'addOrganization'    => array(
-                    'description'    => 'Create a new organization',
-                    'path'            => '/api/register/addOrganization',
-                    'authentication_required'    => true,
-                    'token_required' => true,
-                    'privilege_required' => 'manage customers',
-                    'return_element'    => 'organization',
-                    'return_type' => 'Register::Organization',
-                    'parameters'    => array(
-                        'code'    => array(
-                            'description'    => 'Organization Code',
-                            'prompt'        => 'Organization Code',
-                            'required'        => false,
-                            'validation_method'    => 'Register::Organization::validCode()'
-                        ),
-                        'name'    => array(
-                            'description'    => 'Organization Name',
-                            'prompt'        => 'Organization Name',
-                            'required'        => true,
-                            'validation_method'    => 'Register::Organization::validName()'
-                        )
-                    )
-                ),
+				'addOrganization'    => array(
+					'description'    => 'Create a new organization',
+					'path'            => '/api/register/addOrganization',
+					'authentication_required'    => true,
+					'token_required' => true,
+					'privilege_required' => 'manage customers',
+					'return_element'    => 'organization',
+					'return_type' => 'Register::Organization',
+					'parameters'    => array(
+						'code'    => array(
+							'description'    => 'Organization Code',
+							'prompt'        => 'Organization Code',
+							'required'        => false,
+							'validation_method'    => 'Register::Organization::validCode()'
+						),
+						'name'    => array(
+							'description'    => 'Organization Name',
+							'prompt'        => 'Organization Name',
+							'required'        => true,
+							'validation_method'    => 'Register::Organization::validName()'
+						)
+					)
+				),
 				'getOrganization' => array(
 					'description'	=> 'Get information about an organization',
 					'path'			=> '/api/register/getOrganization/{code}',
@@ -2194,72 +2194,72 @@
 						)
 					)
 				),
-                'addRole'   => array(
-                    'description'	=> 'Create a new role',
-                    'path'			=> '/api/register/addRole',
-                    'authentication_required'	=> true,
-                    'token_required' => true,
-                    'privilege_required' => 'manage customers',
-                    'return_element'	=> 'role',
-                    'return_type' => 'Register::Role',
-                    'parameters'	=> array(
-                        'name'	=> array(
-                            'description'	=> 'Role Name',
-                            'prompt'		=> 'Role Name',
-                            'required'		=> true,
-                            'validation_method'	=> 'Register::Role::validCode()'
-                        ),
-                        'description'	=> array(
-                            'description'	=> 'Role Description',
-                            'prompt'		=> 'Role Description',
-                            'required'		=> true,
-                            'validation_method'	=> 'Register::Role::validDescription()'
-                        ),
-                        'time_based_password' => array(
-                            'description'   => 'Require Time-Based Password for this Role',
-                            'type'          => 'radio',
-                            'options'       => array(
-                                'true',
-                                'false'
-                            )
-                        )
-                    )
-                ),
-                'addPrivilege'	=> array(
-                    'description'	=> 'Create a privilege (or return existing if name exists)',
-                    'authentication_required'	=> true,
-                    'token_required' => true,
-                    'privilege_required'	=> 'manage privileges',
-                    'return_element'	=> 'privilege',
-                    'return_type'	=> 'Register::Privilege',
-                    'parameters'	=> array(
-                        'name'	=> array(
-                            'description'	=> 'Privilege name',
-                            'required' => true
-                        ),
-                        'description'	=> array(
-                            'description'	=> 'Privilege description'
-                        ),
-                        'module'	=> array(
-                            'description'	=> 'Module (e.g. Unspecified)'
-                        ),
-                    ),
-                ),
-                'getRole'    => array(
-                    'description'	=> 'Get information about a role',
-                    'path'			=> '/api/register/getRole/{code}',
-                    'authentication_required'	=> true,
-                    'privilege_required' => 'manage customers',
-                    'return_element'	=> 'role',
-                    'return_type' => 'Register::Role',
-                    'parameters'	=> array(
-                        'code'	=> array(
-                            'description'	=> 'Role Name',
-                            'prompt'		=> 'Role Name',
-                            'validation_method'	=> 'Register::Role::validCode()'
-                        )
-                    )
-                ),
+				'addRole'   => array(
+					'description'	=> 'Create a new role',
+					'path'			=> '/api/register/addRole',
+					'authentication_required'	=> true,
+					'token_required' => true,
+					'privilege_required' => 'manage customers',
+					'return_element'	=> 'role',
+					'return_type' => 'Register::Role',
+					'parameters'	=> array(
+						'name'	=> array(
+							'description'	=> 'Role Name',
+							'prompt'		=> 'Role Name',
+							'required'		=> true,
+							'validation_method'	=> 'Register::Role::validCode()'
+						),
+						'description'	=> array(
+							'description'	=> 'Role Description',
+							'prompt'		=> 'Role Description',
+							'required'		=> true,
+							'validation_method'	=> 'Register::Role::validDescription()'
+						),
+						'time_based_password' => array(
+							'description'   => 'Require Time-Based Password for this Role',
+							'type'          => 'radio',
+							'options'       => array(
+								'true',
+								'false'
+							)
+						)
+					)
+				),
+				'addPrivilege'	=> array(
+					'description'	=> 'Create a privilege (or return existing if name exists)',
+					'authentication_required'	=> true,
+					'token_required' => true,
+					'privilege_required'	=> 'manage privileges',
+					'return_element'	=> 'privilege',
+					'return_type'	=> 'Register::Privilege',
+					'parameters'	=> array(
+						'name'	=> array(
+							'description'	=> 'Privilege name',
+							'required' => true
+						),
+						'description'	=> array(
+							'description'	=> 'Privilege description'
+						),
+						'module'	=> array(
+							'description'	=> 'Module (e.g. Unspecified)'
+						),
+					),
+				),
+				'getRole'    => array(
+					'description'	=> 'Get information about a role',
+					'path'			=> '/api/register/getRole/{code}',
+					'authentication_required'	=> true,
+					'privilege_required' => 'manage customers',
+					'return_element'	=> 'role',
+					'return_type' => 'Register::Role',
+					'parameters'	=> array(
+						'code'	=> array(
+							'description'	=> 'Role Name',
+							'prompt'		=> 'Role Name',
+							'validation_method'	=> 'Register::Role::validCode()'
+						)
+					)
+				),
 				'findRoles'	    => array(
 					'description'	=> 'List all roles',
 					'path'			=> '/api/register/findRoles',
@@ -2547,60 +2547,60 @@
 						)
 					)
 				),
-                'expireAgingCustomers' => array(
-                    'description' => 'Expire customers who have exceeded their allowed inactivity period',
-                    'authentication_required' => true,
-                    'privilege_required' => 'manage customers',
-                    'return_element' => 'expired_count',
-                    'return_type' => 'integer',
-                    'parameters' => array()
-                ),
-                'purgeUserSessions' => array(
-                    'description' => 'Purge user sessions prior to a given date',
-                    'authentication_required' => true,
-                    'privilege_required' => 'manage customers',
-                    'return_element' => 'success',
-                    'return_type' => 'boolean',
-                    'parameters' => array(
-                        'date_start' => array(
-                            'required' => false,
-                            'type' => 'date',
-                            'description' => 'Purge sessions prior to this date (YYYY-MM-DD). Defaults to 6 months ago if not provided.',
-                            'validation_method' => 'Porkchop::validDate()'
-                        ),
-                        'customer_id' => array(
-                            'required' => false,
-                            'type' => 'integer',
-                            'description' => 'ID of the customer whose sessions should be purged. If not provided, sessions for all customers will be purged.'
-                        ),
-                        'login' => array(
-                            'required' => false,
-                            'type' => 'string',
-                            'description' => 'Login of the customer whose sessions should be purged. If not provided, sessions for all customers will be purged.',
-                            'validation_method' => 'Register::Customer::validLogin()'
-                        )
-                    )
-                ),
-                'verifyEmailWithQueue' => array(
-                    'description' => 'Verify user email address and update queue status',
-                    'authentication_required' => false,
-                    'token_required' => false,
-                    'return_element' => 'verified',
-                    'return_type' => 'boolean',
-                    'parameters' => array(
-                        'login' => array(
-                            'required' => true,
-                            'type' => 'string',
-                            'description' => 'Customer login',
-                            'validation_method' => 'Register::Customer::validLogin()'
-                        ),
-                        'access' => array(
-                            'required' => true,
-                            'type' => 'string',
-                            'description' => 'Email verification access key'
-                        )
-                    )
-                )
-            );
+				'expireAgingCustomers' => array(
+					'description' => 'Expire customers who have exceeded their allowed inactivity period',
+					'authentication_required' => true,
+					'privilege_required' => 'manage customers',
+					'return_element' => 'expired_count',
+					'return_type' => 'integer',
+					'parameters' => array()
+				),
+				'purgeUserSessions' => array(
+					'description' => 'Purge user sessions prior to a given date',
+					'authentication_required' => true,
+					'privilege_required' => 'manage customers',
+					'return_element' => 'success',
+					'return_type' => 'boolean',
+					'parameters' => array(
+						'date_start' => array(
+							'required' => false,
+							'type' => 'date',
+							'description' => 'Purge sessions prior to this date (YYYY-MM-DD). Defaults to 6 months ago if not provided.',
+							'validation_method' => 'Porkchop::validDate()'
+						),
+						'customer_id' => array(
+							'required' => false,
+							'type' => 'integer',
+							'description' => 'ID of the customer whose sessions should be purged. If not provided, sessions for all customers will be purged.'
+						),
+						'login' => array(
+							'required' => false,
+							'type' => 'string',
+							'description' => 'Login of the customer whose sessions should be purged. If not provided, sessions for all customers will be purged.',
+							'validation_method' => 'Register::Customer::validLogin()'
+						)
+					)
+				),
+				'verifyEmailWithQueue' => array(
+					'description' => 'Verify user email address and update queue status',
+					'authentication_required' => false,
+					'token_required' => false,
+					'return_element' => 'verified',
+					'return_type' => 'boolean',
+					'parameters' => array(
+						'login' => array(
+							'required' => true,
+							'type' => 'string',
+							'description' => 'Customer login',
+							'validation_method' => 'Register::Customer::validLogin()'
+						),
+						'access' => array(
+							'required' => true,
+							'type' => 'string',
+							'description' => 'Email verification access key'
+						)
+					)
+				)
+			);
 		}
 	}
