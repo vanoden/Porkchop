@@ -76,6 +76,10 @@
 
 			if ($this->version() < 2) {
 				app_log("Upgrading ".$this->module." schema to version 2",'notice',__FILE__,__LINE__);
+
+				// Initialize Database Service
+				$database = new \Database\Service();
+
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `form_versions` (
 						`id` int(10) NOT NULL AUTO_INCREMENT,
@@ -95,13 +99,18 @@
 					return false;
 				}
 
-				$alter_table_query = "
-					ALTER TABLE `form_questions`
-					DROP FOREIGN KEY `fk_form_question`
-				";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->SQLError($this->error());
-					return false;
+				// See if fk_form_question exists before trying to drop it, since some users may have already manually altered their tables
+				$schema = new \Database\Schema();
+				$table = $schema->table('form_questions');
+				if ($table->has_constraint('fk_form_question')) {
+					$alter_table_query = "
+						ALTER TABLE `form_questions`
+						DROP FOREIGN KEY `fk_form_question`
+					";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->SQLError($this->error());
+						return false;
+					}
 				}
 
 				$alter_table_query = "
