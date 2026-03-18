@@ -2103,6 +2103,23 @@
 						),
 					)
 				),
+				'searchOrganizationsByName' => array(
+					'description'	=> 'Search organizations by name',
+					'path'			=> '/api/register/searchOrganizationsByName',
+					'authentication_required'	=> true,
+					'privilege_required' => 'manage customers',
+					'return_element'	=> 'organization',
+					'return_type'		=> 'Register::Organization',
+					'hidden' 		=> true,
+					'parameters'	=> array(
+						'name' => array(
+							'description' => 'Organization Name',
+							'prompt' => 'Organization Name',
+							'required' => true,
+							'validation_method' => 'Register::Organization::validName()'
+						)
+					)
+				),
 				'findOrganizationOwnedProducts'	=> array(
 					'description'		=> 'Find assignable products and services associated with this organization',
 					'path'				=> '/api/register/findOrganizationOwnedProducts',
