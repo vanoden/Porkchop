@@ -2383,6 +2383,22 @@
 						)
 					)
 				),
+				'getRegistrationVerificationURL' => array(
+					'description'	=> 'Get URL for verifying a customer\'s email address during registration',
+					'authentication_required'	=> true,
+					'privilege_required' => 'manage customers',
+					'return_element'	=> 'url',
+					'return_type' => 'string',
+					'hidden' => true,
+					'parameters'	=> array(
+						'login'	=> array(
+							'description'	=> 'Customer login',
+							'prompt'		=> 'Customer login',
+							'required' => true,
+							'validation_method'	=> 'Register::Customer::validCode()'
+						)
+					)
+				),
 				'acceptTermsOfUse'	=> array(
 					'description' => 'Decline a terms of use agreement',
 					'authentication_required' => true,
