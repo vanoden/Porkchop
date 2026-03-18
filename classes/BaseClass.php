@@ -192,6 +192,13 @@ class BaseClass {
 	}
 
 	/**
+	 * Backward-compatible alias used by legacy model/list code.
+	 */
+	public function clearErrors() {
+		$this->clearError();
+	}
+
+	/**
 	 * Get the list of valid types
 	 * 
 	 * @return array Array of valid types

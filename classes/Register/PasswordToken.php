@@ -90,6 +90,35 @@
 			else return null;
 		}
 
+		/**
+		 * Lookup token without deleting it.
+		 * Useful so the token is only consumed after session elevation succeeds.
+		 */
+		public function peek($code) {
+			$get_record_query = "
+				SELECT	person_id
+				FROM	register_password_tokens
+				WHERE	code = ?
+				AND		date_expires > sysdate()
+			";
+
+			$rs = $GLOBALS['_database']->Execute(
+				$get_record_query,
+				array($code)
+			);
+
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+
+			if ($rs->RecordCount()) {
+				list($person_id) = $rs->FetchRow();
+				return $person_id;
+			}
+			return null;
+		}
+
 		public function getKey($person_id) {
 			$database = new \Database\Service();
 			$get_object_query = "
