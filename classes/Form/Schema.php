@@ -112,6 +112,16 @@
 						return false;
 					}
 				}
+				elseif ($table->has_constraint('form_questions_ibfk_1')) {
+					$alter_table_query = "
+						ALTER TABLE `form_questions`
+						DROP FOREIGN KEY `form_questions_ibfk_1`
+					";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->SQLError($this->error());
+						return false;
+					}
+				}
 
 				$alter_table_query = "
 					ALTER TABLE `form_questions`
