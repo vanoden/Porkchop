@@ -1,10 +1,12 @@
 <?php
-	/* Base Class for Site APIs */
+	/** @class API
+	 * Abstract Base Class for Site APIs
+	 */
 	abstract class API {
-		protected $_error;
-		protected $response;
-		protected $module;
-		protected $_admin_role = 'administrator';
+		protected $_error;							// Error message, if any
+		protected $response;						// API HTTP Response object
+		protected $module;							// Module of the API being called
+		protected $_admin_role = 'administrator';	// Role required to access admin interface of this API
 		protected $_default_home = '/';
 		protected $_schema;
 		protected $_version;
@@ -13,6 +15,7 @@
 		protected $_communication;
 		private $page;
 
+		/** @constructor */
 		public function __construct() {
 			if (!empty($_REQUEST["method"])) {
 				$counterKey = "api.".$this->_name.".".$_REQUEST["method"];
@@ -27,10 +30,11 @@
 			$this->_communication = new \Site\APICommunication();
 		}
 
-		/********************************************/
-		/* Show be overridden by child, but return	*/
-		/* an array if not.							*/
-		/********************************************/
+		/** @method public _methods()
+		*	Show be overridden by child, but return
+		*	an array if not.
+		*	@return array of method definitions, with method name as key and definition as value.
+		*/
 		public function _methods() {
 			return array();
 		}
@@ -877,7 +881,7 @@
 					continue;
 				}
 				//$form .= "Priv req: ".$method->privilege_required." Customer: ".print_r($GLOBALS['_SESSION_']->customer,true)."\n";
-				if ($settings["privilege_required"] && !$GLOBALS['_SESSION_']->customer->can($settings["privilege_required"])) {
+				if (!empty($settings["privilege_required"]) && !$GLOBALS['_SESSION_']->customer->can($settings["privilege_required"])) {
 					continue;
 				}
 				
@@ -895,6 +899,7 @@
 							continue;
 						}
 						app_log("Defining API Method ".$form_name." with return type ".$class_name,'debug',__FILE__,__LINE__);
+						if ($class_name == '\boolean') continue;
 						$class = new \ReflectionClass($class_name);
 						$definition_object['paths'][$settings['path']] = array();
 						if (!array_key_exists($settings['return_type'],$components)) {
@@ -920,16 +925,35 @@
 								"properties" => $properties,
 							);
 						}
-						if (empty($settings['verb'])) {
-							if (preg_match('/^get/i',$form_name)) $settings['verb'] = 'get';
-							else $settings['verb'] = 'post';
+						if (!empty($settings['verb']) && !is_array($settings['verb'])) {
+							$settings['verb'] = array(strtolower($settings['verb']));
 						}
-						else ($settings['verb'] = strtolower($settings['verb']));
-						if ($settings['verb'] == 'get') {
+						elseif (empty($settings['verb'])) {
+							$settings['verb'] = array();
+						}
+
+						if (preg_match('/^get/i',$form_name) && !in_array('get',$settings['verb'])) $settings['verb'][] = 'get';
+						else if (preg_match('/^update/i',$form_name) && !in_array('put',$settings['verb'])) $settings['verb'][] = 'put';
+						else if (!in_array('post',$settings['verb'])) $settings['verb'][] = 'post';
+						
+						if (in_array('get',$settings['verb'])) {
+							$parameters = array();
+							foreach ($settings['parameters'] as $name => $options) {
+								$parameter = array(
+									"name" => $name,
+									"in" => "query",
+									"required" => isset($options['required']) && $options['required'] ? true : false,
+									"description" => isset($options['description']) ? $options['description'] : '',
+									"schema" => array(
+										"type" => isset($options['content_type']) ? $options['content_type'] : 'string',
+									),
+								);
+								$parameters[] = $parameter;
+							}
 							$definition_object['paths'][$settings['path']]['get'] = array(
 								"summary" => $settings['description'],
 								"operationId" => $form_name,
-								"parameters" => array(),
+								"parameters" => $parameters,
 								"responses" => array(
 									"200" => array(
 										"description" => "Successful Operation",
@@ -964,7 +988,21 @@
 								),
 							);
 						}
-						elseif ($settings['verb'] == 'post') {
+						elseif (in_array('post',$settings['verb'])) {
+							$parameters = array();
+							$required = array();
+							foreach ($settings['parameters'] as $name => $options) {
+								$parameter = array(
+									$name => array(
+										"type" => isset($options['content_type']) ? $options['content_type'] : 'string',
+									),
+								);
+								if (isset($options['required']) && $options['required']) {
+									$required[] = $name;
+								}
+
+								$parameters[] = $parameter;
+							}
 							$definition_object['paths'][$settings['path']]['post'] = array (
 								"summary" => $settings['description'],
 								"operationId" => $form_name,
@@ -973,7 +1011,8 @@
 										"application/json" => array(
 											"schema" => array(
 												"type" => "object",
-												"properties" => array(),
+												"properties" => $parameters,
+												"required" => $required,
 											),
 										),
 									),
@@ -993,6 +1032,54 @@
 									),
 								),
 							);
+						}
+						elseif (in_array('put',$settings['verb'])) {
+							$parameters = array();
+							$required = array();
+							foreach ($settings['parameters'] as $name => $options) {
+								$parameter = array(
+									$name => array(
+										"type" => isset($options['content_type']) ? $options['content_type'] : 'string',
+									),
+								);
+								if (isset($options['required']) && $options['required']) {
+									$required[] = $name;
+								}
+								$parameters[] = $parameter;
+							}
+							$definition_object['paths'][$settings['path']]['put'] = array(
+								"summary" => $settings['description'],
+								"operationId" => $form_name,
+								"requestBody" => array(
+									"content" => array(
+										"application/json" => array(
+											"schema" => array(
+												"type" => "object",
+												"properties" => $parameters,
+												"required" => $required,
+											),
+										),
+									),
+								),
+								"responses" => array(
+									"200" => array(
+										"description" => "Successful Operation",
+									),
+									"403" => array(
+										"description" => "You are not authorized to access this resource",
+									),
+									"404" => array(
+										"description" => "Instance Not Found Matching Criteria",
+									),
+									"500" => array(
+										"description" => "Internal Server Error",
+									),
+								),
+							);
+						}
+						else {
+							//Skip for now
+							continue;
 						}
 					}
 				}
