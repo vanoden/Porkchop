@@ -14,30 +14,45 @@
 	if (isset($_REQUEST['token']) && $token->validCode($_REQUEST['token'])) {
 		app_log('Auth By Token','debug',__FILE__,__LINE__);
 
-		// Consume Token
-		$customer_id = $token->consume($_REQUEST['token']);
-		if ($token->error()) {
-			app_log("Error in password recovery: ".$token->error(),'error',__FILE__,__LINE__);
-			$page->addError("Error in password recovery.  Admins have been notified.  Please try again later.");
-		} elseif ($customer_id > 0) {
-			$GLOBALS['_SESSION_']->superElevate();
-			// Grab Customer Instance
-			$customer = new \Register\Customer($customer_id);
-			if ($customer->error()) {
-				app_log("Error getting customer: ".$customer->error(),'error',__FILE__,__LINE__);
-				$page->addError("Token error");
-			}
-			elseif(! $customer->id) {
-				app_log("Customer not found!",'notice',__FILE__,__LINE__);
-				$page->addError("Token error");
+		// If session is already elevated, do not treat the token as authoritative.
+		// This avoids showing "token expired" during refresh/reload when elevation already exists.
+		if (!empty($GLOBALS['_SESSION_']) && $GLOBALS['_SESSION_']->superElevated()) {
+			app_log("Session already super-elevated; skipping token validation",'debug',__FILE__,__LINE__);
+		}
+		else {
+			// Lookup token without deleting it yet.
+			// We only "consume" (delete) once session elevation succeeds, otherwise a reload
+			// can strand the user with an already-consumed token.
+			$customer_id = $token->peek($_REQUEST['token']);
+			if ($token->error()) {
+				app_log("Error in password recovery: ".$token->error(),'error',__FILE__,__LINE__);
+				$page->addError("Error in password recovery.  Admins have been notified.  Please try again later.");
+			} elseif ($customer_id > 0) {
+				$GLOBALS['_SESSION_']->superElevate();
+				// Grab Customer Instance
+				$customer = new \Register\Customer($customer_id);
+				if ($customer->error()) {
+					app_log("Error getting customer: ".$customer->error(),'error',__FILE__,__LINE__);
+					$page->addError("Token error");
+				}
+				elseif(! $customer->id) {
+					app_log("Customer not found!",'notice',__FILE__,__LINE__);
+					$page->addError("Token error");
+				} else {
+					// assign a super elevated user session for password reset
+					if ($GLOBALS['_SESSION_']->assign($customer->id, true)) {
+						// Now that elevation succeeded, consume the token (delete it)
+						$token->consume($_REQUEST['token']);
+						app_log("Customer ".$customer->id." logged in by token",'debug',__FILE__,__LINE__);
+					}
+					else {
+						$page->addError("Error in password recovery.  Please try again later.");
+					}
+				}
 			} else {
-                // assign a super elevated user session for password reset
-				$GLOBALS['_SESSION_']->assign($customer->id, true);
-				app_log("Customer ".$customer->id." logged in by token",'debug',__FILE__,__LINE__);
+				$page->addError("Sorry, your recovery token was not recognized or has expired");
+				app_log("Customer not found for token ".$_REQUEST['token'],'info');
 			}
-		} else {
-			$page->addError("Sorry, your recovery token was not recognized or has expired");
-			app_log("Customer not found for token ".$_REQUEST['token'],'info');
 		}
 	}
 	elseif (isset($_REQUEST["password"])) {

@@ -140,28 +140,38 @@ class Event Extends \BaseModel {
 
 	protected function getCallingClass() {
 		$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4);
-		if ($backtrace[1]['class'] == 'Site\AuditLog\Event' || $backtrace[1]['class'] == 'BaseModel') {
-			if ($backtrace[2]['class'] == 'Site\AuditLog\Event' || $backtrace[2]['class'] == 'BaseModel') {
-				if (!empty($backtrace[3]['class'])) return $backtrace[3]['class'];
+		$cls1 = $backtrace[1]['class'] ?? null;
+		$cls2 = $backtrace[2]['class'] ?? null;
+		$cls3 = $backtrace[3]['class'] ?? null;
+
+		if ($cls1 == 'Site\AuditLog\Event' || $cls1 == 'BaseModel') {
+			if ($cls2 == 'Site\AuditLog\Event' || $cls2 == 'BaseModel') {
+				if (!empty($cls3)) return $cls3;
 				return null;
 			}
-			if (!empty($backtrace[2]['class'])) return $backtrace[2]['class'];
+			if (!empty($cls2)) return $cls2;
 			return null;
 		}
-		return isset($backtrace[1]['class']) ? $backtrace[1]['class'] : null;
+		return $cls1;
 	}
 
 	protected function getCallingMethod() {
 		$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4);
-		if ($backtrace[1]['class'] == 'Site\AuditLog\Event' || $backtrace[1]['class'] == 'BaseModel') {
-			if ($backtrace[2]['class'] == 'Site\AuditLog\Event' || $backtrace[2]['class'] == 'BaseModel') {
-				if (!empty($backtrace[3]['function'])) return $backtrace[3]['function'];
+		$cls1 = $backtrace[1]['class'] ?? null;
+		$cls2 = $backtrace[2]['class'] ?? null;
+		$fn3 = $backtrace[3]['function'] ?? null;
+		$fn2 = $backtrace[2]['function'] ?? null;
+		$fn1 = $backtrace[1]['function'] ?? null;
+
+		if ($cls1 == 'Site\AuditLog\Event' || $cls1 == 'BaseModel') {
+			if ($cls2 == 'Site\AuditLog\Event' || $cls2 == 'BaseModel') {
+				if (!empty($fn3)) return $fn3;
 				return null;
 			}
-			if (!empty($backtrace[2]['function'])) return $backtrace[2]['function'];
+			if (!empty($fn2)) return $fn2;
 			return null;
 		}
-		return isset($backtrace[1]['function']) ? $backtrace[1]['function'] : null;
+		return $fn1;
 	}
 
 	/**

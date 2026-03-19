@@ -12,11 +12,9 @@ classes/FumeConnect
 docs/
 html
 html.src
-modules/monitor/spectros
-modules/contact/spectros
-modules/action/spectros
-modules/event/spectros
-modules/monitor/local
+modules/*/local/
+modules/action/
+modules/*/spectros
 modules/support/default
 modules/engineering/default
 modules/spectros
@@ -35,3 +33,5 @@ third_party/composer.sha384sum
 third_party/composer-setup.php
 docker-compose-lamp
 .codegpt
+*.code-workspace
+FPDF_Fonts/

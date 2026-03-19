@@ -73,6 +73,78 @@
 				$this->setVersion(1);
 				$GLOBALS['_database']->CommitTrans();
 			}
+
+			if ($this->version() < 2) {
+				app_log("Upgrading ".$this->module." schema to version 2",'notice',__FILE__,__LINE__);
+
+				// Initialize Database Service
+				$database = new \Database\Service();
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `form_versions` (
+						`id` int(10) NOT NULL AUTO_INCREMENT,
+						`form_id` int(5) NOT NULL DEFAULT '0',
+						`code` varchar(32) NOT NULL DEFAULT '',
+						`name` varchar(64) NOT NULL DEFAULT '',
+						`description` text,
+						`instructions` text,
+						`user_id_activated` int(6) DEFAULT NULL,
+						`date_activated` datetime,
+						PRIMARY KEY (`id`),
+						UNIQUE KEY `idx_form_version_code` (`form_id`, `code`)
+					)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				// See if fk_form_question exists before trying to drop it, since some users may have already manually altered their tables
+				$schema = new \Database\Schema();
+				$table = $schema->table('form_questions');
+				if ($table->has_constraint('fk_form_question')) {
+					$alter_table_query = "
+						ALTER TABLE `form_questions`
+						DROP FOREIGN KEY `fk_form_question`
+					";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->SQLError($this->error());
+						return false;
+					}
+				}
+				elseif ($table->has_constraint('form_questions_ibfk_1')) {
+					$alter_table_query = "
+						ALTER TABLE `form_questions`
+						DROP FOREIGN KEY `form_questions_ibfk_1`
+					";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->SQLError($this->error());
+						return false;
+					}
+				}
+
+				$alter_table_query = "
+					ALTER TABLE `form_questions`
+					ADD COLUMN `version_id` int(10) NOT NULL DEFAULT '0' AFTER `id`,
+					DROP COLUMN `form_id`
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				$alter_table_query = "
+					ALTER TABLE `form_questions`
+					ADD FOREIGN KEY `fk_form_question_version` (`version_id`) REFERENCES `form_versions` (`id`)
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				$this->setVersion(2);
+				$GLOBALS['_database']->CommitTrans();
+			}
 		
 			return true;
 		}

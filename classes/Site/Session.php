@@ -651,6 +651,11 @@ use Register\Customer;
 				return false;
 			}
 			
+			// Important: clear previously bound parameters before the next query.
+			// Otherwise old params accumulate and ADODB/MySQL reports:
+			// "Input array has X params, does not match query" for the UPDATE below.
+			$database->resetParams();
+			
 			if ($isElevated) {
 				// Prepare Query to Update Super Elevation Expiration
 				$update_session_query = "

@@ -420,7 +420,10 @@
 			}
 
 			$method = $this->fullMethods()[$function_name];
-			if (isset($method['privilege_required']) && !(preg_match('/^\[\w+\]$/',$method['privilege_required']))) {
+			if (isset($method['privilege_required']) && $method['privilege_required'] == '[CONDITIONAL]') {
+				// Leave it to the method to determine what privileges are required and call requirePrivilege() as needed.  This is for methods that have different privilege requirements based on parameters or other factors.
+			}
+			elseif (isset($method['privilege_required'])) {
 				$this->requirePrivilege($method['privilege_required']);
 			}
 			if (isset($method['role_required']) && !(preg_match('/^\[\w+\]$/',$method['role_required']))) {
