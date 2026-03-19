@@ -930,16 +930,20 @@ use Register\Customer;
 		 * @return bool True if authenticated, false otherwise
 		 */
 		public function authenticated(): bool {
+			if (empty($this->customer) || empty($this->customer->id)) {
+				app_log("User Not Authenticated - no customer object or customer ID", 'trace', __FILE__, __LINE__, 'otplogs');
+				return false;
+			}
 			$configuration = new \Site\Configuration();
 			app_log("=== AUTHENTICATED() METHOD CALL ===", 'trace', __FILE__, __LINE__, 'otplogs');
 			app_log("OTP Enabled: " . ($configuration->getValueBool("use_otp") ? 'true' : 'false'), 'trace', __FILE__, __LINE__, 'otplogs');
 			app_log("Customer ID: " . ($this->customer->id ?? 'null'), 'trace', __FILE__, __LINE__, 'otplogs');
-			app_log("Customer requires OTP: " . ($this->customer->requiresOTP() ? 'true' : 'false'), 'trace', __FILE__, __LINE__, 'otplogs');
+			app_log("Customer requires OTP: " . ($this->customer?->requiresOTP() ? 'true' : 'false'), 'trace', __FILE__, __LINE__, 'otplogs');
 			$otpStatus = $this->getOTPVerified();
 			app_log("OTP verified status: " . ($otpStatus === false ? 'false' : ($otpStatus === true ? 'true' : 'null')), 'trace', __FILE__, __LINE__, 'otplogs');
 			app_log("Current URI: " . $_SERVER['REQUEST_URI'], 'trace', __FILE__, __LINE__, 'otplogs');
 			
-			if ($configuration->getValueBool("use_otp") && isset($this->customer->id) && $this->customer->requiresOTP() && $this->customer->id > 0 && $this->getOTPVerified() === false) {
+			if ($configuration->getValueBool("use_otp") && isset($this->customer->id) && $this->customer?->requiresOTP() && $this->customer->id > 0 && $this->getOTPVerified() === false) {
 				// If OTP is required and not verified, redirect to OTP page
 				// But don't redirect if we're already on the OTP page to prevent loops
 				if (!preg_match('/\/_register\/otp/', $_SERVER['REQUEST_URI'])) {
