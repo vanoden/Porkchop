@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'geography';
-			$this->_version = '0.2.2';
-			$this->_release = '2026-02-24';
+			$this->_version = '0.3.3';
+			$this->_release = '2026-03-19';
 			$this->_schema = new Schema();
 			parent::__construct();
 		}

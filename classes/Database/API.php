@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'database';
-			$this->_version = '0.1.1';
-			$this->_release = '2024-11-15';
+			$this->_version = '0.2.2';
+			$this->_release = '2026-03-19';
 			parent::__construct();
 		}
 
@@ -46,7 +46,6 @@
 	
 		public function _methods() {
 			return [
-				'ping'			=> array(),
 				'tables'	=> [
 					'description'			=> 'Get list of tables in database',
 					'privilege_required'	=> 'manage database',

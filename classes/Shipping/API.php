@@ -7,8 +7,8 @@
 		public function __construct() {
 			$this->_admin_role = 'shipping manager';
 			$this->_name = 'shipping';
-			$this->_version = '0.1.2';
-			$this->_release = '2022-03-10';
+			$this->_version = '0.2.3';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Shipping\Schema();
 			parent::__construct();
 		}

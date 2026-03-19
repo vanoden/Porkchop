@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'form';
-			$this->_version = '0.1.1';
-			$this->_release = '2023-03-14';
+			$this->_version = '0.2.2';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Form\Schema();
 			parent::__construct();
 		}
@@ -465,7 +465,6 @@
 
 		public function _methods() {
 			return array(
-				'ping'			=> array(),
 				'findForms'	=> array(
 				),
 				'addForm'	=> array(

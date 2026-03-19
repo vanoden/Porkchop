@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'contact';
-			$this->_version = '0.1.2';
-			$this->_release = '2021-08-08';
+			$this->_version = '0.2.3';
+			$this->_release = '2026-03-19';
 			$this->_schema = new Schema();
 			$this->_admin_role = 'contact manager';
 			parent::__construct();
@@ -55,7 +55,6 @@
 
 		public function _methods() {
 			return array(
-				'ping'	=> array(),
 				'addEvent'	=> array(
 					'description'	=> 'Add a contact event',
 					'privilege_required'	=> 'manage contact events',

@@ -7,8 +7,8 @@
 		public function __construct() {
 			$this->_admin_role = 'content operator';
 			$this->_name = 'content';
-			$this->_version = '0.1.1';
-			$this->_release = '2021-07-20';
+			$this->_version = '1.2.2';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Content\Schema();
 			parent::__construct();
 		}
@@ -168,7 +168,6 @@
 
 		public function _methods() {
 			return array(
-				'ping'			=> array(),
 				'parse'			=> array(
 					'description'	=> 'Parse a content block',
 					'parameters'	=> array(

@@ -7,8 +7,8 @@
 		public function __construct() {
 			$this->_admin_role = 'email manager';
 			$this->_name = 'email';
-			$this->_version = '0.1.1';
-			$this->_release = '2021-08-13';
+			$this->_version = '0.2.2';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Email\Schema();
 			parent::__construct();
 		}
@@ -104,7 +104,6 @@
 
 		public function _methods() {
 			return array(
-				'ping'	=> array(),
 				'sendEmail'			=> array(
 					'description'	=> 'Send an email',
 					'privilege_required'	=> 'send email',

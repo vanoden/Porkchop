@@ -5,8 +5,8 @@
 	class API Extends \API {
 		public function __construct() {
 			$this->_name = 'calendar';
-			$this->_version = '0.1.1';
-			$this->_release = '2026-01-24';
+			$this->_version = '0.2.2';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Calendar\Schema();
 			parent::__construct();
 		}

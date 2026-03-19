@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'network';
-			$this->_version = '0.2.1';
-			$this->_release = '2020-06-10';
+			$this->_version = '0.3.2';
+			$this->_release = '2026-03-19';
 			$this->_schema = new Schema();
 			parent::__construct();
 		}
@@ -511,7 +511,6 @@
 
 		public function _methods() {
 			return array(
-				'ping'	=> array(),
 				'findDomains'	=> array(
 					'description'	=> 'Find domains',
 					'privilege_required'	=> 'network admin',

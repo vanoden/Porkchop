@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'register';
-			$this->_version = '0.3.2';
-			$this->_release = '2021-06-01';
+			$this->_version = '0.4.3';
+			$this->_release = '2026-03-19';
 			$this->_schema = new Schema();
 			$this->_admin_role = 'administrator';
 			parent::__construct();
@@ -1836,12 +1836,15 @@
 				'me'	=> array(
 					'description' => 'Get information about the authenticated user',
 					'path' => '/api/register/me',
+					'verb' => 'GET',
 					'parameters' => array(),
 					'authentication_required' => false,
 					'return_element' => 'customer',
 					'return_type' => 'Register::Customer'
 				),
 				'authenticateSession'	=> array(
+					'path' => '/api/register/authenticateSession',
+					'verb' => array('POST','GET'),
 					'description'	=> 'Authenticate your account',
 					'authentication_required'	=> false,
 					'token_required' => false,
@@ -1861,6 +1864,8 @@
 					)
 				),
 				'addCustomer'    => array(
+					'path' => '/api/register/addCustomer',
+					'verb' => 'POST',
 					'description'	=> 'Add a new customer',
 					'authentication_required'	=> true,
 					'token_required' 			=> true,
@@ -1929,6 +1934,8 @@
 					)
 				),
 				'updateCustomer'	=> array(
+					'path' => '/api/register/updateCustomer/{code}',
+					'verb' => 'PUT',
 					'description'	=> 'Change customer information. Empty fields will not be changed.',
 					'authentication_required'	=> true,
 					'token_required' 			=> true,
@@ -1937,7 +1944,7 @@
 					'return_type' => 'Register::Customer',
 					'parameters'	=> array(
 						'id'			=> array(
-							'decription'	=> 'Customer ID',
+							'description'	=> 'Customer ID',
 							'requirement_group'	=> 0,
 							'prompt' => 'Customer ID',
 							'content-type' => 'int',

@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'product';
-			$this->_version = '0.3.3';
-			$this->_release = '2023-09-12';
+			$this->_version = '1.0.4';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Product\Schema();
 			parent::__construct();
 		}
@@ -766,7 +766,6 @@
 		public function _methods() {
 			$validationClass = new \Product\Item();
 			return array(
-				'ping'			=> array(),
 				'findItems'	=> array(
 					'description'		=> 'Find products matching criteria',
 					'authentication_required' => false,
