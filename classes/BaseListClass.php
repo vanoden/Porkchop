@@ -6,6 +6,7 @@ class BaseListClass extends \BaseClass {
 
 	protected $_flat = false; // Configuration option for controlling whether to automatically load related objects when loading details of this object.  Can be overridden by passing 'recursive' parameter to find() and get() methods.
 	protected $_ids = false; // Configuration option for controlling whether to return only ID's instead of objects.  Can be overridden by passing 'ids' parameter to find() and get() methods.
+	protected $_countOnly = false; // Configuration option for controlling whether to only return the count of matched records instead of objects.  Can be overridden by passing 'count' parameter to find() and get() methods.
 
 	// Default Sort Controls
 	protected $_tableDefaultSortBy;	// Default column to sort by
@@ -281,7 +282,7 @@ class BaseListClass extends \BaseClass {
 		// Assemble Results
 		$objects = array();
 		while (list($id) = $rs->FetchRow()) {
-			if ($this->_count) {
+			if ($this->_countOnly) {
 				// Don't do anything, we're just counting records
 			}
 			elseif ($this->_ids) {
