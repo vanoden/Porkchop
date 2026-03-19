@@ -99,7 +99,10 @@
 					$org = $me->organization();
 					$responseObj = $me->_clone();
 					if ($org && $org->id) {
-						$responseObj->organization = $org;
+						$orgObj = $org->_clone();
+						$services = $org->ownedServices();
+						$orgObj->services = $services;
+						$responseObj->organization = $orgObj;
 					}
 					else {
 						// Set empty organization object if none exists
@@ -960,9 +963,17 @@
 
 			if (! $organization->exists()) $this->notFound();
 
+			// Clone Organization Object to Avoid Caching Issues
+			$organizationObj = $organization->_clone();
+
+			// Get Services Products Owned by Organization
+			$services = $organization->ownedServices();
+			if ($organization->error()) $this->app_error("Error finding organization owned products: ".$organization->error(),__FILE__,__LINE__);
+			$organizationObj->services = $services;
+
 			$response = new \APIResponse();
 			$response->success = 1;
-			$response->addElement('organization',$organization);
+			$response->addElement('organization',$organizationObj);
 
 			# Send Response
 			$response->print();
@@ -1098,12 +1109,12 @@
 
 			# Initiate Organization Object
 			$organization = new \Register\Organization();
-			$organization->get($_REQUEST['organization']);
+			$organization->get($_REQUEST['organization_code']);
 			if (! $organization->id) $this->error("Organization not found");
 			if ($organization->error()) $this->app_error("Error getting organization: ".$organization()->error,__FILE__,__LINE__);
 
 			$product = new \Product\Item();
-			$product->get($_REQUEST['product']);
+			$product->get($_REQUEST['product_code']);
 			if ($product->error()) $this->app_error("Error getting product: ".$product->error(),__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
 
@@ -1113,9 +1124,12 @@
 			# Error Handling
 			if ($product->error()) $this->app_error($product->error(),__FILE__,__LINE__);
 
+			if ($product->quantity <= 0) $product = null;
+			elseif ($product->expired()) $product = null;
+
 			$response = new \APIResponse();
 			$response->success(true);
-			$response->addElement('product',$product);
+			if (!empty($product)) $response->addElement('product',$product);
 
 			# Send Response
 			$response->print();
@@ -2044,6 +2058,25 @@
 							'description'	=> 'Organization Code',
 							'prompt'		=> 'Organization Code',
 							'validation_method'	=> 'Register::Organization::validCode()'
+						)
+					)
+				),
+				'getOrganizationOwnedProduct' => array(
+					'description'	=> 'Get information about an owned product or service associated with this organization',
+					'path'			=> '/api/register/getOrganizationOwnedProduct',
+					'authentication_required'	=> true,
+					'return_element'	=> 'product',
+					'return_type'		=> 'Product::Item',
+					'parameters'	=> array(
+						'organization_code'	=> array(
+							'description'	=> 'Organization Code',
+							'prompt'		=> 'Organization Code',
+							'validation_method'	=> 'Register::Organization::validCode()'
+						),
+						'product_code'	=> array(
+							'description'	=> 'Product Code/Sku',
+							'prompt'		=> 'Product Code/Sku',
+							'validation_method'	=> 'Product::Item::validCode()',
 						)
 					)
 				),
