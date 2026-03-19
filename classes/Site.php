@@ -398,4 +398,12 @@
 			closedir($handle);
 			return null;
 		}
+
+		/** @method company()
+		 * Get the company object.
+		 * @return Company\Company The company object.
+		 */
+		public function company() {
+			return new \Company\Company();
+		}
 	}
