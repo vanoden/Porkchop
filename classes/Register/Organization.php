@@ -1,8 +1,6 @@
 <?php
 	namespace Register;
 
-use Register\Organization\OwnedProduct;
-
 	class Organization Extends \BaseModel {
 
 		public string $name = "";
@@ -334,7 +332,7 @@ use Register\Organization\OwnedProduct;
 		 * Get an owned product for this organization
 		 * @param int $product_id
 		 */
-		public function product($product_id): ?OwnedProduct {
+		public function product($product_id): ?\Register\Organization\OwnedProduct {
 			$product = new \Product\Item($product_id);
 			if ($product->error()) {
 				$this->error($product->error());
@@ -385,32 +383,32 @@ use Register\Organization\OwnedProduct;
 			else return false;
 		}
 
-		/** @method addProduct(id,quantity,expiration_date = '9999-12-31')
+		/** @method addProduct(id,quantity,date_expires = '9999-12-31')
 		 * Add a product to this organization
 		 */
-		public function addProduct($product_id,$quantity,$expiration_date = '9999-12-31'): bool {
+		public function addProduct($product_id,$quantity,$date_expires = '9999-12-31'): bool {
 			$owned_product = $this->product($product_id);
 			if ($owned_product->error()) {
 				$this->error($owned_product->error());
 				return false;
 			}
-			if ($owned_product->id) {
+			if ($owned_product->product_id) {
 				// They already have this product, update quantity and expiration if needed
 				$new_quantity = $owned_product->quantity + $quantity;
-				if ($expiration_date < $owned_product->date_expires) {
-					$new_expiration_date = $expiration_date;
+				if ($date_expires < $owned_product->date_expires) {
+					$new_date_expires = $date_expires;
 				}
 				else {
-					$new_expiration_date = $owned_product->date_expires;
+					$new_date_expires = $owned_product->date_expires;
 				}
-				if (!$owned_product->update(array('quantity' => $new_quantity,'expiration_date' => $new_expiration_date))) {
+				if (!$owned_product->update(array('quantity' => $new_quantity,'date_expires' => $new_date_expires))) {
 					$this->error($owned_product->error());
 					return false;
 				}
 			}
 			else {
 				// They don't have this product, add it
-				if (!$owned_product->add(array('quantity' => $quantity,'expiration_date' => $expiration_date))) {
+				if (!$owned_product->add(array('quantity' => $quantity,'date_expires' => $date_expires))) {
 					$this->error($owned_product->error());
 					return false;
 				}
@@ -418,14 +416,14 @@ use Register\Organization\OwnedProduct;
 			return true;
 		}
 
-		public function updateProduct($product_id,$quantity,$expiration_date = '9999-12-31'): bool {
+		public function updateProduct($product_id,$quantity,$date_expires = '9999-12-31'): bool {
 			$owned_product = $this->product($product_id);
 			if ($owned_product->error()) {
 				$this->error($owned_product->error());
 				return false;
 			}
 			if ($owned_product->product_id) {
-				if (!$owned_product->update(array('quantity' => $quantity,'expiration_date' => $expiration_date))) {
+				if (!$owned_product->update(array('quantity' => $quantity,'date_expires' => $date_expires))) {
 					$this->error($owned_product->error());
 					return false;
 				}
@@ -592,5 +590,37 @@ use Register\Organization\OwnedProduct;
 			list($association_found) = $rs->FetchRow();
 			if ($association_found) return true;
 			else return false;
+		}
+
+		/** @method public ownedProducts(parameters)
+		 * Get a list of products owned by this organization
+		 * @param array parameters - optional parameters for filtering products
+		 * @return array of Product\Item objects
+		 */
+		public function ownedProducts($parameters = array()) {
+			// Clear any previous errors
+			$this->clearError();
+
+			$parameters['organization_id'] = $this->id;
+			$owned_product_list = new \Register\Organization\OwnedProductList();
+			$products = $owned_product_list->find($parameters);
+			if ($owned_product_list->error()) {
+				$this->error("Error loading owned products: ".$owned_product_list->error());
+				return [];
+			}
+			return $products;
+		}
+
+		/** @method public ownedServices(parameters)
+		 * Get a list of services owned by this organization
+		 * @param array parameters - optional parameters for filtering services
+		 * @return array of Product\Item objects
+		 */
+		public function ownedServices($parameters = array()) {
+			// Clear any previous errors
+			$this->clearError();
+
+			// Return filtered list of owned products with type = service
+			return $this->ownedProducts(array_merge($parameters,array('type' => 'service')));
 		}
 	}
