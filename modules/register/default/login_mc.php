@@ -1,14 +1,13 @@
 <?php
-	###########################################################
-	### login_mc.php										###
-	### This program is the main content file for			###
-	### login.php.  This program allows a customer to		###
-	### identify themselves via login name and password.	###
-	### It will flag the session and order record with		###
-	### the customer id if login successful.				###
-	### A. Caravello 8/25/2002								###
-	###########################################################
-	$page = new \Site\Page();
+	/** @view /_register/login
+	 * Allows a customer to identify themselves 
+	 * via login name and password. It will assign
+	 * the session and order record with the customer id
+	 * if login successful.
+	 */
+	$porkchop = new \Porkchop();
+	$site = $porkchop->site();
+	$page = $site->page();
 
 	if (empty($_REQUEST['csrfToken'])) $_REQUEST['csrfToken'] = null;
     
@@ -238,3 +237,5 @@
 		app_log("No authentication information sent",'debug',__FILE__,__LINE__);
 	}
 
+	$company = $site->company();
+	$csrfToken = $GLOBALS['_SESSION_']->getCSRFToken();
