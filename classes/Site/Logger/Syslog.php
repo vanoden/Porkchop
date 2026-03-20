@@ -43,6 +43,7 @@
 				"critical"	=> LOG_CRIT,
 				"error"		=> LOG_ERR,
 				"warning"	=> LOG_WARNING,
+				"warn"		=> LOG_WARNING,
 				"notice"	=> LOG_NOTICE,
 				"info"		=> LOG_INFO,
 				"debug"		=> LOG_DEBUG,
