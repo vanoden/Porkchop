@@ -469,6 +469,8 @@
 		public function riskLevel() {
 			$risk_level = 0;
 			$uri = $this->_uri;
+			$agent = $this->user_agent;
+
 			if (preg_match('/^([\/\w\-\_\.]+)\?(.*)$/',$uri,$matches)) {
 				$uri = $matches[1];
 				$query_string = $matches[2];
@@ -482,6 +484,12 @@
 				app_log("WAF RULE: unparseable URI",'trace2');
 				$risk_level += 80;
 				$uri = null;
+			}
+
+			if (preg_match('/(sqlmap|nmap|nikto|acunetix|nessus|fuzz|dirbuster|fimap|fierce|whatweb|wpscan|w3af|havij|paros|skipfish|libredtail)/i',$agent)) {
+				# Known Scanning or Fuzzing Tool
+				app_log("WAF RULE: known scanning tool in user agent",'trace2');
+				$risk_level += 150;
 			}
 
 			if ($this->module && $this->module != "content") {

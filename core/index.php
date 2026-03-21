@@ -158,6 +158,11 @@
 
 	# Access Logging in Application Log
 	$logger->writeln("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info',__FILE__,__LINE__);
+	if ($_REQUEST_->riskLevel() >= 100) {
+		$logger->writeln("High Risk Request Rejected: URI: ".$_REQUEST_->uri()." Agent: ".$_REQUEST_->user_agent,'warning',__FILE__,__LINE__);
+		header("HTTP/1.1 403 Forbidden");
+		exit;
+	}
 
 	# Load Page Information
 	$page = $site->page();
