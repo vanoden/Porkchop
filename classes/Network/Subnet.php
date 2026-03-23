@@ -456,6 +456,7 @@
 				$this->managed = $object->managed;
 				$this->date_added = $object->date_added;
 				$this->date_last_seen = $object->date_last_seen;
+				$this->uri_last_seen = $object->uri_last_seen;
 				return true;
 			}
 			else {
@@ -469,5 +470,24 @@
 		 */
 		public function riskLevel(): int {
 			return $this->risk_level;
+		}
+
+		/** @method public realAddress()
+		 * Returns the real address of the subnet in standard notation (dotted quad for IPv4, colon-separated for IPv6).
+		 */
+		public function realAddress(): string {
+			if (preg_match('/^ipv4$/i', $this->type)) {
+				if ($this->size == 1) {
+					return long2ip($this->address);
+				}
+				else {
+					$mask = ~((1 << (32 - $this->size)) - 1);
+					return long2ip($this->address & $mask)."/".$this->size;
+				}
+			}
+			elseif (preg_match('/^ipv6$/i', $this->type)) {
+				return inet_ntop($this->address);
+			}
+			else return '';
 		}
 	}

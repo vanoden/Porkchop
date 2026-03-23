@@ -26,3 +26,6 @@
 
 <label for="subnet_date_last_seen">Date Last Seen</label>
 <span id="subnet_date_last_seen" name="subnet_date_last_seen"> <?= $subnet->date_last_seen ? date('Y-m-d\TH:i:s', strtotime($subnet->date_last_seen)) : '' ?></span>
+
+<label for="subnet_uri_last_seen">URI Last Seen</label>
+<span id="subnet_uri_last_seen" name="subnet_uri_last_seen"> <?= $subnet->uri_last_seen ? $subnet->uri_last_seen : '' ?></span>
