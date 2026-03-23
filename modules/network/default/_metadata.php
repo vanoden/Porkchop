@@ -13,3 +13,7 @@
 			"manage acls"
 		)
 	);
+
+	$menus["Network"] = array(
+		"Subnets"	=> "/_network/admin_subnets"
+	);
