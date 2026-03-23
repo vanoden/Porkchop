@@ -1,7 +1,22 @@
+<script type="text/javascript">
+function rdapLookup() {
+	var address = document.getElementById('subnet_address').value;
+	var type = document.getElementById('subnet_type').value;
+	if (address && type) {
+		var rdapUrl = '/_network/rdap_lookup?address=' + encodeURIComponent(address) + '&type=' + encodeURIComponent(type);
+		window.open(rdapUrl, '_blank');
+	}
+	else {
+		alert('Please enter a valid subnet address and type for RDAP lookup.');
+	}
+}
+</script>
 <?= $page->showSubHeading() ?>
 
 <label for="subnet_address">Subnet Address</label>
 <input type="text" id="subnet_address" name="subnet_address" value="<?= long2ip($subnet->address) ?>" required>
+
+<input type="button" id="btn_rdap" name="btn_rdap" value="RDAP Lookup" onclick="rdapLookup()">
 
 <label for="subnet_size">Subnet Size</label>
 <input type="number" id="subnet_size" name="subnet_size" value="<?= $subnet->size ?>" required>
