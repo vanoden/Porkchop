@@ -124,8 +124,6 @@
 			return $results;
 		}
 
-		
-
 		/** @method public contains($ip)
 		 * Checks if the given IP address is within the subnet.
 		 * @param string $ip The IP address to check (can be in standard notation or long format)
@@ -234,6 +232,56 @@
 			else return false;
 		}
 
+		/** @method public purgeSafeSubnets()
+		 * Permanently deletes subnets that are considered safe
+		 */
+		public function purgeSafeSubnets(): void {
+			// Initialize Database Service
+			$database = new \Database\Service();
+			$purge_query = "
+				DELETE
+				FROM	network_subnets
+				WHERE	risk_level = 0
+				AND		managed = 'AUTO'
+			";
+			$database->Execute($purge_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				app_log($this->error(), 'error');
+			}
+			else {
+				app_log("Purged safe subnets with risk level 0 and managed set to AUTO", 'info');
+			}
+		}
+
+		/** @method purgeOldSubnets()
+		 * Permanently deletes subnets that have not been seen in over a day and have a low risk level
+		 */
+		public function purgeOldSubnets(): void {
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			$purge_query = "
+				DELETE
+				FROM	network_subnets
+				WHERE	date_last_seen < DATE_SUB(NOW(), INTERVAL 1 DAY)
+				AND		risk_level <= 1
+				AND		managed = 'AUTO'
+			";
+			$database->Execute($purge_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				app_log($this->error(), 'error');
+			}
+			else {
+				app_log("Purged old subnets not seen in over a day with risk level 1 or lower", 'info');
+			}
+		}
+
+		/** @method matched()
+		 * Get the subnet that was matched in the last contains() check
+		 * @return \Network\Subnet|null The matched subnet or null if no match
+		 */
 		public function matched(): ?Subnet {
 			if ($this->_matched) {
 				$subnet = new \Network\Subnet($this->_matched);
@@ -242,6 +290,10 @@
 			else return null;
 		}
 
+		/** @method matches()
+		 * Get all matched subnets
+		 * @return array Array of \Network\Subnet objects
+		 */
 		public function matches(): array {
 			$subnets = [];
 			foreach ($this->_matches as $match_id) {

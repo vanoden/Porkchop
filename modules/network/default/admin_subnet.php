@@ -12,12 +12,11 @@ function rdapLookup() {
 }
 </script>
 <?= $page->showSubHeading() ?>
-
+<form method="post" action="/_network/admin_subnet">
+<input type="hidden" name="csrf_token" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
+<input type="hidden" name="id" value="<?= $subnet->id ?>">
 <label for="subnet_address">Subnet Address</label>
 <input type="text" id="subnet_address" name="subnet_address" value="<?= long2ip($subnet->address) ?>" required>
-
-<input type="button" id="btn_rdap" name="btn_rdap" value="RDAP Lookup" onclick="rdapLookup()">
-
 <label for="subnet_size">Subnet Size</label>
 <input type="number" id="subnet_size" name="subnet_size" value="<?= $subnet->size ?>" required>
 
@@ -48,6 +47,10 @@ function rdapLookup() {
 <label for="subnet_applied_risk_level">Applied Risk Level</label>
 <span id="subnet_applied_risk_level" name="subnet_applied_risk_level"> <?= $subnet->applied_risk_level !== null ? $subnet->applied_risk_level : 'N/A' ?></span>
 
+
+<input type="button" id="btn_rdap" name="btn_rdap" value="RDAP Lookup" onclick="rdapLookup()">
+<input type="submit" id="btn_save" name="btn_save" value="Apply Changes">
+</form>
 <?php if ($subnet->id) { ?>
 <label for="session_user_agent">User Agent</label>
 <span id="session_user_agent" name="session_user_agent"> <?= $subnet->session() ? $subnet->session()->user_agent : 'N/A' ?></span>

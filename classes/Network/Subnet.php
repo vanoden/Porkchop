@@ -30,6 +30,7 @@
 				'last_session_id'
 
 			));
+			$this->_addTypes('ipv4','ipv6');
 			parent::__construct($id);
 		}
 
@@ -247,7 +248,7 @@
 				'class_method' => 'add'
 			));
 
-			return $this->upgrade($params);
+			return $this->update($params);
 		}
 
 		public function getByCIDR($cidr) {
@@ -294,6 +295,11 @@
 					$this->error("Invalid size");
 					return false;
 				}
+				else {
+					$update_object_query .= ",
+					size = ?";
+					$database->AddParam($params['size']);
+				}
 			}
 
 			if (isset($params['description'])) {
@@ -328,8 +334,8 @@
 
 			if (isset($params['address'])) {
 				if (preg_match('/^ipv4$/i', $this->type)) {
-					if (! $this->validipv4($params['address'])) {
-						$this->error("Invalid ".$this->type."address");
+					if (! $this->validIPv4($params['address'])) {
+						$this->error("Invalid ".$this->type." address");
 						return false;
 					}
 					else {
@@ -337,8 +343,8 @@
 					}
 				}
 				elseif (preg_match('/^ipv6$/i', $this->type)) {
-					if (! $this->validipv6($params['address'])) {
-						$this->error("Invalid ".$this->type."address");
+					if (! $this->validIPv6($params['address'])) {
+						$this->error("Invalid ".$this->type." address");
 						return false;
 					}
 					else {
@@ -551,12 +557,31 @@
 					return long2ip($this->address);
 				}
 				else {
-					$mask = ~((1 << (32 - $this->size)) - 1);
-					return long2ip($this->address & $mask)."/".$this->size;
+					return long2ip($this->address)."/".$this->cidr();
 				}
 			}
 			elseif (preg_match('/^ipv6$/i', $this->type)) {
-				return inet_ntop($this->address);
+				if ($this->size == 1) {
+					return inet_ntop($this->address);
+				}
+				else {
+					return inet_ntop($this->address)."/".$this->cidr();
+				}
+			}
+			else return '';
+		}
+
+		/** @method public cidr()
+		 * Returns the CIDR notation of the subnet based on the size and type. For example, if the subnet is an IPv4 subnet with a size of 256, it would return the CIDR notation for that subnet.
+		 */
+		public function cidr(): string {
+			if (preg_match('/^ipv4$/i', $this->type)) {
+				$cidr = 32 - (int)log($this->size, 2);
+				return $cidr;
+			}
+			elseif (preg_match('/^ipv6$/i', $this->type)) {
+				$cidr = 128 - (int)log($this->size, 2);
+				return $cidr;
 			}
 			else return '';
 		}
@@ -574,5 +599,23 @@
 				return $session;
 			}
 			return null;
+		}
+
+		/** @method private validIPv4(string $address)
+		 * Validates an IPv4 address.
+		 * @param string $address The IPv4 address to validate.
+		 * @return bool True if the address is valid, false otherwise.
+		 */
+		private function validIPv4(string $address): bool {
+			return filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false;
+		}
+
+		/** @method private validIPv6(string $address)
+		 * Validates an IPv6 address.
+		 * @param string $address The IPv6 address to validate.
+		 * @return bool True if the address is valid, false otherwise.
+		 */
+		private function validIPv6(string $address): bool {
+			return filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false;
 		}
 	}

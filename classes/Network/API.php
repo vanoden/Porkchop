@@ -574,11 +574,35 @@
 			}
 		}
 
+		/** @apiMethod purgeSafeSubnets()
+		 * Permanently deletes subnets that are considered safe
+		 */
+		public function purgeSafeSubnets() {
+			$subnetList = new \Network\SubnetList();
+			$subnetList->purgeSafeSubnets();
+
+			$response = new \APIResponse();
+			if ($subnetList->error()) $response->error($subnetList->error());
+			$response->print();
+		}
+
+		/** @apiMethod purgeOldSubnets()
+		 * Permanently deletes subnets that have not been seen in over a day and have a low risk level
+		 */
+		public function purgeOldSubnets() {
+			$subnetList = new \Network\SubnetList();
+			$subnetList->purgeOldSubnets();
+
+			$response = new \APIResponse();
+			if ($subnetList->error()) $response->error($subnetList->error());
+			$response->print();
+		}
+
 		public function _methods() {
 			return array(
 				'findDomains'	=> array(
 					'description'	=> 'Find domains',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'return_element'		=> 'domain',
 					'return_type'			=> 'Network::Domain',
 					'parameters'	=> array(
@@ -587,7 +611,7 @@
 				),
 				'getDomain'	=> array(
 					'description'	=> 'Get domain details',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'return_element'		=> 'domain',
 					'return_type'			=> 'Network::Domain',
 					'parameters'	=> array(
@@ -596,7 +620,7 @@
 				),
 				'addDomain'	=> array(
 					'description'	=> 'Add a domain',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'token_required'		=> true,
 					'return_element'		=> 'domain',
 					'return_type'			=> 'Network::Domain',
@@ -606,7 +630,7 @@
 				),
 				'findHosts'		=> array(
 					'description'	=> 'Find hosts',
-					'privilege_required' => 'network admin',
+					'privilege_required' => 'manage network',
 					'return_element'		=> 'host',
 					'return_type'			=> 'Network::Host',
 					'parameters'	=> array(
@@ -618,7 +642,7 @@
 				),
 				'getHost'	=> array(
 					'description'	=> 'Get host details',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'return_element'		=> 'host',
 					'return_type'			=> 'Network::Host',
 					'parameters'	=> array(
@@ -628,7 +652,7 @@
 				),
 				'addHost'	=> array(
 					'description'	=> 'Add a host',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'token_required'		=> true,
 					'return_element'		=> 'host',
 					'return_type'			=> 'Network::Host',
@@ -641,7 +665,7 @@
 				),
 				'findAdapters'	=> array(
 					'description'	=> 'Find adapters',
-					'privilege_required' => 'network admin',
+					'privilege_required' => 'manage network',
 					'return_element'		=> 'adapter',
 					'return_type'			=> 'Network::Adapter',
 					'parameters'	=> array(
@@ -653,7 +677,7 @@
 				),
 				'getAdapter'	=> array(
 					'description'	=> 'Get adapter details',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'return_element'		=> 'adapter',
 					'return_type'			=> 'Network::Adapter',
 					'parameters'	=> array(
@@ -665,7 +689,7 @@
 				),
 				'addAdapter'	=> array(
 					'description'	=> 'Add an adapter',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'token_required'		=> true,
 					'return_element'		=> 'adapter',
 					'return_type'			=> 'Network::Adapter',
@@ -679,7 +703,7 @@
 				),
 				'findAddresses'	=> array(
 					'description'	=> 'Find addresses',
-					'privilege_required' => 'network admin',
+					'privilege_required' => 'manage network',
 					'return_element'		=> 'address',
 					'return_type'			=> 'Network::IPAddress',
 					'parameters'	=> array(
@@ -691,7 +715,7 @@
 				),
 				'getAddress'	=> array(
 					'description'	=> 'Get address details',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'return_element'		=> 'address',
 					'return_type'			=> 'Network::IPAddress',
 					'parameters'	=> array(
@@ -700,7 +724,7 @@
 				),
 				'addAddress'	=> array(
 					'description'	=> 'Add an address',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'token_required'		=> true,
 					'return_element'		=> 'address',
 					'return_type'			=> 'Network::IPAddress',
@@ -723,7 +747,7 @@
 				),
 				'addSubnet'	=> array(
 					'description'	=> 'Add a subnet',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'token_required'		=> true,
 					'return_element'		=> 'subnet',
 					'return_type'			=> 'Network::Subnet',
@@ -761,7 +785,7 @@
 				),
 				'updateSubnet'	=> array(
 					'description'	=> 'Update a subnet',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'token_required'		=> true,
 					'return_element'		=> 'subnet',
 					'return_type'			=> 'Network::Subnet',
@@ -799,7 +823,7 @@
 				),
 				'getSubnetsContainingAddress' => array(
 					'description'	=> 'Get subnets containing a specified address',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'return_element'		=> 'subnet',
 					'return_type'			=> 'Network::Subnet',
 					'parameters'	=> array(
@@ -807,6 +831,22 @@
 							'required' => true
 						)
 					)
+				),
+				'purgeSafeSubnets' => array(
+					'description'	=> 'Permanently delete subnets that are considered safe',
+					'privilege_required'	=> 'manage network',
+					'token_required'		=> true,
+					'return_element'		=> null,
+					'return_type'			=> null,
+					'parameters'			=> array()
+				),
+				'purgeOldSubnets' => array(
+					'description'	=> 'Permanently delete subnets that have not been seen in over a day and have a low risk level',
+					'privilege_required'	=> 'manage network',
+					'token_required'		=> true,
+					'return_element'		=> null,
+					'return_type'			=> null,
+					'parameters'			=> array()
 				)
 			);
 		}
