@@ -13,7 +13,7 @@
 			$this->_modelName = "\Network\Subnet";
 		}
 
-		public function findAdvanced($parameters = [], $controls = [], $advanced = []): array {
+		public function findAdvanced($parameters = [], $advanced = [], $controls = []): array {
 			// Clear Errors and Reset Count
 			$this->clearErrors();
 			$this->resetCount();
@@ -93,14 +93,14 @@
 				return [];
 			}
 
-			if ($controls['sort_by'] ?? false) {
+			if ($controls['sort'] ?? false) {
 				$allowed_sort_fields = ['id', 'address', 'size', 'type', 'risk_level', 'managed', 'date_last_seen'];
-				if (in_array($controls['sort_by'], $allowed_sort_fields)) {
+				if (in_array($controls['sort'], $allowed_sort_fields)) {
 					$find_objects_query .= "
-					ORDER BY ".$controls['sort_by']." ".($controls['sort_dir'] ?? 'ASC');
+					ORDER BY ".$controls['sort']." ".($controls['order'] ?? 'ASC');
 				}
 				else {
-					$this->error("Invalid sort_by control");
+					$this->error("Invalid sort control");
 					return [];
 				}
 			}
