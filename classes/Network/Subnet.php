@@ -11,6 +11,8 @@
 		public $date_added;				// Date the subnet was added to the system
 		public $date_last_seen;			// Last time a connection was seen from an address in this subnet
 		public $uri_last_seen;			// The URI that was last accessed from an address in this subnet
+		public $applied_risk_level = 0;	// The last risk level that was applied to this subnet
+		public $last_session_id;		// ID of the last session that was associated with this subnet when its risk level was updated
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'network_subnets';
@@ -23,7 +25,10 @@
 				'risk_level',
 				'date_added',
 				'date_last_seen',
-				'uri_last_seen'
+				'uri_last_seen',
+				'applied_risk_level',
+				'last_session_id'
+
 			));
 			parent::__construct($id);
 		}
@@ -356,6 +361,30 @@
 				$database->AddParam($params['uri_last_seen']);
 			}
 
+			if (!empty($params['applied_risk_level'])) {
+				if (! is_numeric($params['applied_risk_level']) || $params['applied_risk_level'] < -100 || $params['applied_risk_level'] > 100) {
+					$this->error("Invalid applied risk level");
+					return false;
+				}
+				else {
+					$update_object_query .= ",
+					applied_risk_level = ?";
+					$database->AddParam($params['applied_risk_level']);
+				}
+			}
+
+			if (!empty($params['last_session_id'])) {
+				if (! is_numeric($params['last_session_id'])) {
+					$this->error("Invalid last session ID");
+					return false;
+				}
+				else {
+					$update_object_query .= ",
+					last_session_id = ?";
+					$database->AddParam($params['last_session_id']);
+				}
+			}
+
 			$update_object_query .= "
 				WHERE	id = ?
 			";
@@ -366,15 +395,6 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-
-			// audit the update event
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Updated '.$this->_objectName(),
-				'class_name' => get_class($this),
-				'class_method' => 'update'
-			));
 
 			return $this->details();
 		}
@@ -432,17 +452,21 @@
 		/** @method maintain(new_risk_level)
 		 * Maintains the subnet's risk level by updating it to the new risk level provided. This should be called whenever there is a change in the subnet's risk level to ensure that the database is updated accordingly.
 		 */
-		public function maintain($new_risk_level): void {
+		public function maintain($new_risk_level, $applied_risk_level): void {
 			$database = new \Database\Service();
 			$update_risk_query = "
 				UPDATE	network_subnets
 				SET		risk_level = ?,
 						date_last_seen = sysdate(),
-						uri_last_seen = ?
+						uri_last_seen = ?,
+						applied_risk_level = ?,
+						last_session_id = ?
 				WHERE	id = ?
 			";
 			$database->AddParam($new_risk_level);
 			$database->AddParam($_SERVER['REQUEST_URI'] ?? null);
+			$database->AddParam($applied_risk_level);
+			$database->AddParam($GLOBALS['_SESSION_']->id ?? null);
 			$database->AddParam($this->id);
 			$database->Execute($update_risk_query);
 			if ($database->ErrorMsg()) {
@@ -481,6 +505,8 @@
 				$this->date_added = $object->date_added;
 				$this->date_last_seen = $object->date_last_seen;
 				$this->uri_last_seen = $object->uri_last_seen;
+				$this->applied_risk_level = $object->applied_risk_level;
+				$this->last_session_id = $object->last_session_id;
 				return true;
 			}
 			else {
@@ -504,15 +530,15 @@
 		public function adjustRiskLevel(int $control): int {
 			$risk_level = 0;
 			if ($control > $this->risk_level) {
-				$risk_level += (int)(($control - $this->risk_level) / 2);
+				$risk_level += (int)(($control - $this->risk_level) / 4);
 			}
 			else if ($control < $this->risk_level) {
-				$risk_level -= (int)(($this->risk_level - $control) / 2);
+				$risk_level -= (int)(($this->risk_level - $control) / 10);
 			}
 			if ($risk_level > 100) $risk_level = 100;
 			if ($risk_level < -100) $risk_level = -100;
 			app_log("Adjusting risk level of subnet ID ".$this->id." from ".$this->risk_level." to ".$risk_level, 'debug');
-			$this->maintain($risk_level);
+			$this->maintain($risk_level, $control);
 			return $risk_level;
 		}
 
@@ -533,5 +559,20 @@
 				return inet_ntop($this->address);
 			}
 			else return '';
+		}
+
+		/** @method public session()
+		 * Returns the session associated with the last session ID that was recorded for this subnet when its risk level was updated. This can be used to retrieve information about the session that contributed to the current risk level of the subnet.
+		 * @return \Session The session object associated with the last session ID recorded for this subnet, or null if there is no session or an error occurs.
+		 */
+		public function session(): ?\Site\Session {
+			if (empty($this->last_session_id)) {
+				return null;
+			}
+			$session = new \Site\Session($this->last_session_id);
+			if ($session->id) {
+				return $session;
+			}
+			return null;
 		}
 	}

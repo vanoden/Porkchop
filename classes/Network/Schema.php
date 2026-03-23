@@ -200,6 +200,21 @@
 				$this->setVersion(6);
 				$database->CommitTrans();
 			}
+
+			if ($this->version() < 7) {
+				$alter_table_query = "
+					ALTER TABLE `network_subnets`
+					ADD COLUMN `last_session_id` int(11) DEFAULT NULL,
+					ADD COLUMN `applied_risk_level` int(3) DEFAULT NULL
+				";
+				if (! $database->execute($alter_table_query)) {
+					$this->SQLError("SQL Error altering network_subnets table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
+					return false;
+				}
+				$this->setVersion(7);
+				$database->CommitTrans();
+			}
 			return true;
 		}
 	}

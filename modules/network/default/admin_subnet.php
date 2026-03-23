@@ -29,3 +29,27 @@
 
 <label for="subnet_uri_last_seen">URI Last Seen</label>
 <span id="subnet_uri_last_seen" name="subnet_uri_last_seen"> <?= $subnet->uri_last_seen ? $subnet->uri_last_seen : '' ?></span>
+
+<?php if ($subnet->id) { ?>
+<label for="session_user_agent">User Agent</label>
+<span id="session_user_agent" name="session_user_agent"> <?= $subnet->session() ? $subnet->session()->user_agent : 'N/A' ?></span>
+
+<label for="hit_count">Hit Count</label>
+<span id="hit_count" name="hit_count"> <?= $subnet->session() ? $subnet->session()->hitCount() : 'N/A' ?></span>
+<div class="tableBody bandedRows">
+	<div class="tableRow header">
+		<div class="tableCell">Date</div>
+		<div class="tableCell">Remote IP</div>
+		<div class="tableCell">Script</div>
+		<div class="tableCell">Query String</div>
+	</div>
+	<?php foreach ($hits as $hit) { ?>
+		<div class="tableRow">
+			<div class="tableCell"><?= $hit->hit_date ?></div>
+			<div class="tableCell"><?= $hit->remote_ip ?></div>
+			<div class="tableCell"><?= $hit->script ?></div>
+			<div class="tableCell"><?= $hit->query_string ?></div>
+		</div>
+	<?php } ?>
+	</div>
+<?php } ?>
