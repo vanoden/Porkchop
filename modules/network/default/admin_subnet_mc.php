@@ -32,3 +32,14 @@
 	if ($session && $session->id) {
 		$hits = $session->hits();
 	}
+
+	require_once THIRD_PARTY . "/autoload.php";
+	use Iodev\Whois\Factory as WhoisFactory;
+	try {
+		$whois = WhoisFactory::get()->createWhois();
+		$whois_info = $whois->lookupDomain($subnet->realAddress());
+		print_r($whois_info);
+	} catch (Exception $e) {
+		error_log("Error performing WHOIS lookup: " . $e->getMessage());
+		$whois_info = null;
+	}

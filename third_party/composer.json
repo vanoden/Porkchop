@@ -19,7 +19,8 @@
         "amphp/byte-stream": "^2.1",
         "psr/simple-cache": "2.0",
         "psr/cache": "^3.0",
-        "endroid/qr-code": "^6.0"
+        "endroid/qr-code": "^6.0",
+        "io-developer/php-whois": "^4.1"
     },
     "config": {
         "allow-plugins": {
