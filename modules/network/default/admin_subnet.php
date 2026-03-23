@@ -45,6 +45,9 @@ function rdapLookup() {
 <label for="subnet_uri_last_seen">URI Last Seen</label>
 <span id="subnet_uri_last_seen" name="subnet_uri_last_seen"> <?= $subnet->uri_last_seen ? $subnet->uri_last_seen : '' ?></span>
 
+<label for="subnet_applied_risk_level">Applied Risk Level</label>
+<span id="subnet_applied_risk_level" name="subnet_applied_risk_level"> <?= $subnet->applied_risk_level !== null ? $subnet->applied_risk_level : 'N/A' ?></span>
+
 <?php if ($subnet->id) { ?>
 <label for="session_user_agent">User Agent</label>
 <span id="session_user_agent" name="session_user_agent"> <?= $subnet->session() ? $subnet->session()->user_agent : 'N/A' ?></span>

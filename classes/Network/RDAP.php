@@ -10,15 +10,16 @@
 		public function lookup($address, $type) {
 			// Validate input
 			if (empty($address) || empty($type)) {
+				$this->error("Address and Type are required for RDAP lookup");
 				return false;
 			}
 
 			// Perform RDAP lookup using external library or API
 			// This is a placeholder implementation and should be replaced with actual RDAP lookup logic
-			//print_r("Performing RDAP lookup for address: $address, type: $type");
+			print_r("Performing RDAP lookup for address: $address, type: $type");
 			$result = $this->performRDAPLookup($address, $type);
 			if ($result === false) {
-				//print_r("Nope");
+				print_r("Nope");
 				$this->error("RDAP lookup failed for address: $address, type: $type");
 				return false;
 			}
@@ -31,14 +32,17 @@
 			$ch = curl_init();
 
 			// Set the URL and other options for the cURL request
-			curl_setopt($ch, CURLOPT_URL, "https://rdap.arin.net/registry/ip/$address");
+			curl_setopt($ch, CURLOPT_URL, "https://rdap.org/registry/ip/$address");
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 			$response = curl_exec($ch);
+			print_r("cURL Response: ");
+			print_r($response);
 			if ($response === false) {
 				return false;
 			}
 			curl_close($ch);
 			$this->result = json_decode($response, true);
+			print_r($this->result);
 			return $this->result;
 		}
 
