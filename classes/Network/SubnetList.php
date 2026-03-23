@@ -7,6 +7,7 @@
 
 	class SubnetList Extends \BaseListClass {
 		private ?int $_matched = null;	// ID of the subnet that was matched in the last contains() check
+		private array $_matches = [];	// Array of subnet IDs that were matched in the last contains() check
 
 		public function __construct() {
 			$this->_modelName = "\Network\Subnet";
@@ -92,6 +93,22 @@
 				return [];
 			}
 
+			if ($controls['sort_by'] ?? false) {
+				$allowed_sort_fields = ['id', 'address', 'size', 'type', 'risk_level', 'managed', 'date_last_seen'];
+				if (in_array($controls['sort_by'], $allowed_sort_fields)) {
+					$find_objects_query .= "
+					ORDER BY ".$controls['sort_by']." ".($controls['sort_dir'] ?? 'ASC');
+				}
+				else {
+					$this->error("Invalid sort_by control");
+					return [];
+				}
+			}
+			else {
+				$find_objects_query .= "
+				ORDER BY address ASC, size ASC, type ASC";
+			}
+
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
@@ -101,6 +118,7 @@
 			$results = [];
 			while (list($id) = $rs->FetchRow()) {
 				$results[] = new \Network\Subnet($id);
+				$this->incrementCount();
 			}
 
 			return $results;
@@ -190,7 +208,6 @@
 				AND		address + size > ?
 				AND		type = ?
 				ORDER BY address DESC, size ASC, managed DESC
-				LIMIT 1
 			";
 
 			$database->AddParam($ip);
@@ -204,9 +221,14 @@
 			}
 
 			// Get the details now so we don't have to do another query if we find a match
-			$found_match = $rs->FetchNextObject(false);
-			if ($found_match) {
-				$this->_matched = $found_match->id;
+			$this->_matched = null;
+			$this->_matches = [];
+			while ($found_match = $rs->FetchNextObject(false)) {
+				$this->_matches[] = $found_match->id;
+				$this->incrementCount();
+			}
+			if (!empty($this->_matches)) {
+				$this->_matched = $this->_matches[0];
 				return true;
 			}
 			else return false;
@@ -218,5 +240,16 @@
 				return $subnet;
 			}
 			else return null;
+		}
+
+		public function matches(): array {
+			$subnets = [];
+			foreach ($this->_matches as $match_id) {
+				$subnet = new \Network\Subnet($match_id);
+				if (! $subnet->error()) {
+					$subnets[] = $subnet;
+				}
+			}
+			return $subnets;
 		}
 	}

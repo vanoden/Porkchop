@@ -496,9 +496,11 @@
 
 			$params = array();
 			if (!empty($_REQUEST['address'])) $params['address'] = $_REQUEST['address'];
-			if (!empty($_REQUEST['mask'])) $params['mask'] = $_REQUEST['mask'];
-			if (!empty($_REQUEST['prefix'])) $params['prefix'] = $_REQUEST['prefix'];
+			if (!empty($_REQUEST['size'])) $params['size'] = $_REQUEST['size'];
 			if (!empty($_REQUEST['type'])) $params['type'] = $_REQUEST['type'];
+			if (!empty($_REQUEST['risk_level'])) $params['risk_level'] = $_REQUEST['risk_level'];
+			if (!empty($_REQUEST['description'])) $params['description'] = $_REQUEST['description'];
+			if (!empty($_REQUEST['managed'])) $params['managed'] = $_REQUEST['managed'];
 
 			if (! $subnet->add($params)) {
 				$this->error($subnet->error());
@@ -507,6 +509,69 @@
 			$response = new \APIResponse();
 			$response->addElement('subnet',$subnet);
 			$response->print();
+		}
+
+		/** @apiMethod updateSubnet()
+		 * Updates a subnet record. Subnet is identified by the 'id' parameter, and other parameters specify fields to update.
+		 * Parameters:
+		 * - id (required): ID of the subnet to update
+		 * - address: New subnet address
+		 * - size: New subnet size
+		 * - type: New subnet type (ipv4 or ipv6)
+		 * - risk_level: New risk level (integer)
+		 * - description: New description (string)
+		 * - managed: New managed status (AUTO or MANUAL)
+		*/
+		public function updateSubnet() {
+			if (empty($_REQUEST['id'])) $this->invalidRequest("id parameter is required");
+			
+			$subnet = new \Network\Subnet($_REQUEST);
+			if (! $subnet->id) $this->notFound();
+
+			$params = array();
+			if (!empty($_REQUEST['address'])) $params['address'] = $_REQUEST['address'];
+			if (!empty($_REQUEST['size'])) $params['size'] = $_REQUEST['size'];
+			if (!empty($_REQUEST['type'])) $params['type'] = $_REQUEST['type'];
+			if (!empty($_REQUEST['risk_level'])) $params['risk_level'] = $_REQUEST['risk_level'];
+			if (!empty($_REQUEST['description'])) $params['description'] = $_REQUEST['description'];
+			if (!empty($_REQUEST['managed'])) $params['managed'] = $_REQUEST['managed'];
+
+			if (! $subnet->update($params)) $this->error($subnet->error());
+
+			$response = new \APIResponse();
+			$response->addElement('subnet',$subnet);
+			$response->print();
+		}
+
+		/** @apiMethod getSubnetsContainingAddress()
+		 * Returns a list of subnets that contain the specified IP address. Parameters:
+		 * - address (required): IP address to check (e.g. 192.168.1.1)
+		 */
+		public function getSubnetsContainingAddress() {
+			if (empty($_REQUEST['address'])) $this->invalidRequest("address parameter is required");
+
+			$subnetList = new \Network\SubnetList();
+			if($subnetList->contains($_REQUEST['address'])) {
+				$response = new \APIResponse();
+				$subnets = $subnetList->matches();
+				if (count($subnets) > 0) {
+					$subnetObjs = array();
+					foreach ($subnets as $subnet) {
+						$subnetObj = $subnet->_clone();
+						if ($subnet->type == 'ipv4') $subnetObj->address = long2ip($subnet->address);
+						elseif ($subnet->type == 'ipv6') $subnetObj->address = inet_ntop($subnet->address);
+						else continue;
+						$subnetObjs[] = $subnetObj;
+					}
+					$response->addElement('subnet', $subnetObjs);
+				}
+				$response->print();
+			}
+			elseif ($subnetList->error()) $this->error($subnetList->error());
+			else {
+				$response = new \APIResponse();
+				$response->print();
+			}
 		}
 
 		public function _methods() {
@@ -648,7 +713,12 @@
 						),
 						'adapter_name'	=> array(),
 						'address'		=> array(),
-						'type'			=> array(),
+						'type'			=> array(
+							'options' => array(
+								'ipv4',
+								'ipv6'
+							)
+						),
 					)
 				),
 				'addSubnet'	=> array(
@@ -658,11 +728,86 @@
 					'return_element'		=> 'subnet',
 					'return_type'			=> 'Network::Subnet',
 					'parameters'	=> array(
+						'address'		=> array(
+							'required' => true
+						),
+						'size'			=> array(
+							'required' => true
+						),
+						'type'			=> array(
+							'options' => array(
+								'ipv4',
+								'ipv6'
+							)
+						),
+						'risk_level'	=> array(
+							'type' => 'integer'
+						),
+						'description'	=> array(
+							'type' => 'string',
+							'validation_method' => 'Network::Subnet::safeString()'
+						),
+						'managed'		=> array(
+							'options' => array(
+								'AUTO',
+								'MANUAL'
+							)
+						),
+						'uri_last_seen'	=> array(
+							'type' => 'string',
+							'validation_method' => 'Network::Subnet::safeString()'
+						)
+					),
+				),
+				'updateSubnet'	=> array(
+					'description'	=> 'Update a subnet',
+					'privilege_required'	=> 'network admin',
+					'token_required'		=> true,
+					'return_element'		=> 'subnet',
+					'return_type'			=> 'Network::Subnet',
+					'parameters'	=> array(
+						'id'			=> array(
+							'required' => true
+						),
 						'address'		=> array(),
-						'subnet_id'		=> array(),
-						'type'			=> array(),
+						'size'			=> array(),
+						'type'			=> array(
+							'options' => array(
+								'ipv4',
+								'ipv6'
+							)
+						),
+						'risk_level'	=> array(
+							'type' => 'integer'
+						),
+						'description'	=> array(
+							'type' => 'string',
+							'validation_method' => 'Network::Subnet::safeString()'
+						),
+						'managed'		=> array(
+							'options' => array(
+								'AUTO',
+								'MANUAL'
+							)
+						),
+						'uri_last_seen' => array(
+							'type' => 'string',
+							'validation_method' => 'Network::Subnet::safeString()'
+
+						)
 					)
 				),
+				'getSubnetsContainingAddress' => array(
+					'description'	=> 'Get subnets containing a specified address',
+					'privilege_required'	=> 'network admin',
+					'return_element'		=> 'subnet',
+					'return_type'			=> 'Network::Subnet',
+					'parameters'	=> array(
+						'address' => array(
+							'required' => true
+						)
+					)
+				)
 			);
 		}
 	}

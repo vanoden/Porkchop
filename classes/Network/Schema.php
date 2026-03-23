@@ -171,6 +171,35 @@
 				$this->setVersion(4);
 				$database->CommitTrans();
 			}
+
+			if ($this->version() < 5) {
+				$alter_table_query = "
+					ALTER TABLE `network_subnets`
+					ADD COLUMN `uri_last_seen` varchar(255) NULL
+				";
+				if (! $database->execute($alter_table_query)) {
+					$this->SQLError("SQL Error altering network_subnets table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(5);
+				$database->CommitTrans();
+			}
+
+			if ($this->version() > 6) {
+				$alter_table_query = "
+					ALTER TABLE `network_subnets`
+					ADD COLUMN `five_minute_hit_rate` float(5,2) NULL
+				";
+				if (! $database->execute($alter_table_query)) {
+					$this->SQLError("SQL Error altering network_subnets table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
+					return false;
+				}
+				$this->setVersion(6);
+				$database->CommitTrans();
+			}
 			return true;
 		}
 	}

@@ -10,7 +10,7 @@
 
 	// Get List if recorded subnets
 	$subnet_list = new \Network\SubnetList();
-	$subnets = $subnet_list->find();
+	$subnets = $subnet_list->find(null, array('date_last_seen' => 'DESC'));
 
 	// Page Heading
 	$page->title("Recorded Subnets");

@@ -10,6 +10,7 @@
 		public $risk_level = 0;			// Risk level of the subnet (-100 to 100)
 		public $date_added;				// Date the subnet was added to the system
 		public $date_last_seen;			// Last time a connection was seen from an address in this subnet
+		public $uri_last_seen;			// The URI that was last accessed from an address in this subnet
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'network_subnets';
@@ -21,7 +22,8 @@
 				'managed',
 				'risk_level',
 				'date_added',
-				'date_last_seen'
+				'date_last_seen',
+				'uri_last_seen'
 			));
 			parent::__construct($id);
 		}
@@ -268,7 +270,7 @@
 			// Prepare Update Query
 			$update_object_query = "
 				UPDATE	network_subnets
-				SET		id = id";
+				SET		date_last_seen = sysdate()";
 
 			// Validate and Append Parameters to Query
 			if (isset($params['type'])) {
@@ -344,6 +346,16 @@
 				$database->AddParam($params['address']);
 			}
 
+			if (!empty($params['uri_last_seen'])) {
+				if (! filter_var($params['uri_last_seen'], FILTER_VALIDATE_URL)) {
+					$this->error("Invalid URI for uri_last_seen");
+					$url_last_seen = '[INVALID]';
+				}
+				$update_object_query .= ",
+					uri_last_seen = ?";
+				$database->AddParam($params['uri_last_seen']);
+			}
+
 			$update_object_query .= "
 				WHERE	id = ?
 			";
@@ -405,9 +417,11 @@
 			$database = new \Database\Service();
 			$update_seen_query = "
 				UPDATE	network_subnets
-				SET		date_last_seen = NOW()
+				SET		date_last_seen = NOW(),
+						uri_last_seen = ?
 				WHERE	id = ?
 			";
+			$database->AddParam($_SERVER['REQUEST_URI'] ?? null);
 			$database->AddParam($this->id);
 			$database->Execute($update_seen_query);
 			if ($database->ErrorMsg()) {
