@@ -44,7 +44,7 @@
 			if (! $this->compares($level)) return 1;
 			list($file,$line) = $this->caller($file,$line);
 
-			fwrite($this->fh,$this->formatted($message,$level,$file,$line,$module,$view)."\n");
+			fwrite($this->fh,$this->formatted($message,$level,$file,$line,$module,$view));
 			return 1;
 		}
 

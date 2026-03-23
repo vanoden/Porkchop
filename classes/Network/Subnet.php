@@ -2,53 +2,226 @@
 	namespace Network;
 
 	class Subnet Extends \BaseModel {
-		public $address;
-		public $size;
-		public $type;
-		public $description;
+		public $address;				// Base Network address of the subnet in long format
+		public $size = 1;				// Size of the subnet as an integer
+		public $type;					// Type of subnet: ipv4 or ipv6
+		public $description;			// Optional description of the subnet
+		public $managed = 'AUTO';		// How this subnet is managed: AUTO (automatically managed by the system), MANUAL (manually managed by an administrator)
+		public $risk_level = 0;			// Risk level of the subnet (-100 to 100)
+		public $date_added;				// Date the subnet was added to the system
+		public $date_last_seen;			// Last time a connection was seen from an address in this subnet
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'network_subnets';
+			$this->_addFields(array(
+				'address',
+				'size',
+				'type',
+				'description',
+				'managed',
+				'risk_level',
+				'date_added',
+				'date_last_seen'
+			));
 			parent::__construct($id);
 		}
 
 		public function add($params = array()) {
-
 			$database = new \Database\Service();
-			if ($params['type'] == 'ipv4') {
-				if (! $this->validipv4($params['address'])) {
-					$this->error("Invalid address");
+			if (preg_match('/^ipv4$/i', $params['type'])) {
+				if (! filter_var($params['address'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+					$this->error("Invalid ".$params['type']." address");
+					return false;
+				}
+				$params['type'] = 'ipv4';
+				$params['address'] = ip2long($params['address']);
+				if ($params['size'] < 1 || $params['size'] > 32) {
+					$this->error("Invalid size for IPv4 subnet");
 					return false;
 				}
 			}
-			elseif ($params['type'] == 'ipv6') {
-				if (! $this->validipv6($params['address'])) {
-					$this->error("Invalid address");
+			elseif (preg_match('/^ipv6$/i', $params['type'])) {
+				if (! filter_var($params['address'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+					$this->error("Invalid ".$params['type']." address");
 					return false;
 				}
+				$params['type'] = 'ipv6';
+				$params['address'] = inet_pton($params['address']);
+				if ($params['size'] < 1 || $params['size'] > 128) {
+					$this->error("Invalid size for IPv6 subnet");
+					return false;
+				}
+			}
+			elseif (preg_match('/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/', $params['address'], $matches)) {
+				$ip = $matches[0];
+				$size = 1;
+				if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+					$this->error("Invalid ".$params['type']." address");
+					return false;
+				}
+				if ($size < 1 || $size > 32) {
+					$this->error("Invalid size for IPv4 subnet");
+					return false;
+				}
+				$params['type'] = 'ipv4';
+				$params['address'] = ip2long($ip);
+				$params['size'] = $size;
+			}
+			elseif (preg_match('/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\/(\d{1,2})$/', $params['address'], $matches)) {
+				$ip = $matches[0];
+				$cidrsize = (int)$matches[5];
+				$size = 2^(32 - $cidrsize);
+				if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+					$this->error("Invalid ".$params['type']." address");
+					return false;
+				}
+				if ($size < 1 || $size > 32) {
+					$this->error("Invalid size for ".$params['type']." subnet");
+					return false;
+				}
+				$params['type'] = 'ipv4';
+				$params['address'] = ip2long($ip);
+				$params['size'] = $size;
+			}
+			elseif (preg_match('/^([a-fA-F0-9:]+)\/(\d{1,3})$/', $params['address'], $matches)) {
+				$ip = $matches[1];
+				$cidrsize = (int)$matches[2];
+				$size = 2^(128 - $cidrsize);
+				if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+					$this->error("Invalid ".$params['type']." address");
+					return false;
+				}
+				if ($size < 1 || $size > 128) {
+					$this->error("Invalid size for ".$params['type']." subnet");
+					return false;
+				}
+				$params['type'] = 'ipv6';
+				$params['address'] = inet_pton($ip);
+				$params['size'] = $size;
 			}
 			else {
-				$this->error("Invalid type");
+				$this->error("Type required for address '".$params['address']."'");
 				return false;
 			}
-			if (!is_numeric($params['size'])) {
+
+			if (empty($params['address'])) {
+				$this->error("Address is required");
+				return false;
+			}
+
+			if (preg_match('/^ipv4$/i', $params['type'])) {
+				if (is_numeric($params['address']) && $params['address'] > 0 && $params['address'] < 4294967295) {
+					$params['address'] = (string)$params['address'];
+				}
+				elseif (! filter_var($params['address'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+					$this->error("Invalid ".$params['type']." address: ".$params['address']);
+					return false;
+				}
+				else $params['address'] = ip2long($params['address']);
+			}
+			elseif (preg_match('/^ipv6$/i', $params['type'])) {
+				if (! filter_var($params['address'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+					$this->error("Invalid ".$params['type']." address: ".$params['address']);
+					return false;
+				}
+				$params['address'] = inet_pton($params['address']);
+			}
+			elseif (preg_match('/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\/(\d{1,2})$/', $params['address'], $matches)) {
+				$ip = $matches[0];
+				$cidrsize = (int)$matches[5];
+				$size = 2^(32 - $cidrsize);
+				if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+					$this->error("Invalid address");
+					return false;
+				}
+				if ($size < 1 || $size > 32) {
+					$this->error("Invalid size for IPv4 subnet");
+					return false;
+				}
+				$params['type'] = 'ipv4';
+				$params['address'] = ip2long($ip);
+				$params['size'] = $size;
+			}
+			elseif (preg_match('/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/', $params['address'], $matches)) {
+				$ip = $matches[0];
+				$size = 1;
+				if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+					$this->error("Invalid address");
+					return false;
+				}
+				if ($size < 1 || $size > 32) {
+					$this->error("Invalid size for IPv4 subnet");
+					return false;
+				}
+				$params['type'] = 'ipv4';
+				$params['address'] = ip2long($ip);
+				$params['size'] = $size;
+			}
+			elseif (preg_match('/^([a-fA-F0-9:]+)\/(\d{1,3})$/', $params['address'], $matches)) {
+				$ip = $matches[1];
+				$cidrsize = (int)$matches[2];
+				$size = 2^(128 - $cidrsize);
+				if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+					$this->error("Invalid address");
+					return false;
+				}
+				if ($size < 1 || $size > 128) {
+					$this->error("Invalid size for IPv6 subnet");
+					return false;
+				}
+				$params['type'] = 'ipv6';
+				$params['address'] = inet_pton($ip);
+				$params['size'] = $size;
+			}
+			elseif (!empty($params['address']) && is_numeric($params['address'])) {
+				$params['address'] = (string)$params['address'];
+			}
+			else {
+				$this->error("Invalid address format");
+				return false;
+			}
+
+			if (!is_numeric($params['size']) || $params['size'] < 1 || (preg_match('/^ipv4$/i', $params['type']) && $params['size'] > 32) || (preg_match('/^ipv6$/i', $params['type']) && $params['size'] > 128)) {
 				$this->error("Invalid size");
 				return false;
+			}
+
+			if (isset($params['description'])) {
+				$params['description'] = noXSS(trim($params['description']));
+			}
+
+			if (isset($params['risk_level'])) {
+				if (! is_numeric($params['risk_level']) || $params['risk_level'] < -100 || $params['risk_level'] > 100) {
+					$this->error("Invalid risk level");
+					return false;
+				}
+			}
+
+			if (!empty($params['managed']) && preg_match('/^manual$/i', $params['managed'])) {
+				$params['managed'] = 'MANUAL';
+			}
+			else {
+				$params['managed'] = 'AUTO';
 			}
 
 			$database->AddParam($params['address']);
 			$database->AddParam($params['size']);
 			$database->AddParam($params['type']);
-				
+
 			$add_object_query = "
 				INSERT
 				INTO	network_subnets
 				(		address,
 						size,
-						type
+						type,
+						date_added,
+						date_last_seen
 				)
 				VALUES
-				(		?,?,?)
+				(		?,?,?,
+						sysdate(),
+						sysdate()
+				)
 			";
 
 			$database->Execute($add_object_query);
@@ -74,16 +247,33 @@
 			return $this->details();
 		}
 
+		/** @method public update()
+		 * Updates the subnet with the given parameters.
+		 * @param array $params The parameters to update.
+		 * - address: The new base network address of the subnet (can be in standard notation or long format)
+		 * - size: The new size of the subnet as an integer
+		 * - type: The new type of the subnet (ipv4 or ipv6)
+		 * - description: An optional new description of the subnet
+		 * - risk_level: The new risk level of the subnet as an integer between -100 and 100
+		 * - managed: How the subnet is managed (AUTO or MANUAL)
+		 * @return bool True if the update was successful, false otherwise.
+		 */
 		public function update($params = []): bool {
+			// Clear Errors
+			$this->clearErrors();
 
+			// Initialize Database Service
 			$database = new \Database\Service();
+
+			// Prepare Update Query
 			$update_object_query = "
 				UPDATE	network_subnets
 				SET		id = id";
 
+			// Validate and Append Parameters to Query
 			if (isset($params['type'])) {
 				if (! $this->validType($params['type'])) {
-					$this->error("Invalid type");
+					$this->error("Invalid type '".$params['type']."'");
 					return false;
 				}
 				else {
@@ -92,17 +282,72 @@
 					$database->AddParam($params['type']);
 				}
 			}
-			if (isset($params['size'])) {
+			if (!empty($params['size'])) {
 				if (! is_numeric($params['size'])) {
 					$this->error("Invalid size");
 					return false;
 				}
 			}
+
 			if (isset($params['description'])) {
 				$update_object_query .= ",
 					description = ?";
 				$database->AddParam(noXSS(trim($params['description'])));
 			}
+
+			if (!empty($params['risk_level'])) {
+				if (! is_numeric($params['risk_level']) || $params['risk_level'] < -100 || $params['risk_level'] > 100) {
+					$this->error("Invalid risk level");
+					return false;
+				}
+				else {
+					$update_object_query .= ",
+					risk_level = ?";
+					$database->AddParam($params['risk_level']);
+				}
+			}
+
+			if (!empty($params['managed'])) {
+				if (preg_match('/^manual$/i', $params['managed'])) {
+					$managed = 'MANUAL';
+				}
+				else {
+					$managed = 'AUTO';
+				}
+				$update_object_query .= ",
+					managed = ?";
+				$database->AddParam($managed);
+			}
+
+			if (isset($params['address'])) {
+				if (preg_match('/^ipv4$/i', $this->type)) {
+					if (! $this->validipv4($params['address'])) {
+						$this->error("Invalid ".$this->type."address");
+						return false;
+					}
+					else {
+						$params['address'] = ip2long($params['address']);
+					}
+				}
+				elseif (preg_match('/^ipv6$/i', $this->type)) {
+					if (! $this->validipv6($params['address'])) {
+						$this->error("Invalid ".$this->type."address");
+						return false;
+					}
+					else {
+						$params['address'] = inet_pton($params['address']);
+					}
+				}
+
+				$update_object_query .= ",
+					address = ?";
+				$database->AddParam($params['address']);
+			}
+
+			$update_object_query .= "
+				WHERE	id = ?
+			";
+			$database->AddParam($this->id);
 
 			$database->Execute($update_object_query);
 			if ($database->ErrorMsg()) {
@@ -122,6 +367,10 @@
 			return $this->details();
 		}
 
+		/** @method public delete()
+		 * Deletes the subnet from the database.
+		 * @return bool True if the deletion was successful, false otherwise.
+		 */
 		public function delete(): bool {
 			
 			$database = new \Database\Service();
@@ -149,6 +398,26 @@
 			return true;
 		}
 
+		/** @method public seen()
+		 * Updates the date_last_seen field to the current date and time. This should be called whenever a connection is seen from an address in this subnet.
+		 */
+		public function seen(): void {
+			$database = new \Database\Service();
+			$update_seen_query = "
+				UPDATE	network_subnets
+				SET		date_last_seen = NOW()
+				WHERE	id = ?
+			";
+			$database->AddParam($this->id);
+			$database->Execute($update_seen_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+			}
+		}
+
+		/** @method public details()
+		 * Retrieves the details of the subnet from the database and updates the object's properties.
+		 */
 		public function details(): bool {
 			$database = new \Database\Service();
 			$get_object_query = "
@@ -163,13 +432,28 @@
 				return false;
 			}
 
-			$rs->FetchNextObject(false);
-			if ($rs->id) {
+			$object = $rs->FetchNextObject(false);
+			if ($object) {
+				$this->risk_level = $object->risk_level;
+				$this->address = $object->address;
+				$this->size = $object->size;
+				$this->type = $object->type;
+				$this->description = $object->description;
+				$this->managed = $object->managed;
+				$this->date_added = $object->date_added;
+				$this->date_last_seen = $object->date_last_seen;
 				return true;
 			}
 			else {
 				$this->id = null;
 				return false;
 			}
+		}
+
+		/** @method public riskLevel()
+		 * Returns the risk level of the current subnet as an integer between -100 and 100.
+		 */
+		public function riskLevel(): int {
+			return $this->risk_level;
 		}
 	}

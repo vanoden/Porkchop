@@ -20,6 +20,8 @@
 		private $_query_string = '';
 		private $_parameters = array();
 		private $_headers = array();
+		private ?int $client_ip_long = 0;	// Int form of client IP for easier subnet matching
+		private ?int $subnet_id = null;		// Subnet ID if client IP matches a subnet in the database
 
 		/** @constructor
 		 * Initializes the HTTP request
@@ -211,7 +213,7 @@
 		 * Parses the URI, identifies module, view, index, and query variables
 		 */
 		public function deconstruct(): true {
-			app_log("REQUEST: ".$_SERVER['REQUEST_URI'],'debug',__FILE__,__LINE__);
+			app_log("REQUEST: ".$_SERVER['REQUEST_URI'],'trace',__FILE__,__LINE__);
 			# Store User Agent
 			$this->user_agent = $_SERVER['HTTP_USER_AGENT'];
 
@@ -347,7 +349,7 @@
 				else $this->query_vars = '';
 			}
 
-			app_log("Request: ".$this->module."::".$this->view."::".$this->index,'debug',__FILE__,__LINE__);
+			app_log("Request: ".$this->module."::".$this->view."::".$this->index,'trace',__FILE__,__LINE__);
 
 			# Parse Remainder of Query String into Array
 			$parsed_vars = preg_split("@/@",$this->query_vars ?? '');
@@ -453,12 +455,14 @@
 
 					// Validate just in case
 					if (filter_var ($client_ip, FILTER_VALIDATE_IP)) {
+						$this->client_ip_long = ip2long($client_ip);
 						return $client_ip;
 					}
 				}
 			}
 
 			// In all other cases, REMOTE_ADDR is the ONLY IP we can trust.
+			$this->client_ip_long = ip2long($_SERVER['REMOTE_ADDR']);
 			return $_SERVER['REMOTE_ADDR'];
 		}
 
@@ -470,6 +474,21 @@
 			$risk_level = 0;
 			$uri = $this->_uri;
 			$agent = $this->user_agent;
+			$subnet = null;
+
+			# See if we already know the subnet
+			if ($this->subnet_id) {
+				$subnet = new \Network\Subnet($this->subnet_id);
+				$risk_level = $subnet->riskLevel();
+			}
+			else {
+				# See if IP is in a known subnet
+				$subnetList = new \Network\SubnetList();
+				if ($subnetList->contains($this->client_ip)) {
+					$subnet = $subnetList->matched();
+					$risk_level = $subnet->riskLevel();
+				}
+			}
 
 			if (preg_match('/^([\/\w\-\_\.]+)\?(.*)$/',$uri,$matches)) {
 				$uri = $matches[1];
@@ -490,6 +509,11 @@
 				# Known Scanning or Fuzzing Tool
 				app_log("WAF RULE: known scanning tool in user agent",'trace2');
 				$risk_level += 150;
+			}
+
+			if (preg_match('/(GPTBot|SemrushBot|AhrefsBot|MJ12bot|ZoominfoBot|DotBot|MauiBot)/i',$agent)) {
+				# Known Good Bot, Reduce Risk
+				app_log("WAF RULE: known good bot in user agent",'trace2');
 			}
 
 			if ($this->module && $this->module != "content") {
@@ -563,6 +587,27 @@
 					app_log("WAF RULE: SQL Inject",'trace2');
 					$risk_level += 100;
 				}
+			}
+
+			if ($subnet && $subnet->id()) {
+				# Add Risk from Subnet
+				app_log("WAF RULE: subnet risk level ".$subnet->riskLevel(),'trace2');
+				$risk_level += $subnet->riskLevel();
+				$subnet->seen();
+			}
+			else if (true || ($risk_level > -100 && empty($subnet))) {
+				# Unmatched IP with Risky Request, Add to Subnet List
+				app_log("WAF RULE: adding subnet for unmatched IP with risk level ".$risk_level,'trace2');
+
+				$subnet = new \Network\Subnet();
+				$parameters = [];
+
+				$parameters['address'] = $this->client_ip;
+				$parameters['size'] = 1;
+				$parameters['address'] = $this->client_ip;
+				$parameters['managed'] = 'AUTO';
+				$parameters['risk_level'] = $risk_level;
+				$subnet->add($parameters);
 			}
 			return $risk_level;
 		}

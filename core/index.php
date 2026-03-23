@@ -93,23 +93,6 @@
 		exit;
 	}
 
-
-	###################################################
-	### Parse Request								###
-	###################################################
-	$_REQUEST_ = new \HTTP\Request();
-	$_REQUEST_->deconstruct();
-
-	###################################################
-	### Traffic Management							###
-	###################################################
-	$logger->writeln("Request for ".$_REQUEST_->uri()." from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info');
-	if (preg_match('/(GPTBot|SemrushBot|AhrefsBot|MJ12bot|ZoominfoBot|DotBot|MauiBot)/i',$_REQUEST_->user_agent)) {
-		$logger->writeln("Search Engine Bot Detected: ".$_REQUEST_->user_agent,'info');
-		header("HTTP/1.1 403 Forbidden");
-		exit;
-	}
-
 	###################################################
 	### Connect to Database							###
 	###################################################
@@ -139,6 +122,22 @@
 	$logger->writeln("Cache Initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
+	### Parse Request								###
+	###################################################
+	$_REQUEST_ = new \HTTP\Request();
+	$_REQUEST_->deconstruct();
+
+	###################################################
+	### Traffic Management							###
+	###################################################
+	$logger->writeln("Request for ".$_REQUEST_->uri()." from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info');
+	if ($_REQUEST_->riskLevel() >= 100) {
+		$logger->writeln("Probable Malicious Request Detected: ".$_REQUEST_->user_agent,'info');
+		header("HTTP/1.1 403 Forbidden");
+		exit;
+	}
+
+	###################################################
 	### Initialize Session							###
 	###################################################
 	$_SESSION_ = new \Site\Session();
@@ -157,7 +156,7 @@
 	if ($_SESSION_->message) $page_message = $_SESSION_->message;
 
 	# Access Logging in Application Log
-	$logger->writeln("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info',__FILE__,__LINE__);
+	$logger->writeln("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' for '".$_REQUEST_->uri()."'Risk Score: ".$_REQUEST_->riskLevel(),'info',__FILE__,__LINE__);
 	if ($_REQUEST_->riskLevel() >= 100) {
 		$logger->writeln("High Risk Request Rejected: URI: ".$_REQUEST_->uri()." Agent: ".$_REQUEST_->user_agent,'warning',__FILE__,__LINE__);
 		header("HTTP/1.1 403 Forbidden");

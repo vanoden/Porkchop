@@ -5,11 +5,14 @@
 		public $module = "network";
 		
 		public function upgrade() {
+			// Initialize Database Service
+			$database = new \Database\Service();
+
 			if ($this->version() < 1) {
-				app_log("Upgrading ".$this->class." schema to version 1",'notice',__FILE__,__LINE__);
+				app_log("Upgrading ".get_class($this)." schema to version 1",'notice',__FILE__,__LINE__);
 
 				# Start Transaction
-				if (! $GLOBALS['_database']->BeginTrans())
+				if (! $database->BeginTrans())
 					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				$create_table_query = "
@@ -20,9 +23,9 @@
 						UNIQUE KEY		`uk_name` (`name`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->execute($create_table_query)) {
+					$this->SQLError("SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -38,9 +41,9 @@
 						FOREIGN KEY `fk_domain` (`domain_id`) REFERENCES `network_domains` (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_hosts table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->execute($create_table_query)) {
+					$this->SQLError("SQL Error creating network_hosts table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -53,9 +56,9 @@
 						FOREIGN KEY `fk_meta_host_id` (`host_id`) REFERENCES `network_hosts` (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_host_metadata table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->execute($create_table_query)) {
+					$this->SQLError("SQL Error creating network_host_metadata table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -72,9 +75,9 @@
 						FOREIGN KEY `fk_host` (`host_id`) REFERENCES `network_hosts` (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_adapters table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->execute($create_table_query)) {
+					$this->SQLError("SQL Error creating network_adapters table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -87,9 +90,9 @@
 						PRIMARY KEY `pk_network_subnet_id` (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_subnets table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->execute($create_table_query)) {
+					$this->SQLError("SQL Error creating network_subnets table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -104,14 +107,14 @@
 						FOREIGN KEY `fk_adapter` (`adapter_id`) REFERENCES `network_adapters` (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_addresses table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->execute($create_table_query)) {
+					$this->SQLError("SQL Error creating network_addresses table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
 				$this->setVersion(1);
-				$GLOBALS['_database']->CommitTrans();
+				$database->CommitTrans();
 			}
 			if ($this->version() < 2) {
 				$create_table_query = "
@@ -124,14 +127,49 @@
 						INDEX `idx_priority` (`priority`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_acls table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->execute($create_table_query)) {
+					$this->SQLError("SQL Error creating network_acls table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
 				$this->setVersion(2);
-				$GLOBALS['_database']->CommitTrans();
+				$database->CommitTrans();
+			}
+			if ($this->version() < 3) {
+				$alter_table_query = "
+					ALTER TABLE `network_subnets`
+					ADD COLUMN `managed` enum('AUTO','MANUAL') NOT NULL DEFAULT 'AUTO',
+					ADD COLUMN `risk_level` int(3) NOT NULL DEFAULT 0,
+					ADD COLUMN `description` varchar(255) NULL,
+					ADD COLUMN `date_added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					ADD COLUMN `date_last_seen` datetime NULL,
+					ADD INDEX `idx_subnet_address` (`address`,`size`,`type`),
+					ADD INDEX `idx_address_last_seen` (`date_last_seen`,`managed`)
+				";
+				if (! $database->execute($alter_table_query)) {
+					$this->SQLError("SQL Error altering network_subnets table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(3);
+				$database->CommitTrans();
+			}
+
+			if ($this->version() < 4) {
+				$alter_table_query = "
+					ALTER TABLE `network_subnets`
+					ADD UNIQUE KEY `uk_subnet` (`address`,`size`,`type`)
+				";
+				if (! $database->execute($alter_table_query)) {
+					$this->SQLError("SQL Error altering network_subnets table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(4);
+				$database->CommitTrans();
 			}
 			return true;
 		}
