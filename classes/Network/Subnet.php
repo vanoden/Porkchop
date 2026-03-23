@@ -429,6 +429,30 @@
 			}
 		}
 
+		/** @method maintain(new_risk_level)
+		 * Maintains the subnet's risk level by updating it to the new risk level provided. This should be called whenever there is a change in the subnet's risk level to ensure that the database is updated accordingly.
+		 */
+		public function maintain($new_risk_level): void {
+			$database = new \Database\Service();
+			$update_risk_query = "
+				UPDATE	network_subnets
+				SET		risk_level = ?,
+						date_last_seen = sysdate(),
+						uri_last_seen = ?
+				WHERE	id = ?
+			";
+			$database->AddParam($new_risk_level);
+			$database->AddParam($_SERVER['REQUEST_URI'] ?? null);
+			$database->AddParam($this->id);
+			$database->Execute($update_risk_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+			}
+			else {
+				$this->risk_level = $new_risk_level;
+			}
+		}
+
 		/** @method public details()
 		 * Retrieves the details of the subnet from the database and updates the object's properties.
 		 */
@@ -470,6 +494,26 @@
 		 */
 		public function riskLevel(): int {
 			return $this->risk_level;
+		}
+
+		/** @method public adjustRiskLevel(int $control)
+		 * Use an algorithm to adjust the risk level of the subnet based on a new risk contribution value. The contribution value can be positive or negative, and the algorithm will adjust the risk level accordingly while keeping it within the bounds of -100 and 100.
+		 * @param int $control The new risk contribution value to adjust the risk level by.
+		 * @return int The new adjusted risk level after applying the contribution.
+		 */
+		public function adjustRiskLevel(int $control): int {
+			$risk_level = 0;
+			if ($control > $this->risk_level) {
+				$risk_level += (int)(($control - $this->risk_level) / 2);
+			}
+			else if ($control < $this->risk_level) {
+				$risk_level -= (int)(($this->risk_level - $control) / 2);
+			}
+			if ($risk_level > 100) $risk_level = 100;
+			if ($risk_level < -100) $risk_level = -100;
+			app_log("Adjusting risk level of subnet ID ".$this->id." from ".$this->risk_level." to ".$risk_level, 'debug');
+			$this->maintain($risk_level);
+			return $risk_level;
 		}
 
 		/** @method public realAddress()

@@ -593,7 +593,7 @@
 				# Add Risk from Subnet
 				app_log("WAF RULE: subnet risk level ".$subnet->riskLevel(),'trace2');
 				$risk_level += $subnet->riskLevel();
-				$subnet->seen();
+				$subnet->adjustRiskLevel($risk_level);
 			}
 			else if (true || ($risk_level > -100 && empty($subnet))) {
 				# Unmatched IP with Risky Request, Add to Subnet List
