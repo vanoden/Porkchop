@@ -187,10 +187,10 @@
 				$database->CommitTrans();
 			}
 
-			if ($this->version() > 6) {
+			if ($this->version() < 6) {
 				$alter_table_query = "
 					ALTER TABLE `network_subnets`
-					ADD COLUMN `five_minute_hit_rate` float(5,2) NULL
+					ADD COLUMN `five_minute_hit_rate` decimal(7,2) DEFAULT NULL
 				";
 				if (! $database->execute($alter_table_query)) {
 					$this->SQLError("SQL Error altering network_subnets table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
