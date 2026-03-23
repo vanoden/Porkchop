@@ -77,7 +77,7 @@ class BaseListClass extends \BaseClass {
 		}
 		elseif ($name == "search") {
 			if (count($parameters) == 3) {
-				return $this->searchAdanced($parameters[0], $parameters[1], $parameters[2]);
+				return $this->searchAdvanced($parameters[0], $parameters[1], $parameters[2]);
 			}
 			elseif (count($parameters) == 2) {
 				return $this->searchControlled($parameters[0], $parameters[1]);
