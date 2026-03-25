@@ -1,5 +1,5 @@
 <?= $page->showSubHeading() ?>
-
+<h3>Found <?= $subnet_list->count() ?> subnets</h3>
 <div class="tableBody bandedRows">
 	<div class="tableRow header">
 		<div class="tableCell">ID</div>

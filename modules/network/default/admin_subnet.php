@@ -44,9 +44,14 @@ function rdapLookup() {
 <label for="subnet_uri_last_seen">URI Last Seen</label>
 <span id="subnet_uri_last_seen" name="subnet_uri_last_seen"> <?= $subnet->uri_last_seen ? $subnet->uri_last_seen : '' ?></span>
 
+<label for="subnet_last_suspicious_traffic">Last Suspicious Traffic</label>
+<span id="subnet_last_suspicious_traffic" name="subnet_last_suspicious_traffic"> <?= $subnet->last_suspicious_traffic ? date('Y-m-d\TH:i:s', strtotime($subnet->last_suspicious_traffic)) : 'N/A' ?></span>
+
 <label for="subnet_applied_risk_level">Applied Risk Level</label>
 <span id="subnet_applied_risk_level" name="subnet_applied_risk_level"> <?= $subnet->applied_risk_level !== null ? $subnet->applied_risk_level : 'N/A' ?></span>
 
+<label for="subnet_description">Description</label>
+<textarea id="subnet_description" name="subnet_description"><?= $subnet->description ?></textarea>
 
 <input type="button" id="btn_rdap" name="btn_rdap" value="RDAP Lookup" onclick="rdapLookup()">
 <input type="submit" id="btn_save" name="btn_save" value="Apply Changes">

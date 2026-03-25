@@ -215,6 +215,20 @@
 				$this->setVersion(7);
 				$database->CommitTrans();
 			}
+
+			if ($this->version() < 8) {
+				$alter_table_query = "
+					ALTER TABLE `network_subnets`
+					ADD COLUMN `last_suspicious_traffic` datetime DEFAULT NULL
+				";
+				if (! $database->execute($alter_table_query)) {
+					$this->SQLError("SQL Error altering network_subnets table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
+					return false;
+				}
+				$this->setVersion(8);
+				$database->CommitTrans();
+			}
 			return true;
 		}
 	}

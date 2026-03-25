@@ -235,7 +235,7 @@
 		/** @method public purgeSafeSubnets()
 		 * Permanently deletes subnets that are considered safe
 		 */
-		public function purgeSafeSubnets(): void {
+		public function purgeSafeSubnets(): int {
 			// Initialize Database Service
 			$database = new \Database\Service();
 			$purge_query = "
@@ -248,16 +248,19 @@
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
 				app_log($this->error(), 'error');
+				return 0;
 			}
 			else {
-				app_log("Purged safe subnets with risk level 0 and managed set to AUTO", 'info');
+				$num_deleted = $database->Affected_Rows();
+				app_log("Purged safe subnets with risk level 0 and managed set to AUTO. Deleted $num_deleted subnets.", 'info');
+				return $num_deleted;
 			}
 		}
 
 		/** @method purgeOldSubnets()
 		 * Permanently deletes subnets that have not been seen in over a day and have a low risk level
 		 */
-		public function purgeOldSubnets(): void {
+		public function purgeOldSubnets(): int {
 			// Initialize Database Service
 			$database = new \Database\Service();
 
@@ -265,16 +268,20 @@
 				DELETE
 				FROM	network_subnets
 				WHERE	date_last_seen < DATE_SUB(NOW(), INTERVAL 1 DAY)
-				AND		risk_level <= 1
+				AND		risk_level <= 0
 				AND		managed = 'AUTO'
 			";
+
 			$database->Execute($purge_query);
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
 				app_log($this->error(), 'error');
+				return 0;
 			}
 			else {
-				app_log("Purged old subnets not seen in over a day with risk level 1 or lower", 'info');
+				$num_deleted = $database->Affected_Rows();
+				app_log("Purged old subnets not seen in over a day with risk level 0 or lower. Deleted $num_deleted subnets.", 'info');
+				return $num_deleted;
 			}
 		}
 

@@ -34,7 +34,8 @@
 			'size' => $_POST['subnet_size'],
 			'type' => $_POST['subnet_type'],
 			'risk_level' => $_POST['subnet_risk_level'],
-			'managed' => $_POST['subnet_managed']
+			'managed' => $_POST['subnet_managed'],
+			'description' => $_POST['subnet_description'],
 		];
 		if ($subnet->id) {
 			if ($subnet->update($parameters)) {

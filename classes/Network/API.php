@@ -579,10 +579,11 @@
 		 */
 		public function purgeSafeSubnets() {
 			$subnetList = new \Network\SubnetList();
-			$subnetList->purgeSafeSubnets();
+			$deleted_records = $subnetList->purgeSafeSubnets();
 
 			$response = new \APIResponse();
 			if ($subnetList->error()) $response->error($subnetList->error());
+			$response->addElement('deleted_records', $deleted_records);
 			$response->print();
 		}
 
@@ -591,10 +592,11 @@
 		 */
 		public function purgeOldSubnets() {
 			$subnetList = new \Network\SubnetList();
-			$subnetList->purgeOldSubnets();
+			$deleted_records = $subnetList->purgeOldSubnets();
 
 			$response = new \APIResponse();
 			if ($subnetList->error()) $response->error($subnetList->error());
+			$response->addElement('deleted_records', $deleted_records);
 			$response->print();
 		}
 

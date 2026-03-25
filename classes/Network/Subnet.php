@@ -13,6 +13,7 @@
 		public $uri_last_seen;			// The URI that was last accessed from an address in this subnet
 		public $applied_risk_level = 0;	// The last risk level that was applied to this subnet
 		public $last_session_id;		// ID of the last session that was associated with this subnet when its risk level was updated
+		public $last_suspicious_traffic = false; // Flag to indicate if this subnet has been seen with suspicious traffic
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'network_subnets';
@@ -27,7 +28,8 @@
 				'date_last_seen',
 				'uri_last_seen',
 				'applied_risk_level',
-				'last_session_id'
+				'last_session_id',
+				'last_suspicious_traffic'
 
 			));
 			$this->_addTypes('ipv4','ipv6');
@@ -462,17 +464,26 @@
 			$database = new \Database\Service();
 			$update_risk_query = "
 				UPDATE	network_subnets
-				SET		risk_level = ?,
-						date_last_seen = sysdate(),
+				SET		date_last_seen = sysdate(),
 						uri_last_seen = ?,
 						applied_risk_level = ?,
-						last_session_id = ?
-				WHERE	id = ?
-			";
-			$database->AddParam($new_risk_level);
+						last_session_id = ?";
 			$database->AddParam($_SERVER['REQUEST_URI'] ?? null);
 			$database->AddParam($applied_risk_level);
 			$database->AddParam($GLOBALS['_SESSION_']->id ?? null);
+			// Change Risk Level only if AUTO
+			if ($this->managed == 'AUTO') {
+				$update_risk_query .= ",
+						risk_level = ?";
+				$database->AddParam($new_risk_level);
+			}
+			if ($new_risk_level > 0) {
+				$update_risk_query .= ",
+						last_suspicious_traffic = sysdate()";
+			}
+			$update_risk_query .= "
+				WHERE	id = ?
+			";
 			$database->AddParam($this->id);
 			$database->Execute($update_risk_query);
 			if ($database->ErrorMsg()) {
@@ -513,6 +524,7 @@
 				$this->uri_last_seen = $object->uri_last_seen;
 				$this->applied_risk_level = $object->applied_risk_level;
 				$this->last_session_id = $object->last_session_id;
+				$this->last_suspicious_traffic = $object->last_suspicious_traffic;
 				return true;
 			}
 			else {
