@@ -254,6 +254,11 @@
 				if (! $country->get($_REQUEST['country_name'])) $this->error("Country not found");
 				$parameters['country_id'] = $country->id;
 			}
+			elseif ($_REQUEST['country_abbreviation']) {
+				$country = new \Geography\Country();
+				if (! $country->getByAbbreviation($_REQUEST['country_abbreviation'])) $this->error("Country not found");
+				$parameters['country_id'] = $country->id;
+			}
 			elseif ($_REQUEST['country_id']) {
 				$country = new \Geography\Country($_REQUEST['country_id']);
 				$parameters['country_id'] = $country->id;
@@ -266,6 +271,20 @@
 			$response = new \APIResponse();
 			$response->success(true);
 			$response->AddElement('province',$provinces);
+			$response->print();
+		}
+
+		/** @apiMethod getStateByZipCode
+		 * Get administrative details (country, province/state, county, city) for a given zip code
+		 */
+		public function getStateByZipCode() {
+			if (empty($_REQUEST['zip_code'])) $this->incompleteRequest("zip_code required");
+			$state = new \Geography\State();
+			if (! $state->getByZipCode(trim((string) $_REQUEST['zip_code']), 'US')) $this->notFound("Zip code not found");
+
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->AddElement('state', $state);
 			$response->print();
 		}
 
@@ -479,11 +498,28 @@
 						'country_id'	=> array(
 							'description'	=> 'Country ID',
 							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
 						),
 						'country_name'	=> array(
 							'description'	=> 'Country Name',
 							'validation_method'	=> 'Geography::Country::validName()',
 							'allow_wildcards'	=> true,
+						),
+						'country_abbreviation'	=> array(
+							'description'	=> 'Country Abbreviation',
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'allow_wildcards'	=> true
+						),
+					),
+				),
+				'getStateByZipCode'	=> array(
+					'description'	=> 'Get administrative details (country, province/state, county, city) for a given zip code',
+					'return_element'	=> 'state',
+					'return_type'	=> 'Geography::State',
+					'parameters'	=> array(
+						'zip_code' => array(
+							'description'	=> 'Zip code to look up',
+							'required' => true,
 						),
 					),
 				),
