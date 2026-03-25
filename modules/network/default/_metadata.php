@@ -1,6 +1,6 @@
 <?php
 	$modules["Network"]	= array(
-		"schema"	=> 7,
+		"schema"	=> 8,
 		"templates"	=> array(
 			"admin_subnets"	=> $templates['admin'],
 			"admin_subnet"	=> $templates['admin'],

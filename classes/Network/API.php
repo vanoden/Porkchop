@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'network';
-			$this->_version = '0.3.2';
-			$this->_release = '2026-03-19';
+			$this->_version = '0.3.3';
+			$this->_release = '2026-03-25';
 			$this->_schema = new Schema();
 			parent::__construct();
 		}
