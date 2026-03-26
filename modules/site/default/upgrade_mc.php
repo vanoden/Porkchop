@@ -116,6 +116,7 @@
 				"request_new"	=> $admin_template,
 				"requests"		=> $admin_template,
 				"request_items"	=> $admin_template,
+				"stale_tickets"	=> $admin_template,
 				"admin_actions"	=> $admin_template,
 				"admin_rmas"	=> $admin_template,
 				"summary"		=> $admin_template,
@@ -330,6 +331,13 @@
 							"view_order"	=> 90,
 							"alt"			=> "RMAs",
 							"description"	=> "RMAs"
+						),
+						array (
+							"title"	=> "Stale Tickets",
+							"target"	=> "/_support/stale_tickets",
+							"view_order"	=> 95,
+							"alt"			=> "Stale Ticket Report",
+							"description"	=> "Stale Ticket Report"
 						),
 						array (
 							"title"	=> "Summary",
