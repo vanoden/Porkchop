@@ -47,6 +47,14 @@
 			return $this->_default_home;
 		}
 
+		/**
+		 * Entity code from GET, POST, or REQUEST. Query-only parameters can be missing from $_REQUEST on some PHP / proxy stacks.
+		 */
+		protected function getCode(): string {
+			$code = $_GET['code'] ?? $_POST['code'] ?? ($_REQUEST['code'] ?? '');
+			return \is_string($code) ? $code : '';
+		}
+
 		/********************************************/
 		/* Just See if Server Is Communicating		*/
 		/********************************************/
