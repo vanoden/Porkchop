@@ -49,7 +49,7 @@
 			),
 		),
 		"Geography"		=> array(
-			"schema"		=> 2,
+			"schema"		=> 3,
 			"roles"			=> array(
 			),
 			"privileges"	=> array(
