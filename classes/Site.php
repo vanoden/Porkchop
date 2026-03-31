@@ -120,6 +120,25 @@
 		public function populateMenus($menus = array()) {
 			$this->install_log("Populating Navigation Menus");
 			foreach ($menus as $code => $menu) {
+				// Support both modern menu format (title/items) and legacy shorthand
+				// format where entries are just "Item Title" => "/target/path".
+				if (!is_array($menu)) continue;
+				if (!isset($menu['title'])) $menu['title'] = $code;
+				if (!isset($menu['items']) || !is_array($menu['items'])) {
+					$legacy_items = array();
+					foreach ($menu as $legacy_title => $legacy_target) {
+						if ($legacy_title === 'title' || $legacy_title === 'items') continue;
+						$legacy_items[] = array(
+							'title' => $legacy_title,
+							'target' => $legacy_target,
+							'view_order' => count($legacy_items) + 1,
+							'alt' => $legacy_title,
+							'description' => $legacy_title
+						);
+					}
+					$menu['items'] = $legacy_items;
+				}
+
 				$nav_menu = new \Site\Navigation\Menu();
 				if ($nav_menu->get($code)) {
 					$this->install_log("Menu $code found");
@@ -131,11 +150,12 @@
 					$this->install_fail("Error adding menu $code: ".$nav_menu->error());
 				}
 				foreach ($menu["items"] as $item) {
+					if (!is_array($item) || empty($item['title'])) continue;
 					$nav_item = new \Site\Navigation\Item();
 					$parameters = array(
-						"view_order"	=> $item["view_order"],
-						"alt"			=> $item["alt"],
-						"description"	=> $item["description"]
+						"view_order"	=> $item["view_order"] ?? 0,
+						"alt"			=> $item["alt"] ?? $item["title"],
+						"description"	=> $item["description"] ?? $item["title"]
 					);
 					if (!empty($item['target'])) {
 						$parameters['target'] = $item['target'];

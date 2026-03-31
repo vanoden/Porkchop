@@ -210,8 +210,6 @@
 		 * @return string
 		 */
 		public function renderPages() {
-			print_r("Total Records: ".$this->count);
-			print_r("Total Pages: ".$this->totalPages());
 			if ($this->totalPages() > 1) {
 				$string = '';
 				$string .= "<ul>\n";

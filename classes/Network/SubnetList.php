@@ -199,13 +199,14 @@
 			}
 
 			// Prepare Query to Check if IP is in Subnet
+			$order_by = "`address` DESC, `size` ASC, `managed` DESC";
 			$check_ip_query = "
 				SELECT	id
-				FROM	network_subnets
-				WHERE	address <= ?
-				AND		address + size > ?
-				AND		type = ?
-				ORDER BY address DESC, size ASC, managed DESC
+				FROM	`network_subnets`
+				WHERE	`address` <= ?
+				AND		`address` + `size` > ?
+				AND		`type` = ?
+				ORDER BY {$order_by}
 			";
 
 			$database->AddParam($ip);
