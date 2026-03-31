@@ -83,9 +83,14 @@
 		### Get Specified Country						###
 		###################################################
 		public function getCountry() {
-			if (isset($_REQUEST['name'])) {
+			if (!empty($_REQUEST['abbreviation'])) {
 				$country = new \Geography\Country();
-				$country->get($_REQUEST['name']);
+				$country->get(trim((string) $_REQUEST['abbreviation']));
+				if ($country->error()) $this->error($country->error());
+			}
+			elseif (!empty($_REQUEST['code'])) {
+				$country = new \Geography\Country();
+				$country->get(trim((string) $_REQUEST['code']));
 				if ($country->error()) $this->error($country->error());
 			}
 			elseif(isset($_REQUEST['id'])) {
@@ -1329,14 +1334,15 @@
 							'requirement_group'	=> 0,
 							'validation_method'	=> 'Geography::Country::validCode()',
 						),
-						'name'	=> array(
-							'description'	=> 'Country Name',
-							'requirement_group'	=> 1,
-							'validation_method'	=> 'Geography::Country::validName()',
-						),
 						'abbreviation' => array(
 							'description'	=> 'Country Abbreviation',
 							'requirement_group'	=> 2,
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
+						),
+						'code' => array(
+							'description'	=> 'Alias for name/abbreviation to find country',
+							'requirement_group'	=> 3,
 							'validation_method'	=> 'Geography::Country::validCode()',
 						),
 					)

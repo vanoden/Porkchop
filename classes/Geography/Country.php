@@ -129,6 +129,11 @@
 			// Initialize Database Service
 			$database = new \Database\Service();
 
+			// Alias US for United States
+			if (is_string($idOrNameOrAbbrev) && trim(strtolower($idOrNameOrAbbrev)) === 'us') {
+				$idOrNameOrAbbrev = 'USA';
+			}
+
 			// Check if input is numeric ID
 			if (is_numeric($idOrNameOrAbbrev) && (int) $idOrNameOrAbbrev > 0) {
 				$this->id = (int) $idOrNameOrAbbrev;
@@ -166,6 +171,11 @@
 
 			// Initialize Database Service
 			$database = new \Database\Service();
+
+			// Alias US for United States
+			if (trim(strtolower($abbreviation)) === 'us') {
+				$abbreviation = 'USA';
+			}
 
 			$s = trim($abbreviation);
 			if ($s === '') return false;
