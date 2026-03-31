@@ -250,7 +250,6 @@
 			";
 			$database->AddParam($country_id);
 			$database->AddParam(trim((string) $abbrev));
-
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());

@@ -49,6 +49,7 @@
 						PRIMARY KEY `pk_id` (`id`),
 						UNIQUE KEY `uk_code` (`code`),
 						UNIQUE KEY `uk_name` (`country_id`,`name`),
+						UNIQUE KEY `uk_province_abbreviation` (`country_id`,`abbreviation`),
 						FOREIGN KEY `fk_country` (`country_id`) REFERENCES `geography_countries` (`id`)
 					)
 				";
@@ -100,7 +101,7 @@
 						longitude DECIMAL(10, 7),
 						PRIMARY KEY `pk_geography_city_id` (`id`),
 						UNIQUE KEY `uk_geography_city_code` (`code`),
-						UNIQUE KEY `uk_geography_city_name` (`province_id`,`county_id`,`name`),
+						UNIQUE KEY `uk_geography_city_name` (`province_id`,`name`),
 						FOREIGN KEY `fk_geography_city_province` (`province_id`) REFERENCES `geography_provinces` (`id`)
 					)
 				";
@@ -132,6 +133,67 @@
 				}
 
 				$this->setVersion(2);
+				$database->CommitTrans();
+			}
+
+			if ($this->version() < 3) {
+				app_log("Upgrading schema to version 3",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $database->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				// Create Weather Table
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `geography_weather` (
+						`id` INT(11) NOT NULL AUTO_INCREMENT,
+						`zip_code_id` INT(11) NOT NULL,
+						`date_record` DATETIME NOT NULL,
+						`temperature` DECIMAL(5,2),
+						`humidity` DECIMAL(5,2),
+						`pressure` DECIMAL(7,2),
+						`wind_speed` DECIMAL(5,2),
+						`wind_direction` DECIMAL(5,2),
+						`wind_gust` DECIMAL(5,2),
+						`precipitation` DECIMAL(5,2),
+						`visibility` INT(9),
+						`conditions` VARCHAR(255),
+						`forecast` tinyint(1) NOT NULL DEFAULT 0,
+						PRIMARY KEY `pk_geography_weather_id` (`id`),
+						INDEX `idx_geography_weather_zip_code_id` (`zip_code_id`,`date_record`),
+						FOREIGN KEY `fk_geography_weather_zip_code` (`zip_code_id`) REFERENCES `geography_zip_codes` (`id`)
+					)
+				";
+				if (! $database->Execute($create_table_query)) {
+					$this->SQLError("Error creating geography_weather table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				// Create Times Table
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `geography_times` (
+						id INT(11) NOT NULL AUTO_INCREMENT,
+						zip_code_id INT(11) NOT NULL,
+						date DATE NOT NULL,
+						sunrise TIME NOT NULL,
+						sunset TIME NOT NULL,
+						moonrise TIME,
+						moonset TIME,
+						moon_phase VARCHAR(255),
+						timezone VARCHAR(50),
+						timezone_offset INT(6),
+						PRIMARY KEY `pk_geography_times_id` (`id`),
+						FOREIGN KEY `fk_geography_times_zip_code` (`zip_code_id`) REFERENCES `geography_zip_codes` (`id`)
+					)
+				";
+				if (! $database->Execute($create_table_query)) {
+					$this->SQLError("Error creating geography_times table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(3);
 				$database->CommitTrans();
 			}
 			return true;

@@ -58,6 +58,10 @@
 			return true;
 		}
 
+		public function exists(): bool {
+			return $this->exists;
+		}
+
 		public function columns() {
 			$get_columns_query = "
 				SELECT	*
