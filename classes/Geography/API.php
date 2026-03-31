@@ -714,9 +714,15 @@
 				return;
 			}
 
+			$zipCodeObj = $zipCode->_clone();
+			$zipCodeObj->country_abbreviation = $zipCode->country()->abbreviation;
+			$zipCodeObj->country_name = $zipCode->country()->name;
+			$zipCodeObj->province_abbreviation = $zipCode->province()->abbreviation;
+			$zipCodeObj->province_name = $zipCode->province()->name;
+
 			$response = new \APIResponse();
 			$response->success(true);
-			$response->AddElement('zip_code', $zipCode);
+			$response->AddElement('zip_code', $zipCodeObj);
 			$response->print();
 		}
 
