@@ -13,7 +13,12 @@
 		public function connect(): true {
 			if ($this->connected) return true;
 			if (! defined('APPLICATION_LOG_NAME')) define('APPLICATION_LOG_NAME', 'Porkchop');
-			openlog(APPLICATION_LOG_NAME, LOG_PID | LOG_PERROR, LOG_LOCAL1);
+			if (defined('APPLICATION_LOG_FACILITY')) {
+				$facility = constant('APPLICATION_LOG_FACILITY');
+			} else {
+				$facility = LOG_LOCAL1;
+			}
+			openlog(APPLICATION_LOG_NAME, LOG_PID | LOG_PERROR, $facility);
 			$this->connected = true;
 			return true;
 		}
