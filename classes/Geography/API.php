@@ -1043,6 +1043,10 @@
 				return;
 			}
 
+			if (! $weatherRecord || ! $weatherRecord->id) {
+				$this->notFound("Weather record not found for specified criteria");
+				return;
+			}
 			$weatherRecordObj = $weatherRecord->_clone();
 			$weatherRecordObj->zip_code = $zipCode->code;
 			$weatherRecordObj->province_abbreviation = $province->abbreviation;
