@@ -623,4 +623,205 @@
 			// Return filtered list of owned products with type = service
 			return $this->ownedProducts(array_merge($parameters,array('type' => 'service')));
 		}
+
+		/**
+		 * Get all ACTIVE organizations for use as merge targets.
+		 * Optionally exclude a specific organization ID (typically the source org).
+		 *
+		 * @param int|null $exclude_id
+		 * @return array Array of simple row objects with id, name, code, status
+		 */
+		public static function activeOrganizations(?int $exclude_id = null): array {
+			$database = new \Database\Service();
+
+			$query = "
+				SELECT	id, name, code, status
+				FROM	register_organizations
+				WHERE	status = 'ACTIVE'
+			";
+			$params = array();
+			if (!empty($exclude_id)) {
+				$query .= "
+				AND		id != ?
+				";
+				$params[] = $exclude_id;
+			}
+			$query .= "
+				ORDER BY name
+			";
+
+			$rs = $database->Execute($query, $params);
+			if (! $rs) {
+				return array();
+			}
+
+			$results = array();
+			while ($row = $rs->FetchNextObject(false)) {
+				$results[] = $row;
+			}
+			return $results;
+		}
+
+		/**
+		 * Merge this organization into a target organization.
+		 * Moves all users (accounts and devices), owned products and location associations
+		 * from the current organization to the target organization.
+		 *
+		 * Also records an organization audit event on the current (source) organization
+		 * noting the merge and updates the source organization status to DELETED.
+		 *
+		 * @param int $target_organization_id ID of the organization to merge into
+		 * @return bool true on success, false on error
+		 */
+		public function mergeInto(int $target_organization_id): bool {
+			$this->clearError();
+
+			// Validate source organization
+			if (empty($this->id) || !is_numeric($this->id)) {
+				$this->error("Source organization is not set");
+				return false;
+			}
+
+			// Prevent merging into self
+			if ($target_organization_id === $this->id) {
+				$this->error("Cannot merge organization into itself");
+				return false;
+			}
+
+			// Load and validate target organization
+			$target = new \Register\Organization($target_organization_id);
+			if ($target->error()) {
+				$this->error("Error loading target organization: " . $target->error());
+				return false;
+			}
+			if (empty($target->id)) {
+				$this->error("Target organization not found");
+				return false;
+			}
+			if ($target->status !== 'ACTIVE') {
+				$this->error("Target organization must be ACTIVE");
+				return false;
+			}
+
+			$database = new \Database\Service();
+
+			// Begin transaction so that all moves succeed or fail together
+			if (! $database->BeginTrans()) {
+				$this->error("Database transactions not supported");
+				return false;
+			}
+
+			// Move all users (accounts and devices) to target organization
+			$database->resetParams();
+			$update_users_query = "
+				UPDATE	register_users
+				SET		organization_id = ?
+				WHERE	organization_id = ?
+			";
+			$database->Execute($update_users_query, array($target->id, $this->id));
+			if ($database->ErrorMsg()) {
+				$this->error("Error moving organization users: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+
+			// Move owned products to target organization, merging quantities where necessary.
+			// Use model logic per product to avoid ambiguous multi-table SQL in a single statement.
+			$database->resetParams();
+			$get_products_query = "
+				SELECT	product_id, quantity, date_expires
+				FROM	register_organization_products
+				WHERE	organization_id = ?
+			";
+			$rsProducts = $database->Execute($get_products_query, array($this->id));
+			if (! $rsProducts) {
+				$this->error("Error reading owned products for merge: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+			while ($row = $rsProducts->FetchNextObject(false)) {
+				// Use existing addProduct behavior to merge quantities/expiration into target
+				if (! $target->addProduct($row->product_id, $row->quantity, $row->date_expires)) {
+					$this->error("Error moving owned product ID ".$row->product_id.": " . $target->error());
+					$database->RollbackTrans();
+					return false;
+				}
+			}
+
+			// Remove any remaining product rows for the source organization
+			$database->resetParams();
+			$delete_products_query = "
+				DELETE FROM register_organization_products
+				WHERE organization_id = ?
+			";
+			$database->Execute($delete_products_query, array($this->id));
+			if ($database->ErrorMsg()) {
+				$this->error("Error cleaning up source organization products: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+
+			// Move location associations to target organization.
+			// Use per-location association to avoid ambiguous multi-table SQL.
+			$database->resetParams();
+			$get_locations_query = "
+				SELECT	location_id
+				FROM	register_organization_locations
+				WHERE	organization_id = ?
+			";
+			$rsLocations = $database->Execute($get_locations_query, array($this->id));
+			if (! $rsLocations) {
+				$this->error("Error reading organization locations for merge: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+			while (list($loc_id) = $rsLocations->FetchRow()) {
+				$location = new \Register\Location($loc_id);
+				if ($location->error()) {
+					$this->error("Error loading location ".$loc_id.": " . $location->error());
+					$database->RollbackTrans();
+					return false;
+				}
+				// This uses ON DUPLICATE KEY internally and will not create duplicates.
+				if (! $location->associateOrganization($target->id)) {
+					$this->error("Error associating location ".$loc_id." with target organization: " . $location->error());
+					$database->RollbackTrans();
+					return false;
+				}
+			}
+
+			// Remove location associations from the source organization
+			$database->resetParams();
+			$delete_locations_query = "
+				DELETE FROM register_organization_locations
+				WHERE organization_id = ?
+			";
+			$database->Execute($delete_locations_query, array($this->id));
+			if ($database->ErrorMsg()) {
+				$this->error("Error cleaning up source organization locations: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+
+			// Commit all moves
+			if (! $database->CommitTrans()) {
+				$this->error("Error committing organization merge transaction");
+				return false;
+			}
+
+			// Mark the source organization as deleted to prevent future use
+			if (! $this->update(array('status' => 'DELETED'))) {
+				// update() will set a detailed error
+				return false;
+			}
+
+			// Record audit event on the source organization describing the merge
+			$merge_notes = "Organization merged into ID {$target->id} ({$target->name})";
+			if (! $this->auditRecord('ORGANIZATION_UPDATED', $merge_notes)) {
+				// auditRecord sets its own error
+				return false;
+			}
+
+			return true;
+		}
 	}
