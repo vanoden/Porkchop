@@ -125,6 +125,28 @@
 		    </div>
 	    </div>
     </div>
+    <?php if (!empty($organization->id) && !empty($mergeTargets)) { ?>
+    <div class="tableBody">
+        <div class="tableRowHeader">
+            <div class="tableCell width-100per">Merge Organization Into</div>
+        </div>
+        <div class="tableRow">
+            <div class="tableCell">
+                <select name="merge_into_organization_id" class="width-250px">
+                    <option value="">Select target organization</option>
+                    <?php foreach ($mergeTargets as $targetOrganization) { ?>
+                        <?php if ($targetOrganization->id == $organization->id) continue; ?>
+                        <option value="<?=$targetOrganization->id?>">
+                            <?=$targetOrganization->name?> (<?=$targetOrganization->code?>)
+                        </option>
+                    <?php } ?>
+                </select>
+                <input type="submit" name="method" value="Merge" class="button"
+                       onclick="return confirm('Are you sure you want to merge this organization into the selected organization? This action cannot be undone.');"/>
+            </div>
+        </div>
+    </div>
+    <?php } ?>
     <div><input type="submit" name="method" value="Apply" class="button"/></div>
 
     <!--End first row-->

@@ -166,6 +166,63 @@
 									$page->addError($shipment->error());
 								}
 								break;
+							
+							case 'query_ups_status':
+								// Query UPS for each package that has a tracking code
+								$packages = $shipment->packages();
+								if (empty($packages)) {
+									$page->addError("No packages found for this shipment to query UPS status.");
+									break;
+								}
+
+								foreach ($packages as $package) {
+									$tracking = trim((string)$package->tracking_code);
+									if ($tracking === '') {
+										continue;
+									}
+
+									// Use package-level last query time if available; fall back to none.
+									$lastQueriedAt = null;
+									if (!empty($package->ups_last_queried_at) && ctype_digit((string)$package->ups_last_queried_at)) {
+										$lastQueriedAt = (int)$package->ups_last_queried_at;
+									}
+
+									$result = \Shipping\UPSStatus::query($tracking, $lastQueriedAt);
+
+									if (!empty($result['rate_limited'])) {
+										$page->addError("UPS was queried too recently for tracking number " . htmlspecialchars($tracking) . ".");
+										continue;
+									}
+
+									if (empty($result['success'])) {
+										$message = !empty($result['error']) ? $result['error'] : 'Unknown error querying UPS.';
+										$page->addError("Could not query UPS for tracking number " . htmlspecialchars($tracking) . ": " . $message);
+										continue;
+									}
+
+									$update = [];
+									if (isset($result['status_text'])) {
+										$update['ups_status'] = $result['status_text'];
+									}
+									if (!empty($result['status_datetime'])) {
+										$update['ups_status_datetime'] = $result['status_datetime'];
+									}
+									if (!empty($result['location'])) {
+										$update['ups_status_location'] = $result['location'];
+									}
+									$update['ups_last_queried_at'] = time();
+
+									if (!empty($update)) {
+										if (!$package->update($update)) {
+											$page->addError("Error updating UPS status for tracking number " . htmlspecialchars($tracking) . ": " . $package->error());
+										}
+									}
+								}
+
+								if (!$page->errorCount()) {
+									$page->appendSuccess("UPS status updated for packages with tracking numbers.");
+								}
+								break;
 								
 							default:
 								$page->addError("Invalid action type");

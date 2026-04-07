@@ -38,7 +38,28 @@
 	        $page->addError("Invalid Request");
 	    }
 		else {
-            $page->appendSuccess($_REQUEST['method']);
+			// Handle merge request separately from standard Apply updates
+			if ($_REQUEST['method'] === 'Merge' && !empty($_REQUEST['merge_into_organization_id'])) {
+				if (!isset($organization->id) || !is_numeric($organization->id)) {
+					$page->addError("Source organization is not set");
+				}
+				else {
+					$target_id = intval($_REQUEST['merge_into_organization_id']);
+					if ($target_id == $organization->id) {
+						$page->addError("Cannot merge organization into itself");
+					}
+					else {
+						if ($organization->mergeInto($target_id)) {
+							$page->appendSuccess("Organization successfully merged into target company");
+						}
+						else {
+							$page->addError("Error merging organization: ".$organization->error());
+						}
+					}
+				}
+			}
+			else {
+            	$page->appendSuccess($_REQUEST['method']);
 		    if (!isset($_REQUEST['name']) || ! $_REQUEST['name']) {
 			    $page->addError("Name required");
 		    }
@@ -145,6 +166,7 @@
 		    }
 	    }		
 	}
+	}
 	
 	// add tag to organization (using BaseModel unified tag system)
 	if (!empty($_REQUEST['addTag']) && empty($_REQUEST['removeTag'])) {
@@ -234,6 +256,11 @@
 	if ($organization && $organization->error()) $page->addError($organization->error());
 
 	$statii = $organization->statii();
+
+	// Build list of potential merge target organizations (ACTIVE only),
+	// using Organization model helper so SQL is not in the controller.
+	$mergeTargets = array();
+	if (!empty($organization->id)) $mergeTargets = \Register\Organization::activeOrganizations($organization->id);
 
 	$page->title = "Organization Details";
 	$page->setAdminMenuSection("Customer");  // Keep Customer section open
