@@ -461,6 +461,13 @@
 			if (!isset($method['parameters'])) {
 				$method['parameters'] = array();
 			}
+			// Build Requirement Groups for Reference
+			$requirement_groups = array();
+			foreach ($method['parameters'] as $param => $options) {
+				if (isset($options['requirement_group']) && is_numeric($options['requirement_group'])) {
+					$requirement_groups[$options['requirement_group']][] = $param;
+				}
+			}
 			foreach ($method['parameters'] as $param => $options) {
 				if (!array_key_exists($param,$_REQUEST)) continue;
 				$value = $_REQUEST[$param];
@@ -472,7 +479,20 @@
 				//print_r($param."\n");
 				if (isset($options['required']) && $options['required']) {
 					//print_r("\trequired\n");
-					if (!isset($value)) {
+					// See if a Requirement Group is associated with this parameter and if so, check if any other parameters in the group are present.  If not, this parameter is required.
+					$group_found = false;
+					if (isset($options['requirement_group']) && is_numeric($options['requirement_group'])) {
+						$group_id = $options['requirement_group'];
+						$group_params = $requirement_groups[$group_id];
+						$group_found = false;
+						foreach ($group_params as $group_param) {
+							if (!empty($_REQUEST[$group_param])) {
+								$group_found = true;
+								break;
+							}
+						}
+					}
+					if (!isset($value) && !$group_found) {
 						$this->incompleteRequest("Missing required parameter: $param");
 					}
 				}
@@ -862,8 +882,8 @@
 			return $form;
 		}
 
-		/**
-		 * Build Definition Document
+		/** @method public definition()
+		 * Build OpenAPI Definition Document
 		 */
 		public function definition() {
 			$api_name = "\\".ucfirst($this->module)."\\API";
@@ -884,6 +904,10 @@
 			);
 			$definition_object['paths'] = array();
 			foreach ($methods as $form_name => $settings) {
+
+				// Skip Hidden Methods
+				if ($settings["hidden"]) continue;
+
 				// Only Show Methods User is Authorized For
 				if ($settings["authentication_required"] && !$GLOBALS['_SESSION_']->customer->exists()) {
 					continue;
@@ -892,7 +916,34 @@
 				if (!empty($settings["privilege_required"]) && !$GLOBALS['_SESSION_']->customer->can($settings["privilege_required"])) {
 					continue;
 				}
-				
+
+				// Try to Guess the Path if not provided
+				if (empty($settings['path'])) {
+					if (!empty($settings['return_type'])) {
+						// If method name starts with add/get/update/drop and return type is provided, use that to infer path
+						if (preg_match('/^(add|get|update|drop)/',$form_name,$matches)) {
+							$methodPrefix = $matches[1];
+							// Get Class Name from Return Type (Remove Namespace and Array Indicators)
+							$return_type = str_replace('::','\\',$settings['return_type']);
+							$parts = explode('\\',$return_type);
+							$module = strtolower($parts[count($parts)-2]);
+							$method = $parts[count($parts)-1];
+							// Assemble Path
+							$settings['path'] = "/api/".$module."/".$methodPrefix.$method;
+
+							if ($methodPrefix == 'get') {
+								// Loop Through Parameters and look for required code parameter to add to path
+								foreach ($settings['parameters'] as $name => $options) {
+									if ($options['required'] && $name == 'code') {
+										$settings['path'] .= "/{code}";
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+
 				if (!empty($settings['path'])) {
 					if ($settings['return_type'] == 'int') {
 						//Skip for now
@@ -947,6 +998,10 @@
 						if (in_array('get',$settings['verb'])) {
 							$parameters = array();
 							foreach ($settings['parameters'] as $name => $options) {
+								// Skip if parameter is hidden
+								if (isset($options['hidden']) && $options['hidden']) continue;
+
+								// Build Parameter Definition
 								$parameter = array(
 									"name" => $name,
 									"in" => "query",
@@ -1000,6 +1055,9 @@
 							$parameters = array();
 							$required = array();
 							foreach ($settings['parameters'] as $name => $options) {
+								// Skip if Parameter is Hidden
+								if (isset($options['hidden']) && $options['hidden']) continue;
+
 								$parameter = array(
 									$name => array(
 										"type" => isset($options['content_type']) ? $options['content_type'] : 'string',
@@ -1045,12 +1103,17 @@
 							$parameters = array();
 							$required = array();
 							foreach ($settings['parameters'] as $name => $options) {
+								// Skip if Parameter is Hidden
+								if (isset($options['hidden']) && $options['hidden']) continue;
 								$parameter = array(
 									$name => array(
 										"type" => isset($options['content_type']) ? $options['content_type'] : 'string',
 									),
 								);
 								if (isset($options['required']) && $options['required']) {
+									$required[] = $name;
+								}
+								elseif (isset($options['requirement_group']) && is_numeric($options['requirement_group']) && $options['requirement_group'] == 0) {
 									$required[] = $name;
 								}
 								$parameters[] = $parameter;
