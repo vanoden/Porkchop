@@ -115,7 +115,11 @@
 			$countryList = new \Geography\CountryList();
 
 			$parameters = array();
-			if (isset($_REQUEST['status']) && $_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
+			if ($_REQUEST['name']) $parameters['name'] = trim((string) $_REQUEST['name']);
+			if ($_REQUEST['abbreviation']) $parameters['abbreviation'] = trim((string) $_REQUEST['abbreviation']);
+			if ($_REQUEST['code']) $parameters['code'] = trim((string) $_REQUEST['code']);
+
+			$controls['wildcards'] = array('name'); // NOT IMPLEMENTED YET - wildcards always allowed for now, but this will allow us to turn off wildcards for certain fields in the future if needed
 			
 			$countries = $countryList->find($parameters);
 			if ($countryList->error()) $this->error("Error finding countries: ".$countryList->error());
@@ -784,7 +788,11 @@
 			}
 			elseif (!empty($_REQUEST['code'])) {
 				$zipCode = new \Geography\ZipCode();
-				if (!empty($_REQUEST['country_id'])) {
+				if (!empty($_REQUEST['country_code'])) {
+					$country = new \Geography\Country();
+					if (! $country->getByAbbreviation(trim((string) $_REQUEST['country_code']))) $this->invalidRequest("Country not found");
+					$parameters['country_id'] = $country->id;
+				} elseif (!empty($_REQUEST['country_id'])) {
 					$country = new \Geography\Country($_REQUEST['country_id']);
 					if (! $country->id) $this->invalidRequest("Country not found");
 				} elseif (isset($_REQUEST['country_abbreviation'])) {
@@ -798,7 +806,10 @@
 					$this->incompleteRequest("country_id, country_abbreviation, or country_name required");
 				}
 
-				if (!empty($_REQUEST['province_abbreviation'])) {
+				if (!empty($_REQUEST['province_code'])) {
+					$province = new \Geography\Province();
+					if (! $province->getByAbbreviation($country->id, trim((string) $_REQUEST['province_code']))) $this->invalidRequest("Province not found");
+				} elseif (!empty($_REQUEST['province_abbreviation'])) {
 					$province = new \Geography\Province();
 					if (! $province->getByAbbreviation($country->id, trim((string) $_REQUEST['province_abbreviation']))) $this->invalidRequest("Province not found");
 				}
@@ -1292,6 +1303,7 @@
 		public function _methods() {
 			return array(
 				'addCountry'	=> array(
+					'path' => '/api/geography/addCountry',
 					'description'	=> 'Add a country',
 					'token_required'	=> true,
 					'privilege_required'	=> 'manage geographical data',
@@ -1311,6 +1323,7 @@
 					),
 				),
 				'updateCountry'	=> array(
+					'path' => '/api/geography/updateCountry',
 					'description'	=> 'Update a country (identify by id, name, abbreviation, or code)',
 					'token_required'	=> true,
 					'privilege_required'	=> 'manage geographical data',
@@ -1319,29 +1332,44 @@
 					'parameters'	=> array(
 						'id'			=> array(
 							'description'	=> 'Country ID',
-						),
-						'name'			=> array(
-							'description'	=> 'Country name (to find) or new name (to set)',
-						),
-						'abbreviation'	=> array(
-							'description'	=> 'Abbreviation (to find or set)',
+							'type'			=> 'integer',
+							'requirement_group'	=> 1,
+							'hidden' 		=> true,
 						),
 						'code'			=> array(
 							'description'	=> 'Alias for name/abbreviation to find country',
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'required' => true,
+						),
+						'name'			=> array(
+							'description'	=> 'Country name (to find) or new name (to set)',
+							'validation_method'	=> 'Geography::Country::validName()',
+						),
+						'abbreviation'	=> array(
+							'description'	=> 'Abbreviation (to find or set)',
+							'validation_method'	=> 'Geography::Country::validCode()',
 						),
 						'view_order'	=> array(
 							'description'	=> 'Display order',
+							'type'			=> 'integer',
 						),
 					),
 				),
 				'getCountry'	=> array(
+					'path' => '/api/geography/getCountry/{code}',
 					'description'	=> 'Get details regarding specified country',
 					'return_element'	=> 'country',
 					'return_type'	=> 'Geography::Country',
 					'parameters'	=> array(
 						'id'	=> array(
 							'description'	=> 'Country ID',
-							'requirement_group'	=> 0,
+							'requirement_group'	=> 1,
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
+						),
+						'code' => array(
+							'description'	=> 'Alias for name/abbreviation to find country',
+							'required' => true,
 							'validation_method'	=> 'Geography::Country::validCode()',
 						),
 						'abbreviation' => array(
@@ -1350,14 +1378,10 @@
 							'validation_method'	=> 'Geography::Country::validCode()',
 							'hidden' => true,
 						),
-						'code' => array(
-							'description'	=> 'Alias for name/abbreviation to find country',
-							'requirement_group'	=> 3,
-							'validation_method'	=> 'Geography::Country::validCode()',
-						),
 					)
 				),
 				'findCountries'	=> array(
+					'path' => '/api/geography/findCountries',
 					'description'	=> 'Find countries matching specified criteria',
 					'return_element'	=> 'country',
 					'return_type'	=> 'Geography::Country',
@@ -1374,21 +1398,34 @@
 					),
 				),
 				'addProvince'	=> array(
+					'path' => '/api/geography/addProvince',
 					'description'	=> 'Add a province or state',
 					'token_required'	=> true,
 					'privilege_required'	=> 'manage geographical data',
 					'return_element'	=> 'province',
 					'return_type'	=> 'Geography::Province',
 					'parameters'	=> array(
+						'code'			=> array(
+							'description'	=> 'Unique code (optional; generated from country+name if omitted)',
+							'validation_method'	=> 'Geography::Province::validCode()',
+							'required' => true,
+						),
 						'country_id'	=> array(
 							'description'	=> 'Country ID',
 							'validation_method'	=> 'Geography::Country::validCode()',
 							'requirement_group'	=> 0,
+							'hidden' => true,
 						),
-						'country_name'	=> array(
-							'description'	=> 'Country Name',
-							'validation_method'	=> 'Geography::Country::validName()',
-							'requirement_group'	=> 1,
+						'country_code'	=> array(
+							'description'	=> 'Country Code',
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'required' => true,
+						),
+						'country_abbreviation'	=> array(
+							'description'	=> 'Country Abbreviation',
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'requirement_group'	=> 2,
+							'hidden' => true,
 						),
 						'name'			=> array(
 							'description'	=> 'Name of province',
@@ -1397,12 +1434,9 @@
 						),
 						'abbreviation'	=> array(
 							'description'	=> 'Abbreviation of province',
-							'required' => true,
+							'requirement_group' => 1,
 							'validation_method'	=> 'Geography::Province::validCode()',
-						),
-						'code'			=> array(
-							'description'	=> 'Unique code (optional; generated from country+name if omitted)',
-							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true,
 						),
 						'type'			=> array(
 							'description'	=> 'Type (e.g. state, province)',
@@ -1415,6 +1449,7 @@
 					),
 				),
 				'updateProvince'	=> array(
+					'path' => '/api/geography/updateProvince',
 					'description'	=> 'Update a province or state (identify by code or id)',
 					'token_required'	=> true,
 					'privilege_required'	=> 'manage geographical data',
@@ -1424,12 +1459,13 @@
 						'code'			=> array(
 							'description'	=> 'Province code (to find)',
 							'validation_method'	=> 'Geography::Province::validCode()',
-							'requirement_group'	=> 0,
+							'required' => true,
 						),
 						'id'			=> array(
 							'description'	=> 'Province ID (to find)',
 							'type'			=> 'integer',
 							'requirement_group'	=> 1,
+							'hidden' => true,
 						),
 						'name'			=> array(
 							'description'	=> 'Name of province',
@@ -1438,10 +1474,25 @@
 						'abbreviation'	=> array(
 							'description'	=> 'Abbreviation of province',
 							'validation_method'	=> 'Geography::Province::validCode()',
+							'requirement_group' => 0,
+							'hidden' => true,
 						),
 						'country_id'	=> array(
 							'description'	=> 'Country ID',
 							'validation_method'	=> 'Geography::Country::validCode()',
+							'requirement_group'	=> 0,
+							'hidden' => true,
+						),
+						'country_code'	=> array(
+							'description'	=> 'Country Code',
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'requirement_group'	=> 0,
+						),
+						'country_abbreviation'	=> array(
+							'description'	=> 'Country Abbreviation',
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'requirement_group'	=> 0,
+							'hidden' => true,
 						),
 						'type'			=> array(
 							'description'	=> 'Type',
@@ -1454,6 +1505,7 @@
 					),
 				),
 				'getProvince'		=> array(
+					'path' => '/api/geography/getProvince/{code}',
 					'description'	=> 'Get details regarding specified province',
 					'return_element'	=> 'province',
 					'return_type'	=> 'Geography::Province',
@@ -1462,6 +1514,17 @@
 							'description'	=> 'Province ID',
 							'requirement_group'	=> 0,
 							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true,
+						),
+						'code'	=> array(
+							'description'	=> 'Province Code',
+							'required' => true,
+							'validation_method'	=> 'Geography::Province::validCode()',
+						),
+						'country_code'	=> array(
+							'description'	=> 'Country Code',
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'required' => true,
 						),
 						'name'	=> array(
 							'description'	=> 'Province Name',
@@ -1472,20 +1535,24 @@
 							'description'	=> 'Country Name',
 							'requirement_group'	=> 1,
 							'validation_method'	=> 'Geography::Country::validName()',
+							'hidden' => true,
 						),
 						'country_abbreviation'	=> array(
 							'description'	=> 'Country Abbreviation',
 							'requirement_group'	=> 1,
 							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
 						),
 						'abbreviation' => array(
 							'description'	=> 'Province Abbreviation',
 							'requirement_group'	=> 2,
 							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true
 						),
 					)
 				),
 				'findProvinces'		=> array(
+					'path' => '/api/geography/findProvinces',
 					'description'	=> 'Find provinces or states matching specified criteria',
 					'return_element'	=> 'province',
 					'return_type'	=> 'Geography::Province',
@@ -1495,9 +1562,18 @@
 							'validation_method'	=> 'Geography::Province::validName()',
 							'allow_wildcards'	=> true,
 						),
+						'code'	=> array(
+							'description'	=> 'Province Code',
+							'validation_method'	=> 'Geography::Province::validCode()',
+						),
 						'abbreviation'	=> array(
 							'description'	=> 'Province Abbreviation',
 							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true,
+						),
+						'country_code'	=> array(
+							'description'	=> 'Country Code',
+							'validation_method'	=> 'Geography::Country::validCode()',
 						),
 						'country_id'	=> array(
 							'description'	=> 'Country ID',
@@ -1512,11 +1588,13 @@
 						'country_abbreviation'	=> array(
 							'description'	=> 'Country Abbreviation',
 							'validation_method'	=> 'Geography::Country::validCode()',
-							'allow_wildcards'	=> true
+							'allow_wildcards'	=> true,
+							'hidden' => true,
 						),
 					),
 				),
 				'getCounty'		=> array(
+					'path' => '/api/geography/getCounty/{code}',
 					'description'	=> 'Get details regarding specified county',
 					'return_element'	=> 'county',
 					'return_type'	=> 'Geography::County',
@@ -1524,18 +1602,34 @@
 						'country_abbreviation' => array(
 							'description' => 'Country Abbreviation',
 							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
+							'requirement_group' => 1,
+						),
+						'country_code' => array(
+							'description' => 'Country Code',
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'required' => true,
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation',
 							'validation_method'	=> 'Geography::Province::validCode()',
+							'requirement_group' => 1,
+							'hidden' => true,
+						),
+						'province_code' => array(
+							'description' => 'Province/State Code',
+							'validation_method'	=> 'Geography::Province::validCode()',
+							'required' => true,
 						),
 						'name' => array(
 							'description' => 'County Name',
 							'validation_method'	=> 'Geography::County::validName()',
+							'required' => true,
 						),
 					),
 				),
 				'addCounty'		=> array(
+					'path' => '/api/geography/addCounty',
 					'description'	=> 'Add a county',
 					'token_required'	=> true,
 					'privilege_required'	=> 'manage geographical data',
@@ -1544,41 +1638,35 @@
 					'parameters'	=> array(
 						'country_abbreviation' => array(
 							'description' => 'Country Abbreviation',
+							'requirement_group' => 0,
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
+						),
+						'country_code' => array(
+							'description' => 'Country Code',
 							'required' => true,
 							'validation_method'	=> 'Geography::Country::validCode()',
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation',
+							'requirement_group' => 0,
+							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true,
+						),
+						'province_code' => array(
+							'description' => 'Province/State Code',
 							'required' => true,
 							'validation_method'	=> 'Geography::Province::validCode()',
 						),
 						'name' => array(
 							'description' => 'County Name',
 							'required' => true,
-							'validation_method'	=> 'Geography::County::validName()',
-						),
-					),
-				),
-				'getCounty'		=> array(
-					'description'	=> 'Get details regarding specified county',
-					'return_element'	=> 'county',
-					'return_type'	=> 'Geography::County',
-					'parameters'	=> array(
-						'country_abbreviation' => array(
-							'description' => 'Country Abbreviation',
-							'validation_method'	=> 'Geography::Country::validCode()',
-						),
-						'province_abbreviation' => array(
-							'description' => 'Province/State Abbreviation',
-							'validation_method'	=> 'Geography::Province::validCode()',
-						),
-						'name' => array(
-							'description' => 'County Name',
 							'validation_method'	=> 'Geography::County::validName()',
 						),
 					),
 				),
 				'findCounties'		=> array(
+					'path' => '/api/geography/findCounties',
 					'description'	=> 'Find counties matching specified criteria',
 					'return_element'	=> 'county',
 					'return_type'	=> 'Geography::County',
@@ -1586,9 +1674,19 @@
 						'country_abbreviation' => array(
 							'description' => 'Country Abbreviation',
 							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
+						),
+						'country_code' => array(
+							'description' => 'Country Code',
+							'validation_method'	=> 'Geography::Country::validCode()',
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation',
+							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true,
+						),
+						'province_code' => array(
+							'description' => 'Province/State Code',
 							'validation_method'	=> 'Geography::Province::validCode()',
 						),
 						'name' => array(
@@ -1599,6 +1697,7 @@
 					),
 				),
 				'addZipCode'	=> array(
+					'path' => '/api/geography/addZipCode',
 					'description'	=> 'Add a zip code with associated country, province/state, county, and city',
 					'token_required'	=> true,
 					'privilege_required'	=> 'manage geographical data',
@@ -1609,27 +1708,47 @@
 							'description'	=> 'Zip code',
 							'required' => true,
 						),
+						'country_code' => array(
+							'description' => 'Country Code',
+							'required' => true,
+							'validation_method'	=> 'Geography::Country::validCode()',
+						),
 						'province_name' => array(
 							'description' => 'Province/State Name',
 							'requirement_group' => 0,
+							'validation_method'	=> 'Geography::Province::validName()',
+							'hidden' => true,
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation',
-							'requirement_group' => 0,
+							'requirement_group' => 1,
+							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true,
+						),
+						'province_code' => array(
+							'description' => 'Province/State Code',
+							'required' => true,
+							'validation_method'	=> 'Geography::Province::validCode()',
 						),
 						'country_name' => array(
 							'description' => 'Country Name',
-							'requirement_group' => 1,
+							'requirement_group' => 0,
+							'validation_method'	=> 'Geography::Country::validName()',
+							'hidden' => true,
 						),
 						'country_abbreviation' => array(
 							'description' => 'Country Abbreviation',
 							'requirement_group' => 1,
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
 						),
 						'county_name' => array(
 							'description' => 'County Name',
+							'validation_method'	=> 'Geography::County::validName()',
 						),
 						'city_name' => array(
 							'description' => 'City Name',
+							'validation_method'	=> 'Geography::City::validName()',
 						),
 						'latitude' => array(
 							'description' => 'Latitude coordinate',
@@ -1642,6 +1761,7 @@
 					),
 				),
 				'updateZipCode'	=> array(
+					'path' => '/api/geography/updateZipCode',
 					'description'	=> 'Update a zip code\'s details (identify by code or id)',
 					'token_required'	=> true,
 					'privilege_required'	=> 'manage geographical data',
@@ -1652,18 +1772,45 @@
 							'description'	=> 'Zip code ID',
 							'type'			=> 'integer',
 							'requirement_group' => 0,
+							'hidden' => true,
 						),
 						'code'			=> array(
 							'description'	=> 'Zip code (to find)',
-							'requirement_group' => 0,
+							'required' => true,
+						),
+						'country_code' => array(
+							'description' => 'Country Code',
+							'required' => true,
+							'validation_method'	=> 'Geography::Country::validCode()',
+						),
+						'country_name' => array(
+							'description' => 'Country Name',
+							'requirement_group' => 1,
+							'validation_method'	=> 'Geography::Country::validName()',
+							'hidden' => true,
+						),
+						'country_abbreviation' => array(
+							'description' => 'Country Abbreviation',
+							'requirement_group' => 2,
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
 						),
 						'province_name' => array(
 							'description' => 'Province/State Name',
 							'validation_method'	=> 'Geography::Province::validName()',
+							'hidden' => true,
+							'requirement_group' => 1,
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation',
 							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true,
+							'requirement_group' => 2,
+						),
+						'province_code' => array(
+							'description' => 'Province/State Code',
+							'validation_method'	=> 'Geography::Province::validCode()',
+							'required' => true,
 						),
 						'county_name' => array(
 							'description' => 'County Name',
@@ -1684,6 +1831,7 @@
 					),
 				),
 				'getZipCode'	=> array(
+					'path' => '/api/geography/getZipCode/',
 					'description'	=> 'Get details regarding specified zip code (identify by code or id)',
 					'return_element'	=> 'zip_code',
 					'return_type'	=> 'Geography::ZipCode',
@@ -1692,25 +1840,58 @@
 							'description' => 'Zip code ID',
 							'type' => 'integer',
 							'requirement_group' => 0,
+							'hidden' => true,
 						),
 						'code' => array(
 							'description' => 'Zip code',
-							'requirement_group' => 0,
+							'required' => true,
+							'validation_method'	=> 'Geography::ZipCode::validCode()',
 						),
 						'country_id' => array(
 							'description' => 'Country ID (to validate that zip code belongs to specified country)',
+							'type' => 'integer',
+							'requirement_group' => 1,
+							'hidden' => true,
+						),
+						'country_code' => array(
+							'description' => 'Country Code (alias for country name or abbreviation to validate that zip code belongs to specified country)',
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'required' => true,
 						),
 						'country_abbreviation' => array(
 							'description' => 'Country Abbreviation (to validate that zip code belongs to specified country)',
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
+							'requirement_group' => 2,
 						),
 						'country_name' => array(
 							'description' => 'Country Name (to validate that zip code belongs to specified country)',
+							'validation_method'	=> 'Geography::Country::validName()',
+							'requirement_group' => 3,
+							'hidden' => true,
+						),
+						'province_id' => array(
+							'description' => 'Province/State ID (to validate that zip code belongs to specified province/state)',
+							'type' => 'integer',
+							'requirement_group' => 1,
+							'hidden' => true,
+						),
+						'province_code' => array(
+							'description' => 'Province/State Code (alias for province name or abbreviation to validate that zip code belongs to specified province/state)',
+							'validation_method'	=> 'Geography::Province::validCode()',
+							'required' => true,
 						),
 						'province_name' => array(
 							'description' => 'Province/State Name (to validate that zip code belongs to specified province/state)',
+							'validation_method'	=> 'Geography::Province::validName()',
+							'hidden' => true,
+							'requirement_group' => 3,
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation (to validate that zip code belongs to specified province/state)',
+							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true,
+							'requirement_group' => 2,
 						),
 						'county_name' => array(
 							'description' => 'County Name (to validate that zip code belongs to specified county)',
@@ -1723,6 +1904,7 @@
 					),
 				),
 				'loadZipCode' => array(
+					'path' => '/api/geography/loadZipCode',
 					'description'	=> 'Load a zip code\'s details by code and country (country can be identified by id, name, or abbreviation)',
 					'return_element'	=> 'zip_code',
 					'return_type'	=> 'Geography::ZipCode',
@@ -1732,7 +1914,7 @@
 							'description' => 'Country ID',
 							'type' => 'integer',
 							'required' => true,
-						),
+						)
 					),
 				),
 				'findZipCodes'	=> array(
@@ -1742,21 +1924,40 @@
 					'parameters'	=> array(
 						'code' => array(
 							'description' => 'Zip code',
+							'validation_method'	=> 'Geography::ZipCode::validCode()',
+						),
+						'country_code' => array(
+							'description' => 'Country Code',
+							'validation_method'	=> 'Geography::Country::validCode()',
 						),
 						'country_id' => array(
 							'description' => 'Country ID',
+							'hidden' => true,
+							'type' => 'integer',
 						),
 						'country_abbreviation' => array(
 							'description' => 'Country Abbreviation',
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
 						),
 						'country_name' => array(
 							'description' => 'Country Name',
+							'validation_method'	=> 'Geography::Country::validName()',
+							'hidden' => true,
+						),
+						'province_code' => array(
+							'description' => 'Province/State Code',
+							'validation_method'	=> 'Geography::Province::validCode()',
 						),
 						'province_name' => array(
 							'description' => 'Province/State Name',
+							'validation_method'	=> 'Geography::Province::validName()',
+							'hidden' => true,
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation',
+							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true,
 						),
 						'county_name' => array(
 							'description' => 'County Name',
@@ -1779,15 +1980,27 @@
 							'description' => 'City Name',
 							'required' => true,
 						),
-						'country_abbreviation' => array(
-							'description' => 'Country Abbreviation',
+						'country_code' => array(
+							'description' => 'Country Code',
 							'required' => true,
 							'validation_method'	=> 'Geography::Country::validCode()',
 						),
-						'province_abbreviation' => array(
-							'description' => 'Province/State Abbreviation',
+						'country_abbreviation' => array(
+							'description' => 'Country Abbreviation',
+							'requirement_group' => 1,
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
+						),
+						'province_code' => array(
+							'description' => 'Province/State Code',
 							'required' => true,
 							'validation_method'	=> 'Geography::Province::validCode()',
+						),
+						'province_abbreviation' => array(
+							'description' => 'Province/State Abbreviation',
+							'requirement_group' => 1,
+							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true,
 						),
 						'county_name' => array(
 							'description' => 'County Name',
@@ -1812,30 +2025,46 @@
 							'description' => 'City ID',
 							'type' => 'integer',
 							'requirement_group' => 0,
+							'hidden' => true,
 						),
 						'name' => array(
 							'description' => 'City Name',
-							'requirement_group' => 0,
+							'required' => true,
+							'validation_method'	=> 'Geography::City::validName()',
+						),
+						'country_code' => array(
+							'description' => 'Country Code',
+							'required' => true,
+							'validation_method'	=> 'Geography::Country::validCode()',
 						),
 						'country_abbreviation' => array(
 							'description' => 'Country Abbreviation (to validate that city belongs to specified country)',
 							'requirement_group' => 1,
 							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
 						),
 						'country_name' => array(
 							'description' => 'Country Name (to validate that city belongs to specified country)',
-							'requirement_group' => 1,
+							'requirement_group' => 2,
 							'validation_method'	=> 'Geography::Country::validName()',
+							'hidden' => true,
+						),
+						'province_code' => array(
+							'description' => 'Province/State Code (to validate that city belongs to specified province/state)',
+							'required' => true,
+							'validation_method'	=> 'Geography::Province::validCode()',
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation (to validate that city belongs to specified province/state)',
-							'requirement_group' => 2,
+							'requirement_group' => 1,
 							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true,
 						),
 						'province_name' => array(
 							'description' => 'Province/State Name (to validate that city belongs to specified province/state)',
 							'requirement_group' => 2,
 							'validation_method'	=> 'Geography::Province::validName()',
+							'hidden' => true,
 						),
 						'county_name' => array(
 							'description' => 'County Name (to validate that city belongs to specified county)',
@@ -1852,21 +2081,33 @@
 							'description' => 'City Name',
 							'validation_method'	=> 'Geography::City::validName()',
 						),
+						'country_code' => array(
+							'description' => 'Country Code',
+							'validation_method'	=> 'Geography::Country::validCode()',
+						),
 						'country_abbreviation' => array(
 							'description' => 'Country Abbreviation',
 							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
 						),
 						'country_name' => array(
 							'description' => 'Country Name',
 							'validation_method'	=> 'Geography::Country::validName()',
+							'hidden' => true,
+						),
+						'province_code' => array(
+							'description' => 'Province/State Code',
+							'validation_method'	=> 'Geography::Province::validCode()',
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation',
 							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true,
 						),
 						'province_name' => array(
 							'description' => 'Province/State Name',
 							'validation_method'	=> 'Geography::Province::validName()',
+							'hidden' => true,
 						),
 						'county_name' => array(
 							'description' => 'County Name',
@@ -1904,18 +2145,18 @@
 						),
 						'country_code' => array(
 							'description' => 'Country Code (to validate that zip code belongs to specified country)',
-							'requirement_group' => 0,
+							'required' => true,
 							'validation_method'	=> 'Geography::Country::validCode()',
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation (to validate that zip code belongs to specified province/state)',
-							'requirement_group' => 1,
+							'requirement_group' => 0,
 							'validation_method'	=> 'Geography::Province::validCode()',
 							'hidden' => true,
 						),
 						'province_code' => array(
 							'description' => 'Province/State Code (to validate that zip code belongs to specified province/state)',
-							'requirement_group' => 1,
+							'required' => true,
 							'validation_method'	=> 'Geography::Province::validCode()',
 						),
 						'timestamp' => array(
@@ -2007,18 +2248,18 @@
 						),
 						'country_code' => array(
 							'description' => 'Country Code (to validate that zip code belongs to specified country)',
-							'requirement_group' => 0,
-							'hidden' => true,
+							'required' => true,
+							'hidden' => false,
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation (to validate that zip code belongs to specified province/state)',
-							'requirement_group' => 1,
+							'requirement_group' => 0,
 							'hidden' => true,
 						),
 						'province_code' => array(
 							'description' => 'Province/State Code (to validate that zip code belongs to specified province/state)',
-							'requirement_group' => 1,
-							'hidden' => true,
+							'required' => true,
+							'hidden' => false,
 						),
 						'timestamp' => array(
 							'description' => 'Timestamp to find previous weather record for (alternatively, can provide date_time)',
@@ -2040,21 +2281,33 @@
 							'type' => 'string',
 							'validation_method'	=> 'Geography::ZipCode::validCode()',
 						),
+						'country_code' => array(
+							'description' => 'Country Code (to validate that zip code belongs to specified country)',
+							'validation_method'	=> 'Geography::Country::validCode()',
+						),
 						'country_abbreviation' => array(
 							'description' => 'Country Abbreviation (to validate that zip code belongs to specified country)',
 							'validation_method'	=> 'Geography::Country::validCode()',
+							'hidden' => true,
 						),
 						'country_name' => array(
 							'description' => 'Country Name (to validate that zip code belongs to specified country)',
 							'validation_method'	=> 'Geography::Country::validName()',
+							'hidden' => true,
+						),
+						'province_code' => array(
+							'description' => 'Province/State Code (to validate that zip code belongs to specified province/state)',
+							'validation_method'	=> 'Geography::Province::validCode()',
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation (to validate that zip code belongs to specified province/state)',
 							'validation_method'	=> 'Geography::Province::validCode()',
+							'hidden' => true,
 						),
 						'province_name' => array(
 							'description' => 'Province/State Name (to validate that zip code belongs to specified province/state)',
 							'validation_method'	=> 'Geography::Province::validName()',
+							'hidden' => true,
 						),
 						'start_timestamp' => array(
 							'description' => 'Start of date range to find weather records for (alternatively, can provide start_date_time)',
