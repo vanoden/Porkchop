@@ -1167,4 +1167,15 @@ class BaseClass {
 		if (is_string($value) && ($value === 'true' || $value === 'false' || $value === '1' || $value === '0')) return true;
 		return false;
 	}
+
+	/**
+	 * Escape a value for safe HTML text and attribute output (XSS mitigation).
+	 * Prefer this over repeating htmlspecialchars(..., ENT_QUOTES, 'UTF-8').
+	 * Call on any BaseClass instance (e.g. from a loaded model in the controller).
+	 *
+	 * @param mixed $value Cast to string; null and missing scalars become ''.
+	 */
+	public function escHtml($value): string {
+		return htmlspecialchars((string) ($value ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+	}
 }
