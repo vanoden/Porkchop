@@ -490,4 +490,11 @@
 			else
 				return false;
 		}
+
+		/** @method public validCode(string $code): bool
+		 * See if string is a valid code (serial number)
+		 */
+		public function validCode($string): bool {
+			return $this->validCode($string);
+		}
 	}
