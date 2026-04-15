@@ -231,7 +231,7 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validCode($string): bool {
-		return (is_string($string) && preg_match($this->_patterns['code'], $string));
+		return (is_string($string) && strlen($string) < 64 && preg_match($this->_patterns['code'], $string));
 	}
 
 	/**
