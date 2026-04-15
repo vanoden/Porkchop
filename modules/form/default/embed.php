@@ -1,8 +1,9 @@
-<?= $page->showTitle() ?>
-
-<?= $page->showMessages() ?>
-
 <style>
+	.formMakerEmbed { font-family: system-ui, sans-serif; margin: 0; padding: 0.75rem; }
+	.formMakerEmbed .formEmbedTitle { font-size: 1.1rem; margin: 0 0 0.75rem 0; }
+	.formMakerEmbed .errorText { color: #a00; }
+	.formMakerEmbed .progressText { color: #060; }
+
 	.formMakerShow .porkchop-form {
 		max-width: 860px;
 		padding: 1rem 1.1rem;
@@ -66,7 +67,13 @@
 	}
 </style>
 
-<div class="formMakerShow">
+<?php if (isset($form) && $form->exists()) { ?>
+<h1 class="formEmbedTitle"><?= htmlspecialchars(strip_tags($form->title), ENT_QUOTES, 'UTF-8') ?></h1>
+<?php } ?>
+
+<?= $page->showMessages() ?>
+
+<div class="formMakerEmbed formMakerShow">
 <?php
 if (isset($form) && $form->exists() && empty($page->success)) {
 	$form->render($extraHiddens ?? array());

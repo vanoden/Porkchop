@@ -1724,6 +1724,12 @@
 				$database->CommitTrans();
 			}
 
+			if ($this->version() < 55) {
+				app_log("Upgrading Register schema to version 55", 'notice', __FILE__, __LINE__);
+				$this->setVersion(55);
+				$database->CommitTrans();
+			}
+
 			return true;
 		}
 	}

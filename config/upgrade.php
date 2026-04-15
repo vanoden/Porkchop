@@ -67,7 +67,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 54,
+			"schema"		=> 55,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
@@ -186,6 +186,7 @@
 	include(MODULES."/shipping/default/_metadata.php");
 	include(MODULES."/package/default/_metadata.php");
 	include(MODULES."/support/default/_metadata.php");
+	include(MODULES."/form/default/_metadata.php");
 
 	$menus = array();
 	// Include upgrade.local.php from any module that has one (e.g. site, spectros)

@@ -391,6 +391,13 @@
 							"description"	=> "Page Management"
 						),
 						array (
+							"title"	=> "Forms",
+							"target"	=> "/_form/admin_forms",
+							"view_order"	=> 15,
+							"alt"			=> "Form Management",
+							"description"	=> "Form Management"
+						),
+						array (
 							"title"	=> "Configurations",
 							"target"	=> "/_site/configurations",
 							"view_order"	=> 20,

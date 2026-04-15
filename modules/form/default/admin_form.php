@@ -22,9 +22,6 @@
 	<option value="get"<?php if ($form->method == "get") print " selected";?>>GET</option>
 </select>
 
-<label for="instructions">Instructions</label>
-<textarea name="instructions"><?=$form->instructions?></textarea>
-
 <div class="section">
 	<input type="submit" name="submit" value="Save" />
 </div>
@@ -36,16 +33,22 @@
 		<div class="tableCell">Activated On</div>
 		<div class="tableCell">Activated By</div>
 	</div>
-<?php	foreach($versions as $version) { ?>
+<?php	if (empty($versions)) { ?>
+	<div class="tableRow">
+		<div class="tableCell">No versions yet. Use “Add New Version” below.</div>
+		<div class="tableCell">—</div>
+		<div class="tableCell">—</div>
+	</div>
+<?php	} else { foreach ($versions as $version) { ?>
 	<div class="tableRow">
 		<div class="tableCell">
-			<a href="/_form/admin_version/<?=$version->id?>"><?=$version->name?></a>
-			<?php if ($version->active) print " (Active)"; ?>
+			<a href="/_form/admin_version/<?=$version->id?>"><?=htmlspecialchars($version->name)?></a>
+			<?php if ($version->active()) print " <em>(Published)</em>"; ?>
 		</div>
-		<div class="tableCell"><?=$version->date_activated?></div>
-		<div class="tableCell"><?=$version->activated_by?></div>
+		<div class="tableCell"><?= $version->date_activated ? htmlspecialchars((string)$version->date_activated) : '—' ?></div>
+		<div class="tableCell"><?= $version->user_id_activated ? htmlspecialchars($version->activatedByDisplayName(), ENT_QUOTES, 'UTF-8') : '—' ?></div>
 	</div>
-<?php	} ?>
+<?php	} } ?>
 </div>
 <div class="section">
 	<a href="/_form/admin_version/<?=$form->code?>">Add New Version</a>

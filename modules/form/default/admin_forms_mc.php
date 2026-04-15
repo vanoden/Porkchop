@@ -6,6 +6,7 @@
 	$porkchop = new \Porkchop();
 	$site = $porkchop->site();
 	$page = $site->page();
+	$page->setAdminMenuSection("Site");
 
 	// Get List of Forms to Display
 	$formList = new \Form\FormList();

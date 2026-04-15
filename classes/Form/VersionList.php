@@ -7,12 +7,26 @@
 	class VersionList Extends \BaseListClass {
 		public function __construct() {
 			$this->_tableName = 'form_versions';
-			$this->_modelName = 'Form\Version';
+			// Must be fully qualified: in namespace Form, 'Form\Version' wrongly resolves to Form\Form\Version.
+			$this->_modelName = '\Form\Version';
 		}
 
+		/** Next default version name: "1", "2", … based on numeric names, or count+1 if none are numeric. */
 		public function nextVersionNumber($form_id) {
-			$versions = $this->find(array('form_id' => $form_id), array('date_activated' => 'DESC'));
-			if (count($versions) == 0) return 1;
-			return intval(substr($versions[0]->code, -3)) + 1;
+			$versions = $this->find(array('form_id' => (int)$form_id));
+			$max = 0;
+			foreach ($versions as $v) {
+				$name = trim((string)($v->name ?? ''));
+				if ($name !== '' && ctype_digit($name)) {
+					$n = (int)$name;
+					if ($n > $max) {
+						$max = $n;
+					}
+				}
+			}
+			if ($max > 0) {
+				return (string)($max + 1);
+			}
+			return (string)max(1, count($versions) + 1);
 		}
 	}

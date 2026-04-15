@@ -16,8 +16,8 @@
 		<option value="post"<?php if ($form->method == "post") print " selected";?>>POST</option>
 		<option value="get"<?php if ($form->method == "get") print " selected";?>>GET</option>
 	</select>
-	<span class="label">Instructions</span>
-	<textarea name="instructions"><?=$form->instructions?></textarea>
+	<label for="instructions" style="display:block;margin:.35em 0">Instructions</label>
+	<textarea id="instructions" name="instructions"><?=$form->instructions?></textarea>
 </div>
 <div class="section">
 	<div class="tableBody">

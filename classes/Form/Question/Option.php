@@ -15,5 +15,6 @@
 			$this->_cacheKeyPrefix = $this->_tableName;
 
 			parent::__construct($id);
-        }
+			$this->_fields();
+		}
 	}

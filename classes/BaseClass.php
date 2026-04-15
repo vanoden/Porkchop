@@ -35,8 +35,13 @@ class BaseClass {
 		'address_line' => '/^[\w? :.-|\'\)]+$/',
 		'city_name' => '/^[\w? :.-|\'\)]+$/',
 		'code' => '/^\w[\w\-\.\_\s]*$/',
-		'name' => '/\w[\w\-\.\_\s\,\!\?\(\)]*$/',
-		'hostname' => '/^[\w\-\.]+$/'
+		// Allow apostrophes and grave accent (common in transliterations, e.g. "ad Dali`").
+		'name' => "/\w[\w\-\.\_\s\,\!\?\(\)\'\x{2019}\x{0060}]*$/u",
+		'hostname' => '/^[\w\-\.]+$/',
+		'absolute_http' => '/^https?:\/\/[a-z0-9\.\-]+(?:\:[0-9]+)?\/[a-z0-9\.\-\/\?\=\&\%\#\+]*$/i',
+		'internal_path' => '/^_(\w[\w\_]*)\/(\w[\w\_]*)$/i',
+		'disallowed_scheme' => '/^\s*(javascript|data|vbscript)\s*:/i',
+		'disallowed_chars' => '/[\x00-\x1F\x7F<>"`\\\\]/'
 	];
 
 	/********************************************/

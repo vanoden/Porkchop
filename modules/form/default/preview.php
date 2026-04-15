@@ -3,6 +3,13 @@
 <?= $page->showMessages() ?>
 
 <style>
+	.formPreviewNote {
+		margin: 0 0 1rem 0;
+		padding: 0.65rem 0.8rem;
+		background: #f6f8fa;
+		border: 1px solid #d9e0e6;
+		border-radius: 6px;
+	}
 	.formMakerShow .porkchop-form {
 		max-width: 860px;
 		padding: 1rem 1.1rem;
@@ -45,8 +52,14 @@
 		box-sizing: border-box;
 	}
 	.formMakerShow textarea {
+		display: block;
+		margin-top: 0.25rem;
 		min-height: 110px;
 		resize: vertical;
+	}
+	.formMakerShow .formQuestion input[type="radio"],
+	.formMakerShow .formQuestion input[type="checkbox"] {
+		margin-right: 0.35rem;
 	}
 	.formMakerShow .formQuestion label {
 		display: block;
@@ -57,19 +70,18 @@
 		margin-bottom: 0.35rem;
 		font-weight: 600;
 	}
-	.formMakerShow .formQuestion input[type="radio"],
-	.formMakerShow .formQuestion input[type="checkbox"] {
-		margin-right: 0.35rem;
-	}
 	.formMakerShow .formSubmit {
 		margin-top: 1rem;
 	}
 </style>
 
+<p class="formPreviewNote"><em>Staff preview — this is the selected version, not necessarily the published one.<br />
+Public URL: <a href="/_form/show/<?= htmlspecialchars($form->code, ENT_QUOTES, 'UTF-8') ?>">/_form/show/<?= htmlspecialchars($form->code, ENT_QUOTES, 'UTF-8') ?></a> (published version only).</em></p>
+
 <div class="formMakerShow">
 <?php
-if (isset($form) && $form->exists() && empty($page->success)) {
-	$form->render($extraHiddens ?? array());
+if (isset($form) && $form->exists() && isset($version) && $version->exists() && empty($page->success)) {
+	$form->render($extraHiddens ?? array(), $version);
 }
 ?>
 </div>

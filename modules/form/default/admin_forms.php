@@ -8,12 +8,14 @@
 		<div class="tableCell">Active Version</div>
 		<div class="tableCell">Activated On</div>
 	</div>
-<?php	foreach ($forms as $form) { ?>
+<?php	foreach ($forms as $form) {
+			$av = $form->activeVersion();
+	?>
 	<div class="tableRow">
 		<div class="tableCell"><a href="/_form/admin_form/<?=$form->code?>"><?=$form->title?></a></div>
 		<div class="tableCell"><?= strip_tags($form->description) ?></div>
-		<div class="tableCell"><?=$form->activeVersion()->name?></div>
-		<div class="tableCell"><?=$form->activeVersion()->date_activated?></div>
+		<div class="tableCell"><?= $av ? htmlspecialchars($av->name) : '—' ?></div>
+		<div class="tableCell"><?= $av && $av->date_activated ? htmlspecialchars($av->date_activated) : '—' ?></div>
 	</div>
 <?php	} ?>
 </div>

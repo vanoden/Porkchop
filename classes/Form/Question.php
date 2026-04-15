@@ -3,6 +3,7 @@
 
 	class Question Extends \BaseModel {
 		public $version_id;			// ID of the version this question belongs to
+		public $aggregate_key;		// Stable key across versions for reporting/aggregation
 		public $type;				// Type of the question, e.g., text, textarea, select, radio, checkbox, hidden
 		public $text;				// Text of the question, used for display purposes
 		public $prompt;				// Prompt for the question, used for display purposes
@@ -24,7 +25,19 @@
 			$this->_cacheKeyPrefix = $this->_tableName;
 
 			parent::__construct($id);
-        }
+			$this->_fields();
+		}
+
+		public function add($parameters = array()) {
+			if (empty($parameters['aggregate_key'])) {
+				$pc = new \Porkchop();
+				$parameters['aggregate_key'] = substr(str_replace(array('-', '_'), '', $pc->biguuid()), 0, 32);
+			}
+			if (empty($parameters['prompt']) && ! empty($parameters['text'])) {
+				$parameters['prompt'] = $parameters['text'];
+			}
+			return parent::add($parameters);
+		}
 
 		/** @method public validType(type): bool
 		 * Validates the type of the question. Returns true if the type is valid, false otherwise.
@@ -32,7 +45,9 @@
 		 * @return bool True if the type is valid, false otherwise
 		 */
 		public function validType($type): bool {
-			if (preg_match('/^(text|textarea|select|radio|checkbox|hidden)$/i',$type)) return true;
+			if (preg_match('/^(text|textarea|select|radio|checkbox|hidden|submit)$/i', $type)) {
+				return true;
+			}
 			return false;
 		}
 
@@ -43,5 +58,29 @@
 		public function options() {
 			$optionList = new \Form\Question\OptionList();
 			return $optionList->find(array('question_id' => $this->id));
+		}
+
+		public function validName($string): bool {
+			return $this->validText($string) && strlen(trim($string)) > 0;
+		}
+
+		public function addOption(array $parameters): ?\Form\Question\Option {
+			$parameters['question_id'] = $this->id;
+			$o = new \Form\Question\Option();
+			if (! $o->add($parameters)) {
+				$this->error($o->error());
+				return null;
+			}
+			return $o;
+		}
+
+		public function dropOptions(): bool {
+			foreach ($this->options() as $opt) {
+				if (! $opt->drop()) {
+					$this->error($opt->error());
+					return false;
+				}
+			}
+			return true;
 		}
 	}

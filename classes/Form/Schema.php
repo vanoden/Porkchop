@@ -145,7 +145,102 @@
 				$this->setVersion(2);
 				$GLOBALS['_database']->CommitTrans();
 			}
-		
+
+			if ($this->version() < 3) {
+				app_log("Upgrading ".$this->module." schema to version 3",'notice',__FILE__,__LINE__);
+
+				$alter = "
+					ALTER TABLE `form_forms`
+					ADD COLUMN `active_version_id` int(10) DEFAULT NULL AFTER `method`,
+					ADD KEY `idx_form_active_version` (`active_version_id`)
+				";
+				if (! $this->executeSQL($alter)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+				$fk = "
+					ALTER TABLE `form_forms`
+					ADD CONSTRAINT `fk_form_active_version`
+					FOREIGN KEY (`active_version_id`) REFERENCES `form_versions` (`id`)
+					ON DELETE SET NULL
+				";
+				if (! $this->executeSQL($fk)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				$alter_q = "
+					ALTER TABLE `form_questions`
+					ADD COLUMN `aggregate_key` varchar(32) NOT NULL DEFAULT '' AFTER `version_id`
+				";
+				if (! $this->executeSQL($alter_q)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				$upd = "
+					UPDATE `form_questions`
+					SET `aggregate_key` = MD5(CONCAT('fq:',`id`,':',`version_id`))
+					WHERE `aggregate_key` = '' OR `aggregate_key` IS NULL
+				";
+				if (! $this->executeSQL($upd)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				$this->setVersion(3);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+			if ($this->version() < 4) {
+				app_log("Upgrading ".$this->module." schema to version 4",'notice',__FILE__,__LINE__);
+
+				$create_sub = "
+					CREATE TABLE IF NOT EXISTS `form_submissions` (
+						`id` int(10) NOT NULL AUTO_INCREMENT,
+						`form_id` int(5) NOT NULL,
+						`version_id` int(10) NOT NULL,
+						`date_submitted` datetime DEFAULT NULL,
+						`object_type` varchar(64) DEFAULT NULL,
+						`object_id` int(10) DEFAULT NULL,
+						`remote_addr` varchar(45) DEFAULT NULL,
+						PRIMARY KEY (`id`),
+						KEY `idx_form_submissions_form` (`form_id`),
+						KEY `idx_form_submissions_version` (`version_id`),
+						KEY `idx_form_submissions_object` (`object_type`,`object_id`),
+						CONSTRAINT `fk_form_submission_form` FOREIGN KEY (`form_id`) REFERENCES `form_forms` (`id`),
+						CONSTRAINT `fk_form_submission_version` FOREIGN KEY (`version_id`) REFERENCES `form_versions` (`id`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+				";
+				if (! $this->executeSQL($create_sub)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				$create_ans = "
+					CREATE TABLE IF NOT EXISTS `form_submission_answers` (
+						`id` int(10) NOT NULL AUTO_INCREMENT,
+						`submission_id` int(10) NOT NULL,
+						`question_id` int(10) NOT NULL,
+						`aggregate_key` varchar(32) NOT NULL DEFAULT '',
+						`value` text,
+						PRIMARY KEY (`id`),
+						KEY `idx_fsa_submission` (`submission_id`),
+						KEY `idx_fsa_question` (`question_id`),
+						KEY `idx_fsa_aggregate` (`aggregate_key`),
+						CONSTRAINT `fk_fsa_submission` FOREIGN KEY (`submission_id`) REFERENCES `form_submissions` (`id`) ON DELETE CASCADE,
+						CONSTRAINT `fk_fsa_question` FOREIGN KEY (`question_id`) REFERENCES `form_questions` (`id`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+				";
+				if (! $this->executeSQL($create_ans)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				$this->setVersion(4);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}
