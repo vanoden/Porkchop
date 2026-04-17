@@ -254,6 +254,16 @@
 				return;
 			}
 			$questions = $activeVersion->questions();
+			$groups = array();
+			$groupList = new \Form\GroupList();
+			$loadedGroups = $groupList->find(array(
+				'version_id' => (int)$activeVersion->id,
+				'_sort' => 'sort_order',
+				'_order' => 'ASC',
+			));
+			if (is_array($loadedGroups)) {
+				$groups = $loadedGroups;
+			}
 			print '<div class="form_instructions">'.htmlspecialchars((string)$activeVersion->instructions, ENT_QUOTES, 'UTF-8').'</div>'."\n";
 			$action = strlen((string)$this->action) ? htmlspecialchars((string)$this->action, ENT_QUOTES, 'UTF-8') : '';
 			print '<form class="porkchop-form" action="'.$action.'" method="'.htmlspecialchars((string)$this->method, ENT_QUOTES, 'UTF-8').'">';
@@ -263,7 +273,7 @@
 			if ($versionOverride !== null) {
 				print '<input type="hidden" name="preview_version_id" value="'.(int)$versionOverride->id.'">';
 			}
-			foreach ($questions as $question) {
+			$renderQuestion = function ($question): void {
 				print '<div class="formQuestion">';
 				print '<label>'.htmlspecialchars((string)$question->text, ENT_QUOTES, 'UTF-8').'</label>';
 				if (!empty($question->help)) {
@@ -326,6 +336,65 @@
 					print '<input type="hidden" name="answer['.$question->id.']" value="'.htmlspecialchars((string)$question->text, ENT_QUOTES, 'UTF-8').'">';
 				}
 				print '</div>';
+			};
+
+			$groupsById = array();
+			$questionsByGroup = array();
+			foreach ($groups as $group) {
+				$gid = (int)($group->id ?? 0);
+				if ($gid < 1) continue;
+				$groupsById[$gid] = $group;
+				$questionsByGroup[$gid] = array();
+			}
+			$ungrouped = array();
+			foreach ($questions as $question) {
+				$gid = (int)($question->group_id ?? 0);
+				if ($gid > 0 && isset($groupsById[$gid])) {
+					$questionsByGroup[$gid][] = $question;
+				}
+				else {
+					$ungrouped[] = $question;
+				}
+			}
+
+			$sortQuestions = function (&$arr): void {
+				usort($arr, function ($a, $b): int {
+					$aOrder = (int)($a->sort_order ?? 50);
+					$bOrder = (int)($b->sort_order ?? 50);
+					if ($aOrder === $bOrder) {
+						return (int)($a->id ?? 0) <=> (int)($b->id ?? 0);
+					}
+					return $aOrder <=> $bOrder;
+				});
+			};
+
+			foreach ($questionsByGroup as $gid => $groupQuestions) {
+				$sortQuestions($groupQuestions);
+				$questionsByGroup[$gid] = $groupQuestions;
+			}
+			$sortQuestions($ungrouped);
+
+			foreach ($groups as $group) {
+				$gid = (int)($group->id ?? 0);
+				if ($gid < 1 || empty($questionsByGroup[$gid])) {
+					continue;
+				}
+				print '<div class="formGroup">';
+				$title = trim((string)($group->title ?? ''));
+				if ($title !== '') {
+					print '<h3 class="formGroupTitle">'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'</h3>';
+				}
+				$instructions = trim((string)($group->instructions ?? ''));
+				if ($instructions !== '') {
+					print '<div class="formGroupInstructions">'.htmlspecialchars($instructions, ENT_QUOTES, 'UTF-8').'</div>';
+				}
+				foreach ($questionsByGroup[$gid] as $question) {
+					$renderQuestion($question);
+				}
+				print '</div>';
+			}
+			foreach ($ungrouped as $question) {
+				$renderQuestion($question);
 			}
 			$csrf = '';
 			if (isset($GLOBALS['_SESSION_']) && is_object($GLOBALS['_SESSION_']) && method_exists($GLOBALS['_SESSION_'], 'getCSRFToken')) {

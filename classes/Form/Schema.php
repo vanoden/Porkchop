@@ -38,7 +38,7 @@
 						`prompt` varchar(256) NOT NULL,
 						`example` varchar(64) DEFAULT NULL,
 						`validation_pattern` varchar(128),
-						`group_id` varchar(64) DEFAULT NULL,
+						`group_id` int(10) DEFAULT NULL,
 						`default` varchar(64) DEFAULT NULL,
 						`sort_order` INT(3) DEFAULT 50,
 						`required` INT(1) DEFAULT 0,
@@ -238,6 +238,100 @@
 				}
 
 				$this->setVersion(4);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+			if ($this->version() < 5) {
+				app_log("Upgrading ".$this->module." schema to version 5",'notice',__FILE__,__LINE__);
+
+				$create_groups = "
+					CREATE TABLE IF NOT EXISTS `form_question_groups` (
+						`id` int(10) NOT NULL AUTO_INCREMENT,
+						`version_id` int(10) NOT NULL,
+						`title` varchar(128) NOT NULL DEFAULT '',
+						`instructions` text,
+						`sort_order` INT(3) NOT NULL DEFAULT 50,
+						PRIMARY KEY (`id`),
+						KEY `idx_form_question_groups` (`version_id`,`sort_order`),
+						CONSTRAINT `fk_form_question_groups_version` FOREIGN KEY (`version_id`) REFERENCES `form_versions` (`id`) ON DELETE CASCADE
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+				";
+				if (! $this->executeSQL($create_groups)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				$schema = new \Database\Schema();
+				$question_table = $schema->table('form_questions');
+				$option_table = $schema->table('form_question_options');
+
+				if ($question_table->has_column('view_order') && ! $question_table->has_column('sort_order')) {
+					$rename_question_order = "
+						ALTER TABLE `form_questions`
+						CHANGE COLUMN `view_order` `sort_order` INT(3) DEFAULT 50
+					";
+					if (! $this->executeSQL($rename_question_order)) {
+						$this->SQLError($this->error());
+						return false;
+					}
+				}
+				if ($option_table->has_column('view_order') && ! $option_table->has_column('sort_order')) {
+					$rename_option_order = "
+						ALTER TABLE `form_question_options`
+						CHANGE COLUMN `view_order` `sort_order` INT(3) NOT NULL DEFAULT 50
+					";
+					if (! $this->executeSQL($rename_option_order)) {
+						$this->SQLError($this->error());
+						return false;
+					}
+				}
+				if ($question_table->has_column('group_id')) {
+					$group_col = $question_table->column('group_id');
+					if ($group_col && ! preg_match('/^int/i', (string)$group_col->type)) {
+						$convert_group = "
+							ALTER TABLE `form_questions`
+							CHANGE COLUMN `group_id` `group_id` INT(10) DEFAULT NULL
+						";
+						if (! $this->executeSQL($convert_group)) {
+							$this->SQLError($this->error());
+							return false;
+						}
+					}
+				}
+
+				$drop_old_q_index = "ALTER TABLE `form_questions` DROP INDEX `idx_form_question`";
+				$this->executeSQL($drop_old_q_index);
+				$drop_old_o_index = "ALTER TABLE `form_question_options` DROP INDEX `idx_form_question_`";
+				$this->executeSQL($drop_old_o_index);
+
+				$new_q_index = "
+					ALTER TABLE `form_questions`
+					ADD INDEX `idx_form_question` (`version_id`, `group_id`, `sort_order`)
+				";
+				if (! $this->executeSQL($new_q_index)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+				$new_o_index = "
+					ALTER TABLE `form_question_options`
+					ADD INDEX `idx_form_question_` (`question_id`, `sort_order`)
+				";
+				if (! $this->executeSQL($new_o_index)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				if (! $question_table->has_constraint('fk_form_question_group')) {
+					$add_group_fk = "
+						ALTER TABLE `form_questions`
+						ADD CONSTRAINT `fk_form_question_group`
+						FOREIGN KEY (`group_id`) REFERENCES `form_question_groups` (`id`)
+						ON DELETE SET NULL
+					";
+					$this->executeSQL($add_group_fk);
+				}
+
+				$this->setVersion(5);
 				$GLOBALS['_database']->CommitTrans();
 			}
 

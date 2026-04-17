@@ -32,10 +32,15 @@
 	}
 	/** Role name provided in URL but Role not found **/
 	elseif (! $role->id && isset($GLOBALS['_REQUEST_']->query_vars_array[0]) && strlen($GLOBALS['_REQUEST_']->query_vars_array[0])) {
-    	$role_name = $GLOBALS['_REQUEST_']->query_vars_array[0];
-		$role = new \Register\Role();
-		$role->get($role_name);
-		if (! $role->id) $page->addError("Role not found");
+		$role_name = trim((string) $GLOBALS['_REQUEST_']->query_vars_array[0]);
+
+		// Ignore malformed/placeholder query fragments (e.g. "/_register/role?")
+		// and stay in "new role" mode instead of showing "Role not found".
+		if ($role_name !== '' && $role_name !== '?' && $role->validName($role_name)) {
+			$role = new \Register\Role();
+			$role->get($role_name);
+			if (! $role->id) $page->addError("Role not found");
+		}
     }
 
 	/** Update Existing Role **/

@@ -8,7 +8,7 @@
 		public $question_id;	// ID of the question this option belongs to
 		public $text;			// Text of the option, used for display purposes
 		public $value;			// Value of the option, used for form submission
-		public $sort_order;		// Sort order for the option, used for display purposes
+		public $sort_order;		// Display order for the option
 
 		public function __construct($id = null) {
 			$this->_tableName = 'form_question_options';

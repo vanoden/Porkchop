@@ -111,12 +111,36 @@ if ($form->exists() && isset($version) && $version->exists()) {
 <label for="instructions" style="display:block;margin:.35em 0">Instructions</label>
 <textarea id="instructions" name="instructions"><?=$version->instructions?></textarea>
 
+<h3>Groups</h3>
+<div class="tableBody">
+	<div class="tableRowHeader">
+		<div class="tableCell">Title</div>
+		<div class="tableCell">Instructions</div>
+		<div class="tableCell">View Order</div>
+	</div>
+<?php foreach ($groups as $group) { ?>
+	<div class="tableRow">
+		<div class="tableCell"><input type="text" name="group_title[<?= (int)$group->id ?>]" value="<?= htmlspecialchars((string)$group->title, ENT_QUOTES, 'UTF-8') ?>" /></div>
+		<div class="tableCell"><input type="text" name="group_instructions[<?= (int)$group->id ?>]" value="<?= htmlspecialchars((string)$group->instructions, ENT_QUOTES, 'UTF-8') ?>" /></div>
+		<div class="tableCell"><input type="number" name="group_sort_order[<?= (int)$group->id ?>]" value="<?= (int)$group->sort_order ?>" /></div>
+	</div>
+<?php } ?>
+	<div class="tableRow">
+		<div class="tableCell"><input type="text" name="group_title_new" value="" placeholder="New group title" /></div>
+		<div class="tableCell"><input type="text" name="group_instructions_new" value="" placeholder="Optional instructions" /></div>
+		<div class="tableCell"><input type="number" name="group_sort_order_new" value="50" /></div>
+	</div>
+</div>
+
+<h3>Questions</h3>
 <div class="tableBody">
 	<div class="tableRowHeader">
 		<div class="tableCell">Type</div>
 		<div class="tableCell">Question</div>
 		<div class="tableCell">Prompt</div>
 		<div class="tableCell">Required</div>
+		<div class="tableCell">Group</div>
+		<div class="tableCell">View Order</div>
 		<div class="tableCell">Choices</div>
 	</div>
 <?php	foreach($questions as $question) {
@@ -139,17 +163,27 @@ if ($form->exists() && isset($version) && $version->exists()) {
 		<div class="tableCell"><input type="text" name="prompt[<?=$question->id?>]" value="<?=$question->prompt?>" /></div>
 		<div class="tableCell"><input type="checkbox" name="required[<?=$question->id?>]" value="1"<?php if ($question->required) print " checked";?> /></div>
 		<div class="tableCell">
+			<select name="group_id[<?=$question->id?>]">
+				<option value="">Ungrouped</option>
+<?php foreach ($groups as $group) { ?>
+				<option value="<?= (int)$group->id ?>"<?php if ((int)$question->group_id === (int)$group->id) print ' selected'; ?>><?= htmlspecialchars((string)$group->title, ENT_QUOTES, 'UTF-8') ?></option>
+<?php } ?>
+			</select>
+		</div>
+		<div class="tableCell"><input type="number" name="sort_order[<?=$question->id?>]" value="<?= (int)$question->sort_order ?>" /></div>
+		<div class="tableCell">
 <?php	if ($showChoices) { ?>
 			<div class="formQuestionChoices">
 				<table class="formChoiceTable">
 					<thead>
-					<tr><th scope="col">Label</th><th scope="col">Value</th><th scope="col">Del</th></tr>
+					<tr><th scope="col">Label</th><th scope="col">Value</th><th scope="col">Order</th><th scope="col">Del</th></tr>
 					</thead>
 					<tbody>
 <?php		foreach ($question->options() as $opt) { ?>
 					<tr>
 						<td><input type="text" name="option_text[<?= (int)$opt->id ?>]" value="<?= htmlspecialchars((string)$opt->text, ENT_QUOTES, 'UTF-8') ?>" size="18" maxlength="128" /></td>
 						<td><input type="text" name="option_value[<?= (int)$opt->id ?>]" value="<?= htmlspecialchars((string)$opt->value, ENT_QUOTES, 'UTF-8') ?>" size="14" maxlength="128" /></td>
+						<td><input type="number" name="option_sort_order[<?= (int)$opt->id ?>]" value="<?= (int)$opt->sort_order ?>" /></td>
 						<td><input type="checkbox" name="option_delete[<?= (int)$opt->id ?>]" value="1" title="Remove this choice" /></td>
 					</tr>
 <?php		} ?>
@@ -158,6 +192,7 @@ if ($form->exists() && isset($version) && $version->exists()) {
 					<tr class="formChoiceNewRow">
 						<td><input type="text" name="option_new_text[<?= (int)$question->id ?>][]" value="" placeholder="Label" size="18" maxlength="128" autocomplete="off" /></td>
 						<td><input type="text" name="option_new_value[<?= (int)$question->id ?>][]" value="" placeholder="Value" size="14" maxlength="128" autocomplete="off" /></td>
+						<td></td>
 						<td><button type="button" class="formChoiceRemoveNewRow" title="Remove this row">&times;</button></td>
 					</tr>
 					</tbody>
@@ -184,6 +219,15 @@ if ($form->exists() && isset($version) && $version->exists()) {
 		<div class="tableCell"><input type="text" name="text_new" value="" /></div>
 		<div class="tableCell"><input type="text" name="prompt_new" value="" /></div>
 		<div class="tableCell"><input type="checkbox" name="required_new" value="1" /></div>
+		<div class="tableCell">
+			<select name="group_id_new">
+				<option value="">Ungrouped</option>
+<?php foreach ($groups as $group) { ?>
+				<option value="<?= (int)$group->id ?>"><?= htmlspecialchars((string)$group->title, ENT_QUOTES, 'UTF-8') ?></option>
+<?php } ?>
+			</select>
+		</div>
+		<div class="tableCell"><input type="number" name="sort_order_new" value="50" /></div>
 		<div class="tableCell"><span class="formChoiceNa" title="Save the new question first, then add choices.">—</span></div>
 	</div>
 </div>

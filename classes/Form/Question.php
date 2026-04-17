@@ -11,7 +11,7 @@
 		public $validation_pattern;	// Regular expression pattern to validate the answer, if applicable
 		public $group_id;			// Group ID for the question, used to group questions together for display purposes
 		public $default;			// Default answer for the question, used for display purposes
-		public $sort_order;			// Sort order for the question, used
+		public $sort_order;			// Display order for the question
 		public $required;			// Whether the question is required
 		public $help;				// Special instructions for the question as needed, used for display purposes
 
@@ -57,7 +57,11 @@
 		 */
 		public function options() {
 			$optionList = new \Form\Question\OptionList();
-			return $optionList->find(array('question_id' => $this->id));
+			return $optionList->find(array(
+				'question_id' => $this->id,
+				'_sort' => 'sort_order',
+				'_order' => 'ASC',
+			));
 		}
 
 		public function validName($string): bool {

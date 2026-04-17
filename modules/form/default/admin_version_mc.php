@@ -63,9 +63,32 @@
 				}
 			} else {
 				$versionList = new \Form\VersionList();
+				$existingVersions = $form->versions();
+				$sourceVersion = (! empty($existingVersions) ? $existingVersions[0] : null);
+
 				$version = new \Form\Version();
-				$version->form_id = $form->id;
-				$version->name = $versionList->nextVersionNumber($form->id);
+				$newVersionParams = array(
+					'form_id' => (int)$form->id,
+					'code' => $porkchop->biguuid(),
+					'name' => (string)$versionList->nextVersionNumber($form->id),
+					'description' => ($sourceVersion && $sourceVersion->exists()) ? (string)$sourceVersion->description : '',
+					'instructions' => ($sourceVersion && $sourceVersion->exists()) ? (string)$sourceVersion->instructions : '',
+				);
+				if (! $version->add($newVersionParams)) {
+					$page->addError("Error creating new version: " . $version->error());
+					$can_proceed = false;
+				}
+				elseif ($sourceVersion && $sourceVersion->exists()) {
+					if (! $version->copyQuestionsFrom($sourceVersion)) {
+						$page->addError("Error copying version structure: " . $version->error());
+						$can_proceed = false;
+					}
+				}
+
+				if ($can_proceed && $version->exists() && empty($_POST)) {
+					header("Location: /_form/admin_version/" . (int)$version->id);
+					exit;
+				}
 			}
 		} elseif ($seg1 === null && $form->validInteger((string)$seg0)) {
 			// e.g. /_form/admin_version/4 — version id from admin form list (not form code)
@@ -239,6 +262,46 @@
 			}
 		}
 
+		// Manage groups first so questions can be assigned to them.
+		if ($can_proceed && $version->exists()) {
+			$groupList = new \Form\GroupList();
+			$postedGroups = $_POST['group_title'] ?? array();
+			if (is_array($postedGroups)) {
+				foreach ($postedGroups as $group_id => $group_title) {
+					$group_id = (int)$group_id;
+					if ($group_id < 1) continue;
+					$group = new \Form\Group($group_id);
+					if (! $group->exists() || (int)$group->version_id !== (int)$version->id) continue;
+					$viewOrder = (int)($_POST['group_sort_order'][$group_id] ?? 50);
+					$params = array(
+						'title' => trim((string)$group_title),
+						'instructions' => trim((string)($_POST['group_instructions'][$group_id] ?? '')),
+						'sort_order' => $viewOrder,
+					);
+					if (! $group->update($params)) {
+						$page->addError("Error updating group: " . $group->error());
+						$can_proceed = false;
+					}
+				}
+			}
+			$newGroupTitle = trim((string)($_POST['group_title_new'] ?? ''));
+			if ($can_proceed && $newGroupTitle !== '') {
+				$newGroup = new \Form\Group();
+				$newParams = array(
+					'version_id' => (int)$version->id,
+					'title' => $newGroupTitle,
+					'instructions' => trim((string)($_POST['group_instructions_new'] ?? '')),
+					'sort_order' => (int)($_POST['group_sort_order_new'] ?? 50),
+				);
+				if (! $newGroup->add($newParams)) {
+					$page->addError("Error adding group: " . $newGroup->error());
+					$can_proceed = false;
+				} else {
+					$page->appendSuccess("Group added.");
+				}
+			}
+		}
+
 		// Process questions if form was successfully created/updated
 		if ($can_proceed) {
 			$typesPost = $_REQUEST['type'] ?? array();
@@ -286,11 +349,15 @@
 				}
 
 				if ($can_proceed) {
+					$groupId = (int)($_REQUEST['group_id'][$question_id] ?? 0);
+					$viewOrder = (int)($_REQUEST['sort_order'][$question_id] ?? 50);
 					$parameters = array(
 						'type' => $question_type,
 						'text' => $question_text,
 						'prompt' => $question_prompt,
 						'required' => $question_required,
+						'sort_order' => $viewOrder,
+						'group_id' => ($groupId > 0 ? $groupId : null),
 					);
 
 					if (! $question->update($parameters)) {
@@ -350,6 +417,7 @@
 						}
 						$optText = trim((string)$optText);
 						$optVal = trim((string)($_POST['option_value'][$option_id] ?? ''));
+						$optViewOrder = (int)($_POST['option_sort_order'][$option_id] ?? 50);
 						if ($optText === '' || $optVal === '') {
 							$page->addError("Choice label and value cannot be empty (option #" . $option_id . ").");
 							$can_proceed = false;
@@ -363,6 +431,7 @@
 						if (! $opt->update(array(
 							'text' => $optText,
 							'value' => $optVal,
+							'sort_order' => $optViewOrder,
 						))) {
 							$page->addError("Error updating choice: " . $opt->error());
 							$can_proceed = false;
@@ -467,6 +536,8 @@
 							'text' => $_REQUEST['text_new'] ?? '',
 							'prompt' => $_REQUEST['prompt_new'] ?? '',
 							'required' => $reqNew,
+							'sort_order' => (int)($_REQUEST['sort_order_new'] ?? 50),
+							'group_id' => (! empty($_REQUEST['group_id_new']) ? (int)$_REQUEST['group_id_new'] : null),
 						);
 
 						if (! $question->add($parameters)) {
@@ -486,6 +557,15 @@
 	if ($can_proceed && $form->id && isset($version) && $version->exists()) {
 		$questions = $version->questions();
 	}
+$groups = array();
+if ($can_proceed && isset($version) && $version->exists()) {
+	$groupList = new \Form\GroupList();
+	$groups = $groupList->find(array(
+		'version_id' => (int)$version->id,
+		'_sort' => 'sort_order',
+		'_order' => 'ASC',
+	));
+}
 
 	$page->setAdminMenuSection("Site");
 	if (isset($version) && $version->exists()) {

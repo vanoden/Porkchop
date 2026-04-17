@@ -103,7 +103,6 @@
   });
 </script>
 
-
 <!-- Page Header -->
 <?= $page->showAdminPageInfo() ?>
 <!-- End Page Header -->
@@ -121,7 +120,7 @@
       <?php if ($role->id) { ?>
         <span class="value role-name-value"><?= htmlspecialchars($role->name) ?></span>
       <?php } else { ?>
-        <input class="role-name-input" type="text" name="name" value="" required aria-required="true" />
+        <input class="role-name-input" type="text" name="name" style="border: 1px solid var(--color-light-four);" placeholder="e.g. Engineering User" value="" required aria-required="true" />
       <?php } ?>
     </div>
 

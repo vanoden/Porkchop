@@ -23,6 +23,25 @@
 		background: #f9fbff;
 		border-left: 4px solid #8aaad6;
 	}
+	.formMakerShow .formGroup {
+		margin: 1rem 0 1.1rem 0;
+		padding: 0.75rem 0.85rem 0.25rem 0.85rem;
+		background: #f8fafc;
+		border: 1px solid #d7e0ea;
+		border-radius: 7px;
+	}
+	.formMakerShow .formGroupTitle {
+		margin: 0 0 0.45rem 0;
+		padding-bottom: 0.35rem;
+		font-size: 1.05rem;
+		font-weight: 700;
+		border-bottom: 1px solid #d7e0ea;
+	}
+	.formMakerShow .formGroupInstructions {
+		margin: 0 0 0.6rem 0;
+		color: #475467;
+		font-size: 0.95em;
+	}
 	.formMakerShow .formQuestion {
 		margin-bottom: 0.95rem;
 		padding-bottom: 0.8rem;
