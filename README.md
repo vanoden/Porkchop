@@ -99,6 +99,52 @@ npm install gulp-cli gulp-template gulp-data gulp-debug
 
 Copy the file '/config/config.php.dist' to '/config/config.php'.  Edit the file with your database connection information and other things specific to your site.
 
+## Logging
+
+Operational logging is controlled mainly by constants in `config/config.php` (see `config/config.php.dist`).
+
+### Log root (`LOG_ROOT`)
+
+Set **`LOG_ROOT`** once (default in the sample config: **`/var/log/apache2/SpectrosWWW/`**). The sample config derives:
+
+| Constant | Typical path | Purpose |
+|----------|----------------|---------|
+| **`APPLICATION_LOG`** | `LOG_ROOT/application` | Directory containing **`application.log`** (`app_log()`, query tracing, etc.) when **`APPLICATION_LOG_TYPE`** is **`file`**. |
+| **`API_LOG`** | `LOG_ROOT/api` | Per-module API logs (`<module>.log`). Set to **`''`** to disable API file logging. |
+| **`PHP_ERROR_LOG`** | `LOG_ROOT/php/error.log` | Target for PHP **`error_log()`** via **`ini_set`** at config load. Set to **`''`** to keep the server default. |
+
+The sample **`config.php.dist`** also creates these directories (best-effort) and **`LOG_ROOT/apache`** for the Apache example in **`config/apache2.config.dist`**.
+
+### Application log (`app_log()`, query tracing, and similar)
+
+The global logger is created in `core/index.php` (HTTP), `service/service.php` (sensor socket service), and various `cli/` scripts after loading config. Its behavior depends on **`APPLICATION_LOG_TYPE`** and related defines:
+
+| `APPLICATION_LOG_TYPE` | Where messages go |
+|------------------------|-------------------|
+| `file` | **`APPLICATION_LOG`**: if this path is a **directory**, the application writes **`application.log`** inside it (`classes/Site/Logger/File.php`). If it is a **file** path, that file is used directly. |
+| `syslog` | Local syslog via PHP `openlog()` / `syslog()` (`classes/Site/Logger/Syslog.php`): identity **`APPLICATION_LOG_NAME`** (default `Porkchop`), facility **`APPLICATION_LOG_FACILITY`** or default **`LOG_LOCAL1`**. The OS syslog implementation decides the backing file (e.g. `/var/log/syslog`). |
+| `errorlog` | PHP’s `error_log()` target (same as plain PHP errors: often the web server error log or `php.ini` `error_log`). |
+| `screen` | Standard output only (some installer / CLI flows); not a log file. |
+
+Severity is filtered by **`APPLICATION_LOG_LEVEL`**.
+
+`core/index.php` and `service/service.php` define defaults for **`APPLICATION_LOG_HOST`** and **`APPLICATION_LOG_PORT`**; the bundled **`Site\Logger\Syslog`** class uses local **`syslog()`** only and does not send to that host/port. If **`LOG_ROOT`** is defined and non-empty but **`APPLICATION_LOG`** / **`APPLICATION_LOG_TYPE`** are absent, **`core/index.php`**, **`service/service.php`**, and **`cli/environment_test.php`** fall back to **`file`** logging under **`LOG_ROOT/application`**. Otherwise legacy defaults (**`syslog`** / empty path) apply—define **`APPLICATION_LOG_*`** (or **`LOG_ROOT`**) in **`config/config.php`** for predictable destinations.
+
+### API request/response logs
+
+If **`API_LOG`** is set to a non-empty value, API logging (`api_log()` in `includes/functions.php` and `\API::log()` in `classes/API.php`) writes:
+
+- **`API_LOG` is a directory**: **`<API_LOG>/<module>.log`** (one file per API module name).
+- **`API_LOG` points to a single file**: all entries append to **that file**.
+
+If **`API_LOG`** is empty or falsy, this API file logging is disabled.
+
+### PHP `error_log()` and web server logs
+
+With **`PHP_ERROR_LOG`** set in config (see above), PHP **`error_log()`** output is routed to that file after **`config/config.php`** loads (including web, CLI, and **`service/service.php`**).
+
+Apache HTTP/error logs are separate from PHP: the sample **`config/apache2.config.dist`** writes **`LOG_ROOT/apache/error.log`** and **`LOG_ROOT/apache/access.log`** so they sit beside the PHP/app logs—adjust paths if you change **`LOG_ROOT`**.
+
 ### Setup
 
 Call the Install script to run the initialization tasks:

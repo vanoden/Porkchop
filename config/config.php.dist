@@ -9,10 +9,41 @@
         define ( 'THIRD_PARTY', BASE.'/third_party/vendor' );
         define ( 'RESOURCES', BASE.'/resources' );
         define ( 'CLASS_PATH', BASE.'/classes' );
-        define ( 'API_LOG', '/var/log/apache2/log');
-        define ( 'APPLICATION_LOG', '/var/log/apache2/access.log');
+
+        /** Root directory for Spectros/Porkchop logs (application, API, PHP error_log). Adjust per environment. */
+        define ( 'LOG_ROOT', ' /var/log/apache2/SpectrosWWW/' );
+
+        /** Directory → `classes/Site/Logger/File.php` writes `application.log` here */
+        define ( 'APPLICATION_LOG', LOG_ROOT.'/application' );
+        
+        /** Directory → per-module `<module>.log`; set to '' to disable API file logging */
+        define ( 'API_LOG', LOG_ROOT.'/api' );
+        
+        /** PHP `error_log()` destination for uncaught diagnostics (empty string = use php.ini / server default) */
+        define ( 'PHP_ERROR_LOG', LOG_ROOT.'/php/error.log' );
+
         define ( 'APPLICATION_LOG_LEVEL', 'debug');
         define ( 'APPLICATION_LOG_TYPE', 'file');
+
+        $_spectros_log_dirs = array(
+                LOG_ROOT,
+                LOG_ROOT.'/application',
+                LOG_ROOT.'/api',
+                LOG_ROOT.'/apache',
+        );
+        if (PHP_ERROR_LOG !== '') {
+                $_spectros_log_dirs[] = dirname(PHP_ERROR_LOG);
+        }
+        foreach ($_spectros_log_dirs as $_spectros_log_dir) {
+                if ($_spectros_log_dir !== '' && $_spectros_log_dir !== '.' && ! is_dir($_spectros_log_dir)) {
+                        @mkdir($_spectros_log_dir, 0775, true);
+                }
+        }
+        unset($_spectros_log_dirs, $_spectros_log_dir);
+
+        if (PHP_ERROR_LOG !== '') {
+                ini_set('error_log', PHP_ERROR_LOG);
+        }
         define ( 'TEMPLATES', BASE.'/templates' );	
         define ( 'REPORTS',BASE.'/reports' );	
         define ( 'SPECTROS_LOCATION_ID', 1);

@@ -84,11 +84,16 @@
 		public function delete($key) {
 			if ($this->_connected) {
 				$internalKey = $this->prefixKey($key);
-				if ($this->_service->delete($internalKey)) return true;
-				else {
-					$this->error("Unable to delete value from cache: ".$this->_service->getResultCode());
-					return false;
+				if ($this->_service->delete($internalKey)) {
+					return true;
 				}
+				$code = $this->_service->getResultCode();
+				$notFound = (defined('Memcached::RES_NOTFOUND') && $code === \Memcached::RES_NOTFOUND) || $code === 16;
+				if ($notFound) {
+					return true;
+				}
+				$this->error("Unable to delete value from cache: ".$code);
+				return false;
 			}
 			else {
 				$this->error("Cache client not connected");

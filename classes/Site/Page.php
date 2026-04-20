@@ -25,6 +25,9 @@
 		private static array $_authExemptViews = ['login', 'forgot_password', 'register', 'email_verify', 'resend_verify', 'invoice_login', 'thank_you'];
 		private static array $_touExemptViews = ['terms_of_use_form', 'terms_of_use_declined'];
 
+		/** @var array<string, int> Resolved page_pages.id keyed by module|view|index for current request only */
+		private static array $_getPageLookupByRoute = [];
+
 		/** @constructor */
 		public function __construct() {
 			$this->_tableName = "page_pages";
@@ -411,6 +414,12 @@
 			if (empty($index) || strlen($index) < 1) $index = null;
 			elseif ($this->validIndex($index)) $this->index = $index;
 
+			$routeKey = $module.'|'.$view.'|'.(($index !== null && strlen((string) $index) > 0) ? (string) $index : '');
+			if (isset(self::$_getPageLookupByRoute[$routeKey])) {
+				$this->id = self::$_getPageLookupByRoute[$routeKey];
+				return $this->details();
+			}
+
 			$database = new \Database\Service();
 
 			// Prepare Query
@@ -444,6 +453,7 @@
 
 			if (is_numeric($id)) {
 				$this->id = $id;
+				self::$_getPageLookupByRoute[$routeKey] = (int) $id;
 				return $this->details();
 			}
 			elseif ($module == "static") {

@@ -11,6 +11,7 @@
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'geography_provinces';
+			$this->_cacheKeyPrefix = 'geography.province';
 			parent::__construct($id);
 		}
 
@@ -154,6 +155,11 @@
 				'class_method' => 'update',
 			]);
 
+			$cache = $this->cache();
+			if (isset($cache)) {
+				$cache->delete();
+			}
+
 			return $this->details();
 		}
 
@@ -258,55 +264,6 @@
 			list($this->id) = $rs->FetchRow();
 			if (empty($this->id)) return false;
 			return $this->details();
-		}
-
-		/** @method public details()
-		 * Load province details by ID.
-		 * @return bool
-		 */
-		public function details(): bool {
-			// Clear Previous Errors
-			$this->clearErrors();
-
-			// Validate ID
-			if (empty($this->id)) return false;
-
-			// Initialize Database Service
-			$database = new \Database\Service();
-
-			// Prepare Query
-			$query = "
-				SELECT id, code, country_id, name, type, abbreviation, label
-				FROM geography_provinces
-				WHERE id = ?
-			";
-
-			// Add Parameters
-			$database->AddParam($this->id);
-
-			// Execute Query
-			$rs = $database->Execute($query);
-
-			// Check for Errors
-			if ($database->ErrorMsg()) {
-				$this->SQLError($database->ErrorMsg());
-				$this->id = null;
-				return false;
-			}
-
-			// Populate Object
-			if ($object = $rs->FetchNextObject(false)) {
-				$this->id = $object->id;
-				$this->country_id = (int) $object->country_id;
-				$this->name = (string) $object->name;
-				$this->type = isset($object->type) ? (string) $object->type : null;
-				$this->abbreviation = (string) $object->abbreviation;
-				$this->label = isset($object->label) ? (string) $object->label : null;
-				$this->code = (string) $object->code;
-				return true;
-			}
-
-			return false;
 		}
 
 		/** @method public country()
