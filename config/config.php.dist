@@ -11,7 +11,7 @@
         define ( 'CLASS_PATH', BASE.'/classes' );
 
         /** Root directory for Spectros/Porkchop logs (application, API, PHP error_log). Adjust per environment. */
-        define ( 'LOG_ROOT', ' /var/log/apache2/SpectrosWWW/' );
+        define ( 'LOG_ROOT', '/var/log/apache2/SpectrosWWW/' );
 
         /** Directory → `classes/Site/Logger/File.php` writes `application.log` here */
         define ( 'APPLICATION_LOG', LOG_ROOT.'/application' );
