@@ -20,10 +20,22 @@
 		<div id="source-sortable-column" class="tableCell">Source</div>
 		<div id="destination-sortable-column" class="tableCell">Destination</div>
 	</div>
-<?php	foreach ($shipments as $shipment) {
-		$vendor = new \Shipping\Vendor($shipment->vendor_id);
-		$sender = new \Register\Customer($shipment->send_contact_id);
-		$receiver = new \Register\Customer($shipment->rec_contact_id);
+<?php
+    $vendorCache = [];
+    $customerCache = [];
+	foreach ($shipments as $shipment) {
+        if (!isset($vendorCache[$shipment->vendor_id])) {
+            $vendorCache[$shipment->vendor_id] = new \Shipping\Vendor($shipment->vendor_id);
+        }
+        if (!isset($customerCache[$shipment->send_contact_id])) {
+            $customerCache[$shipment->send_contact_id] = new \Register\Customer($shipment->send_contact_id);
+        }
+        if (!isset($customerCache[$shipment->rec_contact_id])) {
+            $customerCache[$shipment->rec_contact_id] = new \Register\Customer($shipment->rec_contact_id);
+        }
+		$vendor = $vendorCache[$shipment->vendor_id];
+		$sender = $customerCache[$shipment->send_contact_id];
+		$receiver = $customerCache[$shipment->rec_contact_id];
 ?>
 	<div class="tableRow">
 		<div class="tableCell"><a href="/_shipping/admin_shipment?id=<?=$shipment->id?>"><?=$shipment->document_number?></a></div>

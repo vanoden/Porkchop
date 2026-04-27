@@ -307,8 +307,33 @@ class Menu Extends \BaseModel {
 	 * @return bool
 	 */
 	private function moduleExists($module) {
-		if (empty($module) || !defined('MODULES')) return false;
-		return is_dir(MODULES . '/' . $module);
+		if (empty($module) || !defined('MODULES')) {
+			return false;
+		}
+		$base = rtrim(MODULES, '/');
+		if (is_dir($base . '/' . $module)) {
+			return true;
+		}
+		// Linux case-sensitive FS: /_form/... yields "form" but module dir may be "Form" etc.
+		$need = strtolower((string) $module);
+		if (!is_dir($base)) {
+			return false;
+		}
+		$dh = @opendir($base);
+		if ($dh === false) {
+			return false;
+		}
+		while (($entry = readdir($dh)) !== false) {
+			if ($entry === '.' || $entry === '..') {
+				continue;
+			}
+			if (strtolower($entry) === $need && is_dir($base . '/' . $entry)) {
+				closedir($dh);
+				return true;
+			}
+		}
+		closedir($dh);
+		return false;
 	}
 
 	/** @method private shouldShowMenuItem($item)

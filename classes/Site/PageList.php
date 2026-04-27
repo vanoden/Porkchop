@@ -53,6 +53,15 @@
 					ORDER BY module,view
 			";
 
+			if (isset($controls['limit']) && is_numeric($controls['limit'])) {
+				$get_object_query .= "
+					LIMIT ".(int)$controls['limit'];
+				if (isset($controls['offset']) && is_numeric($controls['offset'])) {
+					$get_object_query .= "
+					OFFSET ".(int)$controls['offset'];
+				}
+			}
+
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
