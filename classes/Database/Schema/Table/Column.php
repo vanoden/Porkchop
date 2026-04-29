@@ -26,6 +26,15 @@
 			}
 		}
 
+		/** @method public get(table,name)
+		/* Loads properties of column from database
+		/* @param table_name Name of table containing column
+		/* @param column_name Name of column
+		/* @return true if present and loaded, otherwise false
+		public function get($table_name,$column_name) {
+			# Load Column Parameters
+		}
+
 		public function error() {
 			return $this->_error;
 		}
