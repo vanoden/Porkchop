@@ -108,6 +108,7 @@
 		/* Load and return the Column object in this table with properties loaded
 		/* @param name Name of column
 		/* @return \Database\Schema\Table\Column object if found, otherwise null
+		*/
 		public function column($name) {
 			if ($this->has_column($name)) {
 				return new \Database\Schema\Table\Column($self->name,$name);
