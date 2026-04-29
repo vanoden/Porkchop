@@ -8,32 +8,7 @@
 			$this->clearError();
 
 			if ($this->version() < 1) {
-				$this->setVersion(1);
-				$GLOBALS['_database']->CommitTrans();
-			}
-
-			if ($this->version() < 2) {
-				$this->setVersion(2);
-				$GLOBALS['_database']->CommitTrans();
-			}
-
-			if ($this->version() < 3) {
-				$this->setVersion(3);
-				$GLOBALS['_database']->CommitTrans();
-			}
-
-			if ($this->version() < 4) {
-				$this->setVersion(4);
-				$GLOBALS['_database']->CommitTrans();
-			}
-
-			if ($this->version() < 5) {
-				$this->setVersion(5);
-				$GLOBALS['_database']->CommitTrans();
-			}
-
-			if ($this->version() < 6) {
-				app_log("Upgrading ".$this->module." schema to version 6",'notice',__FILE__,__LINE__);
+				app_log("Upgrading ".$this->module." schema to version 1",'notice',__FILE__,__LINE__);
 
 				$create_form_versions = "
 					CREATE TABLE IF NOT EXISTS `form_versions` (
@@ -47,7 +22,7 @@
 						`date_activated` datetime DEFAULT NULL,
 						PRIMARY KEY (`id`),
 						UNIQUE KEY `idx_form_version_code` (`form_id`,`code`)
-					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+					)
 				";
 				if (! $this->executeSQL($create_form_versions)) {
 					$this->SQLError($this->error());
@@ -70,7 +45,7 @@
 						UNIQUE KEY `idx_form_code` (`code`),
 						KEY `idx_form_active_version` (`active_version_id`),
 						CONSTRAINT `fk_form_active_version` FOREIGN KEY (`active_version_id`) REFERENCES `form_versions` (`id`) ON DELETE SET NULL
-					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+					) 
 				";
 				if (! $this->executeSQL($create_form_forms)) {
 					$this->SQLError($this->error());
@@ -87,7 +62,7 @@
 						PRIMARY KEY (`id`),
 						KEY `idx_form_question_groups` (`version_id`,`sort_order`),
 						CONSTRAINT `fk_form_question_groups_version` FOREIGN KEY (`version_id`) REFERENCES `form_versions` (`id`) ON DELETE CASCADE
-					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+					)
 				";
 				if (! $this->executeSQL($create_question_groups)) {
 					$this->SQLError($this->error());
@@ -113,7 +88,7 @@
 						KEY `idx_form_question` (`group_id`,`sort_order`),
 						KEY `fk_form_question_version` (`version_id`),
 						CONSTRAINT `form_questions_ibfk_1` FOREIGN KEY (`version_id`) REFERENCES `form_versions` (`id`)
-					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+					)
 				";
 				if (! $this->executeSQL($create_form_questions)) {
 					$this->SQLError($this->error());
@@ -130,7 +105,7 @@
 						PRIMARY KEY (`id`),
 						KEY `idx_form_question_` (`question_id`,`sort_order`),
 						CONSTRAINT `form_question_options_ibfk_1` FOREIGN KEY (`question_id`) REFERENCES `form_questions` (`id`)
-					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+					)
 				";
 				if (! $this->executeSQL($create_form_question_options)) {
 					$this->SQLError($this->error());
@@ -152,7 +127,7 @@
 						KEY `idx_form_submissions_object` (`object_type`,`object_id`),
 						CONSTRAINT `fk_form_submission_form` FOREIGN KEY (`form_id`) REFERENCES `form_forms` (`id`),
 						CONSTRAINT `fk_form_submission_version` FOREIGN KEY (`version_id`) REFERENCES `form_versions` (`id`)
-					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+					)
 				";
 				if (! $this->executeSQL($create_form_submissions)) {
 					$this->SQLError($this->error());
@@ -172,14 +147,14 @@
 						KEY `idx_fsa_aggregate` (`aggregate_key`),
 						CONSTRAINT `fk_fsa_question` FOREIGN KEY (`question_id`) REFERENCES `form_questions` (`id`),
 						CONSTRAINT `fk_fsa_submission` FOREIGN KEY (`submission_id`) REFERENCES `form_submissions` (`id`) ON DELETE CASCADE
-					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+					)
 				";
 				if (! $this->executeSQL($create_form_submission_answers)) {
 					$this->SQLError($this->error());
 					return false;
 				}
 
-				$this->setVersion(6);
+				$this->setVersion(1);
 				$GLOBALS['_database']->CommitTrans();
 			}
 
