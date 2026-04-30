@@ -22,12 +22,30 @@
 		}
 
 		public function questions() {
-			$questionList = new \Form\QuestionList();
-			return $questionList->find(array(
-				'version_id' => $this->id,
-				'_sort' => 'sort_order',
-				'_order' => 'ASC',
-			));
+			$questions = array();
+			$sql = "
+				SELECT q.id
+				FROM form_questions q
+				INNER JOIN form_question_groups g ON g.id = q.group_id
+				WHERE g.version_id = ?
+				ORDER BY q.sort_order ASC, q.id ASC
+			";
+			$rs = $GLOBALS['_database']->Execute($sql, array((int)$this->id));
+			if (! $rs) {
+				$this->error('Could not load version questions');
+				return array();
+			}
+			while ($row = $rs->FetchRow()) {
+				$qid = (int)($row['id'] ?? 0);
+				if ($qid < 1) {
+					continue;
+				}
+				$q = new \Form\Question($qid);
+				if ($q->exists()) {
+					$questions[] = $q;
+				}
+			}
+			return $questions;
 		}
 
 		public function active(): bool {
@@ -100,7 +118,6 @@
 				}
 				$nq = new \Form\Question();
 				$params = array(
-					'version_id' => $this->id,
 					'type' => $q->type,
 					'text' => $q->text,
 					'prompt' => $q->prompt,

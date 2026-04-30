@@ -314,7 +314,7 @@
 					continue;
 				}
 				$question = new \Form\Question($question_id);
-				if (! $question->exists() || (int)$question->version_id !== (int)$version->id) {
+				if (! $question->exists()) {
 					$page->addError("Invalid question in this version.");
 					$can_proceed = false;
 					continue;
@@ -388,7 +388,7 @@
 							continue;
 						}
 						$q = new \Form\Question((int)$opt->question_id);
-						if (! $q->exists() || (int)$q->version_id !== (int)$version->id || ! in_array($q->type, $choiceTypes, true)) {
+						if (! $q->exists() || ! in_array($q->type, $choiceTypes, true)) {
 							continue;
 						}
 						if (! $opt->drop()) {
@@ -412,7 +412,7 @@
 							continue;
 						}
 						$q = new \Form\Question((int)$opt->question_id);
-						if (! $q->exists() || (int)$q->version_id !== (int)$version->id || ! in_array($q->type, $choiceTypes, true)) {
+						if (! $q->exists() || ! in_array($q->type, $choiceTypes, true)) {
 							continue;
 						}
 						$optText = trim((string)$optText);
@@ -464,12 +464,12 @@
 								break;
 							}
 						}
-						if ($hasNonEmpty && (! $q->exists() || (int)$q->version_id !== (int)$version->id || ! in_array($q->type, $choiceTypes, true))) {
+						if ($hasNonEmpty && (! $q->exists() || ! in_array($q->type, $choiceTypes, true))) {
 							$page->addError("Invalid question for new choice.");
 							$can_proceed = false;
 							continue;
 						}
-						if (! $q->exists() || (int)$q->version_id !== (int)$version->id || ! in_array($q->type, $choiceTypes, true)) {
+						if (! $q->exists() || ! in_array($q->type, $choiceTypes, true)) {
 							continue;
 						}
 						$maxSort = 0;
@@ -531,7 +531,6 @@
 					}
 					if (! $page->errorCount() && $can_proceed) {
 						$parameters = array(
-							'version_id' => $version->id,
 							'type' => $_REQUEST['type_new'] ?? '',
 							'text' => $_REQUEST['text_new'] ?? '',
 							'prompt' => $_REQUEST['prompt_new'] ?? '',

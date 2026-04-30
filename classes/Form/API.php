@@ -176,9 +176,11 @@
 
 			$questions = array();
 			if (! empty($_REQUEST['version_id'])) {
-				$qlist = new \Form\QuestionList();
-				$questions = $qlist->find(array('version_id' => (int)$_REQUEST['version_id']));
-				if ($qlist->error()) $this->error($qlist->error());
+				$v = new \Form\Version((int)$_REQUEST['version_id']);
+				if (! $v->exists()) {
+					$this->error("Version not found");
+				}
+				$questions = $v->questions();
 			}
 			elseif (! empty($_REQUEST['form_code'])) {
 				$form = new \Form\Form();

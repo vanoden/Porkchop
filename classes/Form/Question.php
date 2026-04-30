@@ -2,7 +2,6 @@
 	namespace Form;
 
 	class Question Extends \BaseModel {
-		public $version_id;			// ID of the version this question belongs to
 		public $aggregate_key;		// Stable key across versions for reporting/aggregation
 		public $type;				// Type of the question, e.g., text, textarea, select, radio, checkbox, hidden
 		public $text;				// Text of the question, used for display purposes
