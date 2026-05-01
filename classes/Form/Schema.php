@@ -72,7 +72,6 @@
 				$create_form_questions = "
 					CREATE TABLE IF NOT EXISTS `form_questions` (
 						`id` int NOT NULL AUTO_INCREMENT,
-						`version_id` int NOT NULL DEFAULT '0',
 						`aggregate_key` varchar(32) NOT NULL DEFAULT '',
 						`type` enum('hidden','text','textarea','select','checkbox','radio','submit') NOT NULL DEFAULT 'text',
 						`text` varchar(64) NOT NULL,
@@ -85,10 +84,8 @@
 						`required` int DEFAULT '0',
 						`help` varchar(256) DEFAULT NULL,
 						PRIMARY KEY (`id`),
-						KEY `idx_form_question` (`group_id`,`sort_order`),
-						KEY `fk_form_question_version` (`version_id`),
-						CONSTRAINT `form_questions_ibfk_1` FOREIGN KEY (`version_id`) REFERENCES `form_versions` (`id`)
-					)
+						KEY `idx_form_question` (`group_id`,`sort_order`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 				";
 				if (! $this->executeSQL($create_form_questions)) {
 					$this->SQLError($this->error());

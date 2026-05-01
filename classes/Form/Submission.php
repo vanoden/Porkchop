@@ -26,10 +26,6 @@
 					$this->error('Invalid question');
 					return false;
 				}
-				if ((int)$q->version_id !== (int)$this->version_id) {
-					$this->error('Question does not match submission version');
-					return false;
-				}
 				if (is_array($value)) {
 					$stored = json_encode(array_values($value));
 				} else {

@@ -95,8 +95,8 @@
 		}
 
 		/**
-		 * Add a question to a specific version (typically a draft being edited).
-		 * @param array $parameters version_id required; text or name for label; aggregate_key optional (for cross-version stats)
+		 * Add a question for a specific version context (typically a draft being edited).
+		 * @param array $parameters version_id required for validation context; text or name for label; aggregate_key optional
 		 */
 		public function addQuestion(array $parameters): ?Question {
 			if (empty($parameters['version_id'])) {
@@ -108,6 +108,42 @@
 				$this->error('Invalid version for this form');
 				return null;
 			}
+			$targetGroupId = 0;
+			if (! empty($parameters['group_id'])) {
+				$group = new \Form\Group((int)$parameters['group_id']);
+				if (! $group->exists() || (int)$group->version_id !== (int)$ver->id) {
+					$this->error('Invalid group for this version');
+					return null;
+				}
+				$targetGroupId = (int)$group->id;
+			} else {
+				$groupList = new \Form\GroupList();
+				$groups = $groupList->find(array(
+					'version_id' => (int)$ver->id,
+					'_sort' => 'sort_order',
+					'_order' => 'ASC',
+				));
+				if ($groupList->error()) {
+					$this->error($groupList->error());
+					return null;
+				}
+				if (! empty($groups) && isset($groups[0]) && $groups[0]->exists()) {
+					$targetGroupId = (int)$groups[0]->id;
+				} else {
+					$newGroup = new \Form\Group();
+					if (! $newGroup->add(array(
+						'version_id' => (int)$ver->id,
+						'title' => 'General',
+						'instructions' => '',
+						'sort_order' => 10,
+					))) {
+						$this->error($newGroup->error() ?: 'Could not create default question group');
+						return null;
+					}
+					$targetGroupId = (int)$newGroup->id;
+				}
+			}
+			unset($parameters['version_id']);
 			if (! empty($parameters['name']) && empty($parameters['text'])) {
 				$parameters['text'] = $parameters['name'];
 			}
@@ -119,6 +155,7 @@
 				$pc = new \Porkchop();
 				$parameters['aggregate_key'] = substr(str_replace(array('-', '_'), '', $pc->biguuid()), 0, 32);
 			}
+			$parameters['group_id'] = $targetGroupId;
 			$q = new Question();
 			if (! $q->add($parameters)) {
 				$this->error($q->error());
