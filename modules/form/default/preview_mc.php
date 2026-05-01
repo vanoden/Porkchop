@@ -1,9 +1,7 @@
 <?php
 /** Staff only: preview any version (draft or published). /_form/preview/{version_id} or ?_form/preview&version_id= */
 
-$porkchop = new \Porkchop();
-$site = $porkchop->site();
-$page = $site->page();
+$page = new \Site\Page();
 $page->requirePrivilege('manage forms');
 
 $form = new \Form\Form();

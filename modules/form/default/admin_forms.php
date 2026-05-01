@@ -7,6 +7,7 @@
 		<div class="tableCell">Description</div>
 		<div class="tableCell">Active Version</div>
 		<div class="tableCell">Activated On</div>
+		<div class="tableCell">Submissions</div>
 	</div>
 <?php	foreach ($forms as $form) {
 			$av = $form->activeVersion();
@@ -16,6 +17,7 @@
 		<div class="tableCell"><?= strip_tags($form->description) ?></div>
 		<div class="tableCell"><?= $av ? htmlspecialchars($av->name) : '—' ?></div>
 		<div class="tableCell"><?= $av && $av->date_activated ? htmlspecialchars($av->date_activated) : '—' ?></div>
+		<div class="tableCell"><a href="/_form/admin_submissions/<?= htmlspecialchars((string)$form->code, ENT_QUOTES, 'UTF-8') ?>">Answers</a></div>
 	</div>
 <?php	} ?>
 </div>

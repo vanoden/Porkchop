@@ -5,9 +5,7 @@
 	### to edit and button to add new.	###
 	#######################################
 
-	# Load Page
-	$site = new \Site();
-	$page = $site->page();
+	$page = new \Site\Page();
 
 	$formList = new \Form\FormList();
 	$forms = $formList->find();

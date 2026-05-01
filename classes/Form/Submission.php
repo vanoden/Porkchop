@@ -44,4 +44,21 @@
 			}
 			return true;
 		}
+
+		/** @return Submission\Answer[] */
+		public function answers(): array {
+			if (! $this->exists()) {
+				return array();
+			}
+			$list = new SubmissionAnswerList();
+			$rows = $list->find(array(
+				'submission_id' => (int)$this->id,
+				'_sort' => 'id',
+				'_order' => 'ASC',
+			));
+			if ($list->error()) {
+				return array();
+			}
+			return is_array($rows) ? $rows : array();
+		}
 	}

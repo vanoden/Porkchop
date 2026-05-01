@@ -5,10 +5,8 @@
 	 * instructions, and questions.  Provides a link
 	 * to save the form and add new questions.
 	 */
-	// Load Page
+	$page = new \Site\Page();
 	$porkchop = new \Porkchop();
-	$site = $porkchop->site();
-	$page = $site->page();
 	$can_proceed = true;
 
 	// Initialize form for validation
@@ -70,7 +68,7 @@
 				$newVersionParams = array(
 					'form_id' => (int)$form->id,
 					'code' => $porkchop->biguuid(),
-					'name' => (string)$versionList->nextVersionNumber($form->id),
+					'name' => (string)$versionList->nextDefaultVersionName((int)$form->id, (string)($form->title ?? '')),
 					'description' => ($sourceVersion && $sourceVersion->exists()) ? (string)$sourceVersion->description : '',
 					'instructions' => ($sourceVersion && $sourceVersion->exists()) ? (string)$sourceVersion->instructions : '',
 				);

@@ -1,9 +1,7 @@
 <?php
 ### Minimal chrome embed: /_form/embed/<code> — same logic as show, embed template ###
 
-$porkchop = new \Porkchop();
-$site = $porkchop->site();
-$page = $site->page();
+$page = new \Site\Page();
 
 $form = new \Form\Form();
 $code = $_REQUEST['code'] ?? '';

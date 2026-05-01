@@ -4,9 +4,7 @@
 ### Public form display and submission	###
 ###########################################
 
-$porkchop = new \Porkchop();
-$site = $porkchop->site();
-$page = $site->page();
+$page = new \Site\Page();
 
 $form = new \Form\Form();
 $code = $_REQUEST['code'] ?? '';

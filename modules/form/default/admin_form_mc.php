@@ -5,10 +5,8 @@
 	 * instructions, and questions.  Provides a link
 	 * to save the form and add new questions.
 	 */
-	// Load Page
+	$page = new \Site\Page();
 	$porkchop = new \Porkchop();
-	$site = $porkchop->site();
-	$page = $site->page();
 	$can_proceed = true;
 
 	// Load Form based on parameters

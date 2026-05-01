@@ -311,6 +311,9 @@
 				print '<input type="hidden" name="preview_version_id" value="'.(int)$versionOverride->id.'">';
 			}
 			$renderQuestion = function ($question): void {
+				if (strtolower((string)$question->type) === 'submit') {
+					return;
+				}
 				print '<div class="formQuestion">';
 				print '<label>'.htmlspecialchars((string)$question->text, ENT_QUOTES, 'UTF-8').'</label>';
 				if (!empty($question->help)) {
@@ -411,9 +414,44 @@
 			}
 			$sortQuestions($ungrouped);
 
+			// Submit-type rows only drive the footer button label; collect in display order before rendering.
+			$submitButtonLabel = '';
 			foreach ($groups as $group) {
 				$gid = (int)($group->id ?? 0);
 				if ($gid < 1 || empty($questionsByGroup[$gid])) {
+					continue;
+				}
+				foreach ($questionsByGroup[$gid] as $sq) {
+					if (strtolower((string)$sq->type) !== 'submit') {
+						continue;
+					}
+					$p = trim((string)($sq->prompt ?? ''));
+					$t = trim((string)($sq->text ?? ''));
+					$submitButtonLabel = ($p !== '') ? $p : (($t !== '') ? $t : $submitButtonLabel);
+				}
+			}
+			foreach ($ungrouped as $sq) {
+				if (strtolower((string)$sq->type) !== 'submit') {
+					continue;
+				}
+				$p = trim((string)($sq->prompt ?? ''));
+				$t = trim((string)($sq->text ?? ''));
+				$submitButtonLabel = ($p !== '') ? $p : (($t !== '') ? $t : $submitButtonLabel);
+			}
+
+			foreach ($groups as $group) {
+				$gid = (int)($group->id ?? 0);
+				if ($gid < 1 || empty($questionsByGroup[$gid])) {
+					continue;
+				}
+				$hasNonSubmit = false;
+				foreach ($questionsByGroup[$gid] as $question) {
+					if (strtolower((string)$question->type) !== 'submit') {
+						$hasNonSubmit = true;
+						break;
+					}
+				}
+				if (! $hasNonSubmit) {
 					continue;
 				}
 				print '<div class="formGroup">';
@@ -439,7 +477,8 @@
 			}
 			print '<input type="hidden" name="csrfToken" value="'.htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8').'">';
 			print '<input type="hidden" name="form_code" value="'.htmlspecialchars((string)$this->code, ENT_QUOTES, 'UTF-8').'">';
-			print '<p class="formSubmit"><button type="submit" name="form_submit" value="1">Submit</button></p>';
+			$btn = trim($submitButtonLabel) !== '' ? $submitButtonLabel : 'Submit';
+			print '<p class="formSubmit"><button type="submit" name="form_submit" value="1">'.htmlspecialchars($btn, ENT_QUOTES, 'UTF-8').'</button></p>';
 			print '</form>';
 		}
 	}
