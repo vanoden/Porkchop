@@ -315,13 +315,13 @@
 					return;
 				}
 				print '<div class="formQuestion">';
-				print '<label>'.htmlspecialchars((string)$question->text, ENT_QUOTES, 'UTF-8').'</label>';
+				$displayLabel = trim((string)($question->prompt ?? ''));
+				if ($displayLabel === '') {
+					$displayLabel = (string)$question->text;
+				}
+				print '<label>'.htmlspecialchars($displayLabel, ENT_QUOTES, 'UTF-8').'</label>';
 				if (!empty($question->help)) {
 					print '<div class="formQuestionHelp">'.htmlspecialchars((string)$question->help, ENT_QUOTES, 'UTF-8').'</div>';
-				}
-				$prompt = trim((string)($question->prompt ?? ''));
-				if ($prompt !== '' && preg_match('/^(select|radio|checkbox)$/i', (string)$question->type)) {
-					print '<div class="formQuestionPrompt">'.htmlspecialchars($prompt, ENT_QUOTES, 'UTF-8').'</div>';
 				}
 				if ($question->type == 'text') {
 					print '<input type="text" name="answer['.$question->id.']"';
@@ -364,8 +364,12 @@
 				elseif ($question->type == 'checkbox') {
 					$opts = $question->options();
 					if (count($opts) < 1) {
-						print '<p class="form_error">No choices configured for this question.</p>';
-					} else {
+						/* No option rows — treat as a single boolean confirmation checkbox */
+						print '<label><input type="checkbox" name="answer['.$question->id.'][]" value="1"';
+						if ($question->required) print ' required';
+						print '> '.htmlspecialchars('Yes', ENT_QUOTES, 'UTF-8').'</label>';
+					}
+					else {
 						foreach ($opts as $option) {
 							print '<label><input type="checkbox" name="answer['.$question->id.'][]" value="'.htmlspecialchars((string)$option->value, ENT_QUOTES, 'UTF-8').'"';
 							print '>'.htmlspecialchars((string)$option->text, ENT_QUOTES, 'UTF-8').'</label>';

@@ -1,8 +1,3 @@
-<style>
-	th {
-		text-align: left;
-	}
-</style>
 <script language="Javascript">
 	function drop(id) {
 		document.forms[0].delete.value = id;

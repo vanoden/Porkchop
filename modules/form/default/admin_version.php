@@ -1,50 +1,5 @@
 <?= $page->showAdminPageInfo(); ?>
 
-<style>
-	/* Keep the choices editor visually nested under the main question row. */
-	.formQuestionChoices {
-		margin-top: 0.35em;
-		padding: 0.45em 0.55em;
-		border: 1px solid #d8d8d8;
-		border-radius: 4px;
-		background: #fafafa;
-	}
-	.formChoiceTable {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.9em;
-		background: #fff;
-	}
-	.formChoiceTable thead th {
-		text-align: left;
-		font-weight: 600;
-		background: #d0d0d0;
-		color: #000;
-		border-bottom: 1px solid #d9d9d9;
-		padding: 0.35em 0.45em;
-	}
-	.formChoiceTable td {
-		padding: 0.3em 0.45em;
-		border-bottom: 1px solid #ececec;
-		vertical-align: middle;
-	}
-	.formChoiceTable tbody tr:last-child td {
-		border-bottom: 0;
-	}
-	.formChoiceTable td:last-child,
-	.formChoiceTable th:last-child {
-		width: 3.5em;
-		text-align: center;
-	}
-	.formChoiceTable input[type="text"] {
-		width: 100%;
-		box-sizing: border-box;
-	}
-	.formChoiceAddRow {
-		margin-top: 0.4em;
-	}
-</style>
-
 <form method="post">
 <input type="hidden" name="csrf_token" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>" />
 <input type="hidden" name="id" value="<?=$version->id?>" />
