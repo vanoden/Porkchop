@@ -1,9 +1,9 @@
 <?php
-	/** @view /_form/edit
-	 * View for editing a form.  Displays a form with
-	 * fields for the form code, title, description,
-	 * instructions, and questions.  Provides a link
-	 * to save the form and add new questions.
+	/** @view /_form/admin_version
+	 * View for editing a form version.  Displays a form
+	 * with fields for the version code, name, description,
+	 * instructions, groups, and questions.  Provides
+	 * controls to save, publish, or unpublish the version.
 	 */
 	$page = new \Site\Page();
 	$porkchop = new \Porkchop();
@@ -113,8 +113,25 @@
 		}
 	}
 
+	// Lock once a version has ever been published: contents become immutable so
+	// past submissions always reflect the exact questions as published.
+	$isLocked = isset($version) && $version->exists() && ! empty($version->date_activated);
+
+	// In a draft, questions copied from a previously-published version share their
+	// aggregate_key with the published source. We treat those as read-only here;
+	// they can only be removed from the draft, not edited.
+	$inheritedKeys = array();
+	if (isset($version) && $version->exists()) {
+		foreach ($version->inheritedAggregateKeys() as $_inheritedKey) {
+			$inheritedKeys[$_inheritedKey] = true;
+		}
+	}
+
 	if (!empty($_POST) && !$page->errorCount()) {
-		if (!empty($_POST['publish_version'])) {
+		if ($isLocked && (isset($_POST['submit']) || ! empty($_POST['publish_version']))) {
+			$page->addError("This version has been published and is read-only. Create a new draft to make changes.");
+		}
+		elseif (!empty($_POST['publish_version'])) {
 			if (! isset($version) || ! $version->exists()) {
 				$page->addError("Cannot publish: version not found.");
 			} elseif ($version->active()) {
@@ -300,6 +317,42 @@
 			}
 		}
 
+		// Process question deletions first so the subsequent update/option loops
+		// don't try to operate on rows that are about to disappear.
+		if ($can_proceed && $version->exists()) {
+			$questionDeletes = $_POST['question_delete'] ?? array();
+			if (is_array($questionDeletes)) {
+				foreach ($questionDeletes as $qid => $flag) {
+					if (empty($flag)) {
+						continue;
+					}
+					$qid = (int)$qid;
+					if ($qid < 1) {
+						continue;
+					}
+					$q = new \Form\Question($qid);
+					if (! $q->exists()) {
+						continue;
+					}
+					$qGroup = new \Form\Group((int)$q->group_id);
+					if (! $qGroup->exists() || (int)$qGroup->version_id !== (int)$version->id) {
+						continue;
+					}
+					if (! $q->dropOptions()) {
+						$page->addError("Error removing question choices: " . $q->error());
+						$can_proceed = false;
+						continue;
+					}
+					if (! $q->drop()) {
+						$page->addError("Error removing question: " . $q->error());
+						$can_proceed = false;
+						continue;
+					}
+					$page->appendSuccess("Question removed.");
+				}
+			}
+		}
+
 		// Process questions if form was successfully created/updated
 		if ($can_proceed) {
 			$typesPost = $_REQUEST['type'] ?? array();
@@ -313,8 +366,11 @@
 				}
 				$question = new \Form\Question($question_id);
 				if (! $question->exists()) {
-					$page->addError("Invalid question in this version.");
-					$can_proceed = false;
+					// May have been removed by an earlier delete in this request; skip silently.
+					continue;
+				}
+				// Questions inherited from a published version are read-only here.
+				if (! empty($inheritedKeys[(string)$question->aggregate_key])) {
 					continue;
 				}
 
@@ -347,7 +403,13 @@
 				}
 
 				if ($can_proceed) {
+					// Keep the existing group when the user picks "Ungrouped" so the
+					// question doesn't get orphaned (Version::questions() drops rows
+					// whose group_id can't be joined to a group).
 					$groupId = (int)($_REQUEST['group_id'][$question_id] ?? 0);
+					if ($groupId < 1) {
+						$groupId = (int)($question->group_id ?? 0);
+					}
 					$viewOrder = (int)($_REQUEST['sort_order'][$question_id] ?? 50);
 					$parameters = array(
 						'type' => $question_type,
@@ -389,6 +451,10 @@
 						if (! $q->exists() || ! in_array($q->type, $choiceTypes, true)) {
 							continue;
 						}
+						// Choices on inherited (published) questions are read-only.
+						if (! empty($inheritedKeys[(string)$q->aggregate_key])) {
+							continue;
+						}
 						if (! $opt->drop()) {
 							$page->addError("Error removing choice: " . $opt->error());
 							$can_proceed = false;
@@ -411,6 +477,10 @@
 						}
 						$q = new \Form\Question((int)$opt->question_id);
 						if (! $q->exists() || ! in_array($q->type, $choiceTypes, true)) {
+							continue;
+						}
+						// Choices on inherited (published) questions are read-only.
+						if (! empty($inheritedKeys[(string)$q->aggregate_key])) {
 							continue;
 						}
 						$optText = trim((string)$optText);
@@ -470,6 +540,10 @@
 						if (! $q->exists() || ! in_array($q->type, $choiceTypes, true)) {
 							continue;
 						}
+						// Choices on inherited (published) questions are read-only.
+						if (! empty($inheritedKeys[(string)$q->aggregate_key])) {
+							continue;
+						}
 						$maxSort = 0;
 						foreach ($q->options() as $o) {
 							$maxSort = max($maxSort, (int)$o->sort_order);
@@ -509,7 +583,6 @@
 			// Add new question if provided
 			if ($can_proceed && ! empty($_REQUEST['text_new'])) {
 				$question = new \Form\Question();
-				$text_new = trim(noXSS($_REQUEST['text_new'] ?? ''));
 
 				if (! $question->validType($_REQUEST['type_new'] ?? '')) {
 					$page->addError("Invalid question type: " . $_REQUEST['type_new']);
@@ -528,17 +601,23 @@
 						$can_proceed = false;
 					}
 					if (! $page->errorCount() && $can_proceed) {
+						// Route through Form::addQuestion so a missing group_id resolves
+						// to the version's first group (or auto-creates a "General" group).
+						// A bare $question->add() leaves group_id NULL, and Version::questions()
+						// filters those out via INNER JOIN, making the new question invisible.
 						$parameters = array(
+							'version_id' => (int)$version->id,
 							'type' => $_REQUEST['type_new'] ?? '',
-							'text' => $_REQUEST['text_new'] ?? '',
+							'text' => trim(noXSS($_REQUEST['text_new'] ?? '')),
 							'prompt' => $_REQUEST['prompt_new'] ?? '',
 							'required' => $reqNew,
 							'sort_order' => (int)($_REQUEST['sort_order_new'] ?? 50),
 							'group_id' => (! empty($_REQUEST['group_id_new']) ? (int)$_REQUEST['group_id_new'] : null),
 						);
 
-						if (! $question->add($parameters)) {
-							$page->addError("Error adding question: " . $question->error());
+						$newQuestion = $form->addQuestion($parameters);
+						if (! $newQuestion) {
+							$page->addError("Error adding question: " . ($form->error() ?: 'unknown error'));
 						} else {
 							$page->appendSuccess("Question added.");
 						}
@@ -564,9 +643,12 @@ if ($can_proceed && isset($version) && $version->exists()) {
 	));
 }
 
+	// Refresh lock state so the view reflects any publish that just happened.
+	$isLocked = isset($version) && $version->exists() && ! empty($version->date_activated);
+
 	$page->setAdminMenuSection("Site");
 	if (isset($version) && $version->exists()) {
-		$page->title("Edit Version ".$version->name);
+		$page->title(($isLocked ? "View Version " : "Edit Version ").$version->name);
 		$page->addBreadcrumb("Forms","/_form/admin_forms");
 		$page->addBreadcrumb($form->title,"/_form/admin_form/".$form->code);
 	} else {

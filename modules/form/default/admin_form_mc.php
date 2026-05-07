@@ -1,5 +1,5 @@
 <?php
-	/** @view /_form/edit
+	/** @view /_form/admin_form
 	 * View for editing a form.  Displays a form with
 	 * fields for the form code, title, description,
 	 * instructions, and questions.  Provides a link

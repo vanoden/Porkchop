@@ -10,8 +10,5 @@
 			"admin_submissions" => "admin.html",
 			"admin_submission" => "admin.html",
 			"admin_version" => "admin.html",
-			"preview" => "admin.html",
-			"show" => "default.html",
-			"embed" => "default.html",
 		)
 	);

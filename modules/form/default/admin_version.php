@@ -1,70 +1,72 @@
 <?= $page->showAdminPageInfo(); ?>
 
-<form method="post">
-<input type="hidden" name="csrf_token" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>" />
-<input type="hidden" name="id" value="<?=$version->id?>" />
-<input type="hidden" name="form_id" value="<?=$form->id?>" />
-
-<?php if (! ($form->exists() && isset($version) && $version->exists())) { ?>
-<label for="form_title">Form Title</label>
-<span name="form_title"><?=$form->title?></span>
-<?php } ?>
-
 <?php
-if ($form->exists() && isset($version) && $version->exists()) {
-	$truncateUrl = function ($s) {
-		$s = (string)$s;
-		return strlen($s) > 20 ? substr($s, 0, 20) . '...' : $s;
-	};
-	$h = function ($s) {
-		return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
-	};
-	$urlShow = '/_form/show/' . $form->code;
-	$urlQuery = '/_form/show?code=' . rawurlencode($form->code);
-	$urlEmbed = '/_form/embed/' . $form->code;
-	$urlPreview = '/_form/preview/' . (int)$version->id;
+// Sticky-form helpers: when validation fails we re-render the form preferring
+// what the user just typed over the DB state, so they don't lose their edits.
+$hasErrors = (isset($page) && method_exists($page, 'errorCount') && $page->errorCount() > 0);
+$h = function ($s) {
+	return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+};
+$postScalar = function ($name, $fallback = '') use ($hasErrors) {
+	if ($hasErrors && isset($_POST[$name]) && is_scalar($_POST[$name])) {
+		return (string)$_POST[$name];
+	}
+	return (string)$fallback;
+};
+$postArrScalar = function ($name, $key, $fallback = '') use ($hasErrors) {
+	if ($hasErrors && isset($_POST[$name]) && is_array($_POST[$name]) && array_key_exists($key, $_POST[$name]) && is_scalar($_POST[$name][$key])) {
+		return (string)$_POST[$name][$key];
+	}
+	return (string)$fallback;
+};
+$postCheckbox = function ($name, $fallback = false) use ($hasErrors) {
+	if ($hasErrors) {
+		return ! empty($_POST[$name]);
+	}
+	return (bool)$fallback;
+};
+$postArrCheckbox = function ($name, $key, $fallback = false) use ($hasErrors) {
+	if ($hasErrors) {
+		return ! empty($_POST[$name][$key]);
+	}
+	return (bool)$fallback;
+};
+$postArrList = function ($name, $key) use ($hasErrors) {
+	if ($hasErrors && isset($_POST[$name][$key]) && is_array($_POST[$name][$key])) {
+		return array_map('strval', $_POST[$name][$key]);
+	}
+	return array();
+};
 ?>
+
+<?php if (! empty($isLocked)) {
+	$publishedDate = trim((string)($version->date_activated ?? ''));
+	$activatedBy = trim((string)$version->activatedByDisplayName());
+	$createDraftUrl = '/_form/admin_version/' . rawurlencode((string)$form->code);
+	$groupsById = array();
+	foreach ($groups as $group) {
+		$groupsById[(int)$group->id] = $group;
+	}
+?>
+<div class="formVersionReadonly">
+
+<p class="formVersionLockedBanner"><strong>Read-only</strong> &mdash; this version has been published and cannot be edited.<?php
+	if ($publishedDate !== '') { ?> Published <?= $h($publishedDate) ?><?php }
+	if ($activatedBy !== '') { ?> by <?= $h($activatedBy) ?><?php }
+?>. To make changes, create a new draft.</p>
+
 <div class="section">
 	<div class="tableBody">
 		<div class="tableRowHeader">
-			<div class="tableCell">Item</div>
-			<div class="tableCell">Value / URL</div>
+			<div class="tableCell">Field</div>
+			<div class="tableCell">Value</div>
 		</div>
-		<div class="tableRow">
-			<div class="tableCell"><strong>Form title</strong></div>
-			<div class="tableCell"><?= $h(strip_tags((string)$form->title)) ?></div>
-		</div>
-		<div class="tableRow">
-			<div class="tableCell">Full page</div>
-			<div class="tableCell"><a target="_blank" rel="noopener" href="<?= $h($urlShow) ?>" title="<?= $h($urlShow) ?>"><?= $h($truncateUrl($urlShow)) ?></a></div>
-		</div>
-		<div class="tableRow">
-			<div class="tableCell">Same with query</div>
-			<div class="tableCell"><a target="_blank" rel="noopener" href="<?= $h($urlQuery) ?>" title="<?= $h($urlQuery) ?>"><?= $h($truncateUrl($urlQuery)) ?></a> <span class="formUrlHint">(<code>?code=</code>)</span></div>
-		</div>
-		<div class="tableRow">
-			<div class="tableCell">Embed (iframe)</div>
-			<div class="tableCell"><a target="_blank" rel="noopener" href="<?= $h($urlEmbed) ?>" title="<?= $h($urlEmbed) ?>"><?= $h($truncateUrl($urlEmbed)) ?></a></div>
-		</div>
-		<div class="tableRow">
-			<div class="tableCell">Preview this version <span class="formUrlHint">(draft or live; staff only; POST uses CSRF)</span></div>
-			<div class="tableCell"><a target="_blank" rel="noopener" href="<?= $h($urlPreview) ?>" title="<?= $h($urlPreview) ?>"><?= $h($truncateUrl($urlPreview)) ?></a></div>
-		</div>
+		<div class="tableRow"><div class="tableCell">Version code</div><div class="tableCell"><?= $h($version->code) ?></div></div>
+		<div class="tableRow"><div class="tableCell">Version name</div><div class="tableCell"><?= $h($version->name) ?></div></div>
+		<div class="tableRow"><div class="tableCell">Description</div><div class="tableCell"><?= $h(strip_tags((string)$version->description)) ?></div></div>
+		<div class="tableRow"><div class="tableCell">Instructions</div><div class="tableCell"><?= nl2br($h($version->instructions)) ?></div></div>
 	</div>
 </div>
-<?php } ?>
-
-<label for="code">Version code</label>
-<input type="text" name="code" value="<?= htmlspecialchars((string)($version->code ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="Unique per form; leave blank to generate on save" />
-
-<label for="name">Version Name</label>
-<input type="text" name="name" value="<?=$version->name?>" />
-
-<label for="description">Description</label>
-<input type="text" name="description" value="<?=strip_tags($version->description)?>" />
-
-<label for="instructions" style="display:block;margin:.35em 0">Instructions</label>
-<textarea id="instructions" name="instructions"><?=$version->instructions?></textarea>
 
 <h3>Groups</h3>
 <div class="tableBody">
@@ -73,18 +75,15 @@ if ($form->exists() && isset($version) && $version->exists()) {
 		<div class="tableCell">Instructions</div>
 		<div class="tableCell">View Order</div>
 	</div>
-<?php foreach ($groups as $group) { ?>
+<?php	if (empty($groups)) { ?>
+	<div class="tableRow"><div class="tableCell">&mdash;</div><div class="tableCell"></div><div class="tableCell"></div></div>
+<?php	} else { foreach ($groups as $group) { ?>
 	<div class="tableRow">
-		<div class="tableCell"><input type="text" name="group_title[<?= (int)$group->id ?>]" value="<?= htmlspecialchars((string)$group->title, ENT_QUOTES, 'UTF-8') ?>" /></div>
-		<div class="tableCell"><input type="text" name="group_instructions[<?= (int)$group->id ?>]" value="<?= htmlspecialchars((string)$group->instructions, ENT_QUOTES, 'UTF-8') ?>" /></div>
-		<div class="tableCell"><input type="number" name="group_sort_order[<?= (int)$group->id ?>]" value="<?= (int)$group->sort_order ?>" /></div>
+		<div class="tableCell"><?= $h($group->title) ?></div>
+		<div class="tableCell"><?= $h($group->instructions) ?></div>
+		<div class="tableCell"><?= (int)$group->sort_order ?></div>
 	</div>
-<?php } ?>
-	<div class="tableRow">
-		<div class="tableCell"><input type="text" name="group_title_new" value="" placeholder="New group title" /></div>
-		<div class="tableCell"><input type="text" name="group_instructions_new" value="" placeholder="Optional instructions" /></div>
-		<div class="tableCell"><input type="number" name="group_sort_order_new" value="50" /></div>
-	</div>
+<?php	}} ?>
 </div>
 
 <h3>Questions</h3>
@@ -98,34 +97,177 @@ if ($form->exists() && isset($version) && $version->exists()) {
 		<div class="tableCell">View Order</div>
 		<div class="tableCell">Choices</div>
 	</div>
+<?php	if (empty($questions)) { ?>
+	<div class="tableRow"><div class="tableCell" colspan="7"><em>No questions defined.</em></div></div>
+<?php	} else { foreach ($questions as $question) {
+		$choiceTypes = array('select', 'radio', 'checkbox');
+		$showChoices = in_array($question->type, $choiceTypes, true);
+		$gid = (int)($question->group_id ?? 0);
+		$groupName = ($gid > 0 && isset($groupsById[$gid])) ? (string)$groupsById[$gid]->title : '';
+?>
+	<div class="tableRow">
+		<div class="tableCell"><?= $h($question->type) ?></div>
+		<div class="tableCell"><?= $h(strip_tags((string)$question->text)) ?></div>
+		<div class="tableCell"><?= $h($question->prompt) ?></div>
+		<div class="tableCell"><?= ! empty($question->required) ? 'Yes' : 'No' ?></div>
+		<div class="tableCell"><?= $groupName !== '' ? $h($groupName) : '<em>Ungrouped</em>' ?></div>
+		<div class="tableCell"><?= (int)$question->sort_order ?></div>
+		<div class="tableCell">
+<?php		if ($showChoices) {
+			$opts = $question->options();
+			if (empty($opts)) { ?>
+			<span class="formChoiceNa">&mdash;</span>
+<?php		} else { ?>
+			<ul class="formChoiceListReadonly">
+<?php			foreach ($opts as $opt) { ?>
+				<li><?= $h($opt->text) ?> <span class="formChoiceValueReadonly">(<?= $h($opt->value) ?>)</span></li>
+<?php			} ?>
+			</ul>
+<?php		}
+		} else { ?>
+			<span class="formChoiceNa">&mdash;</span>
+<?php	} ?>
+		</div>
+	</div>
+<?php	}} ?>
+</div>
+
+<div class="section formVersionReadonlyActions">
+	<p><a class="formVersionAction" href="<?= $h($createDraftUrl) ?>">Create new draft from this version</a></p>
+<?php	if ($version->active()) { ?>
+	<form method="post" class="formVersionUnpublishForm">
+		<input type="hidden" name="csrf_token" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>" />
+		<input type="hidden" name="id" value="<?= (int)$version->id ?>" />
+		<input type="hidden" name="form_id" value="<?= (int)$form->id ?>" />
+		<p><input type="submit" name="unpublish_form" value="Unpublish form (take offline)" onclick="return confirm('Take this form offline? Visitors will not see a live version until you publish a version again.');" /></p>
+	</form>
+<?php	} ?>
+</div>
+
+</div>
+<?php } else { ?>
+
+<form method="post">
+<input type="hidden" name="csrf_token" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>" />
+<input type="hidden" name="id" value="<?=$version->id?>" />
+<input type="hidden" name="form_id" value="<?=$form->id?>" />
+
+<?php if (! ($form->exists() && isset($version) && $version->exists())) { ?>
+<label for="form_title">Form Title</label>
+<span name="form_title"><?=$form->title?></span>
+<?php } ?>
+
+<label for="code">Version code</label>
+<input type="text" name="code" value="<?= $h($postScalar('code', $version->code ?? '')) ?>" placeholder="Unique per form; leave blank to generate on save" />
+
+<label for="name">Version Name</label>
+<input type="text" name="name" value="<?= $h($postScalar('name', $version->name ?? '')) ?>" />
+
+<label for="description">Description</label>
+<input type="text" name="description" value="<?= $h($postScalar('description', strip_tags((string)($version->description ?? '')))) ?>" />
+
+<label for="instructions" style="display:block;margin:.35em 0">Instructions</label>
+<textarea id="instructions" name="instructions"><?= $h($postScalar('instructions', $version->instructions ?? '')) ?></textarea>
+
+<h3>Groups</h3>
+<div class="tableBody">
+	<div class="tableRowHeader">
+		<div class="tableCell">Title</div>
+		<div class="tableCell">Instructions</div>
+		<div class="tableCell">View Order</div>
+	</div>
+<?php foreach ($groups as $group) { ?>
+	<div class="tableRow">
+		<div class="tableCell"><input type="text" name="group_title[<?= (int)$group->id ?>]" value="<?= $h($postArrScalar('group_title', (int)$group->id, $group->title ?? '')) ?>" /></div>
+		<div class="tableCell"><input type="text" name="group_instructions[<?= (int)$group->id ?>]" value="<?= $h($postArrScalar('group_instructions', (int)$group->id, $group->instructions ?? '')) ?>" /></div>
+		<div class="tableCell"><input type="number" name="group_sort_order[<?= (int)$group->id ?>]" value="<?= (int)$postArrScalar('group_sort_order', (int)$group->id, (int)$group->sort_order) ?>" /></div>
+	</div>
+<?php } ?>
+	<div class="tableRow">
+		<div class="tableCell"><input type="text" name="group_title_new" value="<?= $h($postScalar('group_title_new', '')) ?>" placeholder="New group title" /></div>
+		<div class="tableCell"><input type="text" name="group_instructions_new" value="<?= $h($postScalar('group_instructions_new', '')) ?>" placeholder="Optional instructions" /></div>
+		<div class="tableCell"><input type="number" name="group_sort_order_new" value="<?= (int)$postScalar('group_sort_order_new', '50') ?>" /></div>
+	</div>
+</div>
+
+<h3>Questions</h3>
+<?php
+$inheritedKeys = isset($inheritedKeys) && is_array($inheritedKeys) ? $inheritedKeys : array();
+$groupsById = array();
+foreach ($groups as $group) {
+	$groupsById[(int)$group->id] = $group;
+}
+?>
+<div class="tableBody">
+	<div class="tableRowHeader">
+		<div class="tableCell">Type</div>
+		<div class="tableCell">Question</div>
+		<div class="tableCell">Prompt</div>
+		<div class="tableCell">Required</div>
+		<div class="tableCell">Group</div>
+		<div class="tableCell">View Order</div>
+		<div class="tableCell">Choices</div>
+		<div class="tableCell">Delete</div>
+	</div>
 <?php	foreach($questions as $question) {
 		$choiceTypes = array('select', 'radio', 'checkbox');
 		$showChoices = in_array($question->type, $choiceTypes, true);
+		$isInherited = ! empty($inheritedKeys[(string)$question->aggregate_key]);
+		$qGroupId = (int)($question->group_id ?? 0);
+		$qGroupName = ($qGroupId > 0 && isset($groupsById[$qGroupId])) ? (string)$groupsById[$qGroupId]->title : '';
 ?>
-	<div class="tableRow">
+	<div class="tableRow<?= $isInherited ? ' formQuestionInherited' : '' ?>">
+<?php	if ($isInherited) { ?>
+		<div class="tableCell"><?= htmlspecialchars((string)$question->type, ENT_QUOTES, 'UTF-8') ?> <span class="formQuestionInheritedBadge" title="Copied from a previously published version. Edit a new question instead, or delete this one from the draft.">inherited</span></div>
+		<div class="tableCell"><?= htmlspecialchars(strip_tags((string)$question->text), ENT_QUOTES, 'UTF-8') ?></div>
+		<div class="tableCell"><?= htmlspecialchars((string)$question->prompt, ENT_QUOTES, 'UTF-8') ?></div>
+		<div class="tableCell"><?= ! empty($question->required) ? 'Yes' : 'No' ?></div>
+		<div class="tableCell"><?= $qGroupName !== '' ? htmlspecialchars($qGroupName, ENT_QUOTES, 'UTF-8') : '<em>Ungrouped</em>' ?></div>
+		<div class="tableCell"><?= (int)$question->sort_order ?></div>
+		<div class="tableCell">
+<?php		if ($showChoices) {
+			$opts = $question->options();
+			if (empty($opts)) { ?>
+			<span class="formChoiceNa">&mdash;</span>
+<?php		} else { ?>
+			<ul class="formChoiceListReadonly">
+<?php			foreach ($opts as $opt) { ?>
+				<li><?= htmlspecialchars((string)$opt->text, ENT_QUOTES, 'UTF-8') ?> <span class="formChoiceValueReadonly">(<?= htmlspecialchars((string)$opt->value, ENT_QUOTES, 'UTF-8') ?>)</span></li>
+<?php			} ?>
+			</ul>
+<?php		}
+		} else { ?>
+			<span class="formChoiceNa">&mdash;</span>
+<?php	} ?>
+		</div>
+		<div class="tableCell"><label><input type="checkbox" name="question_delete[<?= (int)$question->id ?>]" value="1" title="Remove this question from this draft" /> remove</label></div>
+<?php	} else {
+		$selType = $postArrScalar('type', (int)$question->id, (string)$question->type);
+		$selGroup = $postArrScalar('group_id', (int)$question->id, (string)(int)$question->group_id);
+?>
 		<div class="tableCell">
 			<select name="type[<?=$question->id?>]">
-				<option value="text"<?php if ($question->type == "text") print " selected";?>>Text</option>
-				<option value="textarea"<?php if ($question->type == "textarea") print " selected";?>>Textarea</option>
-				<option value="select"<?php if ($question->type == "select") print " selected";?>>Select</option>
-				<option value="checkbox"<?php if ($question->type == "checkbox") print " selected";?>>Checkbox</option>
-				<option value="radio"<?php if ($question->type == "radio") print " selected";?>>Radio</option>
-				<option value="submit"<?php if ($question->type == "submit") print " selected";?>>Submit</option>
-				<option value="hidden"<?php if ($question->type == "hidden") print " selected";?>>Hidden</option>
+				<option value="text"<?php if ($selType === "text") print " selected";?>>Text</option>
+				<option value="textarea"<?php if ($selType === "textarea") print " selected";?>>Textarea</option>
+				<option value="select"<?php if ($selType === "select") print " selected";?>>Select</option>
+				<option value="checkbox"<?php if ($selType === "checkbox") print " selected";?>>Checkbox</option>
+				<option value="radio"<?php if ($selType === "radio") print " selected";?>>Radio</option>
+				<option value="submit"<?php if ($selType === "submit") print " selected";?>>Submit</option>
+				<option value="hidden"<?php if ($selType === "hidden") print " selected";?>>Hidden</option>
 			</select>
 		</div>
-		<div class="tableCell"><input type="text" name="text[<?=$question->id?>]" value="<?=strip_tags($question->text)?>" /></div>
-		<div class="tableCell"><input type="text" name="prompt[<?=$question->id?>]" value="<?=$question->prompt?>" /></div>
-		<div class="tableCell"><input type="checkbox" name="required[<?=$question->id?>]" value="1"<?php if ($question->required) print " checked";?> /></div>
+		<div class="tableCell"><input type="text" name="text[<?=$question->id?>]" value="<?= $h($postArrScalar('text', (int)$question->id, strip_tags((string)$question->text))) ?>" /></div>
+		<div class="tableCell"><input type="text" name="prompt[<?=$question->id?>]" value="<?= $h($postArrScalar('prompt', (int)$question->id, $question->prompt ?? '')) ?>" /></div>
+		<div class="tableCell"><input type="checkbox" name="required[<?=$question->id?>]" value="1"<?php if ($postArrCheckbox('required', (int)$question->id, ! empty($question->required))) print " checked";?> /></div>
 		<div class="tableCell">
 			<select name="group_id[<?=$question->id?>]">
-				<option value="">Ungrouped</option>
+				<option value=""<?php if ($selGroup === '' || $selGroup === '0') print ' selected'; ?>>Ungrouped</option>
 <?php foreach ($groups as $group) { ?>
-				<option value="<?= (int)$group->id ?>"<?php if ((int)$question->group_id === (int)$group->id) print ' selected'; ?>><?= htmlspecialchars((string)$group->title, ENT_QUOTES, 'UTF-8') ?></option>
+				<option value="<?= (int)$group->id ?>"<?php if ((int)$selGroup === (int)$group->id && (int)$group->id > 0) print ' selected'; ?>><?= htmlspecialchars((string)$group->title, ENT_QUOTES, 'UTF-8') ?></option>
 <?php } ?>
 			</select>
 		</div>
-		<div class="tableCell"><input type="number" name="sort_order[<?=$question->id?>]" value="<?= (int)$question->sort_order ?>" /></div>
+		<div class="tableCell"><input type="number" name="sort_order[<?=$question->id?>]" value="<?= (int)$postArrScalar('sort_order', (int)$question->id, (int)$question->sort_order) ?>" /></div>
 		<div class="tableCell">
 <?php	if ($showChoices) { ?>
 			<div class="formQuestionChoices">
@@ -136,20 +278,29 @@ if ($form->exists() && isset($version) && $version->exists()) {
 					<tbody>
 <?php		foreach ($question->options() as $opt) { ?>
 					<tr>
-						<td><input type="text" name="option_text[<?= (int)$opt->id ?>]" value="<?= htmlspecialchars((string)$opt->text, ENT_QUOTES, 'UTF-8') ?>" size="18" maxlength="128" /></td>
-						<td><input type="text" name="option_value[<?= (int)$opt->id ?>]" value="<?= htmlspecialchars((string)$opt->value, ENT_QUOTES, 'UTF-8') ?>" size="14" maxlength="128" /></td>
-						<td><input type="number" name="option_sort_order[<?= (int)$opt->id ?>]" value="<?= (int)$opt->sort_order ?>" /></td>
-						<td><input type="checkbox" name="option_delete[<?= (int)$opt->id ?>]" value="1" title="Remove this choice" /></td>
+						<td><input type="text" name="option_text[<?= (int)$opt->id ?>]" value="<?= $h($postArrScalar('option_text', (int)$opt->id, $opt->text ?? '')) ?>" size="18" maxlength="128" /></td>
+						<td><input type="text" name="option_value[<?= (int)$opt->id ?>]" value="<?= $h($postArrScalar('option_value', (int)$opt->id, $opt->value ?? '')) ?>" size="14" maxlength="128" /></td>
+						<td><input type="number" name="option_sort_order[<?= (int)$opt->id ?>]" value="<?= (int)$postArrScalar('option_sort_order', (int)$opt->id, (int)$opt->sort_order) ?>" /></td>
+						<td><input type="checkbox" name="option_delete[<?= (int)$opt->id ?>]" value="1" title="Remove this choice"<?php if ($postArrCheckbox('option_delete', (int)$opt->id, false)) print ' checked'; ?> /></td>
 					</tr>
 <?php		} ?>
 					</tbody>
 					<tbody class="formChoiceNewRows" data-question-id="<?= (int)$question->id ?>">
+<?php
+					$newTexts = $postArrList('option_new_text', (int)$question->id);
+					$newVals = $postArrList('option_new_value', (int)$question->id);
+					$newRowCount = max(count($newTexts), count($newVals), 1);
+					for ($_i = 0; $_i < $newRowCount; $_i++) {
+						$nt = $newTexts[$_i] ?? '';
+						$nv = $newVals[$_i] ?? '';
+?>
 					<tr class="formChoiceNewRow">
-						<td><input type="text" name="option_new_text[<?= (int)$question->id ?>][]" value="" placeholder="Label" size="18" maxlength="128" autocomplete="off" /></td>
-						<td><input type="text" name="option_new_value[<?= (int)$question->id ?>][]" value="" placeholder="Value" size="14" maxlength="128" autocomplete="off" /></td>
+						<td><input type="text" name="option_new_text[<?= (int)$question->id ?>][]" value="<?= $h($nt) ?>" placeholder="Label" size="18" maxlength="128" autocomplete="off" /></td>
+						<td><input type="text" name="option_new_value[<?= (int)$question->id ?>][]" value="<?= $h($nv) ?>" placeholder="Value" size="14" maxlength="128" autocomplete="off" /></td>
 						<td></td>
 						<td><button type="button" class="formChoiceRemoveNewRow" title="Remove this row">&times;</button></td>
 					</tr>
+<?php				} ?>
 					</tbody>
 				</table>
 				<p><button type="button" class="formChoiceAddRow" data-question-id="<?= (int)$question->id ?>">Add choice row</button></p>
@@ -158,32 +309,39 @@ if ($form->exists() && isset($version) && $version->exists()) {
 			<span class="formChoiceNa">—</span>
 <?php	} ?>
 		</div>
+		<div class="tableCell"><label><input type="checkbox" name="question_delete[<?= (int)$question->id ?>]" value="1" title="Remove this question from this draft" /> remove</label></div>
+<?php	} ?>
 	</div>
 <?php	} ?>
+<?php
+	$selTypeNew = $postScalar('type_new', 'text');
+	$selGroupNew = $postScalar('group_id_new', '');
+?>
 	<div class="tableRow">
 		<div class="tableCell">
 			<select name="type_new">
-				<option value="text" selected>Text</option>
-				<option value="textarea">Textarea</option>
-				<option value="select">Select</option>
-				<option value="checkbox">Checkbox</option>
-				<option value="radio">Radio</option>
-				<option value="hidden">Hidden</option>
+				<option value="text"<?php if ($selTypeNew === 'text') print ' selected'; ?>>Text</option>
+				<option value="textarea"<?php if ($selTypeNew === 'textarea') print ' selected'; ?>>Textarea</option>
+				<option value="select"<?php if ($selTypeNew === 'select') print ' selected'; ?>>Select</option>
+				<option value="checkbox"<?php if ($selTypeNew === 'checkbox') print ' selected'; ?>>Checkbox</option>
+				<option value="radio"<?php if ($selTypeNew === 'radio') print ' selected'; ?>>Radio</option>
+				<option value="hidden"<?php if ($selTypeNew === 'hidden') print ' selected'; ?>>Hidden</option>
 			</select>
 		</div>
-		<div class="tableCell"><input type="text" name="text_new" value="" /></div>
-		<div class="tableCell"><input type="text" name="prompt_new" value="" /></div>
-		<div class="tableCell"><input type="checkbox" name="required_new" value="1" /></div>
+		<div class="tableCell"><input type="text" name="text_new" value="<?= $h($postScalar('text_new', '')) ?>" /></div>
+		<div class="tableCell"><input type="text" name="prompt_new" value="<?= $h($postScalar('prompt_new', '')) ?>" /></div>
+		<div class="tableCell"><input type="checkbox" name="required_new" value="1"<?php if ($postCheckbox('required_new', false)) print ' checked'; ?> /></div>
 		<div class="tableCell">
 			<select name="group_id_new">
-				<option value="">Ungrouped</option>
+				<option value=""<?php if ($selGroupNew === '' || $selGroupNew === '0') print ' selected'; ?>>Ungrouped</option>
 <?php foreach ($groups as $group) { ?>
-				<option value="<?= (int)$group->id ?>"><?= htmlspecialchars((string)$group->title, ENT_QUOTES, 'UTF-8') ?></option>
+				<option value="<?= (int)$group->id ?>"<?php if ((int)$selGroupNew === (int)$group->id && (int)$group->id > 0) print ' selected'; ?>><?= htmlspecialchars((string)$group->title, ENT_QUOTES, 'UTF-8') ?></option>
 <?php } ?>
 			</select>
 		</div>
-		<div class="tableCell"><input type="number" name="sort_order_new" value="50" /></div>
+		<div class="tableCell"><input type="number" name="sort_order_new" value="<?= (int)$postScalar('sort_order_new', '50') ?>" /></div>
 		<div class="tableCell"><span class="formChoiceNa" title="Save the new question first, then add choices.">—</span></div>
+		<div class="tableCell"></div>
 	</div>
 </div>
 <div class="section">
@@ -238,3 +396,4 @@ if ($form->exists() && isset($version) && $version->exists()) {
 	});
 })();
 </script>
+<?php } ?>
