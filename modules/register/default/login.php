@@ -22,15 +22,15 @@
 		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 
 		<h2>Sign in</h2>
-		<ul id="register_form" class="form-grid four-col connectBorder">
-			<li>
+		<ul id="register_form" class="section-grid grid-col-4">
+			<li class="form-field">
 				<label for="login">Login</label>
 				<input type="text" id="login" name="login" autofocus/>
 			</li>
-			<li>
+			<li class="form-field">
 				<label for="password">Password</label>
 				<input type="password" id="password" name="password"/>
-			</li>
+			</li class="form-field">
 			<?php	if ($CAPTCHA_GO) { ?>
 				<li class="g-recaptcha" data-sitekey="<?=$captcha_public_key?>"></li>
 			<?php	}	?>
