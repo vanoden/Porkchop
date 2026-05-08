@@ -44,8 +44,16 @@
 			if (! $this->compares($level)) return 1;
 			list($file,$line) = $this->caller($file,$line);
 
+			if (! $this->fh) {
+				$this->error("No filehandle for log");
+				return false;
+			}
+			if (get_resource_type($this->fh) != "stream") {
+				$this->error("Log config is not a stream");
+				return false;
+			}
 			fwrite($this->fh,$this->formatted($message,$level,$file,$line));
-			return 1;
+			return true;
 		}
 
 		public function writeln($message,$level = 'debug',$file = null,$line = null) {
