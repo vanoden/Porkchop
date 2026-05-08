@@ -12,4 +12,8 @@
 			$this->_typeId = 2;
 			$this->_typeName = "Register Response";
 		}
+	
+		public function readable(): string {
+			return "";
+		}
 	}

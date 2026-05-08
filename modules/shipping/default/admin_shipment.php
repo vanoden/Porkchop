@@ -69,11 +69,28 @@
 		        <div class="tableCell">Status</div>
 		        <div class="tableCell">Received</div>
 		        <div class="tableCell">Condition</div>
+		        <div class="tableCell">UPS Status</div>
 	        </div>
 	        <div class="tableRow">
-		        <div class="tableCell"><?=$package->tracking_code?></div>
-		        <div class="tableCell"><?=$package->status?></div>
+		        <div class="tableCell"><?=htmlspecialchars($package->tracking_code)?></div>
+		        <div class="tableCell"><?=htmlspecialchars($package->status)?></div>
 		        <div class="tableCell"><?=$package->date_received?> by <?=$package->user_received()->full_name()?></div>
+                <div class="tableCell">
+                    <?php if (!empty($package->ups_status)) { ?>
+                        <div><strong><?=htmlspecialchars($package->ups_status)?></strong></div>
+                        <?php if (!empty($package->ups_status_datetime)) { ?>
+                            <div><?=htmlspecialchars($package->ups_status_datetime)?></div>
+                        <?php } ?>
+                        <?php if (!empty($package->ups_status_location)) { ?>
+                            <div><?=htmlspecialchars($package->ups_status_location)?></div>
+                        <?php } ?>
+                        <?php if (!empty($package->ups_last_queried_at)) { ?>
+                            <div class="hint">Last checked: <?=date('Y-m-d H:i', (int)$package->ups_last_queried_at)?></div>
+                        <?php } ?>
+                    <?php } else { ?>
+                        <span class="hint">No UPS status recorded</span>
+                    <?php } ?>
+                </div>
     <?php   if ($package->status == 'READY') { ?>
                 <div class="tableCell">N/A</div>
     <?php   } elseif ($package->status == 'RECEIVED') { ?>
@@ -88,6 +105,14 @@
     <?php   } ?>
 	        </div>
         </div>
+        <p>
+            <?php if (!empty($package->tracking_code)) { ?>
+                <input type="button"
+                       class="button"
+                       value="Query UPS Status for Package <?=$package->number?>"
+                       onclick="document.forms[0].package_id.value='<?=$package->id?>';document.forms[0].action_type.value='query_ups_status';document.forms[0].submit();" />
+            <?php } ?>
+        </p>
         <h3>Package <?=$package->number?> Items</h3>
         <div class="table">
 	        <div class="tableRowHeader">
@@ -149,15 +174,31 @@
         <div class="tableRowHeader">
             <div class="tableCell">Ship From</div>
             <div class="tableCell">Ship To</div>
+            <div class="tableCell">Ship From</div>
         </div>
         <div class="tableRow">
             <div class="tableCell">
-                <a class="value"><a href="/_register/admin_location?id=<?=$from_location->id?>"><?=$from_location->name?></a><br>
-                <span class="value"><?=$from_location->HTMLBlockFormat()?></span>
+                <a class="value" href="/_register/admin_location?id=<?= $from_location->id ?>"><?= htmlspecialchars($from_location->name) ?></a><br>
+                <span class="value"><?= $from_location->HTMLBlockFormat() ?></span>
             </div>
             <div class="tableCell">
-                <a class="value"><a href="/_register/admin_location?id=<?=$to_location->id?>"><?=$to_location->name?></a><br>
-                <span class="value"><?=$to_location->HTMLBlockFormat()?></span>
+                <a class="value" href="/_register/admin_location?id=<?= $to_location->id ?>"><?= htmlspecialchars($to_location->name) ?></a><br>
+                <span class="value"><?= $to_location->HTMLBlockFormat() ?></span>
+            </div>
+            <div class="tableCell">
+                <form method="post" action="" style="margin-bottom:8px;">
+                    <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>" />
+                    <input type="hidden" name="id" value="<?= (int)$shipment->id ?>" />
+                    <select name="send_location_id" class="value input" onchange="this.form.submit()">
+                        <?php foreach ($send_location_list as $loc) { ?>
+                        <option value="<?= (int)$loc->id ?>"<?= ($shipment->send_location_id == $loc->id) ? ' selected' : '' ?>><?= htmlspecialchars($loc->name) ?></option>
+                        <?php } ?>
+                    </select>
+                </form><br />
+                <span class="value"><?= $from_location->HTMLBlockFormat() ?></span>
+                <?php if ($send_org && $send_org->id) { ?>
+                <p style="margin-top:8px;"><input type="button" class="button" value="Add address" onclick="window.location.href='/_register/admin_location?organization_id=<?= (int)$send_org->id ?>&amp;return_for_shipment_id=<?= (int)$shipment->id ?>';" /></p>
+                <?php } ?>
             </div>
         </div>
     </div>

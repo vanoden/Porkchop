@@ -35,8 +35,13 @@ class BaseClass {
 		'address_line' => '/^[\w? :.-|\'\)]+$/',
 		'city_name' => '/^[\w? :.-|\'\)]+$/',
 		'code' => '/^\w[\w\-\.\_\s]*$/',
-		'name' => '/\w[\w\-\.\_\s\,\!\?\(\)]*$/',
-		'hostname' => '/^[\w\-\.]+$/'
+		// Allow apostrophes and grave accent (common in transliterations, e.g. "ad Dali`").
+		'name' => "/\w[\w\-\.\_\s\,\!\?\(\)\'\x{2019}\x{0060}]*$/u",
+		'hostname' => '/^[\w\-\.]+$/',
+		'absolute_http' => '/^https?:\/\/[a-z0-9\.\-]+(?:\:[0-9]+)?\/[a-z0-9\.\-\/\?\=\&\%\#\+]*$/i',
+		'internal_path' => '/^_(\w[\w\_]*)\/(\w[\w\_]*)$/i',
+		'disallowed_scheme' => '/^\s*(javascript|data|vbscript)\s*:/i',
+		'disallowed_chars' => '/[\x00-\x1F\x7F<>"`\\\\]/'
 	];
 
 	/********************************************/
@@ -121,16 +126,26 @@ class BaseClass {
 	 * @return string The extracted class name or "Object" if not found
 	 */
 	public function _objectName() {
+		// Try to get class name from get_class first (more reliable)
+		$class = get_class($this);
+		if (!empty($class)) {
+			// Extract just the class name (last part after namespace separator)
+			if (preg_match('/([^\\\\]+)$/', $class, $matches)) {
+				return $matches[1];
+			}
+		}
+		
+		// Fallback to old method if get_class doesn't work
 		if (!isset($caller)) {
 			$trace = debug_backtrace();
-			if (count($trace) < 3) return "NULL";
+			if (count($trace) < 3) return "Object";
 			$caller = $trace[2];
 		}
 
 		$class = isset($caller['class']) ? $caller['class'] : null;
-		if (empty($class)) return "NULL";
+		if (empty($class)) return "Object";
 		if (preg_match('/(\w[\w\_]*)$/', $class, $matches)) $classname = $matches[1];
-		else $classname = "NULL";
+		else $classname = "Object";
 		return $classname;
 	}
 
@@ -146,8 +161,25 @@ class BaseClass {
 	 * @param array|null $bind_params The bind parameters used in the query
 	 * @return string The formatted error message
 	 */
+	/**
+	 * Sanitize a database error message so SQL/schema is never exposed to end users.
+	 * @param string $message Raw error message from driver
+	 * @return string Safe message for display
+	 */
+	protected static function sanitizeSqlError($message) {
+		if (!is_string($message) || $message === '') return $message;
+		if (strpos($message, 'SQL Statement failed on preparation') === 0) {
+			return 'SQL Statement failed on preparation.';
+		}
+		if (preg_match('/Input array has \d+ params?, does not match query:/', $message)) {
+			return preg_replace('/^(Input array has \d+ params?, does not match query):.*/s', '$1.', $message);
+		}
+		return $message;
+	}
+
 	public function SQLError($message = '', $query = null, $bind_params = null) {
 		if (empty($message)) $message = $GLOBALS['_database']->ErrorMsg();
+		$message = self::sanitizeSqlError($message);
 		$trace = debug_backtrace();
 		$caller = $trace[1];
 		$class = $caller['class'];
@@ -162,6 +194,13 @@ class BaseClass {
 	 */
 	public function clearError() {
 		$this->_error = null;
+	}
+
+	/**
+	 * Backward-compatible alias used by legacy model/list code.
+	 */
+	public function clearErrors() {
+		$this->clearError();
 	}
 
 	/**
@@ -192,7 +231,7 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validCode($string): bool {
-		return (is_string($string) && preg_match($this->_patterns['code'], $string));
+		return (is_string($string) && strlen($string) < 64 && preg_match($this->_patterns['code'], $string));
 	}
 
 	/**
@@ -1108,16 +1147,17 @@ class BaseClass {
     
     /**
      * Get client IP address
+     * Checks multiple server variables in order of priority
+     * Prioritizes HAProxy HTTP_X_FORWARDED_FOR header when available
+     * Handles comma-separated values (takes first IP)
+     * Validates IP address before returning
      * 
      * @return string Client IP address
      */
     public function getIpAddress(): string {
-        if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ip = filter_var($_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP);
-            if ($ip !== false) return $ip;
-        }
-        if (isset($_SERVER['REMOTE_ADDR'])) return filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) ?: '';
-        return '';
+        $request = new \HTTP\Request();
+		$request->deconstruct();
+		return $request->client_ip;
     }
 
 	/**
@@ -1131,5 +1171,16 @@ class BaseClass {
 		if (is_numeric($value) && ($value == 0 || $value == 1)) return true;
 		if (is_string($value) && ($value === 'true' || $value === 'false' || $value === '1' || $value === '0')) return true;
 		return false;
+	}
+
+	/**
+	 * Escape a value for safe HTML text and attribute output (XSS mitigation).
+	 * Prefer this over repeating htmlspecialchars(..., ENT_QUOTES, 'UTF-8').
+	 * Call on any BaseClass instance (e.g. from a loaded model in the controller).
+	 *
+	 * @param mixed $value Cast to string; null and missing scalars become ''.
+	 */
+	public function escHtml($value): string {
+		return htmlspecialchars((string) ($value ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 	}
 }

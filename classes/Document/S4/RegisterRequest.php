@@ -60,4 +60,8 @@
 			$array = str_split($string);
 			return count($array);
 		}
+
+		public function readable(): string {
+			return "Serial Number: ".$this->_serialNumber.", Model Number: ".$this->_modelNumber;
+		}
 	}

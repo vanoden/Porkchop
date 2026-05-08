@@ -1,95 +1,12 @@
 <link href="/css/upload.css" type="text/css" rel="stylesheet">
-<script type="text/javascript">
-	function submitForm() {
-		// make sure that all the notify contacts have a 'description' value populated
-		var contactTable = document.getElementById("contact-main-table");
-		var notifyChecked = contactTable.getElementsByTagName("input");
-		for (var i = 0; i < notifyChecked.length; i++) {
-			if (notifyChecked[i].checked) {
-				var matches = notifyChecked[i].name.match(/\[[0-9]+\]/);
-				if (matches[0]) {
-					contactDescriptionField = document.getElementsByName("description[" + matches[0].replace('[', '').replace(']', '') + "]");
-					contactDescriptionField[0].style.border = "";
-					if (!contactDescriptionField[0].value) {
-						alert("Please enter a 'Description' value for all notify (checked) Methods of Contact");
-						contactDescriptionField[0].style.border = "3px solid red";
-						return false;
-					}
-				}
-			}
-		}
-
-		if (document.register.password.value.length > 0 || document.register.password_2.value.length > 0) {
-			if (document.register.password.value.length < 6) {
-				alert("Your password is too short.");
-				return false;
-			}
-
-			if (document.register.password.value != document.register.password_2.value) {
-				alert("Your passwords don't match.");
-				return false;
-			}
-		}
-		return true;
-	}
-
-	// submit a delete contact with the hidden form
-	function submitDelete(contactId) {
-		var confirmDelete = confirm("Delete contact entry for user?");
-		if (confirmDelete == true) {
-			document.getElementById("register-contacts-id").value = contactId;
-			document.getElementById("delete-contact").submit();
-		}
-	}
-
-	// Redirect user to reset password page
-	function passChange() {
-		window.location.replace("/_register/reset_password");
-		return true;
-	}
-
-	function highlightImage(id) {
-		// Remove highlight from all images
-		var images = document.getElementsByClassName('image-item');
-		for (var i = 0; i < images.length; i++) {
-			images[i].classList.remove('highlighted');
-		}
-		// Add highlight to the clicked image
-		document.getElementById('ItemImageDiv_' + id).classList.add('highlighted');
-	}
-
-	function updateDefaultImage(imageId) {
-		document.getElementById('default_image_id').value = imageId;
-		document.getElementById('updateImage').value = 'true';
-		document.getElementById('register_form').submit();
-	}
-
-	function removeSearchTagById(id) {
-		document.getElementById('removeSearchTagId').value = id;
-		document.getElementById('register_form').submit();
-	}
-</script>
-
-
+<script type="text/javascript" src="/includes/register-account.js"></script>
 
 <section id="reg_form" class="body">
-	<h1 class="pageSect_full">My Account</h1>
-
+	<div class="organization-page-wrapper" style="display: flex; flex-direction: column; width: 100%;">
+	
 	<!-- Success/Error Messages Section -->
-	<?php if ($page->errorCount() > 0) { ?>
-		<section id="form-message" class="message error">
-			<ul class="connectBorder errorText">
-				<li><?= $page->errorString() ?></li>
-			</ul>
-		</section>
-	<?php }
-	if ($page->success) { ?>
-		<section id="form-message" class="message success">
-			<ul class="connectBorder progressText">
-				<li><?= $page->success ?></li>
-			</ul>
-		</section>
-	<?php }
+	<?=$page->showSubHeading()?>
+	<?php 
 	if ($canView) {
 		?>
 		<form name="register" id="register_form" action="<?= PATH ?>/_register/account" method="POST">
@@ -149,7 +66,7 @@
 					<li id="accountEmailQuestion" class="form-row">
 						<label for="status">Status:</label>
 						<span id="status" class="value"><?= $queuedCustomer->status ?></span>
-						<?php if ($queuedCustomer->status == "VERIFYING") { ?>
+						<?php if (! $readOnly &&$queuedCustomer->status == "VERIFYING") { ?>
 							<input type="submit" name="method" value="Resend Email" class="button" />
 						<?php } ?>
 					</li>
@@ -159,14 +76,20 @@
 					</li>
 					<li id="accountFirstNameQuestion" class="form-row">
 						<label for="first_name">*First Name:</label>
-						<input type="text" name="first_name" class="long-field" value="<?= $customer->first_name ?>" <?php if ($readOnly)
-							  echo 'disabled'; ?> />
+					<?php if ($readOnly) { ?>
+						<span class="value"><?= $customer->first_name ?></span>
+					<?php } else { ?>
+						<input type="text" name="first_name" class="long-field" value="<?= $customer->first_name ?>" />
+					<?php } ?>
 					</li>
 					<li id="accountLastNameQuestion" class="form-row">
 						<label for="last_name">*Last Name:</label>
+					<?php if ($readOnly) { ?>
+						<span class="value"><?= $customer->last_name ?></span>
+					<?php } else { ?>
 						<input type="text" class="value registerValue registerLastNameValue lowding-field" name="last_name"
-							value="<?= $customer->last_name ?>" <?php if ($readOnly)
-								  echo 'disabled'; ?> />
+							value="<?= $customer->last_name ?>" />
+					<?php } ?>
 					</li>
 					<li id="accountOrganizationQuestion" class="form-row">
 						<label for="">*Organization:</label>
@@ -174,8 +97,10 @@
 					</li>
 					<li id="accountTimeZoneQuestion" class="form-row">
 						<label for="timezone">*Time Zone:</label>
-						<select id="timezone" name="timezone" class="value input collectionField long-field" <?php if ($readOnly)
-							echo 'disabled'; ?>>
+					<?php if ($readOnly) { ?>
+						<span class="value"><?= $customer->timezone ?></span>
+					<?php } else { ?>
+						<select id="timezone" name="timezone" class="value input collectionField long-field">
 							<?php foreach (timezone_identifiers_list() as $timezone) {
 								if (isset($customer->timezone))
 									$selected_timezone = $customer->timezone;
@@ -188,23 +113,30 @@
 							<?php } ?>
 						</select>
 					</li>
+					<?php } ?>
 					<li id="accountJobTitleQuestion" class="form-row">
 						<label for="job_title">*Job Title:</label>
+					<?php if ($readOnly) { ?>
+						<span class="value"><?= $customer->getMetadata('job_title') ?></span>
+					<?php } else { ?>
 						<input type="text" name="job_title" class="long-field"
-							value="<?= $customer->getMetadata('job_title') ?>" <?php if ($readOnly)
-								  echo 'disabled'; ?> />
+							value="<?= $customer->getMetadata('job_title') ?>" />
+					<?php } ?>
 					</li>
 					<li id="accountJobDescriptionQuestion" class="form-row">
 						<label for="job_description">*Job Description:</label>
-						<textarea name="job_description" class="long-field register-account-textarea" <?php if ($readOnly)
-							echo 'disabled'; ?>><?= $customer->getMetadata('job_description') ?></textarea>
+					<?php if ($readOnly) { ?>
+						<span class="value"><?= $customer->getMetadata('job_description') ?></span>
+					<?php } else { ?>
+						<textarea name="job_description" class="long-field register-account-textarea"><?= $customer->getMetadata('job_description') ?></textarea>
+					<?php } ?>
 					</li>
 				</ul>
 			</section>
 
 			<!-- Contact Methods Section -->
 			<section class="form-group contact-methods">
-				<h4>Add Methods of Contact</h4>
+				<h4>Methods of Contact</h4>
 				<div id="contact-main-table" class="tableBody bandedRows">
 					<div class="tableRowHeader">
 						<div class="tableCell">Types</div>
@@ -215,7 +147,8 @@
 						<div class="tableCell">Public</div>
 						<div class="tableCell">Drop</div>
 					</div>
-					<?php foreach ($contacts as $contact) { ?>
+					<?php if (count($contacts) > 0) {
+						foreach ($contacts as $contact) { ?>
 						<div class="tableRow">
 							<div class="tableCell">
 								<span class="display-none value">Types: </span>
@@ -268,8 +201,11 @@
 								</span>
 							</div>
 						</div>
-					<?php } ?>
+					<?php }}
+						else { ?>
+						No contact methods available <?php } ?>
 					<!-- New Contact Row -->
+					<?php if ($my_account) { ?>
 					<div class="tableRow new-contact">
 						<div class="tableCell">
 							<select class="value input" name="type[0]" <?php if ($readOnly)
@@ -300,20 +236,22 @@
 						</div>
 						<div class="tableCell"></div>
 					</div>
+					<?php } ?>
 				</div>
 			</section>
 
 			<?php if ($customer->profile == "public") { ?>
-				<!-- Business Card Preview Link -->
+				<!-- Business Card Preview Button -->
 				<div class="register-account-margin">
-					<a href="/_register/businesscard?customer_id=<?= $customer->id ?>" class="button" target="_blank">Preview
-						Business Card</a>
+					<button type="button" class="button" onclick="window.open('/_register/businesscard?customer_id=<?= $customer->id ?>', '_blank')">Preview Business Card</button>
 				</div>
 			<?php } ?>
 
 			<?php if (!$readOnly) { ?>
 				<!-- Two-Factor Authentication Section -->
-				<?php if ($GLOBALS['_config']->register->use_otp) { ?>
+				<?php
+					$configurations = new \Site\Configuration(); 
+					if ($configurations->getValueBool("use_otp")) { ?>
 					<section class="form-group two-factor pageSect_full">
 						<h5>Time Based Password [Google Authenticator]</h5>
 						<div class="checkbox-group">
@@ -440,4 +378,5 @@
 			<input type="hidden" id="register-contacts-id" name="register-contacts-id" value="" />
 		</form>
 	<?php } ?>
+	</div>
 </section>

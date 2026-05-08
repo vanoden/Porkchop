@@ -5,6 +5,29 @@
 		public bool $elevated = false;
 		public int $unreadMessages = 0;
 		protected string $password = '';
+		private \Register\User\Statistics|null $_statistics = null;
+
+		/** @var array<int, Role[]> Roles list per customer ID within this request */
+		private static $_rolesQueryCacheByUserId = array();
+
+		/** @var array<string, bool> Per-request memo for identical has_privilege() checks */
+		private static $_hasPrivilegeRequestCache = array();
+
+		/** @var array<int, bool> Memo requiresOTP() per customer per request */
+		private static $_requiresOTPRequestMemo = array();
+
+		private static function clearHasPrivilegeRequestCache(?int $customer_id = null): void {
+			if ($customer_id !== null && $customer_id > 0) {
+				$p = $customer_id.'|';
+				foreach (array_keys(self::$_hasPrivilegeRequestCache) as $k) {
+					if (strpos($k, $p) === 0) {
+						unset(self::$_hasPrivilegeRequestCache[$k]);
+					}
+				}
+			} else {
+				self::$_hasPrivilegeRequestCache = array();
+			}
+		}
 
 		/**
 		 * Constructor
@@ -22,7 +45,24 @@
 		 */
 		public function add($parameters = []) {
 			if (parent::add($parameters)) {
-				$this->auditRecord('REGISTRATION_SUBMITTED','Customer added', $this->id);
+				// Initialize register_user_statistics record with appropriate fields
+				$this->statistics()->initRecord();
+				
+				// Determine if this is admin account creation or new registration
+				// For admin account creation, user_id should be the admin creating it (from session)
+				// For new registration, user_id and instance_id both match the mysql insert id
+				$audit_user_id = null;
+				if (!empty($GLOBALS['_SESSION_']->customer->id) && $GLOBALS['_SESSION_']->customer->id != $this->id) {
+					// Admin account creation - use admin's ID from session
+					$audit_user_id = $GLOBALS['_SESSION_']->customer->id;
+				} else {
+					// New registration - user_id and instance_id match the mysql insert id
+					$audit_user_id = $this->id;
+				}
+				
+				// Record audit event
+				// instance_id always matches the mysql insert id of the new record
+				$this->auditRecord('REGISTRATION_SUBMITTED','Customer added', $audit_user_id);
 				$this->changePassword($parameters['password']);
 				return true;
 			}
@@ -35,6 +75,8 @@
 		 * @return bool 
 		 */
 		public function update($parameters = []): bool {
+			// Collect Audit Messages
+			$audit_messages = [];
 
             // Password must be changed per Authentication Service
 			if (isset($parameters['password'])) {
@@ -53,6 +95,7 @@
 				else {
 					return false;
 				}
+				$audit_messages[] = "Password changed";
 			}
 
 			if ($_SERVER["SCRIPT_FILENAME"] == BASE."/core/install.php") app_log("Installer updating new admin account",'info');
@@ -60,17 +103,15 @@
 				if (!empty($parameters['organization_id']) && $this->organization_id != $parameters['organization_id']) {
 					$oldOrg = $this->organization();
 					$oldOrgName = $oldOrg ? $oldOrg->name : 'Unknown';
-					$this->auditRecord("ORGANIZATION_CHANGED","Organization changed from ".$oldOrgName." to ".$parameters['organization_id']);
+					$audit_messages[] = "Organization changed from ".$oldOrgName." to ".$parameters['organization_id'];
 				}
-				if (!empty($parameters['status']) && $this->status != $parameters['status']) $this->auditRecord("STATUS_CHANGED","Status changed from ".$this->status." to ".$parameters['status']);
-				if (!empty($parameters['first_name']) && $this->first_name != $parameters['first_name'] || !empty($parameters['last_name']) && $this->last_name != $parameters['last_name'])  $this->auditRecord("USER_UPDATED","Customer Name changed from " . $this->first_name . " " . $this->last_name . " to " . $parameters['first_name'] . " " . $parameters['last_name']);
-				if (isset($parameters['profile_visibility']) && $this->profile != $parameters['profile_visibility']) $this->auditRecord("PROFILE_VISIBILITY_CHANGED","Profile visibility changed from ".$this->profile." to ".$parameters['profile_visibility']);
+				if (!empty($parameters['status']) && $this->status != $parameters['status']) $audit_messages[] = "Status changed from ".$this->status." to ".$parameters['status'];
+				if (!empty($parameters['first_name']) && $this->first_name != $parameters['first_name'] || !empty($parameters['last_name']) && $this->last_name != $parameters['last_name'])  $audit_messages[] = "Customer Name changed from " . $this->first_name . " " . $this->last_name . " to " . $parameters['first_name'] . " " . $parameters['last_name'];
+				if (isset($parameters['profile_visibility']) && $this->profile != $parameters['profile_visibility']) $audit_messages[] = "Profile visibility changed from ".$this->profile." to ".$parameters['profile_visibility'];
 			}
 
 			parent::update($parameters);
 			if ($this->error()) return false;
-
-			$auditLog = new \Site\AuditLog\Event();
 
 			// roles
 			if (isset($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
@@ -79,23 +120,18 @@
 				foreach ($roles as $role) {
 					if (isset($parameters['roles']) && is_array($parameters['roles'])) {
 						if (array_key_exists($role['id'],$parameters['roles'])) {
-							$auditLog->appendDescription("Added role ".$role['name']);
+							$audit_messages[] = "ROLE_ADDED: Added role ".$role['name'];
 							$this->add_role($role['id']);
 						} else {
-							$auditLog->appendDescription("Added role ".$role['name']);
+							$audit_messages[] = "ROLE_REMOVED: Removed role ".$role['name'];
 							$this->drop_role($role['id']);
 						}
 					}
 				}
 			}
-			
+
 			// audit the update event
-			app_log("Well, log it already!");
-			$auditLog->addIfDescription(array(
-				'instance_id' => $this->id,
-				'class_name' => get_class($this),
-				'class_method' => 'update'
-			));
+			$this->recordAuditEvent($this->id, implode("; ", $audit_messages));
 
 			return $this->details();
 		}
@@ -104,40 +140,14 @@
 		 * Record last hit date
 		 */
 		public function recordHit() {
-			$this->clearError();
-			$database = new \Database\Service();
-
-			// Prepare Query
-			$update_customer_query = "
-				UPDATE	register_users
-				SET		last_hit_date = now()
-				WHERE	id = ?
-			";
-			$database->AddParam($this->id);
-			$database->Execute($update_customer_query);
-			if ($database->ErrorMsg()) {
-				$this->SQLError($database->ErrorMsg());
-			}
+			$this->statistics()->recordHit();
 		}
 
 		/** @method clearAuthFailures()
 		 * Clear Auth Failures
 		 */
 		public function clearAuthFailures() {
-			$this->clearError();
-			$this->clearCache();
-
-			$database = new \Database\Service();
-			$update_customer_query = "
-				UPDATE	register_users
-				SET		auth_failures = 0
-				WHERE	id = ?
-			";
-			$database->AddParam($this->id);
-			$database->Execute($update_customer_query);
-			if ($database->ErrorMsg()) {
-				$this->SQLError($database->ErrorMsg());
-			}
+			$this->statistics()->resetFailedLogins();
 		}
 
 		/** @method organization(organization)
@@ -163,50 +173,25 @@
 			return null;
 		}
 
-		/** @method increment_auth_failures()
-		 * Count auth failures
+		/** @method add_role(role_id)
+		 * Add a Role to the Customer
+		 * @param string $role_id The ID of the role to add
+		 * @return bool True if successful, otherwise false
 		 */
-		public function increment_auth_failures() {
-			// Clear Errors
+		function add_role ($role_id): bool {
+			// Clear any previous errors
 			$this->clearError();
-
-			// Check if ID is set
-			if (! isset($this->id)) return false;
 
 			// Initialize Database Service
 			$database = new \Database\Service();
 
-			// Prepare Query
-			$update_customer_query = "
-				UPDATE	register_users
-				SET		auth_failures = auth_failures + 1
-				WHERE	id = ?";
-
-			// Add Parameters
-			$database->AddParam($this->id);
-
-			// Execute Query
-			$database->Execute($update_customer_query);
-
-			// Check for Errors
-			if ($database->ErrorMsg()) {
-				$this->SQLError($database->ErrorMsg());
+			$role = new \Register\Role($role_id);
+			if (! $role->id) {
+				$this->error("Role not found");
 				return false;
 			}
 
-			// Bust Cache
-			$cache_key = "customer[" . $this->id . "]";
-			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
-			$cache->delete();
-			return $this->details();
-		}
-
-		/** @method add_role(role_id)
-		 * Add a Role to the Customer
-		 * @param string $role_id The ID of the role to add
-		 */
-		function add_role ($role_id) {
-		
+			// Security Check - Ensure user has privilege to assign roles
 			if ($GLOBALS['_SESSION_']->elevated()) {
 				app_log("Elevated Session adding role");
 			}
@@ -216,9 +201,20 @@
 			else {
 				app_log("Non admin failed to update roles",'notice',__FILE__,__LINE__);
 				$this->error("Insufficient Privileges");
-				return 0;
+				return false;
 			}
-			
+
+			// Prevent self-privilege escalation: Users cannot grant themselves roles that increase their privilege level
+			$current_user = $GLOBALS['_SESSION_']->customer;
+			if ($current_user && $current_user->id == $this->id) {
+				// User is trying to grant a role to themselves (Ok if the have ADMINISTRATOR level 'manage customers' privilege)
+				if (! $current_user->has_privilege('manage customers',\Register\PrivilegeLevel::ADMINISTRATOR) && $this->wouldGrantHigherPrivilege($role_id, $this)) {
+					$this->error("You cannot grant yourself privileges that would increase your privilege level");
+					return false;
+				}
+			}
+
+			// Prepare SQL Query
 			$add_role_query = "
 				INSERT
 				INTO	register_users_roles
@@ -230,22 +226,26 @@
 				ON DUPLICATE KEY UPDATE user_id = user_id
 			";
 
-			$GLOBALS['_database']->Execute(
-				$add_role_query,
-				array($this->id,$role_id)
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return 0;
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($role_id);
+
+			// Execute Query
+			$database->Execute($add_role_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
 			}
 
 			# Bust Cache
 			$cache_key = "customer[" . $this->id . "]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
 			$cache->delete();
+			unset(self::$_rolesQueryCacheByUserId[$this->id]);
+			self::clearHasPrivilegeRequestCache((int) $this->id);
 
-			$this->auditRecord('ROLE_ADDED','Role has been added: '.$role_id);
-			return 1;
+			$this->recordAuditEvent($this->id,'Role '.$role->name.' assigned');
+			return true;
 		}
 
 		/** @method drop_role(role_id)
@@ -253,24 +253,40 @@
 		 * @param string $role_id The ID of the role to remove
 		 */
 		function drop_role($role_id) {
+			// Clear any previous errors
+			$this->clearError();
+
+			$role = new \Register\Role($role_id);
+			if (! $role->id) {
+				$this->error("Role not found");
+				return false;
+			}
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare SQL Query
 			$drop_role_query = "
 				DELETE
 				FROM	register_users_roles
 				WHERE	user_id = ?
 				AND		role_id = ?
 			";
-			
-			//error_log("Update Customer: $drop_role_query");
-			$GLOBALS['_database']->Execute(
-				$drop_role_query,
-				array($this->id,$role_id)
-			);
-			
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($role_id);
+
+			// Execute Query
+			$database->Execute($drop_role_query);
+
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			$this->auditRecord('ROLE_DROPPED','Role '.$role_id.' dropped');
+			unset(self::$_rolesQueryCacheByUserId[$this->id]);
+			self::clearHasPrivilegeRequestCache((int) $this->id);
+			$this->recordAuditEvent($this->id,'Role '.$role->name.' removed');
 			return true;
 		}
 
@@ -301,10 +317,22 @@
 		function authenticate ($login, $password): bool {
 			$this->clearError();
 
+			// Get IP address and user agent for logging
+			$request = new \HTTP\Request();
+			$request->deconstruct();
+			$ip_address = $request->client_ip;
+
+			// Get User Agent
+			$user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+
+			// Identify EndPoint
+			$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
+
 			// Validate Input
 			if (! $this->validLogin($login)) {
+				// Log authentication failure
 				$failure = new \Register\AuthFailure();
-				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'INVALIDLOGIN',$_SERVER['PHP_SELF']));
+				$failure->add(array($ip_address,$login,'UNKNOWN',$endpoint,$user_agent));
 				return false;
 			}
 
@@ -331,8 +359,9 @@
 			list($id,$auth_method,$status,$password_age) = $rs->fields();
 			if (! $id) {
 				app_log("Auth denied because no account found matching '$login'",'notice',__FILE__,__LINE__);
+				// Log authentication failure
 				$failure = new \Register\AuthFailure();
-				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'NOACCOUNT',$_SERVER['PHP_SELF']));
+				$failure->add(array($ip_address,$login,'NOACCOUNT',$endpoint,$user_agent));
 				return false;
 			}
 			if (!empty($auth_method)) $this->auth_method = $auth_method;
@@ -341,9 +370,11 @@
 			$this->get($login);		
 			if ($this->password_expired()) {
 				$this->error("Your password is expired.  Please use Recover Password to restore.");
+				// Log authentication failure
 				$failure = new \Register\AuthFailure();
-				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'PASSEXPIRED',$_SERVER['PHP_SELF']));
-				$this->auditRecord("AUTHENTICATION_FAILURE","Password expired");
+				$failure->add(array($ip_address,$login,'PASSEXPIRED',$endpoint,$user_agent));
+				// Update statistics: increment failed_login_count and set last_failed_login_date
+				$this->statistics()->recordFailedLogin();
 				return false;
 			}
 
@@ -354,23 +385,25 @@
 			// Authenticate using service
 			if ($authenticationService->authenticate($login,$password)) {
 				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
+				// Successful authentication - update statistics only, no separate log entry
+				// recordLogin() updates: last_login_date, last_hit_date, failed_login_count=0, 
+				// first_login_date (if not set), and increments session_count
 				$this->clearAuthFailures();
-				$this->auditRecord("AUTHENTICATION_SUCCESS","Authenticated successfully");
-
-				// update last_hit_date	for user login
-				$this->recordHit();
+				$this->statistics()->recordLogin();
 				
 				return true;
 			}
 			else {
 				app_log("'$login' failed to authenticate",'notice',__FILE__,__LINE__);
+				// Log authentication failure
 				$failure = new \Register\AuthFailure();
-				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'WRONGPASS',$_SERVER['PHP_SELF']));
-				$this->increment_auth_failures();
+				$failure->add(array($ip_address,$login,'WRONGPASS',$endpoint,$user_agent));
+				$this->statistics()->recordFailedLogin();
 				if ($this->auth_failures() >= 6) {
 					app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
 					$this->block();
-					$this->auditRecord("AUTHENTICATION_FAILURE","Blocked after ".$this->auth_failures()." failures");
+					// Send notification to support staff
+					$this->sendAccountBlockedNotification();
 				}
 				return false;
 			}
@@ -393,6 +426,7 @@
 			
 			if ($authenticationService->changePassword($this->code,$password)) {
 				$this->resetAuthFailures();
+				$this->statistics()->recordPasswordChange();
 				$this->auditRecord('PASSWORD_CHANGED','Password changed');
 				return true;
 			}
@@ -438,18 +472,7 @@
 		 * @return int 
 		 */
 		public function auth_failures() {
-			$get_failures_query = "
-				SELECT	auth_failures
-				FROM	register_users
-				WHERE	id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute($get_failures_query,array($this->id));
-			if (! $rs) {
-				$this->error("SQL Error in Register::Customer::auth_failures(): ".$GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			list($count) = $rs->FetchRow();
-			return $count;
+			return $this->statistics()->failed_login_count;
 		}
 
 		/** @method resetAuthFailures()
@@ -457,7 +480,7 @@
 		 * @return bool True if successful, otherwise false
 		 */
 		public function resetAuthFailures() {
-			return $this->update(array("auth_failures" => 0));
+			return $this->statistics()->resetFailedLogins();
 		}
 
 		/** @method products(product)
@@ -515,6 +538,22 @@
 			return $products;
 		}
 
+		/** @method hasProductID(product_id)
+		 * Check if customer has a product by product ID.  Currently only through Organization ownership, but could be extended to direct ownership in the future.
+		 * @param int $product_id The product ID to check
+		 * @return bool True if customer has the product, otherwise false
+		 */
+		public function hasProductID($product_id): bool {
+			$this->clearError();
+			$organization = $this->organization();
+			if ($organization) {
+				if ($organization->hasProductID($product_id)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		/**
 		 * Magic method to handle can() calls with different parameter counts
 		 * @param string $name Method name
@@ -524,9 +563,10 @@
 		public function __call($name, $parameters) {
 			if ($name == "can") {
 				if (count($parameters) == 2) {
+					// Check privilege with specific level
 					return $this->_canLevel($parameters[0], $parameters[1]);
 				} elseif (count($parameters) == 1) {
-					return $this->_canLevel($parameters[0], 63); // Default to administrator level
+					return $this->_canLevel($parameters[0], \Register\PrivilegeLevel::ADMINISTRATOR); // Default to administrator level
 				}
 			}
 			
@@ -543,15 +583,21 @@
 		protected function _canLevel($privilege_name, $required_level): bool {
 			if ($GLOBALS['_SESSION_']->elevated()) return true;
 
-			// Convert level to integer if it's a string
-			$level_int = \Register\PrivilegeLevel::convertLevelToInt($required_level);
-			if ($level_int === null) {
+			if (is_int($required_level)) {
+				return $this->has_privilege($privilege_name, $required_level);
+			}
+			elseif (is_string($required_level)) {
+				// Convert level name to integer
+				$level_int = \Register\PrivilegeLevel::privilegeId($required_level);
+				if ($level_int === null) {
+					return false;
+				}
+				return $this->has_privilege($privilege_name, $level_int);
+			}
+			else {
 				return false;
 			}
-
-			return $this->has_privilege_level($privilege_name, $level_int);
 		}
-
 
 		/** @method has_role(role_name)
 		 * See If a User has been granted a Role
@@ -608,26 +654,32 @@
 		 * @param string Privilege Name
 		 * @return bool True if customer has privilege, otherwise false
 		 */
-		public function has_privilege($privilege_name) {
+		public function has_privilege($privilege_name, ?int $required_level = \Register\PrivilegeLevel::ADMINISTRATOR): bool {
 			$this->clearError();
-			$database = new \Database\Service();
-			$privilege = new \Register\Privilege();
-			
-			if (! $privilege->get($privilege_name)) {
-				if ($privilege_name != "manage privileges" && $GLOBALS['_SESSION_']->customer->can("manage privileges")) {
-					$privilege->add(array('name' => $privilege_name));
-				}
-				else {
-					return false;
+			$req = $required_level ?? \Register\PrivilegeLevel::ADMINISTRATOR;
+			if ($this->id) {
+				$cacheKey = $this->id.'|'.$privilege_name.'|'.$req;
+				if (isset(self::$_hasPrivilegeRequestCache[$cacheKey])) {
+					return self::$_hasPrivilegeRequestCache[$cacheKey];
 				}
 			}
+
+			$database = new \Database\Service();
+			$privilege = new \Register\Privilege();
+
+			# Add the privilege if it doesn't exist
+			if (! $privilege->get($privilege_name)) $privilege->add(array('name' => $privilege_name));
+
 			$check_privilege_query = "
-				SELECT	*
+				SELECT	rrp.level,
+						rp.name
 				FROM	register_users_roles rur,
-						register_roles_privileges rrp
+						register_roles_privileges rrp,
+						register_privileges rp
 				WHERE	rur.user_id = ?
 				AND		rrp.role_id = rur.role_id
 				AND		rrp.privilege_id = ?
+				AND		rp.id = rrp.privilege_id
 			";
 			$database->AddParam($this->id);
 			$database->AddParam($privilege->id);
@@ -635,36 +687,139 @@
 			$rs = $database->Execute($check_privilege_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return null;
+				return false;
 			}
-			list($found) = $rs->FetchRow();
 
-			if ($found == "1") return true;
-			else return false;
+			while (list($level,$levelname) = $rs->FetchRow()) {
+				//print_r("Privilege ".$privilege->name."[".$privilege->id."]:  User Level: ".var_export($level,true)." Required Level: ".var_export($required_level,true)."\n");
+				// Is the required level present in user's privilege level?
+				// Use bitwise check for privilege levels
+				if (inMatrix($level,$req)) {
+					if ($this->id) {
+						self::$_hasPrivilegeRequestCache[$cacheKey] = true;
+					}
+					return true;
+				}
+			}
+			if ($this->id) {
+				self::$_hasPrivilegeRequestCache[$cacheKey] = false;
+			}
+			return false;
 		}
 
-		/** @method has_privilege_level(privilege_name, required_level)
-		 * Check if customer has specified privilege with required level
-		 * @param string $privilege_name Privilege Name
-		 * @param int $required_level Required privilege level
-		 * @return bool True if customer has privilege with sufficient level, otherwise false
+		/**
+		 * Check if user's privilege level contains the required level
+		 * Uses bitwise AND to determine if a specific level is included
+		 * @param int $user_level The user's combined privilege level
+		 * @param int $required_level The required privilege level
+		 * @return bool True if user has the required level
 		 */
-		public function has_privilege_level($privilege_name, int $required_level = \Register\PrivilegeLevel::CUSTOMER) {
+		private function checkPrivilegeLevel(int $user_level, int $required_level): bool {
+			// Use the PrivilegeLevel::hasLevel() method which implements correct bitwise checking
+			return \Register\PrivilegeLevel::hasLevel($user_level, $required_level);
+		}
+
+		/**
+		 * Get privilege level name by ID
+		 * @param int $id The privilege level ID
+		 * @return string|null The privilege level name or null if not found
+		 */
+		public function privilegeName(int $id): ?string {
+			return \Register\PrivilegeLevel::privilegeName($id);
+		}
+
+		/**
+		 * Get privilege level ID by name
+		 * @param string $name The privilege level name
+		 * @return int|null The privilege level ID or null if not found
+		 */
+		public function privilegeId(string $name): ?int {
+			return \Register\PrivilegeLevel::privilegeId($name);
+		}
+
+		/**
+		 * Validate privilege level name
+		 * @param string $name The privilege level name to validate
+		 * @return bool True if valid
+		 */
+		public function validPrivilegeName(string $name): bool {
+			return \Register\PrivilegeLevel::validPrivilegeName($name);
+		}
+
+		/**
+		 * Check if customer can modify privileges for a role
+		 * @param \Register\Role $role The role to check permissions for
+		 * @return bool True if customer can modify role privileges, otherwise false
+		 */
+		public function canModifyRolePrivileges($role): bool {
 			$this->clearError();
-			$database = new \Database\Service();
-			$privilege = new \Register\Privilege();
-			
-			if (! $privilege->get($privilege_name)) {
-				if ($privilege_name != "manage privileges" && $GLOBALS['_SESSION_']->customer->can("manage privileges")) {
-					$privilege->add(array('name' => $privilege_name));
+
+			// Elevated sessions can do anything
+			if ($GLOBALS['_SESSION_']->elevated()) {
+				return true;
+			}
+
+			// Users with administrator level can modify any role
+			if ($this->has_privilege('manage privileges', \Register\PrivilegeLevel::ADMINISTRATOR)) {
+				return true;
+			}
+
+			// Users with organization_manager level can only modify roles they themselves have
+			if ($this->has_privilege('manage privileges', \Register\PrivilegeLevel::ORGANIZATION_MANAGER)) {
+				// Check if this user has the role
+				if ($role instanceof \Register\Role && $role->id) {
+					return $this->has_role_id($role->id);
 				}
-				else {
-					return false;
+				return false;
+			}
+
+			// Other privilege levels cannot modify role privileges
+			return false;
+		}
+
+		/**
+		 * Check if granting a role to a customer would increase their privilege level
+		 * @param int $role_id The role ID to check
+		 * @param \Register\Customer $target_customer The customer receiving the role (optional, defaults to self)
+		 * @return bool True if granting the role would increase privilege level, false otherwise
+		 */
+		private function wouldGrantHigherPrivilege(int $role_id, $target_customer = null): bool {
+			if ($target_customer === null) {
+				$target_customer = $this;
+			}
+
+			// Get the role and its privileges
+			$role = new \Register\Role($role_id);
+			if (!$role->id) {
+				return false; // Invalid role, can't grant higher privilege
+			}
+
+			$role_privileges = $role->privileges();
+
+			// Check each privilege in the role
+			foreach ($role_privileges as $role_privilege) {
+				// Get the target customer's current level for this privilege
+				$current_level = $this->getPrivilegeLevelForUser($target_customer->id, $role_privilege->id);
+
+				// If the role grants a higher level than the user currently has, it would increase privilege
+				if ($role_privilege->level > $current_level) {
+					return true;
 				}
 			}
-			
-			// Use the level column
-			$check_privilege_query = "
+
+			return false;
+		}
+
+		/**
+		 * Get the maximum privilege level a user has for a specific privilege
+		 * @param int $user_id The user ID
+		 * @param int $privilege_id The privilege ID
+		 * @return int The maximum privilege level (0 if user has no privilege)
+		 */
+		private function getPrivilegeLevelForUser(int $user_id, int $privilege_id): int {
+			$database = new \Database\Service();
+
+			$get_level_query = "
 				SELECT	MAX(rrp.level) as max_level
 				FROM	register_users_roles rur,
 						register_roles_privileges rrp
@@ -672,65 +827,22 @@
 				AND		rrp.role_id = rur.role_id
 				AND		rrp.privilege_id = ?
 			";
-			$database->AddParam($this->id);
-			$database->AddParam($privilege->id);
 
-			$rs = $database->Execute($check_privilege_query);
-			if (! $rs) {
-				$this->SQLError($database->ErrorMsg());
-				return false;
+			$database->AddParam($user_id);
+			$database->AddParam($privilege_id);
+
+			$rs = $database->Execute($get_level_query);
+			if (!$rs || $database->ErrorMsg()) {
+				return 0;
 			}
-			
+
 			$row = $rs->FetchRow();
 			if ($row) {
-				list($user_level) = $row;
-				// Handle null user_level from MAX() query when no records match
-				if ($user_level === null) {
-					return false;
-				}
-				return $this->checkPrivilegeLevel($user_level, $required_level);
+				list($max_level) = $row;
+				return $max_level ?? 0;
 			}
-			else {
-				return false;
-			}
-		}
 
-		/**
-		 * Check if user's privilege level contains the required level
-		 * Uses bitwise subtraction to determine if a specific level is included
-		 * @param int $user_level The user's combined privilege level
-		 * @param int $required_level The required privilege level
-		 * @return bool True if user has the required level
-		 */
-		private function checkPrivilegeLevel(int $user_level, int $required_level): bool {
-			// Define privilege levels in descending order using constants
-			$levels = [
-				\Register\PrivilegeLevel::ADMINISTRATOR,
-				\Register\PrivilegeLevel::DISTRIBUTOR,
-				\Register\PrivilegeLevel::ORGANIZATION_MANAGER,
-				\Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER,
-				\Register\PrivilegeLevel::CUSTOMER
-			];
-			
-			// If user level is 0, they only have customer level
-			if ($user_level == 0) {
-				return $required_level == 0;
-			}
-			
-			// Check each level by subtracting from user's level
-			$remaining = $user_level;
-			
-			foreach ($levels as $level) {
-				if ($remaining >= $level) {
-					// User has this level
-					if ($level == $required_level) {
-						return true;
-					}
-					$remaining -= $level;
-				}
-			}
-			
-			return false;
+			return 0;
 		}
 
 		
@@ -756,6 +868,10 @@
 		public function roles() {
 			// Clear previous errors
 			$this->clearError();
+
+			if ($this->id && isset(self::$_rolesQueryCacheByUserId[$this->id])) {
+				return self::$_rolesQueryCacheByUserId[$this->id];
+			}
 	
 			// Initialize Database Service
 			$database = new \Database\Service();
@@ -785,6 +901,10 @@
 			while (list($id) = $rs->FetchRow()) {
 				$role = new Role($id);
 				array_push($roles,$role);
+			}
+
+			if ($this->id) {
+				self::$_rolesQueryCacheByUserId[$this->id] = $roles;
 			}
 			
 			return $roles;
@@ -823,6 +943,7 @@
 				$this->error("Error getting session: ".$sessionList->error());
 				return null;
 			}
+
 			if (count($sessions) > 0) $session = $sessions[0];
 			else return null;
 			return $session->last_hit_date;
@@ -918,22 +1039,36 @@
 		 * @return \Register\Location[]|null List of locations or null on error
 		 */
 		public function locations($parameters = array()) {
-			$get_locations_query = "
-				SELECT	rol.location_id
-				FROM	register_organization_locations rol
-				WHERE	rol.organization_id = ?
-				UNION
-				SELECT	rul.location_id
-				FROM	register_user_locations rul
-				WHERE	rul.user_id = ?
-			";
 			$organization = $this->organization();
-		if (!$organization) {
-			$this->error("Customer has no associated organization");
-			return null;
-		}
-		$rs = $GLOBALS['_database']->Execute($get_locations_query,array($organization->id,$this->id));
-			
+			if (!$organization) {
+				$this->error("Customer has no associated organization");
+				return null;
+			}
+			$include_hidden = isset($parameters['include_hidden']) ? (bool)$parameters['include_hidden'] : true;
+			if ($include_hidden) {
+				$get_locations_query = "
+					SELECT	rol.location_id
+					FROM	register_organization_locations rol
+					WHERE	rol.organization_id = ?
+					UNION
+					SELECT	rul.location_id
+					FROM	register_user_locations rul
+					WHERE	rul.user_id = ?
+				";
+			} else {
+				$get_locations_query = "
+					SELECT	rol.location_id
+					FROM	register_organization_locations rol
+					INNER JOIN register_locations rl ON rl.id = rol.location_id
+					WHERE	rol.organization_id = ? AND rl.hidden = 0
+					UNION
+					SELECT	rul.location_id
+					FROM	register_user_locations rul
+					INNER JOIN register_locations rl ON rl.id = rul.location_id
+					WHERE	rul.user_id = ? AND rl.hidden = 0
+				";
+			}
+			$rs = $GLOBALS['_database']->Execute($get_locations_query, array($organization->id, $this->id));
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
@@ -1068,37 +1203,50 @@
 			return true;
 		}
 
-		/** @method auditRecord(type, notes, customer_id)
-		 * Audit Record
-		 * @param string $type
-		 * @param string $notes
-		 * @param int $customer_id, used only for empty session
-		 * @return bool
-		 */
-		public function auditRecord($type, $notes, $customer_id = null) {
-			$audit = new \Register\UserAuditEvent();
-			if (!empty($GLOBALS['_SESSION_']->customer->id)) $customer_id = $GLOBALS['_SESSION_']->customer->id;
-			if (!empty($this->id) && empty($customer_id)) $customer_id = $this->id;
-
-			if ($audit->validClass($type) == false) {
-				app_log("Invalid audit class: ".$type,'error');
-				return false;
-			}
-
-			$audit->add(array(
-				'user_id'		=> $this->id,
-				'admin_id'		=> $customer_id,
-				'event_date'	=> date('Y-m-d H:i:s'),
-				'event_class'	=> $type,
-				'event_notes'	=> $notes
-			));
-			
-			if ($audit->error()) {
-				app_log($audit->error(),'error');
-				return false;
-			}
-			return true;
+	/** @method auditRecord(type, notes, customer_id)
+	 * Audit Record - Migrated to use site_audit_events table
+	 * @param string $type Event type/class (for backward compatibility)
+	 * @param string $notes Description of the event
+	 * @param int $customer_id User ID making the change (from session if not provided)
+	 * @return bool
+	 */
+	public function auditRecord($type, $notes, $customer_id = null) {
+		// Validate type and notes are not NULL
+		if (empty($type) || $type === null) {
+			$this->error("Audit type is required and cannot be NULL");
+			return false;
 		}
+		if ($notes === null) {
+			$notes = 'Value not found';
+		} elseif (empty($notes)) {
+			$notes = '';
+		}
+		
+		// Get user_id from session if not provided
+		if (empty($customer_id)) {
+			if (!empty($GLOBALS['_SESSION_']->customer->id)) {
+				$customer_id = $GLOBALS['_SESSION_']->customer->id;
+			} elseif (!empty($this->id)) {
+				$customer_id = $this->id;
+			}
+		}
+
+		// Use site_audit_events table (replaces register_user_audit)
+		$audit = new \Site\AuditLog\Event();
+		$result = $audit->add(array(
+			'instance_id' => $this->id,
+			'description' => $type . ': ' . $notes,
+			'class_name' => $this->_getActualClass(),
+			'class_method' => 'auditRecord',
+			'customer_id' => $customer_id
+		));
+		
+		if ($audit->error()) {
+			app_log($audit->error(),'error');
+			return false;
+		}
+		return $result;
+	}
 
 		/** @method sessions(parameters)
 		 * Get a list of sessions for the customer
@@ -1118,6 +1266,17 @@
 			}
 		}
 
+		/** @method public statistics()
+		 * Get the statistics object for the customer
+		 * @return \Register\User\Statistics Statistics object
+		 */
+		public function statistics(): \Register\User\Statistics {
+			if ($this->_statistics instanceof \Register\User\Statistics) {
+				return $this->_statistics;
+			}
+			return new \Register\User\Statistics($this->id);
+		}
+
 		/** @method requiresOTP()
 		 * Determines if this customer requires OTP authentication
 		 * Checks organization, roles, and user settings in order
@@ -1125,16 +1284,27 @@
 		 */
 		public function requiresOTP(): bool {
 			
-			app_log("DEBUG: requiresOTP() called for customer ID: ".$this->id, 'debug', __FILE__, __LINE__);
+			app_log("requiresOTP() called for customer ID: ".$this->id, 'trace', __FILE__, __LINE__);
+
+			if ($this->id && array_key_exists($this->id, self::$_requiresOTPRequestMemo)) {
+				return self::$_requiresOTPRequestMemo[$this->id];
+			}
 
 			// If use_otp false, return false immediately
-			if (!$GLOBALS['_config']->register->use_otp) {
+			$configuration = new \Site\Configuration();
+			if (!$configuration->getValueBool("use_otp")) {
+				if ($this->id) {
+					self::$_requiresOTPRequestMemo[$this->id] = false;
+				}
 				return false;
 			}
 		
 			// Check organization setting
 			$organization = $this->organization();
 			if ($organization && !empty($organization->time_based_password)) {
+				if ($this->id) {
+					self::$_requiresOTPRequestMemo[$this->id] = true;
+				}
 				return true;
 			}
 			
@@ -1142,15 +1312,24 @@
 			$userRoles = $this->roles();
 			foreach ($userRoles as $role) {
 				if (!empty($role->time_based_password)) {
+					if ($this->id) {
+						self::$_requiresOTPRequestMemo[$this->id] = true;
+					}
 					return true;
 				}
 			}
 
 			// Check user setting
 			if (!empty($this->time_based_password)) {
+				if ($this->id) {
+					self::$_requiresOTPRequestMemo[$this->id] = true;
+				}
 				return true;
 			}
-			
+
+			if ($this->id) {
+				self::$_requiresOTPRequestMemo[$this->id] = false;
+			}
 			return false;
 		}
 
@@ -1225,12 +1404,16 @@
 			$transport->hostname($GLOBALS['_config']->email->hostname);
 			$transport->token($GLOBALS['_config']->email->token);
 
+			app_log("Attempting to deliver OTP recovery email to: " . $email_address, 'debug', __FILE__, __LINE__, 'otplogs');
 			if ($transport->deliver($message)) {
+				app_log("OTP recovery email delivered successfully to: " . $email_address, 'info', __FILE__, __LINE__, 'otplogs');
 				$this->auditRecord('OTP_RECOVERY_REQUESTED', 'OTP recovery email sent to: ' . $email_address);
 				return true;
 			}
 			else {
-				$this->error("Error sending recovery email: " . ($transport->error() ?: "Unknown error"));
+				$errorMsg = $transport->error() ?: "Unknown error";
+				app_log("Failed to deliver OTP recovery email to: " . $email_address . ". Error: " . $errorMsg, 'error', __FILE__, __LINE__, 'otplogs');
+				$this->error("Error sending recovery email: " . $errorMsg);
 				return false;
 			}
 		}
@@ -1269,7 +1452,7 @@
 						'CUSTOMER.NAME' => $this->full_name(),
 						'CUSTOMER.EMAIL' => $notify_email,
 						'DATE.TIME' => date('F j, Y \a\t g:i A T'),
-						'IP.ADDRESS' => $_SERVER['REMOTE_ADDR'] ?? 'Unknown',
+						'IP.ADDRESS' => $GLOBALS['_REQUEST_']->client_ip ?? 'Unknown',
 						'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
 					)
 				)
@@ -1506,6 +1689,345 @@
 			}
 		}
 
+		/** @method createBlockedAccountSupportTicket()
+		 * Create a support ticket when an account is blocked
+		 * @return bool True if ticket created successfully, false on error
+		 */
+		public function createBlockedAccountSupportTicket(): bool {
+			$this->clearError();
+
+			if (!$this || !$this->id) {
+				app_log("Invalid customer object for creating blocked account support ticket", 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			// Get customer details
+			$this->details();
+			$organization = $this->organization();
+			if (!$organization || !$organization->id) {
+				app_log("Customer " . $this->id . " has no organization, cannot create support ticket", 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			// Get last failed login IP from auth failures
+			$lastFailedIP = 'Unknown';
+			$failureList = new \Register\AuthFailureList();
+			$lastFailure = $failureList->last(['login' => $this->code]);
+			if ($lastFailure && !$failureList->error() && isset($lastFailure->ip_address)) {
+				$lastFailedIP = $lastFailure->ip_address;
+			}
+
+			// Get recent audit events for context
+			$auditList = new \Site\AuditLog\EventList();
+			$recentAuditEvents = $auditList->find(
+				['instance_id' => $this->id],
+				[
+					'sort' => 'event_date',
+					'order' => 'desc',
+					'limit' => 20
+				]
+			);
+
+			// Build audit history text
+			$auditHistory = '';
+			if (!empty($recentAuditEvents) && !$auditList->error()) {
+				$auditHistory = "\n\nRecent Account Activity (Audit History):\n";
+				$auditHistory .= str_repeat("-", 60) . "\n";
+				$actors = [];
+				foreach ($recentAuditEvents as $event) {
+					$actorName = 'System';
+					if (!empty($event->user_id)) {
+						if (!isset($actors[$event->user_id])) {
+							$actor = new \Register\Customer($event->user_id);
+							$actors[$event->user_id] = $actor->code ?? 'Unknown';
+						}
+						$actorName = $actors[$event->user_id];
+					}
+					$eventDate = $event->event_date ? date('Y-m-d H:i:s', strtotime($event->event_date)) : 'N/A';
+					$auditHistory .= "Date: " . $eventDate . "\n";
+					$auditHistory .= "Acted By: " . $actorName . "\n";
+					$auditHistory .= "Action: " . ($event->class_method ?? 'N/A') . "\n";
+					$auditHistory .= "Description: " . ($event->description ?? 'N/A') . "\n";
+					$auditHistory .= str_repeat("-", 60) . "\n";
+				}
+			} else {
+				$auditHistory = "\n\nNo recent audit events found for this account.\n";
+			}
+
+			// Create support request with type 'SERVICE' (database enum requirement)
+			$site = new \Site();
+			if ($site->findModule('Support')) {
+				$requestClass = "Support\\Request";
+				$supportRequest = new $requestClass();
+				$supportRequest->add(array(
+					'customer_id' => $this->id,
+					'organization_id' => $organization->id,
+					'type' => 'SERVICE',
+					'status' => 'NEW',
+					'date_request' => date('Y-m-d H:i:s')
+				));
+
+				if ($supportRequest->error()) {
+					app_log("Error creating support ticket for blocked account: " . $supportRequest->error(), 'error', __FILE__, __LINE__);
+					return false;
+				}
+			}
+
+			// Add item to the support request with blocking details
+			// Type of Request: "web portal" (as description)
+			// Describe Problem: "user has been blocked (history of account audits)"
+			$description = "Type of Request: web portal\n\n";
+			$description .= "Describe Problem: User has been blocked (history of account audits)\n\n";
+			$description .= "Account Blocked - Security Alert\n\n";
+			$description .= "Account: " . $this->code . " (ID: " . $this->id . ")\n";
+			$description .= "Customer: " . $this->full_name() . "\n";
+			$description .= "Organization: " . $organization->name . "\n";
+			$description .= "Failed Login Attempts: " . $this->auth_failures() . "\n";
+			$description .= "Last Failed Login IP: " . $lastFailedIP . "\n";
+			$description .= "Blocked Date: " . date('Y-m-d H:i:s T') . "\n";
+			$description .= $auditHistory;
+			$description .= "\nThe account was automatically blocked after multiple failed login attempts. ";
+			$description .= "The customer will need to use the 'Forgot Password' feature to reset their password and restore account access.";
+
+			$ticket = $supportRequest->addItem(array(
+				'line' => 1,
+				'product_id' => 0,  // No product for web portal requests
+				'serial_number' => 'N/A',  // No serial number for account blocking
+				'quantity' => 1,
+				'status' => 'NEW',
+				'description' => $description
+			));
+
+			if ($supportRequest->error() || !$ticket) {
+				app_log("Error adding item to support ticket for blocked account: " . ($supportRequest->error() ?: 'Unknown error'), 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			app_log("Support ticket " . $supportRequest->code . " created for blocked account " . $this->code, 'info', __FILE__, __LINE__);
+			$this->auditRecord('SUPPORT_TICKET_CREATED', 'Support ticket ' . $supportRequest->code . ' created for blocked account');
+			
+			return true;
+		}
+
+		/** @method sendAccountBlockedNotification()
+		 * Send account blocked notification emails to both user and support staff
+		 * @return bool True if both emails sent successfully, false on error
+		 */
+		public function sendAccountBlockedNotification(): bool {
+			$this->clearError();
+
+			if (!$this || !$this->id) {
+				app_log("Invalid customer object for account blocked notification", 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			// Get customer details
+			$this->details();
+			$organization = $this->organization();
+			$organizationName = $organization ? $organization->name : 'N/A';
+			
+			// Get customer email
+			$customerEmail = $this->notify_email();
+			if (empty($customerEmail)) {
+				// Try to get any email
+				$contacts = $this->contacts(['type' => 'email']);
+				if (!empty($contacts) && is_array($contacts) && count($contacts) > 0) {
+					$customerEmail = $contacts[0]->value;
+				}
+			}
+
+			// Get last failed login IP from auth failures
+			$lastFailedIP = 'Unknown';
+			$failureList = new \Register\AuthFailureList();
+			$lastFailure = $failureList->last(['login' => $this->code]);
+			if ($lastFailure && !$failureList->error() && isset($lastFailure->ip_address)) {
+				$lastFailedIP = $lastFailure->ip_address;
+			}
+
+			// Get admin account URL
+			$adminAccountUrl = 'http' . ($GLOBALS['_config']->site->https ? 's' : '') . '://' . $GLOBALS['_config']->site->hostname . '/_register/admin_account?id=' . $this->id;
+			$forgotPasswordUrl = 'http' . ($GLOBALS['_config']->site->https ? 's' : '') . '://' . $GLOBALS['_config']->site->hostname . '/_register/forgot_password';
+
+			$result = true;
+
+			// Send email to user
+			if (!empty($customerEmail)) {
+				if (!isset($GLOBALS['_config']->register->account_blocked_user_notification)) {
+					app_log("Account blocked user notification email configuration not found", 'error', __FILE__, __LINE__);
+					$result = false;
+				} else {
+					$user_email_config = $GLOBALS['_config']->register->account_blocked_user_notification;
+					if (!isset($user_email_config->template) || !file_exists($user_email_config->template)) {
+						app_log("Account blocked user notification email template not found", 'error', __FILE__, __LINE__);
+						$result = false;
+					} else {
+						$user_template = new \Content\Template\Shell(
+							array(
+								'path' => $user_email_config->template,
+								'parameters' => array(
+									'CUSTOMER.FIRST_NAME' => $this->first_name,
+									'CUSTOMER.LOGIN' => $this->code,
+									'FAILED_ATTEMPTS' => $this->auth_failures(),
+									'BLOCKED.DATE' => date('Y-m-d'),
+									'BLOCKED.TIME' => date('H:i:s T'),
+									'FORGOT_PASSWORD.URL' => $forgotPasswordUrl,
+									'SUPPORT.EMAIL' => $GLOBALS['_config']->site->support_email ?? 'service@spectrosinstruments.com',
+									'SUPPORT.PHONE' => $GLOBALS['_config']->site->support_phone ?? '',
+									'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
+								)
+							)
+						);
+
+						if (!$user_template->error()) {
+							$user_message = new \Email\Message();
+							$user_message->html(true);
+							$user_message->to($customerEmail);
+							$user_message->from($user_email_config->from);
+							$user_message->subject($user_email_config->subject);
+							$user_message->body($user_template->output());
+
+							$transportFactory = new \Email\Transport();
+							$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+							if ($transport && !$transport->error()) {
+								$transport->hostname($GLOBALS['_config']->email->hostname);
+								$transport->token($GLOBALS['_config']->email->token);
+								if (!$transport->deliver($user_message)) {
+									app_log("Error sending account blocked user notification email: " . $transport->error(), 'error', __FILE__, __LINE__);
+									$result = false;
+								} else {
+									app_log("Account blocked user notification email sent to " . $customerEmail, 'info', __FILE__, __LINE__);
+								}
+							} else {
+								app_log("Error creating email transport for user notification: " . ($transport ? $transport->error() : 'Transport creation failed'), 'error', __FILE__, __LINE__);
+								$result = false;
+							}
+						} else {
+							app_log("Error generating user notification email: " . $user_template->error(), 'error', __FILE__, __LINE__);
+							$result = false;
+						}
+					}
+				}
+			} else {
+				app_log("No email address available for customer " . $this->id . ", skipping user notification", 'info', __FILE__, __LINE__);
+			}
+
+			// Create support ticket for blocked account
+			$this->createBlockedAccountSupportTicket();
+
+			// Send email to support with audit information
+			if (!isset($GLOBALS['_config']->register->account_blocked_notification)) {
+				app_log("Account blocked notification email configuration not found", 'error', __FILE__, __LINE__);
+				$result = false;
+			} else {
+				$support_email_config = $GLOBALS['_config']->register->account_blocked_notification;
+				if (!isset($support_email_config->template) || !file_exists($support_email_config->template)) {
+					app_log("Account blocked notification email template not found", 'error', __FILE__, __LINE__);
+					$result = false;
+				} else {
+					// Get recent audit events (last 10)
+					$auditList = new \Site\AuditLog\EventList();
+					$recentAuditEvents = $auditList->find(
+						['instance_id' => $this->id],
+						[
+							'sort' => 'event_date',
+							'order' => 'desc',
+							'limit' => 10
+						]
+					);
+
+					$auditHtml = '';
+					if (!empty($recentAuditEvents) && !$auditList->error()) {
+						$auditHtml = '<table class="info-table" style="width: 100%; border-collapse: collapse; margin: 10px 0;">';
+						$auditHtml .= '<tr><th style="background-color: #f9f9f9; padding: 8px; text-align: left; font-weight: bold; border-bottom: 1px solid #ececec;">Date</th>';
+						$auditHtml .= '<th style="background-color: #f9f9f9; padding: 8px; text-align: left; font-weight: bold; border-bottom: 1px solid #ececec;">Acted By</th>';
+						$auditHtml .= '<th style="background-color: #f9f9f9; padding: 8px; text-align: left; font-weight: bold; border-bottom: 1px solid #ececec;">Action</th>';
+						$auditHtml .= '<th style="background-color: #f9f9f9; padding: 8px; text-align: left; font-weight: bold; border-bottom: 1px solid #ececec;">Description</th></tr>';
+						
+						$actors = [];
+						foreach ($recentAuditEvents as $event) {
+							$actorName = 'System';
+							if (!empty($event->user_id)) {
+								if (!isset($actors[$event->user_id])) {
+									$actor = new \Register\Customer($event->user_id);
+									$actors[$event->user_id] = $actor->code ?? 'Unknown';
+								}
+								$actorName = $actors[$event->user_id];
+							}
+							
+							$eventDate = $event->event_date ? date('Y-m-d H:i:s', strtotime($event->event_date)) : 'N/A';
+							$auditHtml .= '<tr>';
+							$auditHtml .= '<td style="padding: 8px; border-bottom: 1px solid #ececec;">' . htmlspecialchars($eventDate) . '</td>';
+							$auditHtml .= '<td style="padding: 8px; border-bottom: 1px solid #ececec;">' . htmlspecialchars($actorName) . '</td>';
+							$auditHtml .= '<td style="padding: 8px; border-bottom: 1px solid #ececec;">' . htmlspecialchars($event->class_method ?? 'N/A') . '</td>';
+							$auditHtml .= '<td style="padding: 8px; border-bottom: 1px solid #ececec;">' . htmlspecialchars($event->description ?? 'N/A') . '</td>';
+							$auditHtml .= '</tr>';
+						}
+						$auditHtml .= '</table>';
+					} else {
+						$auditHtml = '<p>No recent audit events found for this account.</p>';
+					}
+
+					$support_template = new \Content\Template\Shell(
+						array(
+							'path' => $support_email_config->template,
+							'parameters' => array(
+								'CUSTOMER.LOGIN' => $this->code,
+								'CUSTOMER.FULL_NAME' => $this->full_name(),
+								'CUSTOMER.ID' => $this->id,
+								'CUSTOMER.EMAIL' => $customerEmail ?: 'N/A',
+								'CUSTOMER.ORGANIZATION' => $organizationName,
+								'FAILED_ATTEMPTS' => $this->auth_failures(),
+								'BLOCKED.DATE' => date('Y-m-d'),
+								'BLOCKED.TIME' => date('H:i:s T'),
+								'LAST_FAILED_IP' => $lastFailedIP,
+								'ADMIN.ACCOUNT_URL' => $adminAccountUrl,
+								'RECENT_AUDIT_EVENTS' => $auditHtml,
+								'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
+							)
+						)
+					);
+
+					if (!$support_template->error()) {
+						// Get support email address - use config "to" field if available, otherwise fall back to site support_email
+						$supportEmail = $support_email_config->to ?? ($GLOBALS['_config']->site->support_email ?? 'service@spectrosinstruments.com');
+						if (empty($supportEmail)) {
+							app_log("Support email address not configured", 'error', __FILE__, __LINE__);
+							$result = false;
+						} else {
+							$support_message = new \Email\Message();
+							$support_message->html(true);
+							$support_message->to($supportEmail);
+							$support_message->from($support_email_config->from);
+							$support_message->subject($support_email_config->subject);
+							$support_message->body($support_template->output());
+
+							$transportFactory = new \Email\Transport();
+							$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+							if ($transport && !$transport->error()) {
+								$transport->hostname($GLOBALS['_config']->email->hostname);
+								$transport->token($GLOBALS['_config']->email->token);
+								if (!$transport->deliver($support_message)) {
+									app_log("Error sending account blocked support notification email: " . $transport->error(), 'error', __FILE__, __LINE__);
+									$result = false;
+								} else {
+									app_log("Account blocked support notification email sent to " . $supportEmail, 'info', __FILE__, __LINE__);
+									$this->auditRecord('ACCOUNT_BLOCKED_NOTIFICATION_SENT', 'Account blocked notification emails sent - user: ' . ($customerEmail ?: 'N/A') . ', support: ' . $supportEmail);
+								}
+							} else {
+								app_log("Error creating email transport for support notification: " . ($transport ? $transport->error() : 'Transport creation failed'), 'error', __FILE__, __LINE__);
+								$result = false;
+							}
+						}
+					} else {
+						app_log("Error generating support notification email: " . $support_template->error(), 'error', __FILE__, __LINE__);
+						$result = false;
+					}
+				}
+			}
+
+			return $result;
+		}
+
 		/** @method resetOTPSetup()
 		 * Reset user's OTP setup (clear secret key)
 		 * @return bool True if successful
@@ -1648,4 +2170,204 @@
 			}
 			return $codes;
 		}
-    }
+
+		/** @method getStatistics()
+		 * Get user statistics
+		 * @return array
+		 */
+		public function getStatistics(): array {
+			$statistics = new \Register\User\Statistics($this->id);
+			return $statistics->toArray();
+		}
+
+		/** @method public purgeAgingSessions()
+		 * Purge aging sessions for this user
+		 * @return int Number of sessions purged
+		 */
+		public function purgeAgingSessions(): int {
+			// Clear previous errors
+			$this->clearError();
+
+			// If no user ID, return false
+			if (! $this->id) {
+				$this->error("User ID not set");
+				return 0;
+			}
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			$start_time = microtime(true);
+
+			// Get Statistics from Database
+			$session_stats = $this->getStatsFromSessions();
+			if ($this->error()) {
+				print_r("Error getting session statistics: " . $this->error() . "\n");
+				return 0;
+			}
+			if (empty($session_stats)) {
+				$this->error("No session statistics found for user");
+				return 0;
+			}
+			print_r("Session Stats: <br>\n");
+			print_r($session_stats);
+			print_r("<br>\nElapsed: " . (microtime(true) - $start_time) . " seconds<br>\n");
+
+			// Get Stored Statistics
+			$stored_stats = $this->statistics();
+			print_r("Stored Stats: <br>\n");
+			print_r($stored_stats->toArray());
+			print_r("<br>\nElapsed: " . (microtime(true) - $start_time) . " seconds<br>\n");
+
+			if (empty($stored_stats)) {
+				$stored_stats = new \Register\User\Statistics($this->id);
+				$stored_stats->update(array(
+					'last_hit_date' => $session_stats['last_hit_date'] ?? null,
+					'session_count' => $session_stats['session_count'] ?? 0,
+					'first_login_date' => $session_stats['first_login_date'] ?? null,
+					'last_failed_login_date' => $session_stats['last_failed_login_date'] ?? null,
+					'failed_login_count' => $session_stats['failed_login_count'] ?? 0,
+				));
+				if ($stored_stats->error()) {
+					$this->error("Error updating stored statistics: " . $stored_stats->error());
+					return 0;
+				}
+			}
+			else {
+				$parameters = [];
+				if (!empty($session_stats['last_failed_login_date'])) {
+					if (empty($stored_stats->last_failed_login_date) || $stored_stats->last_failed_login_date < $session_stats['last_failed_login_date']) {
+						$parameters['last_failed_login_date'] = $session_stats['last_failed_login_date'];
+					}
+				}
+				if (!empty($session_stats['last_hit_date'])) {
+					if (empty($stored_stats->last_hit_date) || $stored_stats->last_hit_date < $session_stats['last_hit_date']) {
+						$parameters['last_hit_date'] = $session_stats['last_hit_date'];
+					}
+				}
+				if (!empty($session_stats['first_login_date'])) {
+					if (empty($stored_stats->first_login_date) || $stored_stats->first_login_date > $session_stats['first_login_date']) {
+						$parameters['first_login_date'] = $session_stats['first_login_date'];
+					}
+				}
+				if (!empty($session_stats['session_count']) && $stored_stats->session_count < $session_stats['session_count']) {
+					$parameters['session_count'] = $session_stats['session_count'];
+				}
+				if (!empty($session_stats['failed_login_count']) && $stored_stats->failed_login_count < $session_stats['failed_login_count']) {
+					$parameters['failed_login_count'] = $session_stats['failed_login_count'];
+				}
+				if (!empty($parameters)) {
+					print_r("<br>\nParameters: <br>\n");
+					print_r($parameters);
+					print_r($stored_stats);
+					if ($stored_stats->update($parameters)) {
+						print_r("Stored statistics updated successfully\n");
+					} elseif ($stored_stats->error()) {
+						print_r("Error updating stored statistics\n");
+						$this->error("Error updating stored statistics: " . $stored_stats->error());
+						return 0;
+					}
+					else {
+						$this->error("Unknown error updating stored statistics");
+						print_r("Unknown error updating stored statistics\n");
+						return 0;
+					}
+				}
+				print_r("Woohoo!");
+				return 0;
+			}
+			print_r("Total time: " . (microtime(true) - $start_time) . " seconds\n");
+exit;
+			print_r("Deleting old sessions: <br>\n");
+			$delete_query = "
+				CALL purge_aging_sessions_for_user(?)
+			";
+			$database->AddParam($this->id);
+			$database->Execute($delete_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return 0;
+			}
+			print_r("Total time: " . (microtime(true) - $start_time) . " seconds\n");
+			return 0;
+		}
+
+		/** @method getStatsFromSessions()
+		 * Get user statistics from session data
+		 * @return array
+		 */
+		public function getStatsFromSessions(): array {
+			// Clear Previous Errors
+			$this->clearError();
+
+			// Prepare Database Service
+			$database = new \Database\Service();
+
+			// Require User ID
+			if (!is_numeric($this->id) || $this->id <= 0) {
+				$this->error("User ID required to collect session statistics");
+				return [];
+			}
+
+			// Initialize Response Array
+			$results = [];
+
+			// Collect statistics from user sessions
+			$session_query = "
+				SELECT	COUNT(*) AS session_count,
+						MAX(last_hit_date) AS last_hit_date
+				FROM	session_sessions
+				WHERE	user_id = ?
+			";
+
+			$database->AddParam($this->id);
+			$rs = $database->Execute($session_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return [];
+			}
+			if ($row = $rs->FetchRow()) {
+				$results["session_count"] = (int)$row['session_count'];
+				$results["last_hit_date"] = $row['last_hit_date'];
+			}
+
+			$first_session_query = "
+				SELECT	MAX(hit_date)
+				FROM	session_hits
+				WHERE	script = '/_register/login'
+				AND		session_id = (
+					SELECT	id
+					FROM	session_sessions
+					WHERE	user_id = ?
+					ORDER BY last_hit_date
+					LIMIT 1
+				)
+			";
+
+			$database->resetParams();
+			$database->AddParam($this->id);
+			$rs = $database->Execute($first_session_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return [];
+			}
+			if ($row = $rs->FetchRow()) {
+				$results["first_login_date"] = $row[0];
+			}
+
+			// Get last login failure from register_auth_failures
+			$failureList = new \Register\AuthFailureList();
+			$last_failure = $failureList->last(["login" => $this->code]);
+			if ($failureList->error()) {
+				$this->error($failureList->error());
+				return [];
+			}
+			$results["last_failed_login_date"] = $last_failure->date;
+
+			// Get the number of login failures since the last successful login
+			$failureList->find(["login" => $this->code]);
+			$results['failed_login_count'] = $failureList->count();
+
+			return $results;
+		}
+	}

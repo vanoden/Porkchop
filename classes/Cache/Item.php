@@ -20,7 +20,7 @@
 			}
 		}
 
-		/** @method set()
+		/** @method set(value)
 		 * Set the value of this cache item
 		 * @param mixed $value The value to store in the cache
 		 * @return bool True if set, false if not
@@ -39,12 +39,47 @@
 			}
 		}
 
+		/** @method setElement(key,value)
+		 * Set a specific key/value pair in this cache item (assumed to be an array or object)
+		 * @param string $key The key to set
+		 * @param mixed $value The value to set
+		 * @return bool True if set, false if not
+		 */
+		public function setElement($key, $value) {
+			$object = $this->get();
+			if (is_array($object)) {
+				$object[$key] = $value;
+			} elseif (is_object($object)) {
+				$object->$key = $value;
+			} else {
+				$this->error("Cache item is not an array or object");
+				return false;
+			}
+			return $this->set($object);
+		}
+
 		/** @method get()
 		 * Get the value of this cache item
 		 * @return mixed The value stored in the cache, or null if not found
 		 */
 		public function get() {
 			return $this->_client->get($this->_key);
+		}
+
+		/** @method getElement(key)
+		 * Get a specific key/value pair from this cache item (assumed to be an array or object)
+		 * @param string $key The key to get
+		 * @return mixed The value stored in the cache, or null if not found
+		 */
+		public function getElement($key) {
+			$object = $this->get();
+			if (is_array($object) && array_key_exists($key, $object)) {
+				return $object[$key];
+			} elseif (is_object($object) && property_exists($object, $key)) {
+				return $object->$key;
+			} else {
+				return null;
+			}
 		}
 
 		/** @method exists()

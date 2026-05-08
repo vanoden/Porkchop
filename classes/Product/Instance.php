@@ -21,6 +21,7 @@
 			$this->_metaTableName = "monitor_asset_metadata";
 			$this->_tableMetaFKColumn = "asset_id";
 			$this->_tableMetaKeyColumn = "key";
+			$this->_cacheKeyPrefix = "product.instance";
             $this->_aliasField("asset_code","code");
 			$this->_aliasField("asset_name","name");
 			$this->_auditEvents = true;
@@ -210,6 +211,7 @@
 			// Add Parameters and Execute Query
 			$database->AddParam($code);
 			$database->AddParam($product->id);
+
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
@@ -266,26 +268,42 @@
                 }
             }
 
-			if (isset($parameters['code']) && $this->validCode($parameters['code'])) {
+			$updates = [];
+
+			if (isset($parameters['code']) && $this->validCode($parameters['code']) && $parameters['code'] != $this->code) {
 				$update_object_query .= ",
 						asset_code = ?";
 				$database->AddParam($parameters['code']);
+				$updates[] = "Code changed to ".$parameters['code'].".";
 			}
-			if (isset($parameters['asset_name'])) {
+			if (isset($parameters['asset_name']) && $parameters['asset_name'] != $this->name) {
 				$update_object_query .= ",
 						asset_name = ?";
 				$database->AddParam($parameters['asset_name']);
+				$updates[] = "Name changed to ".$parameters['asset_name'].".";
 			}
-			if (isset($parameters['product_id']) && is_numeric($parameters['product_id'])) {
+			if (isset($parameters['product_id']) && is_numeric($parameters['product_id']) && $parameters['product_id'] != $this->product_id) {
+				$product = new \Product\Item($parameters['product_id']);
+				if (! $product->exists()) {
+					$this->error("Product not found");
+					return false;
+				}
 				$update_object_query .= ",
 						product_id = ?";
 				$database->AddParam($parameters['product_id']);
+				$updates[] = "Product changed to ".$product->code.".";
 			}
-			if (isset($parameters['organization_id']) && is_numeric($parameters['organization_id'])) {
+			if (!empty($parameters['organization_id']) && is_numeric($parameters['organization_id']) && $parameters['organization_id'] != $this->organization_id) {
 				if ($GLOBALS['_SESSION_']->customer->can('manage product instances')) {
+					$organization = new \Register\Organization($parameters['organization_id']);
+					if (! $organization->exists()) {
+						$this->error("Organization not found");
+						return false;
+					}
 					$update_object_query .= ",
 						organization_id = ?";
 					$database->AddParam($parameters['organization_id']);
+					$updates[] = "Organization changed to ".$organization->name.".";
 				}
 				else {
 					$this->error("Insufficient privileges for update");
@@ -310,6 +328,7 @@
 				if (isset($parameters['organization_id'])) $organization = new \Register\Organization($parameters['organization_id']);
 				else $organization = new \Register\Organization();
 
+				/* Replaced by audit log
 				if (isset($GLOBALS['_config']->action)) {
 				
 					# Record Event
@@ -326,15 +345,17 @@
 					);
 					if ($event->error()) app_log("Failed to add change to history: ".$event->error(),'error',__FILE__,__LINE__);
 				}
+				*/
 
                 $cache = $this->cache();
                 if (isset($cache)) $cache->delete();
 
 				// audit the update event
+				//$this->record_audit_event($this->id, implode(" ",$updates), __FUNCTION__);
 				$auditLog = new \Site\AuditLog\Event();
 				$auditLog->add(array(
 					'instance_id' => $this->id,
-					'description' => 'Updated '.$this->_objectName(),
+					'description' => implode(" ",$updates),
 					'class_name' => get_class($this),
 					'class_method' => 'update'
 				));
@@ -468,5 +489,12 @@
 				return true;
 			else
 				return false;
+		}
+
+		/** @method public validCode(string $code): bool
+		 * See if string is a valid code (serial number)
+		 */
+		public function validCode($string): bool {
+			return parent::validCode($string);
 		}
 	}

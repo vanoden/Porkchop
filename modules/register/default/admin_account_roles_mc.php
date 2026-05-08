@@ -1,22 +1,20 @@
 <?php
-###################################################
-## admin_account_roles_mc.php					###
-## This program handles role assignments for		###
-## customer account management.					###
-## A. Caravello 11/12/2002						###
-###################################################
-
-$page = new \Site\Page(array("module" => 'register', "view" => 'account'));
+/** @view /_register/default
+ * @description Admin account role management page, allows admin users to view and edit customer role assignments.
+ */
+$porkchop = new Porkchop();
+$site = $porkchop->site();
+$page = $site->page(array("module" => 'register', "view" => 'account'));
 $page->requirePrivilege('manage customers');
 $page->setAdminMenuSection("Customer");  // Keep Customer section open
 $customer = new \Register\Customer();
 
+// Load Repository for Image Uploads
 $site_config = new \Site\Configuration();
 $site_config->get('website_images');
+$repositoryFactory = new \Storage\RepositoryFactory();
 if (!empty($site_config->value)) {
-	$repository = new \Storage\Repository();
-	$repository->get($site_config->value);
-	$repository = $repository->getInstance();
+	$repository = $repositoryFactory->createWithCode($site_config->value);
 }
 
 if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id']))
@@ -64,14 +62,27 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				if (isset($_REQUEST['role'][$role->id])) {
 					// Role is checked - add it if not already assigned
 					if (!$customer->has_role($role->name)) {
-						$customer->add_role($role->id);
-						app_log("Added role: " . $role->name, 'debug', __FILE__, __LINE__);
+						if (! $customer->add_role($role->id)) {
+							app_log("Error adding role: " . $customer->error(), 'error', __FILE__, __LINE__);
+							$page->addError("Error adding role &quot;".$role->name."&quot; to customer &quot;".$customer->full_name()."&quot;: ".$customer->error());
+						}
+						else {
+							app_log("Added role: " . $role->name, 'debug', __FILE__, __LINE__);
+							$page->appendSuccess("Added role &quot;".$role->name."&quot; to customer &quot;".$customer->full_name()."&quot;.");
+						}
 					}
 				} else {
 					// Role is not checked - remove it if assigned
 					if ($customer->has_role($role->name)) {
-						$customer->drop_role($role->id);
-						app_log("Removed role: " . $role->name, 'debug', __FILE__, __LINE__);
+						if (! $customer->drop_role($role->id)) {
+							app_log("Error removing role: " . $customer->error(), 'error', __FILE__, __LINE__);
+							$page->addError("Error removing role &quot;".$role->name."&quot; from customer &quot;".$customer->full_name()."&quot;: ".$customer->error());
+							continue;
+						}
+						else {
+							app_log("Removed role: " . $role->name, 'debug', __FILE__, __LINE__);
+							$page->appendSuccess("Removed role &quot;".$role->name."&quot; from customer &quot;".$customer->full_name()."&quot;.");
+						}
 					}
 				}
 			}

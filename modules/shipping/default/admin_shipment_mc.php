@@ -37,6 +37,22 @@
 		}
 	}
 
+	// Handle ship-from (send) address change (dropdown or from add-new flow)
+	if ($can_proceed && isset($_POST['send_location_id']) && $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) {
+		$new_send_id = preg_match('/^\d+$/', $_POST['send_location_id']) ? (int)$_POST['send_location_id'] : 0;
+		$send_contact = $shipment->send_contact();
+		$valid = false;
+		if ($new_send_id > 0 && $send_contact->id) {
+			$cust_locs = $send_contact->locations(array('include_hidden' => true));
+			foreach ($cust_locs as $l) { if ($l->id == $new_send_id) { $valid = true; break; } }
+		}
+		if ($valid && $shipment->setSendLocationId($new_send_id)) {
+			$page->appendSuccess("Ship-from address updated.");
+		} elseif (!$valid && $new_send_id > 0) {
+			$page->addError("Invalid ship-from address selection.");
+		}
+	}
+
 	// Handle form submission
 	if (isset($_REQUEST['action_type'])) {
 		// Validate CSRF token
@@ -66,7 +82,7 @@
 					}
 				}
 			}
-			
+		
 			// Handle package actions
 			if (!empty($_REQUEST['package_id'])) {
 				if (!$rma->validInteger($_REQUEST['package_id'])) {
@@ -150,6 +166,63 @@
 									$page->addError($shipment->error());
 								}
 								break;
+							
+							case 'query_ups_status':
+								// Query UPS for each package that has a tracking code
+								$packages = $shipment->packages();
+								if (empty($packages)) {
+									$page->addError("No packages found for this shipment to query UPS status.");
+									break;
+								}
+
+								foreach ($packages as $package) {
+									$tracking = trim((string)$package->tracking_code);
+									if ($tracking === '') {
+										continue;
+									}
+
+									// Use package-level last query time if available; fall back to none.
+									$lastQueriedAt = null;
+									if (!empty($package->ups_last_queried_at) && ctype_digit((string)$package->ups_last_queried_at)) {
+										$lastQueriedAt = (int)$package->ups_last_queried_at;
+									}
+
+									$result = \Shipping\UPSStatus::query($tracking, $lastQueriedAt);
+
+									if (!empty($result['rate_limited'])) {
+										$page->addError("UPS was queried too recently for tracking number " . htmlspecialchars($tracking) . ".");
+										continue;
+									}
+
+									if (empty($result['success'])) {
+										$message = !empty($result['error']) ? $result['error'] : 'Unknown error querying UPS.';
+										$page->addError("Could not query UPS for tracking number " . htmlspecialchars($tracking) . ": " . $message);
+										continue;
+									}
+
+									$update = [];
+									if (isset($result['status_text'])) {
+										$update['ups_status'] = $result['status_text'];
+									}
+									if (!empty($result['status_datetime'])) {
+										$update['ups_status_datetime'] = $result['status_datetime'];
+									}
+									if (!empty($result['location'])) {
+										$update['ups_status_location'] = $result['location'];
+									}
+									$update['ups_last_queried_at'] = time();
+
+									if (!empty($update)) {
+										if (!$package->update($update)) {
+											$page->addError("Error updating UPS status for tracking number " . htmlspecialchars($tracking) . ": " . $package->error());
+										}
+									}
+								}
+
+								if (!$page->errorCount()) {
+									$page->appendSuccess("UPS status updated for packages with tracking numbers.");
+								}
+								break;
 								
 							default:
 								$page->addError("Invalid action type");
@@ -190,6 +263,13 @@
 	// Get locations
 	$from_location = $shipment->send_location();
 	$to_location = $shipment->rec_location();
+	// Locations for ship-from dropdown (sender's org/customer locations)
+	$send_location_list = array();
+	if ($can_proceed && $shipment->send_contact()->id) {
+		$send_location_list = $shipment->send_contact()->locations(array('include_hidden' => true)) ?: array();
+	}
+	$send_contact = $can_proceed ? $shipment->send_contact() : null;
+	$send_org = ($send_contact && $send_contact->organization()) ? $send_contact->organization() : null;
 
 	// Set up page navigation
 	$page->title("Shipment Detail");

@@ -98,6 +98,12 @@
 			elseif ($typeId == 19) {
 				return new \Document\S4\Unauthorized();
 			}
+			elseif ($typeId == 20) {
+				return new \Document\S4\SensorRequest();
+			}
+			elseif ($typeId == 21) {
+				return new \Document\S4\SensorResponse();
+			}
 			else {
 				$this->error("Invalid message type");
 				return null;

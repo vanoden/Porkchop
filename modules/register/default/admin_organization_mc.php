@@ -38,7 +38,28 @@
 	        $page->addError("Invalid Request");
 	    }
 		else {
-            $page->appendSuccess($_REQUEST['method']);
+			// Handle merge request separately from standard Apply updates
+			if ($_REQUEST['method'] === 'Merge' && !empty($_REQUEST['merge_into_organization_id'])) {
+				if (!isset($organization->id) || !is_numeric($organization->id)) {
+					$page->addError("Source organization is not set");
+				}
+				else {
+					$target_id = intval($_REQUEST['merge_into_organization_id']);
+					if ($target_id == $organization->id) {
+						$page->addError("Cannot merge organization into itself");
+					}
+					else {
+						if ($organization->mergeInto($target_id)) {
+							$page->appendSuccess("Organization successfully merged into target company");
+						}
+						else {
+							$page->addError("Error merging organization: ".$organization->error());
+						}
+					}
+				}
+			}
+			else {
+            	$page->appendSuccess($_REQUEST['method']);
 		    if (!isset($_REQUEST['name']) || ! $_REQUEST['name']) {
 			    $page->addError("Name required");
 		    }
@@ -145,17 +166,15 @@
 		    }
 	    }		
 	}
+	}
 	
-	// add tag to organization
+	// add tag to organization (using BaseModel unified tag system)
 	if (!empty($_REQUEST['addTag']) && empty($_REQUEST['removeTag'])) {
-	    $registerTag = new \Register\Tag();
-	    if (!empty($_REQUEST['newTag']) && $registerTag->validName($_REQUEST['newTag'])) {
-	        $registerTag->add(array('type'=>'ORGANIZATION','register_id'=>$_REQUEST['organization_id'],'name'=>$_REQUEST['newTag']));
-			if ($registerTag->error()) {
-				$page->addError("Error adding organization tag: ".$registerTag->error());
-			}
-			else {
+	    if (!empty($_REQUEST['newTag']) && $organization->validTagValue($_REQUEST['newTag'])) {
+	        if ($organization->addTag($_REQUEST['newTag'], 'organization_tag')) {
 				$page->appendSuccess("Organization Tag added Successfully");
+			} else {
+				$page->addError("Error adding organization tag: ".$organization->error());
 			}
 	    }
 		else {
@@ -163,11 +182,16 @@
 	    }
 	}
 	
-	// remove tag from organization
+	// remove tag from organization (using BaseModel unified tag system)
 	if (!empty($_REQUEST['removeTagId'])) {
-        $registerTagList = new \Register\TagList();
-        $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id, "id"=> $_REQUEST['removeTagId']));
-	    foreach ($organizationTags as $organizationTag) $organizationTag->delete();
+		// Get tag details from xref ID
+		$searchTagXrefItem = new \Site\SearchTagXref($_REQUEST['removeTagId']);
+		if ($searchTagXrefItem->id) {
+			$searchTag = new \Site\SearchTag($searchTagXrefItem->tag_id);
+			if ($searchTag->id && $searchTag->class === 'Register::Organization' && $searchTag->category === 'ORGANIZATION') {
+				$organization->removeTag($searchTag->value, $searchTag->category);
+			}
+		}
 	}
 
 	if ($organization->id) {
@@ -216,9 +240,15 @@
 	$resellerList = new \Register\OrganizationList();
 	$resellers = $resellerList->find(array("is_reseller" => true));
 
-    // get tags for organization
-    $registerTagList = new \Register\TagList();
-    $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id));
+    // get tags for organization (using BaseModel unified tag system)
+    if ($organization->id) {
+        $organizationTags = $organization->getTags();
+        if (!is_array($organizationTags)) {
+            $organizationTags = array();
+        }
+    } else {
+        $organizationTags = array();
+    }
 
     // get organization locations
     $locations = array();
@@ -227,10 +257,18 @@
 
 	$statii = $organization->statii();
 
+	// Build list of potential merge target organizations (ACTIVE only),
+	// using Organization model helper so SQL is not in the controller.
+	$mergeTargets = array();
+	if (!empty($organization->id)) $mergeTargets = \Register\Organization::activeOrganizations($organization->id);
+
 	$page->title = "Organization Details";
 	$page->setAdminMenuSection("Customer");  // Keep Customer section open
 	$page->addBreadcrumb("Customer");
-	$page->addBreadcrumb("Organizations", "/_register/organizations");
+	$page->addBreadcrumb("Organizations", "/_register/admin_organizations");
 	if (isset($organization->id)) {
 		$page->addBreadcrumb($organization->name,"/_register/admin_organization?organization_id=".$organization->id);
 	}
+	$page->instructions = "Make changes and click 'Apply' to complete.";
+
+	$activeTab = 'details';

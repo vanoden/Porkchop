@@ -48,7 +48,7 @@ if ($can_proceed && $page->errorCount() < 1) {
 		}
 	}
 	// File Update Form Submitted
-	elseif ($request->validText($btn_submit)) {
+	elseif (! empty($btn_submit) && $request->validText($btn_submit)) {
 		$csrfToken = $_POST['csrfToken'] ?? null;
 		if (!$GLOBALS['_SESSION_']->verifyCSRFToken($csrfToken)) {
 			$page->addError("Invalid Request");
@@ -107,8 +107,8 @@ if ($can_proceed && $page->errorCount() < 1) {
 					$path = $_REQUEST['path'] ?? '';
 
 					if (!preg_match('/^\//', $path)) $path = '/' . $path;
-					$repositoryBase = new \Storage\Repository($repository_id);
-					$repository = $repositoryBase->getInstance();
+					$repositoryFactory = new \Storage\RepositoryFactory();
+					$repository = $repositoryFactory->createWithID($repository_id);
 
 					if ($repository->error()) {
 						$page->addError("Error loading repository: " . $repository->error());
@@ -216,4 +216,9 @@ foreach ($object_associations as $assoc) {
 				$assoc_string .= $assoc['object_type'] . ': ' . $assoc['label'] . "; ";
 		}
 	}
+}
+if (empty($assoc_string)) {
+	$assoc_string = "None";
+} else {
+	$assoc_string = rtrim($assoc_string, "; ");
 }

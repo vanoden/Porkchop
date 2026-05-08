@@ -1,18 +1,21 @@
 <?php
-	/* Base Class for Site APIs */
-	class API {
-		protected $_error;
-		protected $response;
-		protected $module;
-		protected $_admin_role = 'administrator';
+	/** @class API
+	 * Abstract Base Class for Site APIs
+	 */
+	abstract class API {
+		protected $_error;							// Error message, if any
+		protected $response;						// API HTTP Response object
+		protected $module;							// Module of the API being called
+		protected $_admin_role = 'administrator';	// Role required to access admin interface of this API
 		protected $_default_home = '/';
 		protected $_schema;
 		protected $_version;
-		protected $_name;
+		protected $_name = "";
 		protected $_release;
 		protected $_communication;
 		private $page;
 
+		/** @constructor */
 		public function __construct() {
 			if (!empty($_REQUEST["method"])) {
 				$counterKey = "api.".$this->_name.".".$_REQUEST["method"];
@@ -24,13 +27,14 @@
 			$this->page = $site->page();
 			$this->module = $this->page->module();
 			$this->response = new \HTTP\Response();
-			$this->_communication = new \Monitor\Communication();
+			$this->_communication = new \Site\APICommunication();
 		}
 
-		/********************************************/
-		/* Show be overridden by child, but return	*/
-		/* an array if not.							*/
-		/********************************************/
+		/** @method public _methods()
+		*	Show be overridden by child, but return
+		*	an array if not.
+		*	@return array of method definitions, with method name as key and definition as value.
+		*/
 		public function _methods() {
 			return array();
 		}
@@ -41,6 +45,14 @@
 
 		public function default_home() {
 			return $this->_default_home;
+		}
+
+		/**
+		 * Entity code from GET, POST, or REQUEST. Query-only parameters can be missing from $_REQUEST on some PHP / proxy stacks.
+		 */
+		protected function getCode(): string {
+			$code = $_GET['code'] ?? $_POST['code'] ?? ($_REQUEST['code'] ?? '');
+			return \is_string($code) ? $code : '';
 		}
 
 		/********************************************/
@@ -57,6 +69,8 @@
 			$response->success(true);
 			$response->print();
 		}
+
+		/********************************************/
 
 		/********************************************/
 		/* Return Error unless User Authenticated	*/
@@ -91,34 +105,27 @@
 		/* To require multiple privileges, call 	*/
 		/* this function multiple times.			*/
 		/********************************************/
-		public function requirePrivilege($privilege_name) {
+		public function requirePrivilege($privilege_name, $required_level = \Register\PrivilegeLevel::ADMINISTRATOR) {
 			if (is_array($privilege_name)) {
 				// Ok if ANY privilege is matched
 				foreach ($privilege_name as $privilege) {
-					if ($GLOBALS['_SESSION_']->customer->can($privilege)) return;
+					if ($GLOBALS['_SESSION_']->customer->can($privilege, $required_level)) return;
 				}
-				$this->deny();
+				$this->deny("Permission Denied - Requires one of the following privileges at level $required_level: ".implode(", ", $privilege_name));
 			}
-			if (! $GLOBALS['_SESSION_']->customer->can($privilege_name)) $this->deny("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can($privilege_name, $required_level)) {
+				$this->deny("Permission Denied - Requires $privilege_name privilege at level $required_level");
+			}
 		}
 
 		/********************************************/
 		/* Return Error unless User has the			*/
 		/* required privilege with required level.	*/
 		/* If an array is passed, only one is 		*/
-		/* required.									*/
+		/* required.								*/
 		/********************************************/
-		public function requirePrivilegeLevel($privilege_name, $required_level = \Register\PrivilegeLevel::CUSTOMER) {
-			if (is_array($privilege_name)) {
-				// Ok if ANY privilege is matched
-				foreach ($privilege_name as $privilege) {
-					if ($GLOBALS['_SESSION_']->customer->can_level($privilege, $required_level)) return;
-				}
-				$this->deny();
-			}
-			if (! $GLOBALS['_SESSION_']->customer->can_level($privilege_name, $required_level)) {
-				$this->deny("Permission Denied - Insufficient privilege level");
-			}
+		public function requirePrivilegeLevel($privilege_name, $required_level = \Register\PrivilegeLevel::ADMINISTRATOR) {
+			return $this->requirePrivilege($privilege_name, $required_level);
 		}
 
 		/********************************************/
@@ -129,7 +136,7 @@
 			$response->success(true);
 			$response->addElement('token',$GLOBALS['_SESSION_']->getCSRFToken());
 
-			$comm = new \Monitor\Communication();
+			$comm = new \Site\APICommunication();
 			$comm->update(json_encode($response));
 	
 			$response->print();
@@ -269,6 +276,28 @@
 		}
 
 		/************************************************/
+		/* Extract Control Parameters		*/
+		/* from $_REQUEST and merge into parameters	*/
+		/* array. Supports: _sort, _order, _limit,		*/
+		/* _offset, _count, _sort_desc, _sort_order,	*/
+		/* _flat, recursive							*/
+		/************************************************/
+		protected function addListControlParams(array $parameters = []): array {
+			// control params: _sort, _order, _limit, _offset
+			// Also support backwards compatibility: _count, _sort_desc, _sort_order, _flat, recursive
+			if (isset($_REQUEST['_sort'])) $parameters['_sort'] = $_REQUEST['_sort'];
+			if (isset($_REQUEST['_order'])) $parameters['_order'] = $_REQUEST['_order'];
+			if (isset($_REQUEST['_limit'])) $parameters['_limit'] = $_REQUEST['_limit'];
+			if (isset($_REQUEST['_offset'])) $parameters['_offset'] = $_REQUEST['_offset'];
+			if (isset($_REQUEST['_count'])) $parameters['_count'] = $_REQUEST['_count'];
+			if (isset($_REQUEST['_sort_desc'])) $parameters['_sort_desc'] = $_REQUEST['_sort_desc'];
+			if (isset($_REQUEST['_sort_order'])) $parameters['_sort_order'] = $_REQUEST['_sort_order'];
+			if (isset($_REQUEST['_flat'])) $parameters['_flat'] = $_REQUEST['_flat'];
+			if (isset($_REQUEST['recursive'])) $parameters['recursive'] = $_REQUEST['recursive'];
+			return $parameters;
+		}
+
+		/************************************************/
 		/* Record API Communication for Debugging		*/
 		/************************************************/
 		public function _store_communication() {
@@ -309,12 +338,74 @@
 			$document->prepare($object);
 			if (isset($GLOBALS['_config']->site->force_content_length) && $GLOBALS['_config']->site->force_content_length == true) {
 				$content = $document->content();
+				$module = $this->module;
+				$method = $_REQUEST['method'];
+				app_log("API STATS: $module/$method executed ".$GLOBALS['_page_query_count']." queries in ".$GLOBALS['_page_query_time']." seconds",'debug',__FILE__,__LINE__);
 				header('Content-Length: '.strlen($content));
 				return $content;
 			}
 			else {
 				return $document->content();
 			}
+		}
+
+		/** @method public fullMethods()
+		 * Add helper methods to the list of methods returned by _methods()
+		 * @return array
+		 */
+		public function fullMethods() {
+			$methods = $this->_methods();
+			$name = $this->_name;
+			$methods['ping'] = array(
+				'description' => 'Ping the API to see if it is responding',
+				'authentication_required' => false,
+				'return_element' => 'message',
+				'return_type' => 'string',
+				'parameters' => [],
+				'hidden'	=> true
+			);
+			$methods['csrfToken'] = array(
+				'description' => 'Get an AntiCSRF Token',
+				'authentication_required' => false,
+				'return_element' => 'token',
+				'return_type' => 'string',
+				'parameters' => [],
+				'hidden'	=> true
+			);
+			$methods['definition'] = array(
+				'description' => 'Get API Definition',
+				'authentication_required' => false,
+				'return_element' => 'api_definition',
+				'return_type' => 'API::Definition',
+				'parameters' => [],
+				'hidden'	=> true
+			);
+			$methods['export'] = array(
+				'description' => 'Export API Definition as OpenAPI Specification',
+				'authentication_required' => false,
+				'return_element' => 'openapi_specification',
+				'return_type' => 'string',
+				'parameters' => [],
+				'hidden'	=> true
+			);
+			$methods['schemaVersion'] = array(
+				'description' => 'Get Database Schema Version',
+				'authentication_required' => false,
+				'return_element' => 'version',
+				'return_type' => 'string',
+				'parameters' => [],
+				'hidden'	=> true
+			);
+			$methods['schemaUpgrade'] = array(
+				'description' => 'Run Database Schema Upgrade',
+				'authentication_required' => true,
+				'privilege_required' => 'manage database schema',
+				'return_element' => 'version',
+				'return_type' => 'string',
+				'parameters' => [],
+				'hidden'	=> true
+			);
+			return $methods;
 		}
 
 		/************************************************/
@@ -327,7 +418,7 @@
 
 			if (empty($function_name)) {
 				if ($this->page->requireRole('API User') || $this->page->requireRole('Administrator')) {
-					$this->apiMethods();
+					$this->fullMethods();
 				}
 				else {
 					$this->deny();
@@ -336,12 +427,15 @@
 			}
 
 			// Method Requirements
-			if (!array_key_exists($function_name,$api->_methods())) {
+			if (!array_key_exists($function_name,$this->fullMethods())) {
 				$this->notFound("Method '$function_name' not found in ".$this->module." API");
 			}
 
-			$method = $api->_methods()[$function_name];
-			if (isset($method['privilege_required']) && !(preg_match('/^\[\w+\]$/',$method['privilege_required']))) {
+			$method = $this->fullMethods()[$function_name];
+			if (isset($method['privilege_required']) && $method['privilege_required'] == '[CONDITIONAL]') {
+				// Leave it to the method to determine what privileges are required and call requirePrivilege() as needed.  This is for methods that have different privilege requirements based on parameters or other factors.
+			}
+			elseif (isset($method['privilege_required'])) {
 				$this->requirePrivilege($method['privilege_required']);
 			}
 			if (isset($method['role_required']) && !(preg_match('/^\[\w+\]$/',$method['role_required']))) {
@@ -367,6 +461,13 @@
 			if (!isset($method['parameters'])) {
 				$method['parameters'] = array();
 			}
+			// Build Requirement Groups for Reference
+			$requirement_groups = array();
+			foreach ($method['parameters'] as $param => $options) {
+				if (isset($options['requirement_group']) && is_numeric($options['requirement_group'])) {
+					$requirement_groups[$options['requirement_group']][] = $param;
+				}
+			}
 			foreach ($method['parameters'] as $param => $options) {
 				if (!array_key_exists($param,$_REQUEST)) continue;
 				$value = $_REQUEST[$param];
@@ -378,7 +479,20 @@
 				//print_r($param."\n");
 				if (isset($options['required']) && $options['required']) {
 					//print_r("\trequired\n");
-					if (!isset($value)) {
+					// See if a Requirement Group is associated with this parameter and if so, check if any other parameters in the group are present.  If not, this parameter is required.
+					$group_found = false;
+					if (isset($options['requirement_group']) && is_numeric($options['requirement_group'])) {
+						$group_id = $options['requirement_group'];
+						$group_params = $requirement_groups[$group_id];
+						$group_found = false;
+						foreach ($group_params as $group_param) {
+							if (!empty($_REQUEST[$group_param])) {
+								$group_found = true;
+								break;
+							}
+						}
+					}
+					if (!isset($value) && !$group_found) {
 						$this->incompleteRequest("Missing required parameter: $param");
 					}
 				}
@@ -489,7 +603,7 @@
 		/* Return List of Available Methods				*/
 		/************************************************/
 		public function apiMethods() {
-			$methods = $this->_methods();
+			$methods = $this->fullMethods();
 			$response = new \APIResponse();
 			$response->success(true);
 			$response->addElement('method',$methods);
@@ -531,7 +645,7 @@
 		/* Get Database Schema 							*/
 		/************************************************/
 		public function schemaVersion() {
-			if ($this->_schema->error) {
+			if ($this->_schema->error()) {
 				$this->app_error("Error getting version: ".$this->_schema->error,__FILE__,__LINE__);
 			}
 
@@ -546,8 +660,8 @@
 		/* Run Database Schema Upgrade Function			*/
 		/************************************************/
 		public function schemaUpgrade() {
-			if ($this->_schema->error) {
-				$this->app_error("Error getting version: ".$this->_schema->error,__FILE__,__LINE__);
+			if ($this->_schema->error()) {
+				$this->app_error("Error getting version: ".$this->_schema->error(),__FILE__,__LINE__);
 			}
 
 			$response = new \APIResponse();
@@ -556,7 +670,7 @@
 				$response->addElement('version',$this->_schema->version());
 			}
 			else {
-				$this->app_error("Error upgrading schema: ".$this->_schema->error,__FILE__,__LINE__);
+				$this->app_error("Error upgrading schema: ".$this->_schema->error(),__FILE__,__LINE__);
 			}
 			$response->print();
 		}
@@ -575,7 +689,7 @@
 			$api_name = "\\".ucfirst($this->module)."\\API";
 			$api = new $api_name();
 			$form = '';
-			$methods = $api->_methods();
+			$methods = $api->fullMethods();
 
 			$form .= '<h1>'.ucfirst($this->module).' API</h1>';
 
@@ -586,7 +700,18 @@
 			foreach ($methods as $form_name => $settings) {
 				$method = new \API\Method($settings);
 
+				// Skip Hidden Methods
 				if ($method->hidden) continue;
+
+				//$form .= "Auth req: ".$method->authentication_required." Customer: ".print_r($GLOBALS['_SESSION_']->customer,true)."\n";
+				// Only Show Methods User is Authorized For
+				if ($method->authentication_required && !$GLOBALS['_SESSION_']->customer->exists()) {
+					continue;
+				}
+				//$form .= "Priv req: ".$method->privilege_required." Customer: ".print_r($GLOBALS['_SESSION_']->customer,true)."\n";
+				if ($method->privilege_required && !$GLOBALS['_SESSION_']->customer->can($method->privilege_required)) {
+					continue;
+				}
 
 				// See if method has file inputs
 				$has_file_inputs = false;
@@ -699,7 +824,7 @@
 					$form .= $t.$t.$t.'<li class="apiParameter">'.$cr;
 
 					// Open Label Span Element
-					$form .= $t.$t.$t.$t.'<label class="apiLabel required'.$required_class.'" for="'.$name.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()">'.$name.'</label>'.$cr;
+					$form .= $t.$t.$t.$t.'<label class="apiLabel'.$required_class.'" for="'.$name.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()">'.$name.'</label>'.$cr;
 
 					// Populate Form Helper Values
 					if (!empty($parameter->object)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_object">'.addslashes($parameter->object).'</span>'.$cr;
@@ -708,7 +833,7 @@
 					if ($parameter->allow_wildcards) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_allow_wildcards">'.addslashes('yes').'</span>'.$cr;
 					if (!empty($parameter->type)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_type">'.addslashes($parameter->type).'</span>'.$cr;
 					if (!empty($parameter->description)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_description">'.addslashes($parameter->description).'</span>'.$cr;
-					if ($parameter->required) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_required" value="'.addslashes($parameter->required).'</span>'.$cr;
+					if ($parameter->required) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_required">'.addslashes($parameter->required).'</span>'.$cr;
 					if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_prompt">'.addslashes($parameter->prompt).'</span>'.$cr;
 					if (!empty($parameter->default)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_default">'.addslashes($parameter->default).'</span>'.$cr;
 					if (!empty($parameter->content_type)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_content_type">'.addslashes($parameter->content_type).'</span>'.$cr;
@@ -757,13 +882,13 @@
 			return $form;
 		}
 
-		/**
-		 * Build Definition Document
+		/** @method public definition()
+		 * Build OpenAPI Definition Document
 		 */
 		public function definition() {
 			$api_name = "\\".ucfirst($this->module)."\\API";
 			$api = new $api_name();
-			$methods = $api->_methods();
+			$methods = $this->fullMethods();
 			$definition_object = array();
 			$components = array();
 			$definition_object['openapi'] = "3.0.0";
@@ -779,6 +904,46 @@
 			);
 			$definition_object['paths'] = array();
 			foreach ($methods as $form_name => $settings) {
+
+				// Skip Hidden Methods
+				if ($settings["hidden"]) continue;
+
+				// Only Show Methods User is Authorized For
+				if ($settings["authentication_required"] && !$GLOBALS['_SESSION_']->customer->exists()) {
+					continue;
+				}
+				//$form .= "Priv req: ".$method->privilege_required." Customer: ".print_r($GLOBALS['_SESSION_']->customer,true)."\n";
+				if (!empty($settings["privilege_required"]) && !$GLOBALS['_SESSION_']->customer->can($settings["privilege_required"])) {
+					continue;
+				}
+
+				// Try to Guess the Path if not provided
+				if (empty($settings['path'])) {
+					if (!empty($settings['return_type'])) {
+						// If method name starts with add/get/update/drop and return type is provided, use that to infer path
+						if (preg_match('/^(add|get|update|drop)/',$form_name,$matches)) {
+							$methodPrefix = $matches[1];
+							// Get Class Name from Return Type (Remove Namespace and Array Indicators)
+							$return_type = str_replace('::','\\',$settings['return_type']);
+							$parts = explode('\\',$return_type);
+							$module = strtolower($parts[count($parts)-2]);
+							$method = $parts[count($parts)-1];
+							// Assemble Path
+							$settings['path'] = "/api/".$module."/".$methodPrefix.$method;
+
+							if ($methodPrefix == 'get') {
+								// Loop Through Parameters and look for required code parameter to add to path
+								foreach ($settings['parameters'] as $name => $options) {
+									if ($options['required'] && $name == 'code') {
+										$settings['path'] .= "/{code}";
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+
 				if (!empty($settings['path'])) {
 					if ($settings['return_type'] == 'int') {
 						//Skip for now
@@ -788,6 +953,12 @@
 					}
 					else {
 						$class_name = "\\".str_replace('::','\\',$settings['return_type']);
+						if ($class_name == '\array') {
+							//Skip for now
+							continue;
+						}
+						app_log("Defining API Method ".$form_name." with return type ".$class_name,'debug',__FILE__,__LINE__);
+						if ($class_name == '\boolean') continue;
 						$class = new \ReflectionClass($class_name);
 						$definition_object['paths'][$settings['path']] = array();
 						if (!array_key_exists($settings['return_type'],$components)) {
@@ -813,16 +984,39 @@
 								"properties" => $properties,
 							);
 						}
-						if (empty($settings['verb'])) {
-							if (preg_match('/^get/i',$form_name)) $settings['verb'] = 'get';
-							else $settings['verb'] = 'post';
+						if (!empty($settings['verb']) && !is_array($settings['verb'])) {
+							$settings['verb'] = array(strtolower($settings['verb']));
 						}
-						else ($settings['verb'] = strtolower($settings['verb']));
-						if ($settings['verb'] == 'get') {
+						elseif (empty($settings['verb'])) {
+							$settings['verb'] = array();
+						}
+
+						if (preg_match('/^get/i',$form_name) && !in_array('get',$settings['verb'])) $settings['verb'][] = 'get';
+						else if (preg_match('/^update/i',$form_name) && !in_array('put',$settings['verb'])) $settings['verb'][] = 'put';
+						else if (!in_array('post',$settings['verb'])) $settings['verb'][] = 'post';
+						
+						if (in_array('get',$settings['verb'])) {
+							$parameters = array();
+							foreach ($settings['parameters'] as $name => $options) {
+								// Skip if parameter is hidden
+								if (isset($options['hidden']) && $options['hidden']) continue;
+
+								// Build Parameter Definition
+								$parameter = array(
+									"name" => $name,
+									"in" => "query",
+									"required" => isset($options['required']) && $options['required'] ? true : false,
+									"description" => isset($options['description']) ? $options['description'] : '',
+									"schema" => array(
+										"type" => isset($options['content_type']) ? $options['content_type'] : 'string',
+									),
+								);
+								$parameters[] = $parameter;
+							}
 							$definition_object['paths'][$settings['path']]['get'] = array(
 								"summary" => $settings['description'],
 								"operationId" => $form_name,
-								"parameters" => array(),
+								"parameters" => $parameters,
 								"responses" => array(
 									"200" => array(
 										"description" => "Successful Operation",
@@ -835,12 +1029,46 @@
 													),
 												),
 											),
+											"application/json" => array(
+												"schema" => array(
+													"type" => "array",
+													"items" => array(
+														"\$ref" => "#/components/schemas/".$settings['return_type'],
+													),
+												),
+											),
 										),
+									),
+									"403" => array(
+										"description" => "You are not authorized to access this resource",
+									),
+									"404" => array(
+										"description" => "Instance Not Found Matching Criteria",
+									),
+									"500" => array(
+										"description" => "Internal Server Error",
 									),
 								),
 							);
 						}
-						elseif ($settings['verb'] == 'post') {
+						elseif (in_array('post',$settings['verb'])) {
+							$parameters = array();
+							$required = array();
+							foreach ($settings['parameters'] as $name => $options) {
+								// Skip if Parameter is Hidden
+								if (isset($options['hidden']) && $options['hidden']) continue;
+
+								$parameter = array(
+									$name => array(
+										"type" => isset($options['content_type']) ? $options['content_type'] : 'string',
+									),
+								);
+								if (isset($options['required']) && $options['required']) {
+									$required[] = $name;
+								}
+
+								$parameters[] = $parameter;
+							}
 							$definition_object['paths'][$settings['path']]['post'] = array (
 								"summary" => $settings['description'],
 								"operationId" => $form_name,
@@ -849,7 +1077,8 @@
 										"application/json" => array(
 											"schema" => array(
 												"type" => "object",
-												"properties" => array(),
+												"properties" => $parameters,
+												"required" => $required,
 											),
 										),
 									),
@@ -858,15 +1087,77 @@
 									"200" => array(
 										"description" => "Successful Operation",
 									),
+									"403" => array(
+										"description" => "You are not authorized to access this resource",
+									),
+									"404" => array(
+										"description" => "Instance Not Found Matching Criteria",
+									),
+									"500" => array(
+										"description" => "Internal Server Error",
+									),
 								),
 							);
+						}
+						elseif (in_array('put',$settings['verb'])) {
+							$parameters = array();
+							$required = array();
+							foreach ($settings['parameters'] as $name => $options) {
+								// Skip if Parameter is Hidden
+								if (isset($options['hidden']) && $options['hidden']) continue;
+								$parameter = array(
+									$name => array(
+										"type" => isset($options['content_type']) ? $options['content_type'] : 'string',
+									),
+								);
+								if (isset($options['required']) && $options['required']) {
+									$required[] = $name;
+								}
+								elseif (isset($options['requirement_group']) && is_numeric($options['requirement_group']) && $options['requirement_group'] == 0) {
+									$required[] = $name;
+								}
+								$parameters[] = $parameter;
+							}
+							$definition_object['paths'][$settings['path']]['put'] = array(
+								"summary" => $settings['description'],
+								"operationId" => $form_name,
+								"requestBody" => array(
+									"content" => array(
+										"application/json" => array(
+											"schema" => array(
+												"type" => "object",
+												"properties" => $parameters,
+												"required" => $required,
+											),
+										),
+									),
+								),
+								"responses" => array(
+									"200" => array(
+										"description" => "Successful Operation",
+									),
+									"403" => array(
+										"description" => "You are not authorized to access this resource",
+									),
+									"404" => array(
+										"description" => "Instance Not Found Matching Criteria",
+									),
+									"500" => array(
+										"description" => "Internal Server Error",
+									),
+								),
+							);
+						}
+						else {
+							//Skip for now
+							continue;
 						}
 					}
 				}
 			}
-			$definition_object['components'] = array(
+			$definition_object['components'] = [
 				"schemas" => $components,
-			);
+			];
 			header('Content-Type: text/plain');
 			print yaml_emit($definition_object);
 		}
@@ -874,11 +1165,33 @@
 		public function export() {
 			$api_name = "\\".ucfirst($this->module)."\\API";
 			$api = new $api_name();
-			$methods = $api->_methods();
+			$methods = $this->fullMethods();
 			header('Content-Type: text/csv');
 			header('Content-disposition: attachment;filename='.$api->_name.'.csv');
 			print("Method,Description,Return Type,Return MIME Type,Authentication Required,Token Required,Privilege Required,Role Required,Deprecated,Path,Verb\n");
 			foreach ($methods as $form_name => $settings) {
+				// Only Show Methods User is Authorized For
+				if ($settings["authentication_required"] && !$GLOBALS['_SESSION_']->customer->exists()) {
+					continue;
+				}
+				//$form .= "Priv req: ".$method->privilege_required." Customer: ".print_r($GLOBALS['_SESSION_']->customer,true)."\n";
+				if ($settings["privilege_required"] && !$GLOBALS['_SESSION_']->customer->can($settings["privilege_required"])) {
+					continue;
+				}
+				if (empty($settings['description'])) $settings['description'] = "";
+				if (empty($settings['return_type'])) $settings['return_type'] = "";
+				if (empty($settings['return_mime_type'])) $settings['return_mime_type'] = "";
+				if (empty($settings['authentication_required']) || !$settings['authentication_required']) $settings['authentication_required'] = "false";
+				else $settings['authentication_required'] = "true";
+				if (empty($settings['token_required']) || !$settings['token_required']) $settings['token_required'] = "false";
+				else $settings['token_required'] = "true";
+				if (empty($settings['privilege_required']) || !$settings['privilege_required']) $settings['privilege_required'] = "";
+				if (empty($settings['role_required'])) $settings['role_required'] = "";
+				if (empty($settings['deprecated']) || !$settings['deprecated']) $settings['deprecated'] = "false";
+				else $settings['deprecated'] = "true";
+				if (empty($settings['path'])) $settings['path'] = "";
+				if (empty($settings['verb'])) $settings['verb'] = "";
+				// Build Record
 				$record = array(
 					"method" => $form_name,
 					"description" => '"'.$settings['description'].'"',

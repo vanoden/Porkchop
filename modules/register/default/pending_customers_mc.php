@@ -198,6 +198,11 @@ if (empty($statusFiltered)) {
 	$_REQUEST['PENDING'] = $statusFiltered[] = 'PENDING';
 }
 
+// Show success message if email was just sent (after redirect)
+if (isset($_GET['emailSent']) && $_GET['emailSent'] == '1') {
+    $page->success = "User was issued another verification email.";
+}
+
 // get results
 app_log("Find");
 if ($can_proceed) {
@@ -224,36 +229,66 @@ if (!empty($verifyAgain)) {
         $can_proceed = false;
     } else {
         $customer = new \Register\Customer($verifyAgain);
-        $validation_key = md5(microtime());
-        $customer->update(array('validation_key' => $validation_key));
-
-        // create the verify account email
-        $verify_url = $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->code;
-        if ($_config->site->https) $verify_url = "https://$verify_url";
-        else $verify_url = "http://$verify_url";
-        $template = new \Content\Template\Shell(
-            array(
-                'path'    => $_config->register->verify_email->template,
-                'parameters'    => array(
-                    'VERIFYING.URL' => $verify_url,
-                    'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? ''
-                )
-            )
-        );
-        if ($template->error()) {
-            app_log($template->error(), 'error');
-            $page->addError("Error: generating verification email");
+        // Ensure customer details are loaded
+        if (!$customer->id || !$customer->details()) {
+            $page->addError("Customer not found");
+            app_log("Customer not found for ID: " . $verifyAgain, 'error');
+            $can_proceed = false;
+        } elseif (!$customer->code) {
+            $page->addError("Customer login not found");
+            app_log("Customer login not found for ID: " . $verifyAgain, 'error');
             $can_proceed = false;
         } else {
-            $message = new \Email\Message($_config->register->verify_email);
-            $message->html(true);
-            $message->body($template->output());
-            if (! $customer->notify($message)) {
-                $page->addError("Error: Confirmation email could not be sent");
-                app_log("Error: sending confirmation email: " . $customer->error(), 'error');
+            $validation_key = md5(microtime());
+            app_log("Generating new validation key for customer " . $verifyAgain . " (login: " . $customer->code . "): " . $validation_key, 'debug');
+            if (!$customer->update(array('validation_key' => $validation_key))) {
+                $page->addError("Error updating validation key: " . $customer->error());
+                app_log("Error updating validation key for customer " . $verifyAgain . ": " . $customer->error(), 'error');
                 $can_proceed = false;
             } else {
-                $page->success = "User was issued another verification email.";
+                app_log("Successfully updated validation key for customer " . $verifyAgain, 'debug');
+                
+                // create the verify account email
+                $hostname = $_config->site->hostname ?? $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
+                $verify_url = $hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->code;
+                $verify_url = ($_config->site->https ?? false ? "https://" : "http://") . $verify_url;
+                
+                // Get template path with fallback
+                $templatePath = $_config->register->verify_email->template ?? (defined('TEMPLATES') ? TEMPLATES : BASE.'/templates') . '/registration/verify_email.html';
+                
+                $template = new \Content\Template\Shell(
+                    array(
+                        'path'    => $templatePath,
+                        'parameters'    => array(
+                            'VERIFYING.URL' => $verify_url,
+                            'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? ''
+                        )
+                    )
+                );
+                
+                $message = new \Email\Message($_config->register->verify_email);
+                $message->html(true);
+                $message->body($template->output());
+                $message->from($_config->register->verify_email->from ?? 'no-reply@spectrosinstruments.com');
+                $message->subject($_config->register->verify_email->subject ?? 'Verify your Email');
+                
+                if (! $customer->notify($message)) {
+                    $page->addError("Error: Confirmation email could not be sent: " . $customer->error());
+                } else {
+                    // Redirect to remove verifyAgain parameter and preserve search parameters
+                    $redirectParams = array();
+                    if (!empty($searchTerm)) $redirectParams['search'] = $searchTerm;
+                    if (!empty($dateStart)) $redirectParams['dateStart'] = $dateStart;
+                    if (!empty($dateEnd)) $redirectParams['dateEnd'] = $dateEnd;
+                    if (in_array('VERIFYING', $statusFiltered)) $redirectParams['VERIFYING'] = 'VERIFYING';
+                    if (in_array('PENDING', $statusFiltered)) $redirectParams['PENDING'] = 'PENDING';
+                    if (in_array('APPROVED', $statusFiltered)) $redirectParams['APPROVED'] = 'APPROVED';
+                    if (in_array('DENIED', $statusFiltered)) $redirectParams['DENIED'] = 'DENIED';
+                    $redirectParams['emailSent'] = '1';
+                    $redirectUrl = '/_register/pending_customers?' . http_build_query($redirectParams);
+                    header("Location: " . $redirectUrl);
+                    exit;
+                }
             }
         }
     }

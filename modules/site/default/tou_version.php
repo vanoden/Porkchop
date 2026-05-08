@@ -2,6 +2,7 @@
 <?= $page->showTitle() ?>
 <?= $page->showMessages() ?>
 
+<?php /* TinyMCE: Add this domain in Tiny Cloud dashboard if you see invalid-origin / read-only. Use HTTPS. */ ?>
 <script src="https://cdn.tiny.cloud/1/owxjg74mr7ujxhw9soo7iquo7iul2mclregqovcp7ophazmn/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
 <?php if (isset($version) && $version->status == 'NEW') { ?>
 	<script>

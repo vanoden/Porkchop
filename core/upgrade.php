@@ -117,7 +117,11 @@
 	$site->install_log("Upgrading Schema");
 	foreach ($modules as $class_name => $base_class) {
 		$schemaClass = "\\$class_name\\Schema";
-		if (! class_exists($schemaClass)) continue;
+		$schemaPath = CLASS_PATH."/".$class_name."/Schema.php";
+		if (! file_exists($schemaPath)) {
+			$site->install_log("No schema for $class_name",'debug');
+			continue;
+		}
 		if (! key_exists('schema',$base_class)) {
 			$site->install_log("No schema requirement for $class_name",'warning');
 			$requiredVersion = null;
@@ -127,7 +131,7 @@
 			$class = new $schemaClass();
 			$class_version = $class->version();
 			if (! $class->upgrade()) {
-				$site->install_fail("Failed to upgrade $class: ".$class->error());
+				$site->install_fail("Failed to upgrade $schemaClass: ".$class->error());
 			}
 			$class_version = $class->version();
 		} catch (Exception $e) {
@@ -208,6 +212,32 @@
 
 	$site->install_log("Populate Menus");
 	$site->populateMenus($menus);
+
+	// Remove duplicate Logout/Log Out items from myaccount menu
+	$nav_menu = new \Site\Navigation\Menu();
+	if ($nav_menu->get('myaccount')) {
+		$itemlist = new \Site\Navigation\ItemList();
+		$all_items = $itemlist->find(array('menu_id' => $nav_menu->id));
+		$logout_items = array();
+		foreach ($all_items as $item) {
+			if (!isset($item->target) && $item->id) {
+				$item->details();
+			}
+			if (stripos((string)($item->target ?? ''), 'logout') !== false || in_array($item->title ?? '', array('Logout', 'Log Out'), true)) {
+				$logout_items[] = $item;
+			}
+		}
+		if (count($logout_items) > 1) {
+			$site->install_log("Removing duplicate Logout menu items from myaccount (keeping one)", 'notice');
+			$keep = array_shift($logout_items);
+			foreach ($logout_items as $dup) {
+				$dup_item = new \Site\Navigation\Item($dup->id);
+				if ($dup_item->id && $dup_item->delete()) {
+					$site->install_log("Deleted duplicate menu item id " . $dup->id . " (Logout)", 'notice');
+				}
+			}
+		}
+	}
 
 	$site->install_log("Upgrade completed successfully",'notice');
 

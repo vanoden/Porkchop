@@ -1,4 +1,7 @@
 <?php
+	/** @view /_site/page
+	 * Manage configuration and metadata for a specific page
+	 */
 	$site = new \Site();
 	$page = $site->page();
 	$page->requirePrivilege('edit site pages');

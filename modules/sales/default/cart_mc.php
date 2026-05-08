@@ -18,11 +18,14 @@
 	$request = new \HTTP\Request();
 	$order_id = $_REQUEST['order_id'] ?? null;
 	if ($request->validInteger($order_id)) {
-		$order = new \Sales\Order($order_id);
+		$order = new \Sales\SalesOrder($order_id);
 	}
 	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
-		$order = new \Sales\Order();
+		$order = new \Sales\SalesOrder();
 		$order->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
+	}
+	else {
+		$order = new \Sales\SalesOrder();
 	}
 
 	// Initialize Parameter Array
@@ -42,7 +45,12 @@
 		$parameters['organization_id'] = $organization->id;
 		$form['organization_id'] = $organization->id;
 	}
-	else $organization = $order->organization();
+	elseif ($order->id > 0) {
+		$organization = $order->organization();
+	}
+	else {
+		$organization = new \Register\Organization();
+	}
 
 	$customer_id = $_REQUEST['customer_id'] ?? null;
 	if ($request->validInteger($customer_id)) {
@@ -50,23 +58,38 @@
 		$parameters['customer_id'] = $customer->id;
 		$form['customer_id'] = $customer->id;
 	}
-	else $customer = $order->customer();
+	elseif ($order->id > 0) {
+		$customer = $order->customer();
+	}
+	else {
+		$customer = new \Register\Customer();
+	}
 
-	$shipping_location = $_REQUEST['shipping_location'] ?? null;
-	if ($request->validInteger($shipping_location)) {
-		$shipping_location = new \Register\Location($shipping_location);
+	$shipping_location_id = $_REQUEST['shipping_location'] ?? null;
+	if ($request->validInteger($shipping_location_id)) {
+		$shipping_location = new \Register\Location($shipping_location_id);
 		$parameters['shipping_location_id'] = $shipping_location->id;
 		$form['shipping_location_id'] = $shipping_location->id;
 	}
-	else $shipping_location = $order->shipping_location();
+	elseif ($order->id > 0) {
+		$shipping_location = $order->shipping_location();
+	}
+	else {
+		$shipping_location = new \Register\Location();
+	}
 
-	$billing_location = $_REQUEST['billing_location'] ?? null;
-	if ($request->validInteger($billing_location)) {
-		$billing_location = new \Register\Location($billing_location);
+	$billing_location_id = $_REQUEST['billing_location'] ?? null;
+	if ($request->validInteger($billing_location_id)) {
+		$billing_location = new \Register\Location($billing_location_id);
 		$parameters['billing_location_id'] = $billing_location->id;
 		$form['billing_location_id'] = $billing_location->id;
 	}
-	else $billing_location = $order->billing_location();
+	elseif ($order->id > 0) {
+		$billing_location = $order->billing_location();
+	}
+	else {
+		$billing_location = new \Register\Location();
+	}
 
 	$shipping_vendor_id = $_REQUEST['shipping_vendor_id'] ?? null;
 	if ($request->validInteger($shipping_vendor_id)) {
@@ -74,7 +97,12 @@
 		$parameters['shipping_vendor_id'] = $shipping_vendor->id;
 		$form['shipping_vendor_id'] = $shipping_vendor->id;
 	}
-	else $shipping_vendor = $order->shipping_vendor();
+	elseif ($order->id > 0) {
+		$shipping_vendor = $order->shipping_vendor();
+	}
+	else {
+		$shipping_vendor = new \Shipping\Vendor();
+	}
 
 	/********************************************/
 	/* Create a New Order						*/
@@ -83,7 +111,7 @@
 		// We Have What We Need to Create an Order
 		// New Order Parameters
 		$parameters['salesperson_id'] = $GLOBALS['_SESSION_']->customer->id;
-		$orderList = new \Sales\OrderList();
+		$orderList = new \Sales\SalesOrderList();
 		$parameters['order_number'] = $orderList->nextNumber();
 
 		$order->add($parameters);
@@ -263,8 +291,9 @@
 	if ($organizationlist->error()) $page->addError($organizationlist->error());
 	if (empty($organizations)) $page->addError("Error: no organizations to create a sales order");
 
-	// Customes from Selected Assocation
+	// Customers from Selected Organization
 	$customers = array();
+	$locations = array();
 	if ($organization->id > 0) {
 		$customers = $organization->members('human',array('NEW','ACTIVE'));
 		if (empty($customers)) $page->addError("Error: no NEW or ACTIVE customers in organization to create sales order");

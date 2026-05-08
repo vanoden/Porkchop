@@ -65,7 +65,7 @@
 				$item = new \Site\Navigation\Item();
 			}
 			
-			if (empty($_REQUEST['title']) || !$navItem->validCode($_REQUEST['title'])) {
+			if (empty($_REQUEST['title']) || !$navItem->validTitle($_REQUEST['title'])) {
 				$page->addError("Invalid title");
 				$can_proceed = false;
 			}
@@ -77,7 +77,10 @@
 					"alt" => noXSS($_REQUEST['alt'] ?? ''),
 					"required_role_id" => $_REQUEST['required_role_id'] ?? null,
 					"view_order" => filter_var($_REQUEST['view_order'] ?? 0, FILTER_VALIDATE_INT),
-					"description" => noXSS($_REQUEST['description'] ?? '')
+					"description" => noXSS($_REQUEST['description'] ?? ''),
+					"authentication_required" => isset($_REQUEST['authentication_required']) ? 1 : 0,
+					"thumbnail_url" => noXSS($_REQUEST['thumbnail_url'] ?? ''),
+					"required_product_id" => $_REQUEST['required_product_id'] ?? null,
 				);
 				
 				if ($item->id > 0) {
@@ -123,18 +126,24 @@
 	$roleList = new \Register\RoleList();
 	$roles = $roleList->find();
 
+	// Load products for dropdown
+	$productList = new \Product\ItemList();
+	$products = $productList->find(array("active" => 1, "order_by" => "code", "type" => "service"));
+
 	$page->title("Menu Item Details");
 	$page->setAdminMenuSection("Site");  // Keep Navigation section open
 	$page->addBreadcrumb("Menus", "/_navigation/menus");
-	if (isset($parent)) {
+	if (isset($menu->code)) {
 		$page->addBreadcrumb($menu->title, "/_navigation/items/" . $menu->code);
-		if ($parent->parent_id) {
+		if (!empty($parent->parent_id) && $parent->parent_id != "0") {
 			$grandparent = new \Site\Navigation\Item($parent->parent_id);
 			$page->addBreadcrumb($grandparent->title, "/_navigation/items?parent_id=" . $grandparent->id);
 		}
-		$page->addBreadcrumb($parent->title, "/_navigation/items?parent_id=" . $parent->id);
+		if (!empty($parent->title)) {
+			$page->addBreadcrumb($parent->title, "/_navigation/items?parent_id=" . $parent->id);
+		}
 	}
-	if (isset($item) && $item->id) {
+	if (!empty($item) && $item->id) {
 		$page->addBreadcrumb($item->title);
 	} else {
 		$page->addBreadcrumb('New Menu Item');

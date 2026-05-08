@@ -64,6 +64,40 @@
 			array_push($this->_params,$value);
 		}
 
+		/** @method AddParamHex(value)
+		 * Apply a Bind Parameter to the Query as a HEX value.  Parameters are applied to parameter marker in order of addition.
+		 * @param array $value Array of byte values
+		 * @return void
+		 */
+		public function AddParamHex($value) {
+			$hex = "x";
+			foreach ($value as $byte) {
+				if (! ctype_xdigit($byte))
+					$hex .= dechex($byte);
+				else
+					$hex .= $byte;
+			}
+			app_log("AddParamHex: ".$hex,'info');
+			array_push($this->_params,$hex);
+		}
+
+		/** @method AddParamBinary($value)
+		 * Apply a Bind Parameter to the Query as a Binary value.  Parameters are applied to parameter marker in order of addition.
+		 * @param array bytes to write
+		 * @return void
+		 */
+		public function AddParamBinary($value,$length) {
+			$binary = "";
+			for ($i = 0; $i < $length; $i++) {
+				if (isset($value[$i])) {
+					$binary .= $value[$i];
+				} else {
+					$binary .= chr(0);
+				}
+			}
+			$this->AddParam($binary);
+		}
+
 		/** @method AddParams(values)
 		 * Apply an array of Bind Parameters to the Query
 		 * Loops through array and calls AddParam() method for each one in order
@@ -114,7 +148,37 @@
 
 			// Execute Query
 			try {
-				$recordSet = new \Database\RecordSet($this->_connection->Execute($this->_query,$this->_params));
+				$exec_start_time = microtime(true);
+				$query_result = $this->_connection->Execute($this->_query,$this->_params);
+				$exec_end_time = microtime(true);
+				$exec_elapsed_time = sprintf("%.6f",$exec_end_time - $exec_start_time);
+				
+				// Check if query result is valid before creating RecordSet
+				if ($query_result === false) {
+					$this->error("Query execution failed");
+					$recordSet = null;
+				} else {
+					$recordSet = new \Database\RecordSet($query_result);
+				}
+				
+				$class_name = 'UnknownClass';
+				$function_name = 'unknownFunction';
+				for ($i = 1; $i < 4; $i++) {
+					if (!isset(debug_backtrace()[$i]['class'])) {
+						break;
+					}
+					if (debug_backtrace()[$i]['class'] == 'BaseModel') {
+						continue;
+					}
+					$class_name = debug_backtrace()[$i]['class'];
+					$function_name = debug_backtrace()[$i]['function'];
+					break;
+				}
+				$affected_rows = $this->affected_rows();
+				if (empty($affected_rows) && $recordSet !== null) $affected_rows = $recordSet->RecordCount();
+				app_log("QUERY STATS: {$class_name}::{$function_name} executed in {$exec_elapsed_time} seconds, affected rows: {$affected_rows}",'trace');
+				$GLOBALS['_page_query_count'] ++;
+				$GLOBALS['_page_query_time'] += $exec_elapsed_time;
 			} catch (\mysqli_sql_exception $e) {
 				$this->error($e->getMessage());
 				$recordSet = null;
@@ -185,11 +249,12 @@
 		}
 
 		/**
-		 * Get the Error Message from the database
-		 * @return string 
+		 * Get the Error Message from the database (sanitized so SQL/schema is never exposed).
+		 * @return string
 		 */
 		public function ErrorMsg() {
-			return $this->_connection->ErrorMsg();
+			$msg = $this->_connection->ErrorMsg();
+			return parent::sanitizeSqlError($msg);
 		}
 
 		/**
@@ -218,6 +283,15 @@
 		 */
 		public function affected_rows() {
 			return $this->_connection->Affected_Rows();
+		}
+
+		/** @method public escapeString(string)
+		 * Escape a string for safe use in SQL queries
+		 * @param string $string
+		 * @return string
+		 */
+		public function escapeString($string) {
+			return $this->_connection->qstr($string,true);
 		}
 
 		/**

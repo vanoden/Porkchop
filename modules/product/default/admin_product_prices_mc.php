@@ -4,11 +4,11 @@
 	$page->requirePrivilege('manage products');
 
 	// Initialize validation objects
-	$item = new \Spectros\Product\Item();
+	$item = new \Product\Item();
 
 	// Validate item by ID
 	if ($item->validInteger($_REQUEST['id'] ?? null)) {
-		$item = new \Spectros\Product\Item($_REQUEST['id']);
+		$item = new \Product\Item($_REQUEST['id']);
 		if (!$item->id) {
 			$page->addError("Item not found");
 		}
@@ -75,6 +75,6 @@
 		$prices = $item->prices();
 	}
 
-	$page->addBreadcrumb('Products', '/_spectros/admin_products');
-	$page->addBreadcrumb($item->code, '/_spectros/admin_product/'.$item->code);
+	$page->addBreadcrumb('Products', '/_product/admin_products');
+	$page->addBreadcrumb($item->code, '/_product/admin_product/'.$item->code);
 	$page->title("Product Prices");

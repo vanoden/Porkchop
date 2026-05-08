@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'product';
-			$this->_version = '0.3.3';
-			$this->_release = '2023-09-12';
+			$this->_version = '1.0.4';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Product\Schema();
 			parent::__construct();
 		}
@@ -97,6 +97,9 @@
 			if ($product->exists()) {
 				$responseObj->metadata = $product->getAllMetadata();
 			}
+			else {
+				$this->notFound();
+			}
 
 			$response = new \APIResponse();
 			$response->addElement('item',$responseObj);
@@ -114,11 +117,71 @@
 			if (isset($_REQUEST['status'])) $parameters["status"] = $_REQUEST['status'];
 			if (isset($_REQUEST['type']) && !empty($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
 			if (!empty($_REQUEST['variant_type'])) $parameters['variant_type'] = $_REQUEST['variant_type'];
+			$parameters = $this->addListControlParams($parameters);
 			$products = $productlist->find($parameters);
 			if ($productlist->error()) $this->error("Error finding products: ".$productlist->error());
 	
 			$response = new \APIResponse();
 			$response->addElement('item',$products);
+			$response->print();
+		}
+
+		/** @method setVisibility()
+		 * Set the visibility of a Product Item in a specific realm
+		 * @param productVisibilityRealm $realm The visibility realm
+		 * @param bool $visible True to make visible, false to hide
+		 * @return void
+		 */
+		public function setVisibility() {
+			$product = new \Product\Item();
+			$product->get($_REQUEST['code']);
+			if ($product->error()) $this->error("Error finding product: ".$product->error());
+			if (! $product->exists()) $this->error("Product not found");
+			app_log("Setting visibility for product '".$_REQUEST['code']."' in realm '".$_REQUEST['realm']."' to '".$_REQUEST['visibility']."'",'info',__FILE__,__LINE__);
+			$realm = constant(\productVisibilityRealm::class . '::' . $_REQUEST['realm']);
+			if ($realm === null) {
+				$this->error("Invalid realm specified");
+			}
+			if (preg_match('/^(true|1|yes|on)$/i',$_REQUEST['visibility'])) {
+				$visible = true;
+			}
+			elseif (preg_match('/^(false|0|no|off)$/i',$_REQUEST['visibility'])) {
+				$visible = false;
+			}
+			else {
+				$this->error("Invalid visible value specified");
+			}
+			if (! $product->setVisibility($realm, $visible)) {
+				$this->error("Error setting visibility: ".$product->error());
+			}
+
+			$response = new \APIResponse();
+			$response->addElement('visible', $visible);
+			$response->addElement('realm', $_REQUEST['realm']);
+			$response->addElement('byte', $product->visibility);
+			$response->print();
+		}
+
+		/** @method getVisibility()
+		 * Get the visibility of a Product Item in a specific realm
+		 * @param productVisibilityRealm $realm The visibility realm
+		 * @return bool True if visible, false otherwise
+		 */
+		public function getVisibility() {
+			$product = new \Product\Item();
+			$product->get($_REQUEST['code']);
+			if ($product->error()) $this->error("Error finding product: ".$product->error());
+			if (! $product->exists()) $this->error("Product '".$_REQUEST['code']."' not found");
+			$realm = constant(\productVisibilityRealm::class . '::' . $_REQUEST['realm']);
+			if ($realm === null) {
+				$this->error("Invalid realm specified");
+			}
+			$visible = $product->getVisibility($realm);
+
+			$response = new \APIResponse();
+			$response->addElement('visible', $visible);
+			$response->addElement('realm', $_REQUEST['realm']);
+			$response->addElement('byte', $product->visibility);
 			$response->print();
 		}
 
@@ -413,14 +476,14 @@
 		 * Update a specified Product Instance
 		 */
 		public function updateInstance() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
 			$instance = new \Product\Instance();
 			if ($instance->error()) $this->app_error("Error initializing asset: ".$instance->error(),__FILE__,__LINE__);
 			if (isset($_REQUEST['product_code']) && strlen($_REQUEST['product_code'])) {
 				$product = new \Product\Item();
 				$product->get($_REQUEST['product_code']);
+				if (! $product->exists()) $this->error("Product not found");
 				$instance->get($_REQUEST['code'],$product->id);
+				if (! $instance->exists()) $this->error("Instance not found");
 			}
 			else {
 				$instance->getSimple($_REQUEST['code']);
@@ -431,8 +494,8 @@
 			$parameters = array();
 			if ($_REQUEST['name'])
 				$parameters['name'] = $_REQUEST['name'];
-		
-			if (isset($_REQUEST['organization'])) {
+
+			if (!empty($_REQUEST['organization'])) {
 				if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 					$organization = new \Register\Organization();
 					$organization->get($_REQUEST['organization_code']);
@@ -442,6 +505,14 @@
 				else {
 				 $this->error("No permissions to specify another organization");
 				}
+			}
+
+			if ($_REQUEST['new_product_code'] && strlen($_REQUEST['new_product_code'])) {
+				$product = new \Product\Item();
+				$product->get($_REQUEST['new_product_code']);
+				if ($product->error()) $this->app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
+				if (! $product->id) $this->error("Product not found");
+				$parameters['product_id'] = $product->id;
 			}
 
 			$instance->update($parameters);
@@ -498,7 +569,7 @@
 		}
 
 		/** @method changeInstanceCode()
-		 * Change the code of an existing product instance
+		 * Change the code (serial number) of an existing product instance
 		 * Takes values from $_REQUEST
 		 * Required: code, new_code, reason
 		 * Optional: product_id
@@ -552,8 +623,8 @@
 			// Default Label to Image Code if not given
 			if (! isset($_REQUEST['label']) || ! strlen($_REQUEST['label'])) $_REQUEST['label'] = $image->name;
 
-            // Force object_type to Spectros\Product\Item for consistency in object_images
-            $product->addImage($image->id, 'Spectros\\Product\\Item', isset($_REQUEST['label']) ? $_REQUEST['label'] : '');
+            // Force object_type to Product\Item for consistency in object_images
+            $product->addImage($image->id, 'Product\\Item', isset($_REQUEST['label']) ? $_REQUEST['label'] : '');
 			if ($product->error()) app_log("Error adding image: ".$product->error(),'error',__FILE__,__LINE__);
 
 			// Assemble and Deliver Response
@@ -695,7 +766,6 @@
 		public function _methods() {
 			$validationClass = new \Product\Item();
 			return array(
-				'ping'			=> array(),
 				'findItems'	=> array(
 					'description'		=> 'Find products matching criteria',
 					'authentication_required' => false,
@@ -708,6 +778,43 @@
 						'variant_type'	=> array(
 							'description' => 'Variant Type',
 							'options' => array_merge(array(''), $validationClass->variantTypes())
+						),
+						'_sort'	=> array(
+							'description' => 'Column to sort by (name, date_added, code, type, status, category, id, price, quantity, sku; default code)',
+							'type' => 'string'
+						),
+						'_order'	=> array(
+							'description' => 'Sort order (ASC or DESC)',
+							'type' => 'string',
+							'options' => array('ASC', 'DESC')
+						),
+						'_limit'	=> array(
+							'description' => 'Maximum number of records to return',
+							'type' => 'integer'
+						),
+						'_offset'	=> array(
+							'description' => 'Number of records to skip',
+							'type' => 'integer'
+						),
+						'_count'	=> array(
+							'description' => 'Return only IDs (backwards compatibility)',
+							'type' => 'boolean'
+						),
+						'_sort_desc'	=> array(
+							'description' => 'Set sort order to DESC (backwards compatibility)',
+							'type' => 'boolean'
+						),
+						'_sort_order'	=> array(
+							'description' => 'Set sort order (backwards compatibility)',
+							'type' => 'string'
+						),
+						'_flat'	=> array(
+							'description' => 'Return IDs only (backwards compatibility)',
+							'type' => 'boolean'
+						),
+						'recursive'	=> array(
+							'description' => 'Include recursive objects',
+							'type' => 'boolean'
 						),
 					)
 				),
@@ -881,6 +988,56 @@
 							'description' => 'Product Code',
 							'validation_method' => 'Product::Item::validCode()'
 						),
+					)
+				),
+				'getVisibility' => array(
+					'description'		=> 'Get the visibility settings for a product in a given realm',
+					'authentication_required' => false,
+					'parameters'		=> array(
+						'code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'realm'	=> array(
+							'required' => true,
+							'description' => 'Visibility Realm',
+							'options' => [
+								'MARKETING',
+								'SALES',
+								'SUPPORT',
+								'ADMINISTRATION'
+							]
+						)
+					)
+				),
+				'setVisibility' => array(
+					'description'		=> 'Set the visibility settings for a product in a given realm',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required' => 'manage products',
+					'parameters'		=> array(
+						'code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'realm'	=> array(
+							'required' => true,
+							'description' => 'Visibility Realm',
+							'options' => [
+								'MARKETING',
+								'SALES',
+								'SUPPORT',
+								'ADMINISTRATION'
+							]
+						),
+						'visibility'	=> array(
+							'required' => true,
+							'description' => 'Visibility Setting',
+							'content-type' => 'boolean',
+							'options' => ['true','false']
+						)
 					)
 				),
 				'addItemImage'	=> array(
@@ -1109,7 +1266,11 @@
 						'organization'	=> array(
 							'description' => 'Organization Code',
 							'validation_method' => 'Register::Organization::validCode()'
-						)
+						),
+						'new_product_code'	=> array(
+							'description' => 'New Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
 					)
 				),
 				'findInstances'	=> array(

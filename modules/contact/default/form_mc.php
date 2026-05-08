@@ -32,7 +32,8 @@
 		$url = "http://www.google.com/recaptcha/api/verify";
 		$data = array(
 			'privatekey'	=> $GLOBALS['_config']->captcha->private_key,
-			'remoteip'		=> $_SERVER['REMOTE_ADDR'],
+			'remoteip'		=> $GLOBALS['_REQUEST_']->client_ip,
+				// $_SERVER['REMOTE_ADDR'],
 			'challenge'		=> $_REQUEST['recaptcha_challenge_field'],
 			'response'		=> $_REQUEST['recaptcha_response_field']
 		);

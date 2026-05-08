@@ -9,7 +9,7 @@ exit;
 	$can_proceed = true;
 
 	# Check Permissions
-	if (! in_array("media manager",$GLOBALS['_SESSION_']->customer->roles)) {
+	if ($GLOBALS['_SESSION_']->customer->can("manage media files")) {
 		header("location: /_media/browse");
 		exit;
 	}

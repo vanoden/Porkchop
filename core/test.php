@@ -74,7 +74,7 @@
 	test_log("'".$_CACHE_->mechanism()."' Cache Initiated",'trace');
 
 	$cache_item = new \Cache\Item($_CACHE_,'_test_key');
-	if ($cache_item->error) test_fail('Cache key creation failed: '.$cache_item->error);
+	if ($cache_item->error()) test_fail('Cache key creation failed: '.$cache_item->error());
 
 	if ($_CACHE_->mechanism() == 'Memcache') {
 		list($cache_service,$cache_stats) = each($_CACHE_->stats());
@@ -83,10 +83,10 @@
 
 	$test_value = microtime();
 	$cache_item->set($test_value);
-	if ($cache_item->error) test_fail('Cache set failed: '.$cache_item->error);
+	if ($cache_item->error()) test_fail('Cache set failed: '.$cache_item->error());
 	else {
 		$cache_result = $cache_item->get();
-		if ($cache_item->error) test_fail('Cache get failed: '.$cache_item->error);
+		if ($cache_item->error()) test_fail('Cache get failed: '.$cache_item->error());
 		elseif ($cache_result == $test_value) test_log("Cached and recovered value '$cache_result' successfully");
 		else (test_fail("Cache test failed: returned value '$cache_result' doesn't match"));
 	}
@@ -96,7 +96,7 @@
 	###################################################
 	$_SESSION_ = new \Site\Session();
 	$_SESSION_->start();
-	if ($_SESSION_->error) test_fail('Error starting session: '.$_SESSION_->error);
+	if ($_SESSION_->error()) test_fail('Error starting session: '.$_SESSION_->error());
 	else test_log("Session '".$_SESSION_->code."' initiated",'trace');
 	if ($_SESSION_->cached()) test_log("Session already cached");
 
@@ -111,13 +111,6 @@
 	$_REQUEST_ = new \HTTP\Request();
 	$_REQUEST_->deconstruct();
 
-	# Identify Remote IP.  User X-Forwarded-For if local address
-	if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) and preg_match('/^(192\.168|172\.16|10|127\.)\./',$_SERVER['REMOTE_ADDR'])) $_REQUEST_->client_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-	else $_REQUEST_->client_ip = $_SERVER['REMOTE_ADDR'];
-
-	$_REQUEST_->user_agent = $_SERVER['HTTP_USER_AGENT'];
-	$_REQUEST_->timer = microtime();
-
 	# Access Logging in Application Log
 	test_log("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."'",'info');
 
@@ -126,12 +119,12 @@
 	###################################################
 	# Create Session
 	$_SESSION_->start();
-	if ($_SESSION_->error) {
-		app_log($_SESSION_->error,'error',__FILE__,__LINE__);
+	if ($_SESSION_->error()) {
+		app_log($_SESSION_->error(),'error',__FILE__,__LINE__);
 		exit;
 	}
 	test_log('Company: '.$_SESSION_->company->name,'info');
-	test_log('Domain '.$_SESSION_->domain->name,'info');
+	test_log('Domain '.$_SESSION_->domain()->name,'info');
 
 	# Create Hit Record
 	$_SESSION_->hit();
@@ -150,8 +143,8 @@
 		elseif ($customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
 			test_log("Customer ".$customer->code." authenticated");
 			$_SESSION_->assign($customer->id);
-			if ($_SESSION_->error) {
-				test_fail("Unable to assign session to customer: ".$_SESSION_->error);
+			if ($_SESSION_->error()) {
+				test_fail("Unable to assign session to customer: ".$_SESSION_->error());
 			}
 			else {
 				test_log("Session assigned to customer");
@@ -166,15 +159,15 @@
 	# Load Page Information
 	$page = new \Site\Page();
 	$page->getPage('register','api');
-	if ($page->error) {
-		test_fail("Error initializing page: ".$page->error,'error');
+	if ($page->error()) {
+		test_fail("Error initializing page: ".$page->error(),'error');
 	}
 	test_log("Page loaded successfully");
 
 	$product = new \Product\Item();
 	$product->get($GLOBALS['_config']->spectros->calibration_product);
-	if ($product->error) {
-		test_fail("Error getting product: ".$product->error);
+	if ($product->error()) {
+		test_fail("Error getting product: ".$product->error());
 	}
 	if (! $product->id) {
 		test_fail("Calibration product not found");

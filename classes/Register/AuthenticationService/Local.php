@@ -15,17 +15,21 @@
 			 * OP's MySQL Server version is 8.0.12. From MySQL Documentation, PASSWORD function has been deprecated for version > 5.7.5:
 			 *   replacement that gives the same answer in version 8: CONCAT('*', UPPER(SHA1(UNHEX(SHA1('mypass')))))
 			 */
-			$db_service = new \Database\Service();
-			if ($db_service->supports_password()) {
+			$database = new \Database\Service();
+			// Old MySQL Password Function
+			if ($database->supports_password()) {
 				$check_password_query = "
 					SELECT	`password`,password(?) FROM register_users WHERE login = ?";
-				$rs = $GLOBALS['_database']->Execute($check_password_query,array($password,$login));
+				$database->resetParams();
+				$database->AddParam($password);
+				$database->AddParam($login);
+				$rs = $database->Execute($check_password_query);
 				if (! $rs) {
-					$this->SQLError($GLOBALS['_database']->ErrorMsg());
+					$this->SQLError($database->ErrorMsg());
 					return false;
 				}
 				list($x,$y) = $rs->FetchRow();
-				app_log("Pass: $x vs $y",'debug');
+				app_log("Pass: $x vs $y",'trace');
 
 			    $get_user_query = "
 				    SELECT	id
@@ -34,12 +38,16 @@
 				    AND		password = password(?)
 			    ";
 			}
+			// New SHA1 Password Function
 			else {
 				$check_password_query = "
 					SELECT	`password`,CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?))))) FROM register_users WHERE login = ?";
-				$rs = $GLOBALS['_database']->Execute($check_password_query,array($password,$login));
+				$database->resetParams();
+				$database->AddParam($password);
+				$database->AddParam($login);
+				$rs = $database->Execute($check_password_query);
 				if (! $rs) {
-					$this->SQLError($GLOBALS['_database']->ErrorMsg());
+					$this->SQLError($database->ErrorMsg());
 					return false;
 				}
 				list($x,$y) = $rs->FetchRow();
@@ -52,14 +60,13 @@
 				    AND		password = CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?)))));
 			    ";
             }
-			$bind_params = array($login,$password);
+			$database->resetParams();
+			$database->AddParam($login);
+			$database->AddParam($password);
 
-			query_log($get_user_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute(
-				$get_user_query,$bind_params
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$rs = $database->Execute($get_user_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
@@ -88,13 +95,18 @@
 				return false;
 			}
 
-			$db_service = new \Database\Service();
-			if ($db_service->supports_password()) {
+			// Initialize Database Service
+			$database = new \Database\Service();
+			if ($database->supports_password()) {
 				$check_password_query = "
-				SELECT	`password`,password(?) FROM register_users WHERE login = ?";
-				$rs = $GLOBALS['_database']->Execute($check_password_query,array($password,$login));
+					SELECT `password`,
+							password(?)
+					FROM	register_users WHERE login = ?";
+				$database->AddParam($password);
+				$database->AddParam($login);
+				$rs = $database->Execute($check_password_query);
 				if (! $rs) {
-					$this->SQLError($GLOBALS['_database']->ErrorMsg());
+					$this->SQLError($database->ErrorMsg());
 					return false;
 				}
 				list($x,$y) = $rs->FetchRow();
@@ -102,17 +114,21 @@
 
 				$update_password_query = "
 					UPDATE	register_users
-					SET	`password` = password(?),
-						password_age = sysdate()
+					SET		`password` = password(?),
+							password_age = sysdate()
 					WHERE	id = ?
 				";
 			}
 			else {
 				$check_password_query = "
-					SELECT	`password`,CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?))))) FROM register_users WHERE login = ?";
-				$rs = $GLOBALS['_database']->Execute($check_password_query,array($password,$login));
+					SELECT	`password`,CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?)))))
+					FROM	register_users
+					WHERE	login = ?";
+				$database->AddParam($password);
+				$database->AddParam($login);
+				$rs = $database->Execute($check_password_query);
 				if (! $rs) {
-					$this->SQLError($GLOBALS['_database']->ErrorMsg());
+					$this->SQLError($database->ErrorMsg());
 					return false;
 				}
 				list($x,$y) = $rs->FetchRow();
@@ -125,17 +141,33 @@
 					WHERE	id = ?
 				";
 			}
-			$rs = $GLOBALS['_database']->Execute($update_password_query,array($password,$customer->id));
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$database->resetParams();
+			$database->AddParam($password);
+			$database->AddParam($customer->id);
+			$rs = $database->Execute($update_password_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			// Check if any rows were actually updated
-			if ($GLOBALS['_database']->Affected_Rows() == 0) {
-                // @TODO during register process it audits the original password itself being changed
-				//$this->error("No rows were updated");
-				return false;
-			}
+
+			app_log("Password updated for customer ".$customer->id,'info',__FILE__,__LINE__);
+			$customer->recordAuditEvent($customer->id, 'Password changed');
+            
 			return true;
+		}
+
+		/** @method public validLogin(login)
+		 * Validate the format of a login name
+		 * @param string $login Login name
+		 * @return bool True if valid, false otherwise
+		 */
+		public function validLogin($login) {
+			// Valid login: Alphanumeric, underscores, dots, hyphens; 3-30 characters
+			if (preg_match('/^[a-zA-Z0-9_.-]{3,30}$/', $login)) {
+				return true;
+			} else {
+				$this->error("Invalid login format");
+				return false;
+			}
 		}
 	}

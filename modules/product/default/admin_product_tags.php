@@ -5,6 +5,21 @@
   // define existing categories and tags for autocomplete
   var existingCategories = <?= $uniqueTagsData['categoriesJson'] ?>;
   var existingTags = <?= $uniqueTagsData['tagsJson'] ?>;
+  
+  // remove a search tag by id
+  function removeSearchTagById(id) {
+    document.getElementById('removeSearchTagId').value = id;
+    document.getElementById('adminProductTagsForm').submit();
+  }
+
+  // When adding a tag with empty category, pass product_tag from the UI
+  document.getElementById('adminProductTagsForm').addEventListener('submit', function(ev) {
+    var catInput = document.getElementById('newSearchTagCategory');
+    var tagInput = document.getElementById('newSearchTag');
+    if (tagInput && tagInput.value && catInput && !catInput.value.trim()) {
+      catInput.value = 'product_tag';
+    }
+  });
 </script>
 
 <?= $page->showAdminPageInfo() ?>
@@ -24,18 +39,17 @@
 <?php
 ?>
 <div class="tabs">
-    <a href="/_spectros/admin_product/<?= $item->code ?>" class="tab <?= $activeTab==='details'?'active':'' ?>">Details</a>
+    <a href="/_product/admin_product/<?= $item->code ?>" class="tab <?= $activeTab==='details'?'active':'' ?>">Details</a>
     <a href="/_product/admin_product_prices/<?= $item->code ?>" class="tab <?= $activeTab==='prices'?'active':'' ?>">Prices</a>
     <a href="/_product/admin_product_vendors/<?= $item->code ?>" class="tab <?= $activeTab==='vendors'?'active':'' ?>">Vendors</a>
     <a href="/_product/admin_images/<?= $item->code ?>" class="tab <?= $activeTab==='images'?'active':'' ?>">Images</a>
     <a href="/_product/admin_product_tags/<?= $item->code ?>" class="tab <?= $activeTab==='tags'?'active':'' ?>">Tags</a>
     <a href="/_product/admin_product_parts/<?= $item->code ?>" class="tab <?= $activeTab==='parts'?'active':'' ?>">Parts</a>
-    <a href="/_spectros/admin_asset_sensors/<?= $item->code ?>" class="tab <?= $activeTab==='sensors'?'active':'' ?>">Sensors</a>
     <a href="/_product/admin_product_metadata/<?= $item->code ?>" class="tab <?= $activeTab==='metadata'?'active':'' ?>">Metadata</a>
     <a href="/_product/audit_log/<?= $item->code ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
 </div>
 
-<form method="post" action="/_product/admin_product_tags/<?= $item->code ?>">
+<form id="adminProductTagsForm" method="post" action="/_product/admin_product_tags/<?= $item->code ?>">
 <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
 <input type="hidden" name="id" value="<?= $item->id ?>" />
 <input type="hidden" id="removeTagId" name="removeTagId" value="" />
@@ -50,17 +64,19 @@
 		<div class="tableCell tableCell-width-33">&nbsp;</div>
 	</div>
 <?php
-	foreach ($productSearchTags as $searchTag) {
+	foreach ($productSearchTags as $row) {
+		$searchTag = $row->searchTag;
+		$xrefId = $row->xrefId;
 ?>
 	<div class="tableRow">
 		<div class="tableCell">
-			<?= $searchTag->category ?>
+			<?= htmlspecialchars($searchTag->category ?: 'product_tag') ?>
 		</div>
 		<div class="tableCell">
-			<?= $searchTag->value ?>
+			<?= htmlspecialchars($searchTag->value) ?>
 		</div>
 		<div class="tableCell">
-			<img src="/img/icons/icon_tools_trash_active.svg" onclick="removeSearchTagById('<?= $searchTag->id ?>')" style="cursor: pointer; width: 20px; height: 20px;" alt="Remove" title="Remove" />
+			<img src="/img/icons/icon_tools_trash_active.svg" onclick="removeSearchTagById('<?= (int)$xrefId ?>')" style="cursor: pointer; width: 20px; height: 20px;" alt="Remove" title="Remove" />
 		</div>
 	</div>
 

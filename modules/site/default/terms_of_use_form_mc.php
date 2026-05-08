@@ -29,7 +29,7 @@
 	}
 
 	$target_page = new \Site\Page();
-	if ($can_proceed && !$target_page->get($module, $view, $index)) {
+	if ($can_proceed && !$target_page->getPage($module, $view, $index ?: '')) {
 		$page->addError("Target Page Not Found");
 		$can_proceed = false;
 	} else if ($can_proceed) {

@@ -37,7 +37,7 @@
 			}
 
 			$session->add(array('client_id' => $client->id()));
-			app_log("Added session ".$session->id()." with client ".$client->id()." to list",'info');
+			app_log("Added session ".$session->codeDebug()." with client ".$client->id()." to list",'info');
 			print_r("We now have ".count($this->list)." sessions\n");
 			return $session;
 		}

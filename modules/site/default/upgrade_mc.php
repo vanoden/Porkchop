@@ -15,13 +15,15 @@
 				"page"	=> $admin_template,
 				"pages"	=> $admin_template,
 				"configurations"	=> $admin_template,
+				"counters"	=> $admin_template,
+				"headers"	=> $admin_template,
+				"terms_of_use"	=> $admin_template,
+				"audit_log"	=> $admin_template,
 				"send_customer_message" => $admin_template
 			),
 		),
 		"Geography"		=> array(
 			"roles"			=> array(
-				"geography manager"	=> array(),
-				"geography user"	=> array(),
 			),
 		),
 		"Content"		=> array(
@@ -34,15 +36,10 @@
 		),
         "Register"		=> array(
 			"roles"			=> array(
-				"register manager"	=> array(
-					"description"		=> "Manager Organizations and Users"
-				),
-				"register reporter"	=> array(
-					"description"		=> "View Organizations and Users"
-				),
 			),
 			"templates"		=> array(
 				"organizations"		=> $admin_template,
+				"organizations_report"	=> $admin_template,
 				"organization"		=> $admin_template,
 				"accounts"			=> $admin_template,
 				"admin_account"		=> $admin_template,
@@ -66,11 +63,15 @@
 				"contact admin"	=> array(),
 			),
 		),
-		"Navigation"	=> array(),
+		"Navigation"	=> array(
+			"templates"	=> array(
+				"menus"	=> $admin_template,
+				"items"	=> $admin_template,
+				"item"	=> $admin_template
+			)
+		),
         "Storage"		=> array(
 			"roles"			=> array(
-				"storage manager"	=> $admin_template,
-				"storage upload"	=> $admin_template,
 			),
 			"templates"		=> array(
 				"repositories"		=> $admin_template,
@@ -80,36 +81,69 @@
 		),
 		"Media"			=> array(
 			"roles"			=> array(
-				"media developer"	=> array(),
-				"media manager"		=> array(),
-				"media reporter"	=> array(),
 			),
 		),
         "Product"		=> array(
 			"roles"			=> array(
-				"product manager"	=> array(),
-				"product reporter"	=> array(),
 			),
 			"templates"		=> array(
 				"report"			=> $admin_template,
 				"edit"				=> $admin_template,
 			),
 		),
+		"Spectros"		=> array(
+			"templates"		=> array(
+				"outstanding_requests"	=> $admin_template,
+				"admin_products"		=> $admin_template,
+				"admin_product"			=> $admin_template,
+				"admin_credits"			=> $admin_template,
+				"cal_report"			=> $admin_template,
+				"transfer_ownership"	=> $admin_template,
+			),
+		),
+		"Engineering"	=> array(
+			"templates"		=> array(
+				"home"			=> $admin_template,
+				"tasks"			=> $admin_template,
+				"releases"		=> $admin_template,
+				"projects"		=> $admin_template,
+				"products"		=> $admin_template,
+				"event_report"	=> $admin_template,
+			),
+		),
+		"Support"		=> array(
+			"templates"		=> array(
+				"request_new"	=> $admin_template,
+				"requests"		=> $admin_template,
+				"request_items"	=> $admin_template,
+				"stale_tickets"	=> $admin_template,
+				"admin_actions"	=> $admin_template,
+				"admin_rmas"	=> $admin_template,
+				"summary"		=> $admin_template,
+			),
+		),
+		"Shipping"		=> array(
+			"templates"		=> array(
+				"admin_shipments"	=> $admin_template,
+			),
+		),
+		"Package"		=> array(
+			"templates"		=> array(
+				"packages"	=> $admin_template,
+			),
+		),
         "Email"			=> array(
 			"roles"			=> array(
-				"manager"		=> array(),
 			),
 		),
 		"Monitor"		=> array(
 			"roles"			=> array(
-				"monitor admin"		=> array(),
-				"monitor manager"	=> array(),
-				"monitor reporter"	=> array(),
 				"monitor asset"		=> array(),
 			),
 			"templates"		=> array(
 				"admin_assets"		=> $admin_template,
 				"admin_details"		=> $admin_template,
+				"admin_collections"	=> $admin_template,
 				"comm_dashboard"	=> $admin_template,
 				"sensor_models"		=> $admin_template,
 				"sensor_model"		=> $admin_template,
@@ -135,7 +169,7 @@
 		"admin"	=> array(
 			"title"	=> "Admin Left Nav",
 			"items"	=> array(
-			    array(
+				array(
 				    "title"			=> "Overview",
 				    "target"		=> "/_spectros/outstanding_requests",
 				    "view_order"	=> 1,
@@ -299,6 +333,13 @@
 							"description"	=> "RMAs"
 						),
 						array (
+							"title"	=> "Stale Tickets",
+							"target"	=> "/_support/stale_tickets",
+							"view_order"	=> 95,
+							"alt"			=> "Stale Ticket Report",
+							"description"	=> "Stale Ticket Report"
+						),
+						array (
 							"title"	=> "Summary",
 							"target"	=> "/_support/summary",
 							"view_order"	=> 100,
@@ -348,6 +389,13 @@
 							"view_order"	=> 10,
 							"alt"			=> "Page Management",
 							"description"	=> "Page Management"
+						),
+						array (
+							"title"	=> "Forms",
+							"target"	=> "/_form/admin_forms",
+							"view_order"	=> 15,
+							"alt"			=> "Form Management",
+							"description"	=> "Form Management"
 						),
 						array (
 							"title"	=> "Configurations",
@@ -427,20 +475,25 @@
 	# Process Modules
 	foreach ($modules as $module_name => $module_data) {
 		install_log($module_name);
-		# Update Schema
-		$class_name = "\\$module_name\\Schema";
-		try {
-			$class = new $class_name();
-			$class_version = $class->version();
-			if (! $class->upgrade()) {
-				install_fail("Error upgrading $module_name schema: ".$class->error());
+		# Update Schema (skip if module has no Schema class, e.g. Navigation)
+		$schema_path = CLASS_PATH."/".$module_name."/Schema.php";
+		if (file_exists($schema_path)) {
+			$class_name = "\\$module_name\\Schema";
+			try {
+				$class = new $class_name();
+				$class_version = $class->version();
+				if (! $class->upgrade()) {
+					install_fail("Error upgrading $module_name schema: ".$class->error());
+				}
+			} catch (Exception $e) {
+				install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
 			}
-		} catch (Exception $e) {
-			install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
-        }
-        install_log("$module_name::Schema: version ".$class_version);
-		if (isset($module_data['schema_required']) && $module_data['schema_required'] != $class_version) {
-			install_fail("Required version ".$module_data['schema_required']." not matched");
+			install_log("$module_name::Schema: version ".$class_version);
+			if (isset($module_data['schema_required']) && $module_data['schema_required'] != $class_version) {
+				install_fail("Required version ".$module_data['schema_required']." not matched");
+			}
+		} else {
+			install_log("No schema for $module_name",'debug');
 		}
 
 		# Add Roles
@@ -533,7 +586,8 @@
 			else {
 				install_fail("Error adding menu item ".$item["title"].": ".$nav_item->error());
 			}
-			foreach ($item['items'] as $subitem) {
+			if (isset($item['items']) && is_array($item['items'])) {
+				foreach ($item['items'] as $subitem) {
 				$subnav_item = new \Site\Navigation\Item();
 				if ($subnav_item->get($nav_menu->id,$subitem["title"],$nav_item)) {
 					$subnav_item->update(
@@ -563,8 +617,36 @@
 					install_fail("Error adding menu item ".$subitem["title"].": ".$subnav_item->error());
 				}
 			}
+			}
 		}
 	}
+
+	// One-time cleanup: remove duplicate Logout/Log Out items from myaccount menu
+	$nav_menu = new \Site\Navigation\Menu();
+	if ($nav_menu->get('myaccount')) {
+		$itemlist = new \Site\Navigation\ItemList();
+		$all_items = $itemlist->find(array('menu_id' => $nav_menu->id));
+		$logout_items = array();
+		foreach ($all_items as $item) {
+			if (!isset($item->target) && $item->id) {
+				$item->details();
+			}
+			if (stripos((string)($item->target ?? ''), 'logout') !== false || in_array($item->title ?? '', array('Logout', 'Log Out'), true)) {
+				$logout_items[] = $item;
+			}
+		}
+		if (count($logout_items) > 1) {
+			install_log("Removing duplicate Logout menu items from myaccount (keeping one)", 'notice');
+			$keep = array_shift($logout_items);
+			foreach ($logout_items as $dup) {
+				$dup_item = new \Site\Navigation\Item($dup->id);
+				if ($dup_item->id && $dup_item->delete()) {
+					install_log("Deleted duplicate menu item id " . $dup->id . " (Logout)", 'notice');
+				}
+			}
+		}
+	}
+
 	install_log("Upgrade completed successfully",'notice');
 	exit;
 

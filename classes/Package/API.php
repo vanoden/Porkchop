@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'package';
-			$this->_version = '0.1.1';
-			$this->_release = '2020-06-03';
+			$this->_version = '0.3.4';
+			$this->_release = '2026-03-19';
 			$this->_schema = new Schema();
 			$this->_admin_role = 'package manager';
 			parent::__construct();
@@ -25,8 +25,9 @@
 			if (! isset($_REQUEST['code'])) $this->error("unique code field required for addPackage");
 
 			# Identify Repository
-			$repository = new \Storage\Repository();
-			if (! $repository->get($_REQUEST['repository_code'])) $this->error("Repository ".$_REQUEST['repository_code']." not found");
+			$repositoryFactory = new \Storage\RepositoryFactory();
+			$repository = $repositoryFactory->createWithCode($_REQUEST['repository_code']);
+			if (empty($repository)) $this->error("Repository ".$_REQUEST['repository_code']." not found");
 			app_log("Repository ".$repository->id);
 	
 			$package = new \Package\Package();
@@ -77,7 +78,7 @@
 					$this->error("Repository not found");
 					return false;
 				}
-				$parameters['repository_id'] = $_REQUEST['repository_id'];
+				$parameters['repository_id'] = $repository->id;
 			}
 	
 			$package->update($parameters);
@@ -125,7 +126,7 @@
 					$this->error("Repository not found");
 					return false;
 				}
-				$parameters['repository_id'] = $_REQUEST['repository_id'];
+				$parameters['repository_id'] = $repository->id;
 			}
 	
 		
@@ -294,18 +295,6 @@
 			$package = new \Package\Package();
 			$version = new \Package\Version();
 			return array(
-				'ping'	=> array(
-					'description'	=> 'Ping the Package API',
-					'authentication_required'	=> false,
-					'path'			=> '/api/package/ping',
-					'parameters'	=> array()
-				),
-				'definition'	=> array(
-					'description'	=> 'Get the definition of the Package API',
-					'authentication_required'	=> false,
-					'path'			=> '/api/package/definition',
-					'parameters'	=> array()
-				),
 				'export'	=> array(
 					'description'	=> 'Export the definition of the Package API',
 					'authentication_required'	=> false,

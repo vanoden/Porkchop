@@ -703,6 +703,121 @@
 				$database->CommitTrans();
 			}
 
+			if ($this->version() < 28) {
+				app_log("Upgrading ".$this->module." schema to version 28",'notice',__FILE__,__LINE__);
+
+				$add_procedure_query = "
+					CREATE PROCEDURE `batchDeleteAuditEvents` (IN className VARCHAR(64), IN numRecs INT(11) )
+					BEGIN
+						DELETE FROM `site_audit_events`
+						WHERE `id` IN (
+							SELECT `id` FROM (
+								SELECT `id` FROM `site_audit_events`
+								WHERE `class_name` = className
+								ORDER BY `event_date` ASC
+								LIMIT numRecs
+							) AS subquery
+						);
+					END
+				";
+				if (! $database->Execute($add_procedure_query)) {
+					$this->SQLError("Altering site_audit_events table: ".$database->error());
+					return false;
+				}
+
+				$this->setVersion(28);
+				$database->CommitTrans();
+			}
+
+			if ($this->version() < 29) {
+				app_log("Upgrading ".$this->module." schema to version 29",'notice',__FILE__,__LINE__);
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS monitor_communications (
+						session_id	int(11) NOT NULL,
+						`timestamp` int(11) NOT NULL,
+						request		text,
+						response	text,
+						PRIMARY KEY `pk_monitor_session` (`session_id`),
+						FOREIGN KEY `fk_monitor_session` (`session_id`) REFERENCES `session_sessions` (`id`),
+						INDEX `idx_timestamp` (`timestamp`,`session_id`)
+					)
+				";
+
+				if (!$database->Execute($create_table_query)) {
+					$this->SQLError("Creating monitor_communications table: " . $database->ErrorMsg());
+					return false;
+				}
+
+				$this->setVersion(29);
+				$database->CommitTrans();
+			}
+
+			if ($this->version() < 30) {
+				app_log("Upgrading ".$this->module." schema to version 30",'notice',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `site_audit_events`
+					ADD COLUMN `ip_address` varchar(45) DEFAULT NULL AFTER `description`
+				";
+				if (! $database->Execute($alter_table_query)) {
+					$this->SQLError("Altering site_audit_events table: ".$database->error());
+					return false;
+				}
+
+				$this->setVersion(30);
+				$database->CommitTrans();
+			}
+
+			if ($this->version() < 31) {
+				app_log("Upgrading ".$this->module." schema to version 31",'notice',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `navigation_menus`
+					ADD COLUMN `show_close_button` tinyint(1) NOT NULL DEFAULT 0
+				";
+				if (! $database->Execute($alter_table_query)) {
+					$this->SQLError("Altering navigation_menus table: ".$database->error());
+					return false;
+				}
+
+				$this->setVersion(31);
+				$database->CommitTrans();
+			}
+
+			if ($this->version() < 32) {
+				app_log("Upgrading ".$this->module." schema to version 32",'notice',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `navigation_menu_items`
+					ADD COLUMN `authentication_required` tinyint(1) NOT NULL DEFAULT 0
+				";
+				if (! $database->Execute($alter_table_query)) {
+					$this->SQLError("Altering navigation_menu_items table: ".$database->error());
+					return false;
+				}
+
+				$this->setVersion(32);
+				$database->CommitTrans();
+			}
+
+			if ($this->version() < 33) {
+				app_log("Upgrading ".$this->module." schema to version 33",'notice',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `navigation_menu_items`
+					ADD COLUMN `required_product_id` int(11) DEFAULT NULL,
+					ADD COLUMN `thumbnail_url` varchar(255) DEFAULT NULL
+				";
+				if (! $database->Execute($alter_table_query)) {
+					$this->SQLError("Altering navigation_menu_items table: ".$database->error());
+					return false;
+				}
+
+				$this->setVersion(33);
+				$database->CommitTrans();
+			}
+
 			return true;
 		}
 	}

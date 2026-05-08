@@ -7,8 +7,8 @@
 		public function __construct() {
 			$this->admin_role('administrator');
 			$this->_name = 'cache';
-			$this->_version = '0.2.1';
-			$this->_release = '2020-06-10';
+			$this->_version = '0.3.2';
+			$this->_release = '2026-03-19';
 			parent::__construct();
 		}
 
@@ -25,11 +25,10 @@
 			$keyArray = array();
 			$keys = $client->keys($object);
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->key = $keys;
+			$response = new \APIResponse();
+			$response->addElement('key', $keys);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
 		###################################################
@@ -42,11 +41,10 @@
 	
 			$keys = $client->keyNames();
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->keyName = $keys;
+			$response = new \APIResponse();
+			$response->addElement('keyName', $keys);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -64,11 +62,10 @@
 	
 			$object = $cache->get();
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->object = $object;
+			$response = new \APIResponse();
+			$response->addElement('object', $object);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -79,8 +76,8 @@
 			if (! $GLOBALS['_SESSION_']->customer->can('manage cache')) $this->deny();
 			$cache_key = $_REQUEST['object']."[".$_REQUEST['id']."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
-			if ($cache->error) {
-				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
+			if ($cache->error()) {
+				app_log("Error in cache mechanism: ".$cache->error(),'error',__FILE__,__LINE__);
 			}
 	
 			$count = 0;
@@ -89,11 +86,11 @@
 				$count = 1;
 			}
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->count = $count;
+			$response = new \APIResponse();
+			$response->addElement('success', 1);
+			$response->addElement('count', $count);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -104,11 +101,11 @@
 	
 			if (! $GLOBALS['_SESSION_']->customer->can('manage cache')) $this->deny();
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->stats = $client->stats();
+			$response = new \APIResponse();
+			$response->addElement('success', 1);
+			$response->addElement('stats', $client->stats());
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -121,15 +118,14 @@
 	
 			$client->flush();
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
+			$response = new \APIResponse();
+			$response->addElement('success', 1);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
 		public function _methods() {
 			return array(
-				'ping'	=> array(),
 				'findKeys'	=> array(
 					'object'	=> array(),
 				),

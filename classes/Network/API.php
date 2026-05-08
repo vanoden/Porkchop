@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'network';
-			$this->_version = '0.2.1';
-			$this->_release = '2020-06-10';
+			$this->_version = '0.3.3';
+			$this->_release = '2026-03-25';
 			$this->_schema = new Schema();
 			parent::__construct();
 		}
@@ -496,9 +496,11 @@
 
 			$params = array();
 			if (!empty($_REQUEST['address'])) $params['address'] = $_REQUEST['address'];
-			if (!empty($_REQUEST['mask'])) $params['mask'] = $_REQUEST['mask'];
-			if (!empty($_REQUEST['prefix'])) $params['prefix'] = $_REQUEST['prefix'];
+			if (!empty($_REQUEST['size'])) $params['size'] = $_REQUEST['size'];
 			if (!empty($_REQUEST['type'])) $params['type'] = $_REQUEST['type'];
+			if (!empty($_REQUEST['risk_level'])) $params['risk_level'] = $_REQUEST['risk_level'];
+			if (!empty($_REQUEST['description'])) $params['description'] = $_REQUEST['description'];
+			if (!empty($_REQUEST['managed'])) $params['managed'] = $_REQUEST['managed'];
 
 			if (! $subnet->add($params)) {
 				$this->error($subnet->error());
@@ -509,12 +511,100 @@
 			$response->print();
 		}
 
+		/** @apiMethod updateSubnet()
+		 * Updates a subnet record. Subnet is identified by the 'id' parameter, and other parameters specify fields to update.
+		 * Parameters:
+		 * - id (required): ID of the subnet to update
+		 * - address: New subnet address
+		 * - size: New subnet size
+		 * - type: New subnet type (ipv4 or ipv6)
+		 * - risk_level: New risk level (integer)
+		 * - description: New description (string)
+		 * - managed: New managed status (AUTO or MANUAL)
+		*/
+		public function updateSubnet() {
+			if (empty($_REQUEST['id'])) $this->invalidRequest("id parameter is required");
+			
+			$subnet = new \Network\Subnet($_REQUEST);
+			if (! $subnet->id) $this->notFound();
+
+			$params = array();
+			if (!empty($_REQUEST['address'])) $params['address'] = $_REQUEST['address'];
+			if (!empty($_REQUEST['size'])) $params['size'] = $_REQUEST['size'];
+			if (!empty($_REQUEST['type'])) $params['type'] = $_REQUEST['type'];
+			if (!empty($_REQUEST['risk_level'])) $params['risk_level'] = $_REQUEST['risk_level'];
+			if (!empty($_REQUEST['description'])) $params['description'] = $_REQUEST['description'];
+			if (!empty($_REQUEST['managed'])) $params['managed'] = $_REQUEST['managed'];
+
+			if (! $subnet->update($params)) $this->error($subnet->error());
+
+			$response = new \APIResponse();
+			$response->addElement('subnet',$subnet);
+			$response->print();
+		}
+
+		/** @apiMethod getSubnetsContainingAddress()
+		 * Returns a list of subnets that contain the specified IP address. Parameters:
+		 * - address (required): IP address to check (e.g. 192.168.1.1)
+		 */
+		public function getSubnetsContainingAddress() {
+			if (empty($_REQUEST['address'])) $this->invalidRequest("address parameter is required");
+
+			$subnetList = new \Network\SubnetList();
+			if($subnetList->contains($_REQUEST['address'])) {
+				$response = new \APIResponse();
+				$subnets = $subnetList->matches();
+				if (count($subnets) > 0) {
+					$subnetObjs = array();
+					foreach ($subnets as $subnet) {
+						$subnetObj = $subnet->_clone();
+						if ($subnet->type == 'ipv4') $subnetObj->address = long2ip($subnet->address);
+						elseif ($subnet->type == 'ipv6') $subnetObj->address = inet_ntop($subnet->address);
+						else continue;
+						$subnetObjs[] = $subnetObj;
+					}
+					$response->addElement('subnet', $subnetObjs);
+				}
+				$response->print();
+			}
+			elseif ($subnetList->error()) $this->error($subnetList->error());
+			else {
+				$response = new \APIResponse();
+				$response->print();
+			}
+		}
+
+		/** @apiMethod purgeSafeSubnets()
+		 * Permanently deletes subnets that are considered safe
+		 */
+		public function purgeSafeSubnets() {
+			$subnetList = new \Network\SubnetList();
+			$deleted_records = $subnetList->purgeSafeSubnets();
+
+			$response = new \APIResponse();
+			if ($subnetList->error()) $response->error($subnetList->error());
+			$response->addElement('deleted_records', $deleted_records);
+			$response->print();
+		}
+
+		/** @apiMethod purgeOldSubnets()
+		 * Permanently deletes subnets that have not been seen in over a day and have a low risk level
+		 */
+		public function purgeOldSubnets() {
+			$subnetList = new \Network\SubnetList();
+			$deleted_records = $subnetList->purgeOldSubnets();
+
+			$response = new \APIResponse();
+			if ($subnetList->error()) $response->error($subnetList->error());
+			$response->addElement('deleted_records', $deleted_records);
+			$response->print();
+		}
+
 		public function _methods() {
 			return array(
-				'ping'	=> array(),
 				'findDomains'	=> array(
 					'description'	=> 'Find domains',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'return_element'		=> 'domain',
 					'return_type'			=> 'Network::Domain',
 					'parameters'	=> array(
@@ -523,7 +613,7 @@
 				),
 				'getDomain'	=> array(
 					'description'	=> 'Get domain details',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'return_element'		=> 'domain',
 					'return_type'			=> 'Network::Domain',
 					'parameters'	=> array(
@@ -532,7 +622,7 @@
 				),
 				'addDomain'	=> array(
 					'description'	=> 'Add a domain',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'token_required'		=> true,
 					'return_element'		=> 'domain',
 					'return_type'			=> 'Network::Domain',
@@ -542,7 +632,7 @@
 				),
 				'findHosts'		=> array(
 					'description'	=> 'Find hosts',
-					'privilege_required' => 'network admin',
+					'privilege_required' => 'manage network',
 					'return_element'		=> 'host',
 					'return_type'			=> 'Network::Host',
 					'parameters'	=> array(
@@ -554,7 +644,7 @@
 				),
 				'getHost'	=> array(
 					'description'	=> 'Get host details',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'return_element'		=> 'host',
 					'return_type'			=> 'Network::Host',
 					'parameters'	=> array(
@@ -564,7 +654,7 @@
 				),
 				'addHost'	=> array(
 					'description'	=> 'Add a host',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'token_required'		=> true,
 					'return_element'		=> 'host',
 					'return_type'			=> 'Network::Host',
@@ -577,7 +667,7 @@
 				),
 				'findAdapters'	=> array(
 					'description'	=> 'Find adapters',
-					'privilege_required' => 'network admin',
+					'privilege_required' => 'manage network',
 					'return_element'		=> 'adapter',
 					'return_type'			=> 'Network::Adapter',
 					'parameters'	=> array(
@@ -589,7 +679,7 @@
 				),
 				'getAdapter'	=> array(
 					'description'	=> 'Get adapter details',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'return_element'		=> 'adapter',
 					'return_type'			=> 'Network::Adapter',
 					'parameters'	=> array(
@@ -601,7 +691,7 @@
 				),
 				'addAdapter'	=> array(
 					'description'	=> 'Add an adapter',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'token_required'		=> true,
 					'return_element'		=> 'adapter',
 					'return_type'			=> 'Network::Adapter',
@@ -615,7 +705,7 @@
 				),
 				'findAddresses'	=> array(
 					'description'	=> 'Find addresses',
-					'privilege_required' => 'network admin',
+					'privilege_required' => 'manage network',
 					'return_element'		=> 'address',
 					'return_type'			=> 'Network::IPAddress',
 					'parameters'	=> array(
@@ -627,7 +717,7 @@
 				),
 				'getAddress'	=> array(
 					'description'	=> 'Get address details',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'return_element'		=> 'address',
 					'return_type'			=> 'Network::IPAddress',
 					'parameters'	=> array(
@@ -636,7 +726,7 @@
 				),
 				'addAddress'	=> array(
 					'description'	=> 'Add an address',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'token_required'		=> true,
 					'return_element'		=> 'address',
 					'return_type'			=> 'Network::IPAddress',
@@ -649,21 +739,117 @@
 						),
 						'adapter_name'	=> array(),
 						'address'		=> array(),
-						'type'			=> array(),
+						'type'			=> array(
+							'options' => array(
+								'ipv4',
+								'ipv6'
+							)
+						),
 					)
 				),
 				'addSubnet'	=> array(
 					'description'	=> 'Add a subnet',
-					'privilege_required'	=> 'network admin',
+					'privilege_required'	=> 'manage network',
 					'token_required'		=> true,
 					'return_element'		=> 'subnet',
 					'return_type'			=> 'Network::Subnet',
 					'parameters'	=> array(
+						'address'		=> array(
+							'required' => true
+						),
+						'size'			=> array(
+							'required' => true
+						),
+						'type'			=> array(
+							'options' => array(
+								'ipv4',
+								'ipv6'
+							)
+						),
+						'risk_level'	=> array(
+							'type' => 'integer'
+						),
+						'description'	=> array(
+							'type' => 'string',
+							'validation_method' => 'Network::Subnet::safeString()'
+						),
+						'managed'		=> array(
+							'options' => array(
+								'AUTO',
+								'MANUAL'
+							)
+						),
+						'uri_last_seen'	=> array(
+							'type' => 'string',
+							'validation_method' => 'Network::Subnet::safeString()'
+						)
+					),
+				),
+				'updateSubnet'	=> array(
+					'description'	=> 'Update a subnet',
+					'privilege_required'	=> 'manage network',
+					'token_required'		=> true,
+					'return_element'		=> 'subnet',
+					'return_type'			=> 'Network::Subnet',
+					'parameters'	=> array(
+						'id'			=> array(
+							'required' => true
+						),
 						'address'		=> array(),
-						'subnet_id'		=> array(),
-						'type'			=> array(),
+						'size'			=> array(),
+						'type'			=> array(
+							'options' => array(
+								'ipv4',
+								'ipv6'
+							)
+						),
+						'risk_level'	=> array(
+							'type' => 'integer'
+						),
+						'description'	=> array(
+							'type' => 'string',
+							'validation_method' => 'Network::Subnet::safeString()'
+						),
+						'managed'		=> array(
+							'options' => array(
+								'AUTO',
+								'MANUAL'
+							)
+						),
+						'uri_last_seen' => array(
+							'type' => 'string',
+							'validation_method' => 'Network::Subnet::safeString()'
+
+						)
 					)
 				),
+				'getSubnetsContainingAddress' => array(
+					'description'	=> 'Get subnets containing a specified address',
+					'privilege_required'	=> 'manage network',
+					'return_element'		=> 'subnet',
+					'return_type'			=> 'Network::Subnet',
+					'parameters'	=> array(
+						'address' => array(
+							'required' => true
+						)
+					)
+				),
+				'purgeSafeSubnets' => array(
+					'description'	=> 'Permanently delete subnets that are considered safe',
+					'privilege_required'	=> 'manage network',
+					'token_required'		=> true,
+					'return_element'		=> null,
+					'return_type'			=> null,
+					'parameters'			=> array()
+				),
+				'purgeOldSubnets' => array(
+					'description'	=> 'Permanently delete subnets that have not been seen in over a day and have a low risk level',
+					'privilege_required'	=> 'manage network',
+					'token_required'		=> true,
+					'return_element'		=> null,
+					'return_type'			=> null,
+					'parameters'			=> array()
+				)
 			);
 		}
 	}

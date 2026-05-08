@@ -294,12 +294,15 @@
 								</tr>
 							</thead>
 							<tbody>
-								<?php foreach ($productSearchTags as $searchTag) { ?>
+								<?php foreach ($productSearchTags as $row) {
+									$searchTag = is_object($row) && isset($row->searchTag) ? $row->searchTag : $row;
+									$xrefId = is_object($row) && isset($row->xrefId) ? $row->xrefId : (isset($searchTag->id) ? $searchTag->id : 0);
+								?>
 									<tr>
-										<td><?= htmlspecialchars($searchTag->category) ?></td>
+										<td><?= htmlspecialchars($searchTag->category ?: 'product_tag') ?></td>
 										<td><?= htmlspecialchars($searchTag->value) ?></td>
 										<td>
-											<button type="button" onclick="removeSearchTagById('<?= $searchTag->id ?>')" class="btn btn-danger btn-sm">Remove</button>
+											<button type="button" onclick="removeSearchTagById('<?= (int)$xrefId ?>')" class="btn btn-danger btn-sm">Remove</button>
 										</td>
 									</tr>
 								<?php } ?>

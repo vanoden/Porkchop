@@ -10,6 +10,7 @@ class Event Extends \BaseModel {
 	public $class_name = null;			// Class name of the object being audited
 	public $class_method = null;		// Method name of the object being audited
 	public $description = null;			// Description of the event
+	public ?string $ip_address = null;	// Client IP address for the event
 
 	/**
 	 * Constructor
@@ -18,7 +19,7 @@ class Event Extends \BaseModel {
 	 */
 	public function __construct($id = 0) {
 		$this->_tableName = 'site_audit_events';
-		$this->_addFields(array('id', 'event_date', 'user_id', 'instance_id', 'class_name', 'class_method', 'description'));
+		$this->_addFields(array('id', 'event_date', 'user_id', 'instance_id', 'class_name', 'class_method', 'description', 'ip_address'));
 		parent::__construct($id);
 	}
 
@@ -39,7 +40,7 @@ class Event Extends \BaseModel {
 	 * @param array $params 
 	 * @return bool 
 	 */
-	public function add($params = []) {
+	public function add($params = [], $force = false) {
 		$this->clearError();
 
 		// Create a new database object
@@ -56,7 +57,7 @@ class Event Extends \BaseModel {
 			return true;
 		}
 
-		if (! property_exists($callingClassName, '_auditEvents')) return true;
+		if (! $force && ! property_exists($callingClassName, '_auditEvents')) return true;
 
 		// if no classes set to be audited, return true
 		if (!empty($GLOBALS['_config']->auditing->auditedClasses) && is_array($GLOBALS['_config']->auditing->auditedClasses)) {
@@ -65,46 +66,71 @@ class Event Extends \BaseModel {
 		}
 
 		$database = new \Database\Service();
-		if (empty($params['instance_id']) || empty($params['description'])) {
-			$this->error("Instance ID and description are required.");
+		if (empty($params['instance_id'])) {
+			$this->error("Instance ID is required.");
 			return false;
 		}
+
+		// Allow NULL descriptions but add a message about "value not found"
+		if (empty($params['description']) || $params['description'] === 'NULL' || $params['description'] === 'Updated NULL' || $params['description'] === 'Added new NULL' || $params['description'] === 'Deleted NULL') {
+			$params['description'] = 'Value not found - ' . ($params['class_name'] ?? 'unknown class') . '::' . ($params['class_method'] ?? 'unknown method');
+			app_log("Audit event with NULL description replaced with 'value not found' message. Class: " . ($params['class_name'] ?? 'unknown') . ", Method: " . ($params['class_method'] ?? 'unknown'), 'warning');
+		}
+
 		if (empty($GLOBALS['_SESSION_']->customer->id)) {
-			if ($_SERVER['SCRIPT_FILENAME'] == BASE."/core/install.php") {
+			if (!empty($params['customer_id'])) $customer_id = $params['customer_id'];
+			elseif ($_SERVER['SCRIPT_FILENAME'] == BASE."/core/install.php") {
 				// Allow install.php to run without a customer ID
 				return true;
 			}
-			app_log("Rejected audit event - No customer ID. Params: " . print_r($params, true));
-			app_log(print_r($params, true));
-			$this->warn("No customer ID found in session.  Cannot log event.");
-			return true;
+			else {
+				app_log("Rejected audit event - No customer ID. Params: " . print_r($params, true));
+				app_log(print_r($params, true));
+				$this->warn("No customer ID found in session.  Cannot log event.");
+				return true;
+			}
+		}
+		else {
+			$customer_id = $GLOBALS['_SESSION_']->customer->id;
 		}
 
 		$this->instance_id = $params['instance_id'];
 		$this->class_name = !empty($params['class_name']) ? $params['class_name'] : $this->getCallingClass();
 		$this->class_method = !empty($params['class_method']) ? $params['class_method'] : $this->getCallingMethod();
 		if (!empty($params['description'])) $this->description = $params['description'];
-		$this->event_date = date('Y-m-d H:i:s');
-		$this->user_id = !empty($GLOBALS['_SESSION_']->customer->id) ? $GLOBALS['_SESSION_']->customer->id : 0;
+		if (!empty($params['ip_address'])) {
+			$this->ip_address = $params['ip_address'];
+		} else {
+			$detectedIp = $this->getClientIp();
+			if ($detectedIp !== '') $this->ip_address = $detectedIp;
+		}
+		$this->user_id = !empty($customer_id) ? $customer_id : 0;
 
+		if (empty($this->instance_id) || empty($this->class_name) || empty($this->class_method) || empty($this->description) || empty($this->user_id) || is_null($this->ip_address)) {
+			app_log("Rejected audit event - missing required fields. Params: " . print_r($params, true),"warning");
+			$this->warn("Missing required fields. Cannot log event.");
+			return true;
+		}
+		// Use sysdate() for event_date as per specification
 		$query = "
 			INSERT INTO site_audit_events
-			(event_date, user_id, instance_id, class_name, class_method, description)
-			VALUES (?, ?, ?, ?, ?, ?)
+			(event_date, user_id, instance_id, class_name, class_method, description, ip_address)
+			VALUES (sysdate(), ?, ?, ?, ?, ?, ?)
 		";
 
 		$database->AddParams(array(
-			$this->event_date,
 			$this->user_id,
 			$this->instance_id,
 			$this->class_name,
 			$this->class_method,
-			$this->description
+			$this->description,
+			$this->ip_address
 		));
 
 		$rs = $database->Execute($query);
 		if (!$rs) {
 			$this->SQLError($database->ErrorMsg());
+			$this->error("Failed to insert audit event into database: ".print_r($params, true));
 			return false;
 		}
 
@@ -114,28 +140,48 @@ class Event Extends \BaseModel {
 
 	protected function getCallingClass() {
 		$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4);
-		if ($backtrace[1]['class'] == 'Site\AuditLog\Event' || $backtrace[1]['class'] == 'BaseModel') {
-			if ($backtrace[2]['class'] == 'Site\AuditLog\Event' || $backtrace[2]['class'] == 'BaseModel') {
-				if (!empty($backtrace[3]['class'])) return $backtrace[3]['class'];
+		$cls1 = $backtrace[1]['class'] ?? null;
+		$cls2 = $backtrace[2]['class'] ?? null;
+		$cls3 = $backtrace[3]['class'] ?? null;
+
+		if ($cls1 == 'Site\AuditLog\Event' || $cls1 == 'BaseModel') {
+			if ($cls2 == 'Site\AuditLog\Event' || $cls2 == 'BaseModel') {
+				if (!empty($cls3)) return $cls3;
 				return null;
 			}
-			if (!empty($backtrace[2]['class'])) return $backtrace[2]['class'];
+			if (!empty($cls2)) return $cls2;
 			return null;
 		}
-		return isset($backtrace[1]['class']) ? $backtrace[1]['class'] : null;
+		return $cls1;
 	}
 
 	protected function getCallingMethod() {
 		$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4);
-		if ($backtrace[1]['class'] == 'Site\AuditLog\Event' || $backtrace[1]['class'] == 'BaseModel') {
-			if ($backtrace[2]['class'] == 'Site\AuditLog\Event' || $backtrace[2]['class'] == 'BaseModel') {
-				if (!empty($backtrace[3]['function'])) return $backtrace[3]['function'];
+		$cls1 = $backtrace[1]['class'] ?? null;
+		$cls2 = $backtrace[2]['class'] ?? null;
+		$fn3 = $backtrace[3]['function'] ?? null;
+		$fn2 = $backtrace[2]['function'] ?? null;
+		$fn1 = $backtrace[1]['function'] ?? null;
+
+		if ($cls1 == 'Site\AuditLog\Event' || $cls1 == 'BaseModel') {
+			if ($cls2 == 'Site\AuditLog\Event' || $cls2 == 'BaseModel') {
+				if (!empty($fn3)) return $fn3;
 				return null;
 			}
-			if (!empty($backtrace[2]['function'])) return $backtrace[2]['function'];
+			if (!empty($fn2)) return $fn2;
 			return null;
 		}
-		return isset($backtrace[1]['function']) ? $backtrace[1]['function'] : null;
+		return $fn1;
+	}
+
+	/**
+	 * Determine the client's IP address using the expected server variables.
+	 * Uses the standardized BaseClass method that prioritizes HAProxy HTTP_X_FORWARDED_FOR header.
+	 * @return string
+	 */
+	private function getClientIp(): string {
+		// Use the standardized method from BaseClass
+		return $this->getIpAddress();
 	}
 
 	public function appendDescription($description) {

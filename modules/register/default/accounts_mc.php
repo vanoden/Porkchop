@@ -9,7 +9,7 @@
 	// Initalize the Page
 	$site = new \Site();
     $page = $site->page();
-	$page->requirePrivilege("manage customers");
+	$page->requirePrivilege("manage customers",\Register\PrivilegeLevel::ORGANIZATION_MANAGER);
 
 	// Initialize Parameter Array
 	$find_parameters = array();
@@ -19,13 +19,16 @@
     $pagination->forwardParameters(array('search','hidden','expired','blocked','deleted','sort_field','sort_direction'));
 
 	// Security - Only Register Module Operators or Managers can see other customers
-	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
-		// Ok
-	}
-	elseif ($GLOBALS['_SESSION_']->customer->organization() && !empty($GLOBALS['_SESSION_']->customer->organization()->id))
-		$find_parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
-	else 
+	// Administrators (manage customers at ADMINISTRATOR level) can see all accounts even without an organization
+	$organization = $GLOBALS['_SESSION_']->customer->organization();
+	$is_admin = $GLOBALS['_SESSION_']->customer->has_privilege('manage customers', \Register\PrivilegeLevel::ADMINISTRATOR);
+	if ($organization !== null && $organization->exists()) {
+		$find_parameters['organization_id'] = $organization->id;
+	} elseif (!$is_admin) {
+		// Non-admin must belong to an organization to see accounts (scoped to that org)
 		return 403;
+	}
+	// If admin with no organization, $find_parameters['organization_id'] is left unset → list all accounts
 
 	$customerList = new \Register\CustomerList();
 

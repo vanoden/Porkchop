@@ -1,12 +1,11 @@
 <?php
 	class Blank Extends \BaseModel {
-	
-		public int $id;
+		public $aParamName = null;
 
 		/********************************************/
 		/* Instance Constructor						*/
 		/********************************************/
-		public function __construct(int $id = null) {
+		public function __construct(?int $id = null) {
 		    
 			// Set Table Name
 			$this->_tableName = 'table name here';
@@ -53,12 +52,12 @@
 			";
 
 			// Add Parameters
-			$database->AddParam($param['code']);
+			$database->AddParam($parameters['code']);
 
 			// Execute Query
 			$rs = $database->Execute($add_object_query);
 			if (! $rs) {
-				$this->SQLError($rs->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
@@ -66,13 +65,7 @@
 			$this->id = $database->Insert_ID();
 
 			// audit the update event
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Added new '.$this->_objectName(),
-				'class_name' => get_class($this),
-				'class_method' => 'add'
-			));
+			if ($this->_auditEvents) $this->recordAuditEvent($this->id, 'Added new ' . $this->_objectName());
 
 			// Update Any Nullable Values
 			return $this->update($params);
@@ -98,8 +91,10 @@
 				UPDATE	`".$this->_tableName."`
 				SET		id = id";
 
+			$audit_messages = [];
+
 			// Add Any Parameters
-			if (isset($params['name'])) {
+			if (!empty($params['name']) && $params['name'] != $this->aParamName) {
 				// Be Sure to Validate! No XSS!
 				if (!$this->validName($params['name'])) {
 					$this->error("Invalid name");
@@ -108,6 +103,7 @@
 				$update_object_query .= ",
 						name = ?";
 				$database->AddParam($params['name']);
+				$audit_messages[] = "name changed from '" . $this->aParamName . "' to '" . $params['name'] . "'";
 			}
 
 			// Query Where Clause
@@ -123,13 +119,7 @@
 			}
 			
 			// audit the update event
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Updated '.$this->_objectName(),
-				'class_name' => get_class($this),
-				'class_method' => 'update'
-			));
+			if ($this->_auditEvents && count($audit_messages) > 0) $this->recordAuditEvent($this->id, implode("; ", $audit_messages));
 
 			// Bust Cache for Updated Object
 			$cache->delete();
@@ -142,7 +132,7 @@
 		/* Load Object Details						*/
 		/* from Cache or Database					*/
 		/********************************************/
-		public function details() {
+		public function details(): bool {
 			// Clear Errors
 			$this->clearError();
 
@@ -152,10 +142,10 @@
 
 			// Fetch Cached Data
 	        if ($cache && $cache->exists()) {
-				$data = $this->cache->get();
+				$data = $this->cache()->get();
 
 				// Fetch Each Class Attribute
-				$this->code = $data->code;
+				$this->code($data->code);
 
 				// Tag Class as Cached
 				$this->_cached = true;
@@ -186,7 +176,7 @@
 			$object = $rs->FetchNextObject();
 			if ($object->id) {
 				$this->id = $object->id;
-				$this->code = $object->code;
+				$this->code($object->code);
 
 				// Cache Database Results
 				$cache->set($object);
@@ -195,8 +185,8 @@
 			}
 			else {
 				// Null out any values
-				$this->id = null;
-				$this->code = null;
+				$this->id = 0;
+				$this->code(null);
 
 				$this->_exists = false;
 			}

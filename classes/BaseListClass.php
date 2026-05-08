@@ -2,6 +2,11 @@
 class BaseListClass extends \BaseClass {
 	protected $_count = 0;	// Number of matched records from latest find/search
 	protected $_modelName;	// Name of object type found in this list
+	protected $_tableName;	// Name of database table for this list
+
+	protected $_flat = false; // Configuration option for controlling whether to automatically load related objects when loading details of this object.  Can be overridden by passing 'recursive' parameter to find() and get() methods.
+	protected $_ids = false; // Configuration option for controlling whether to return only ID's instead of objects.  Can be overridden by passing 'ids' parameter to find() and get() methods.
+	protected $_countOnly = false; // Configuration option for controlling whether to only return the count of matched records instead of objects.  Can be overridden by passing 'count' parameter to find() and get() methods.
 
 	// Default Sort Controls
 	protected $_tableDefaultSortBy;	// Default column to sort by
@@ -31,6 +36,24 @@ class BaseListClass extends \BaseClass {
 		$this->_count = 0;
 	}
 
+	/** @method flatten(true|false)
+	 * Set the flat property for this list, which controls whether to automatically load related objects when loading details of this object.  Less DB load, response size and memory usage for list views, but requires additional calls to load related objects if needed.
+	 * Passed directly to BaseModel constructor when loading objects in this list
+	 * @param bool $flat
+	 */
+	public function flatten($flat = true) {
+		$this->_flat = $flat;
+	}
+
+	/** @method idsOnly(true|false)
+	 * Set the ids property for this list, which controls whether to return only ID's instead of objects.  Passed directly to BaseModel constructor when loading objects in this list
+	 * Passed directly to BaseModel constructor when loading objects in this list
+	 * @param bool $ids
+	 */
+	public function idsOnly($ids = true) {
+		$this->_ids = $ids;
+	}
+
 	/** @method __call(name, parameters)
 	 * Polymorphic method for find and search
 	 * @param mixed $name 
@@ -54,7 +77,7 @@ class BaseListClass extends \BaseClass {
 		}
 		elseif ($name == "search") {
 			if (count($parameters) == 3) {
-				return $this->searchAdanced($parameters[0], $parameters[1], $parameters[2]);
+				return $this->searchAdvanced($parameters[0], $parameters[1], $parameters[2]);
 			}
 			elseif (count($parameters) == 2) {
 				return $this->searchControlled($parameters[0], $parameters[1]);
@@ -141,13 +164,37 @@ class BaseListClass extends \BaseClass {
 		unset($parameters['_limit']);
 		if (!empty($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
 		unset($parameters['_offset']);
-		if (!empty($parameters['recursive'])) $controls['recursive'] = $parameters['recursive'];
+		if (!empty($parameters['recursive'])) {
+			if ($parameters['recursive'] === true || $parameters['recursive'] === 1) $controls['recursive'] = true;
+			else $controls['recursive'] = false;
+		}
+		unset($parameters['recursive']);
+
+		// Backwards Compatibility for legacy parameters that change the output of the find method
+		// Return Only ID's if _ids is set in parameters (legacy used _count for this functionality, but that is confusing and not intuitive, so we will support both for backwards compatibility)
+		if (!empty($parameters['_ids'])) {
+			if ($parameters['_ids'] === true || $parameters['_ids'] === 1) $controls['ids'] = true;
+			else $controls['ids'] = false;
+		}
+		elseif ($this->_ids) {
+			$controls['ids'] = true;
+		}
+		unset($parameters['_ids']);
+		// Return Only Requested Object, not related objects if _flat is set in parameters (used for search_tags searching)
+		if (!empty($parameters['_flat'])) {
+			if ($parameters['_flat'] === true || $parameters['_flat'] === 1) $controls['flat'] = true;
+			else $controls['flat'] = false;
+		}
+		elseif ($this->_flat) {
+			$controls['flat'] = true;
+		}
+		unset($parameters['_flat']);
 
 		// Other Backwards Compatibility
 		if (!empty($parameters['_count'])) $controls['ids'] = $parameters['_count'];
 		if (!empty($parameters['_sort_desc'])) $controls['order'] = 'DESC';
 		if (!empty($parameters['_sort_order'])) $controls['order'] = $parameters['_sort_order'];
-		if (!empty($parameters['_flat']) && $parameters['_flat']) $controls['ids'] = true;
+
 		// Normalize order to ASC/DESC only
 		$controls['order'] = preg_match('/^(asc|desc)$/i', $controls['order'] ?? '') ? $controls['order'] : 'ASC';
 		return $this->findAdvanced($parameters, [], $controls);
@@ -203,12 +250,14 @@ class BaseListClass extends \BaseClass {
 		$tableIDColumn = $model->_tableIDColumn();
 		$fields = $model->_fields();
 
+		// Prepare Query
 		$find_objects_query = "
 				SELECT	`$tableIDColumn`
 				FROM	`$tableName`
 				WHERE	`$tableIDColumn` = `$tableIDColumn`
 			";
 
+		// Add Parameters to Query
 		foreach ($parameters as $key => $value) {
 			if (in_array($key, $fields)) {
 				$find_objects_query .= "
@@ -217,54 +266,71 @@ class BaseListClass extends \BaseClass {
 			}
 		}
 
-		if (!empty($controls['sort'])) {
-			if (!in_array($controls['sort'], $fields)) {
-				$this->error("Invalid sort column name '".$controls['sort']."'");
-				return array();
-			}
-			$find_objects_query .= "
-					ORDER BY `" . $controls['sort'] . "`";
-			if (!empty($controls['order']) && preg_match('/^(asc|desc)$/i', $controls['order'])) {
-				$find_objects_query .= " " . $controls['order'];
-			}
-		}
-		elseif (!empty($this->_tableDefaultSortBy)) {
-			$find_objects_query .= "
-					ORDER BY `" . $this->_tableDefaultSortBy . "`";
-			if (!empty($this->_tableDefaultSortOrder)) {
-				$find_objects_query .= " " . $this->_tableDefaultSortOrder;
-			}
-		}
+		// Add Sort Clause
+		$find_objects_query .= $this->sortClause($controls);
 
-		if (!empty($controls['limit'])) {
-			if (is_numeric($controls['limit'])) {
-				if (!empty($controls['offset'])) {
-					if (is_numeric($controls['offset'])) {
-						$find_objects_query .= "
-							LIMIT " . $controls['offset'] . "," . $controls['limit'];
-					}
-				}
-				$find_objects_query .= "
-					LIMIT " . $controls['limit'];
-			} else {
-				$this->error("Invalid limit qty");
-				return array();
-			}
-		}
-		$objects = array();
+		// Add Limit Clause
+		$find_objects_query .= $this->limitClause($controls);
+
+		// Execute Query
 		$rs = $database->Execute($find_objects_query);
 		if (!$rs) {
 			$this->SQLError($database->ErrorMsg());
 			return array();
 		}
 
+		// Assemble Results
+		$objects = array();
 		while (list($id) = $rs->FetchRow()) {
-			$object = new $this->_modelName($id);
-			array_push($objects, $object);
+			if ($this->_countOnly) {
+				// Don't do anything, we're just counting records
+			}
+			elseif ($this->_ids) {
+				// Return only array of object id's
+				array_push($objects, $id);
+			}
+			elseif ($this->_flat) {
+				// Return objects with only fields and no related objects
+				$object = new $this->_modelName($id, true);
+				array_push($objects, $object);
+			}
+			else {
+				// Return full objects with related objects
+				$object = new $this->_modelName($id);
+				array_push($objects, $object);
+			}
 			$this->incrementCount();
 		}
 
 		return $objects;
+	}
+
+	/** @method sortClause(controls)
+	 * Generate sort clause for SQL
+	 * @param array $controls (sort/order)
+	 * @return string
+	 */
+	public function sortClause($controls) {
+		$sort = "";
+		if (!empty($controls['sort'])) {
+			$modelClass = new $this->_modelName();
+			$fields = $modelClass->_fields();
+			if (!in_array($controls['sort'], $fields)) {
+				$this->error("Invalid sort column name '".$controls['sort']."'");
+				return "";
+			}
+			$sort = " ORDER BY `" . $controls['sort'] . "`";
+			if (!empty($controls['order']) && preg_match('/^(asc|desc)$/i', $controls['order'])) {
+				$sort .= " " . $controls['order'];
+			}
+		}
+		elseif (!empty($this->_tableDefaultSortBy)) {
+			$sort = " ORDER BY `" . $this->_tableDefaultSortBy . "`";
+			if (!empty($this->_tableDefaultSortOrder)) {
+				$sort .= " " . $this->_tableDefaultSortOrder;
+			}
+		}
+		return $sort;
 	}
 
 	/** @method limitClause(controls)
@@ -274,14 +340,12 @@ class BaseListClass extends \BaseClass {
 	 */
 	public function limitClause($controls) {
 		$limit = "";
-		if (!empty($controls['limit'])) {
-			if (is_numeric($controls['limit'])) {
-				if (!empty($controls['offset'])) {
-					if (is_numeric($controls['offset'])) {
-						$limit = " LIMIT " . $controls['offset'] . "," . $controls['limit'];
-					}
-				}
-				else $limit = " LIMIT " . $controls['limit'];
+		if (!empty($controls['limit']) && is_numeric($controls['limit'])) {
+			$offset = isset($controls['offset']) && is_numeric($controls['offset']) ? (int) $controls['offset'] : 0;
+			if ($offset > 0) {
+				$limit = " LIMIT " . $offset . "," . $controls['limit'];
+			} else {
+				$limit = " LIMIT " . $controls['limit'];
 			}
 		}
 		return $limit;

@@ -8,10 +8,16 @@
 	# Handle Actions
 	if (!empty($_REQUEST['email_address'])) {
 		$customer = new \Register\Customer();
-		// CAPTCHA Required and Provided
-		$reCAPTCHA = new \GoogleAPI\ReCAPTCHA();
-		if ($reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) {
-			app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
+		// reCAPTCHA configurable on/off for forgot_password
+		$rc = $GLOBALS['_config']->register->requireCAPTCHA ?? null;
+		$require_captcha_forgot = ($rc && isset($rc->forgot_password)) ? $rc->forgot_password : true;
+		$captcha_ok = true;
+		if ($require_captcha_forgot) {
+			$reCAPTCHA = new \GoogleAPI\ReCAPTCHA();
+			$captcha_ok = $reCAPTCHA->test($customer, $_REQUEST['g-recaptcha-response'] ?? '');
+			if ($captcha_ok) app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
+		}
+		if ($captcha_ok) {
 
 			if (!isset($_POST['csrfToken']) or !strlen($_POST['csrfToken'])) {
 				$page->addError("Invalid Request");
@@ -50,6 +56,13 @@
 						if (! isset($customer->code) or ! strlen($customer->code)) {
 							app_log("Customer has invalid login",'error',__FILE__,__LINE__);
 							$page->addError("Sorry, you have not been given access to this site.");
+							return;
+						}
+
+						# Check if account is blocked
+						if ($customer->isBlocked()) {
+							app_log("Blocked account attempted password recovery: ".$customer->code,'notice',__FILE__,__LINE__);
+							$page->addError("Your account has been blocked due to multiple failed login attempts. Please contact support at ".($GLOBALS['_config']->site->support_email ?? 'service@spectrosinstruments.com')." for assistance.");
 							return;
 						}
 			
@@ -106,40 +119,43 @@
 						$message->subject($GLOBALS['_config']->register->forgot_password->subject);
 						$message->body($notice_template->output());
 
-						app_log("Sending Forgot Password Link",'debug',__FILE__,__LINE__);
-						$transportFactory = new \Email\Transport();
-						$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
-						if (! $transport) {
-							$page->addError("Error sending email, please contact us at ".$GLOBALS['_config']->site->support_email);
-							return;
-						}
-						if ($transport->error()) {
-							$page->addError("Error sending email, please contact us at ".$GLOBALS['_config']->site->support_email);
-							app_log("Error initializing email transport: ".$transport->error(),'error',__FILE__,__LINE__);
-							return;
-						}
-						$transport->hostname($GLOBALS['_config']->email->hostname);
-						$transport->token($GLOBALS['_config']->email->token);
-						if ($transport->deliver($message)) {
-							app_log("Delivered message");
+					app_log("Sending Forgot Password Link to ".$_REQUEST['email_address'],'debug',__FILE__,__LINE__);
+					$transportFactory = new \Email\Transport();
+					$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+					if (! $transport) {
+						app_log("Failed to create email transport with provider: ".$GLOBALS['_config']->email->provider,'error',__FILE__,__LINE__);
+						$page->addError("Error sending email, please contact us at ".$GLOBALS['_config']->site->support_email);
+						return;
+					}
+					if ($transport->error()) {
+						app_log("Error initializing email transport: ".$transport->error(),'error',__FILE__,__LINE__);
+						$page->addError("Error sending email, please contact us at ".$GLOBALS['_config']->site->support_email);
+						return;
+					}
+					$transport->hostname($GLOBALS['_config']->email->hostname);
+					$transport->token($GLOBALS['_config']->email->token);
+					app_log("Email transport configured: provider=".$GLOBALS['_config']->email->provider.", hostname=".$GLOBALS['_config']->email->hostname,'debug',__FILE__,__LINE__);
+					if ($transport->deliver($message)) {
+						$result = $transport->result();
+						app_log("Email delivery successful. Transport result: ".$result." for email to ".$_REQUEST['email_address'],'info',__FILE__,__LINE__);
 
-							// Terminate Session
-							$GLOBALS['_SESSION_']->end();
+						// Terminate Session
+						$GLOBALS['_SESSION_']->end();
 
-							// Display Confirmation Page
-							header("location: /_register/password_token_sent");
-							exit;
-						}
-						elseif ($transport->error()) {
-							$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
-							app_log("Error sending forgot password link: ".$transport->error(),'error',__FILE__,__LINE__);
-							return;
-						}
-						else {
-							$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
-							app_log("Error sending forgot password link: ".$transport->error(),'error',__FILE__,__LINE__);
-							return;
-						}
+						// Display Confirmation Page
+						header("location: /_register/password_token_sent");
+						exit;
+					}
+					elseif ($transport->error()) {
+						app_log("Error sending forgot password link: ".$transport->error()." for email to ".$_REQUEST['email_address'],'error',__FILE__,__LINE__);
+						$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
+						return;
+					}
+					else {
+						app_log("Email delivery failed without error message. Transport result: ".$transport->result()." for email to ".$_REQUEST['email_address'],'error',__FILE__,__LINE__);
+						$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
+						return;
+					}
 					}
 					else {
 						app_log("Customer not found matching '".$_REQUEST['email_address']."', no email sent",'notice',__FILE__,__LINE__);

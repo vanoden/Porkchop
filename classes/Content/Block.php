@@ -12,6 +12,7 @@
 		public ?int $menu_id = null;
 		public string $name = "";		
 		public string $content = "";
+		public string $date_modified = "";
 
         public function __construct($id = 0) {
 			$this->_tableName = 'content_messages';
@@ -21,22 +22,28 @@
         }
 
 		public function get($target = ''): bool {
-		
+			// Clear any existing errors
 			$this->clearError();
 
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$get_contents_query = "
 				SELECT	id
 				FROM	content_messages
 				WHERE	target = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_contents_query,
-				array(
-					$target
-				)
-			);
+
+			// Bind Parameters
+			$database->AddParam($target);
+
+			// Execute Query
+			$rs = $database->Execute($get_contents_query);
+
+			// Check for SQL Error
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
@@ -51,6 +58,13 @@
 		}
 
 		public function getByCompanyIdTargetDeleted ($company_id, $target, $deleted = 0) {
+			// Clear any existing errors
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$get_contents_query = "
 				SELECT	id
 				FROM	content_messages
@@ -58,16 +72,15 @@
 				AND		target = ?
 				AND		deleted = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_contents_query,
-				array(
-					$company_id,
-					$target,
-					$deleted
-				)
-			);
+
+			// Bind Parameters
+			$database->AddParam($company_id);
+			$database->AddParam($target);
+			$database->AddParam($deleted);
+
+			$rs = $database->Execute($get_contents_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
@@ -81,9 +94,9 @@
 		}
 
 		public function add($parameters = []) {
-		
 			$this->clearError();
-			$_customer = new \Register\Customer();
+			$database = new \Database\Service();
+
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error("You do not have permission to add content");
 				app_log("Denied access in Content::add, 'content operator' required to add message '".$parameters['target']."'",'notice',__FILE__,__LINE__);
@@ -101,49 +114,43 @@
 				VALUES
 				(		?,?,'&nbsp',sysdate())
 			";
-            $rs = $GLOBALS['_database']->Execute(
-				$insert_content_query,
-				array(
-					$parameters['target'],
-					$GLOBALS['_SESSION_']->company->id
-				)
-			);
-            if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$database->AddParam($parameters['target']);
+			$database->AddParam($GLOBALS['_SESSION_']->company->id);
+
+            $rs = $database->Execute($insert_content_query);
+            if ($database->ErrorMsg()) {
+                $this->SQLError($database->ErrorMsg());
 				app_log($this->error(),'error',__FILE__,__LINE__);
                 return null;
             }
 
-			$id = $GLOBALS['_database']->Insert_ID();
+			$id = $database->Insert_ID();
 
 			// add audit log
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $id,
-				'description' => 'Added new content message',
-				'class_name' => get_class($this),
-				'class_method' => 'add'
-			));
+			$this->recordAuditEvent($id, 'Added new content message');
 
 			$this->id = $id;
 			return $this->update($parameters);
 		}
 
         public function update($parameters = []): bool {
-        
+			// Clear any existing errors and cache
+			$this->clearError();
 			$this->clearCache();
+
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error("You do not have permission to update content");
 				app_log("Denied access in Content::Message::update(), 'content operator' required",'notice');
-				return null;
+				return false;
 			}
 
 			if (! $this->id) {
 				$this->error("id parameter required to update content");
-				return null;
+				return false;
 			}
 
-			cache_unset("content[".$this->id."]");
+			// Initialize Database Service
+			$database = new \Database\Service();
 
 			$ok_params = array(
 				"name"		=> "name",
@@ -151,47 +158,48 @@
 				"title"		=> "title",
 			);
 
+			// Prepare Update Query
             $update_content_query = "
                 UPDATE	content_messages
 				SET		date_modified = sysdate()";
 
-			$bind_params = array();
+			$audit_messages = [];
 
 			foreach ($ok_params as $parameter) {
-				if (isset($parameters[$parameter])) {
+				if (isset($parameters[$parameter]) && $parameters[$parameter] !== $this->$parameter) {
 					$update_content_query .= ",
 						$parameter = ?";
-					array_push($bind_params,$parameters[$parameter]);
+					$database->AddParam($parameters[$parameter]);
+					if ($parameter == 'content') $audit_messages[] = "Updated content";
+					else $audit_messages[] = "Changed $parameter to '".$parameters[$parameter]."'";
 				}
 			}
 
 			$update_content_query .= "
 				WHERE   id = ?";
-			array_push($bind_params,$this->id);
-	
-			query_log($update_content_query,$bind_params);
-            $rs = $GLOBALS['_database']->Execute(
-				$update_content_query,$bind_params
+			$database->AddParam($this->id);
+
+			if (empty($audit_messages)) {
+				// Nothing to update
+				return true;
+			}
+
+            $rs = $database->Execute(
+				$update_content_query
 			);
             if (! $rs) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
+                $this->SQLError($database->ErrorMsg());
                 return false;
             }
-			
+
 			// audit the update event
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Updated '.$this->_objectName(),
-				'class_name' => get_class($this),
-				'class_method' => 'update'
-			));
+			$this->recordAuditEvent($this->id, implode("; ", $audit_messages));
 
             return $this->details();
         }
 
 		public function drop() {
-		
+			$this->clearError();
 			$database = new \Database\Service();
 			$delete_object_query = "
 				DELETE
@@ -204,6 +212,7 @@
 				return false;
 			}
 			else {
+				$this->recordAuditEvent($this->id, 'Deleted content message');
 				return true;
 			}
 		}

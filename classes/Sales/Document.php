@@ -22,12 +22,13 @@
 	 */
 	abstract class Document extends \BaseModel {
 		public $code;						// Unique Code for Document
-		protected DocumentStatus $status;	// Document Status
+		public $status;						// Document Status (string value)
 		protected DocumentType $type;		// Document Type
 		public $customer_id;				// ID of \Register\Customer purchasing product
 		public $customer_organization_id;	// ID of \Register\Organization to which the customer belongs
 		public $seller_id;					// ID of \Register\Customer selling product
 		public $seller_organization_id;		// ID of \Register\Organization to which the seller belongs
+		public $salesperson_id;				// ID of \Register\Admin who is the salesperson
 		public $local_document_number;		// Our Order Number For Sales Orders, Our Purchase Order Number for Purchase Orders
 		public $remote_document_number;		// Their Order Number For Sales Orders, Their Purchase Order Number for Purchase Orders
 		public $billing_location_id;		// ID of \Register\Location for billing
@@ -289,13 +290,22 @@
 			return new \Register\Admin($this->seller_id);
 		}
 
-		/** @method public customer()
-		 *  Get the \Register\Customer who is the buyer for this order
-		 *  @return \Register\Customer
-		 */
-		public function customer() {
-			return new \Register\Customer($this->customer_id);
-		}
+	/** @method public customer()
+	 *  Get the \Register\Customer who is the buyer for this order
+	 *  @return \Register\Customer
+	 */
+	public function customer() {
+		return new \Register\Customer($this->customer_id);
+	}
+
+
+	/** @method public salesperson()
+	 *  Get the \Register\Admin who is the salesperson for this order
+	 *  @return \Register\Admin
+	 */
+	public function salesperson() {
+		return new \Register\Admin($this->salesperson_id);
+	}
 
 		/** @method public billing_location()
 		 *  Get the \Register\Location for billing
@@ -462,7 +472,12 @@
 		 */
 		private function addEvent($parameters = array()) {
 			$event = new \Sales\Document\Event();
-			$parameters['order_id'] = $this->id;
+			// Support both order_id and document_id for backward compatibility
+			if (isset($parameters['order_id'])) {
+				$parameters['document_id'] = $parameters['order_id'];
+			} else {
+				$parameters['document_id'] = $this->id;
+			}
 			if (! $event->add($parameters)) {
 				$this->error($event->error());
 				return false;
@@ -505,7 +520,7 @@
 		 */
 		public function date_created() {
 			$eventlist = new \Sales\Document\EventList();
-			$first =  $eventlist->first(array('order_id' => $this->id, 'new_status' => 'NEW'));
+			$first =  $eventlist->first(array('document_id' => $this->id, 'new_status' => 'NEW'));
 			if (empty($first)) return "Unknown";
 			else return $first->date_event;
 		}

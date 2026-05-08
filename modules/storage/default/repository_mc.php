@@ -7,33 +7,25 @@ $page = $site->page();
 $page->requirePrivilege('manage storage repositories');
 
 // Identify File from User Input
+$factory = new \Storage\RepositoryFactory();
 if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
 	// POST/GET Variable with Repository ID
-	$repository = new \Storage\Repository($_REQUEST['id']);
+	$repository = $factory->createWithID($_REQUEST['id']);
 }
 elseif (!empty($_REQUEST['code'])) {
 	// POST/GET Variable with Repository Code
-	$repository = new \Storage\Repository();
-	$repository->get($_REQUEST['code']);
+	$repository = $factory->createWithCode($_REQUEST['code']);
 }
 elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 	// Query String with Repository Code
-	$repository = new \Storage\Repository();
-	$repository->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
+	$repository = $factory->createWithCode($GLOBALS['_REQUEST_']->query_vars_array[0]);
 }
-//elseif ($repository->validType($_REQUEST['type'])) {
-//	// POST/GET Variable with Repository Type
-//	$repository = $factory->create($_REQUEST['type']);
-//	// If factory returns false (unsupported type), fall back to base repository
-//	if (!$repository) $repository = new \Storage\Repository();
-//}
 else {
-	// Default to Local Repository
-	$repository = new \Storage\Repository();
+	// Default to Virtual Repository
+	$repository = $factory->create('virtual');
 }
 
-$repository_types = $repository->getSupportedTypes();
-$factory = new \Storage\RepositoryFactory();
+$repository_types = $factory->types();
 
 // Handle Form Submission
 if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
@@ -46,10 +38,10 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 			$page->addError("Invalid name");
 			$_REQUEST['name'] = htmlspecialchars($_REQUEST['name']);
 		}
-					if (empty($repository->id) && isset($_REQUEST['type']) && !$repository->validType($_REQUEST['type'])) {
-				$page->addError("Invalid type '" . $_REQUEST['type'] . "'");
-				$_REQUEST['type'] = htmlspecialchars($_REQUEST['type']);
-			}
+		if (empty($repository->id) && isset($_REQUEST['type']) && !$repository->validType($_REQUEST['type'])) {
+			$page->addError("Invalid type '" . $_REQUEST['type'] . "'");
+			$_REQUEST['type'] = htmlspecialchars($_REQUEST['type']);
+		}
 		if (isset($_REQUEST['status']) && !$repository->validStatus($_REQUEST['status'])) {
 			$page->addError("Invalid status");
 			$_REQUEST['status'] = htmlspecialchars($_REQUEST['status']);
@@ -57,13 +49,12 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 
 		// For new repositories, create the proper repository type before validation
 		if (empty($repository->id) && !empty($_REQUEST['type']) && isset($_REQUEST['type']) && $repository->validType($_REQUEST['type'])) {
-			$repository = new \Storage\Repository();
-			$repository->getInstance($_REQUEST['type']);
-			if ($repository->error()) $page->addError($repository->error());
+			$repository = $factory->create($_REQUEST['type']);
+			if ($factory->error()) $page->addError($factory->error());
 			// If factory returns false (unsupported type), fall back to base repository
 			if (!$repository) {
 				$page->addError("Repository type '" . (isset($_REQUEST['type']) ? $_REQUEST['type'] : '') . "' is not supported");
-				$repository = new \Storage\Repository();
+				$repository = $factory->create('Validation');
 			}
 		}
 
@@ -112,7 +103,7 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 					// If factory returns false (unsupported type), fall back to base repository
 					if (!$repository) {
 						$page->addError("Repository type '" . $_REQUEST['type'] . "' is not supported");
-						$repository = new \Storage\Repository();
+						$repository = $factory->create('Validation');
 					}
 				}
 				if (isset($_REQUEST['type']) && $_REQUEST['type'] == 'local' && isset($_REQUEST['path'])) $parameters['path'] = $_REQUEST['path'];
@@ -253,11 +244,13 @@ if (is_array($repository_types)) {
 }
 
 // Get Default Privileges for Repository
-if (is_object($repository)) {
+if (!is_object($repository)) {
+	$page->addError("Repository not found or could not be created.");
+	$default_privileges = array();
+} else {
+	// Initialize privileges for both new and existing repositories
 	$default_privileges = $repository->default_privileges();
 	//$override_privileges = $repository->override_privileges();
-} else {
-	$page->addError("Repository not found or could not be created.");
 }
 
 

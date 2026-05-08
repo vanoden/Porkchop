@@ -31,8 +31,11 @@
 					}
 					$class_version = $class->version();
 					$this->install_log("$module_name::Schema: version ".$class_version);
-					if (isset($module_data['schema']) && $module_data['schema'] != $class_version) {
-						$this->install_fail($module_name." Schema version ".$class_version." doesn't match required version ".$module_data['schema']);
+					if (isset($module_data['schema']) && $module_data['schema'] < $class_version) {
+						$this->install_fail($module_name." Schema version ".$class_version." greater than required version ".$module_data['schema'].". Please correct the module schema version.");
+					}
+					elseif (isset($module_data['schema']) && $module_data['schema'] > $class_version) {
+						$this->install_fail($module_name." Schema version ".$class_version." less than required version ".$module_data['schema'].". Please check for errors in schema upgrade.");
 					}
 				}
 
@@ -41,10 +44,9 @@
 				/********************************************/
 				if (!empty($module_data['privileges'])) {
 					foreach ($module_data['privileges'] as $privilege_name) {
-						$this->install_log("Adding privilege ".$privilege_name);
 						$privilege = new \Register\Privilege();
 						if ($privilege->get($privilege_name)) {
-							$this->install_log("Privilege $privilege_name already exists",'info');
+							$this->install_log("Privilege $privilege_name already exists",'trace');
 							$privilege->update(array('module' => $module_name));
 						}
 						else {
@@ -116,7 +118,27 @@
 		 * @param array $menus Array of menus to populate.
 		 */
 		public function populateMenus($menus = array()) {
+			$this->install_log("Populating Navigation Menus");
 			foreach ($menus as $code => $menu) {
+				// Support both modern menu format (title/items) and legacy shorthand
+				// format where entries are just "Item Title" => "/target/path".
+				if (!is_array($menu)) continue;
+				if (!isset($menu['title'])) $menu['title'] = $code;
+				if (!isset($menu['items']) || !is_array($menu['items'])) {
+					$legacy_items = array();
+					foreach ($menu as $legacy_title => $legacy_target) {
+						if ($legacy_title === 'title' || $legacy_title === 'items') continue;
+						$legacy_items[] = array(
+							'title' => $legacy_title,
+							'target' => $legacy_target,
+							'view_order' => count($legacy_items) + 1,
+							'alt' => $legacy_title,
+							'description' => $legacy_title
+						);
+					}
+					$menu['items'] = $legacy_items;
+				}
+
 				$nav_menu = new \Site\Navigation\Menu();
 				if ($nav_menu->get($code)) {
 					$this->install_log("Menu $code found");
@@ -128,62 +150,56 @@
 					$this->install_fail("Error adding menu $code: ".$nav_menu->error());
 				}
 				foreach ($menu["items"] as $item) {
+					if (!is_array($item) || empty($item['title'])) continue;
 					$nav_item = new \Site\Navigation\Item();
+					$parameters = array(
+						"view_order"	=> $item["view_order"] ?? 0,
+						"alt"			=> $item["alt"] ?? $item["title"],
+						"description"	=> $item["description"] ?? $item["title"]
+					);
+					if (!empty($item['target'])) {
+						$parameters['target'] = $item['target'];
+					}
+
 					if ($nav_item->getItem($nav_menu->id,$item["title"])) {
-						$nav_item->update(
-							array(
-								"view_order"	=> $item["view_order"],
-								"alt"			=> $item["alt"],
-								"description"	=> $item["description"],
-								"target"		=> $item["target"],
-							)
-						);
+						$nav_item->update($parameters);
 						$this->install_log("Menu Item ".$item["title"]." updated");
 					}
-					elseif (! $nav_item->error() && $nav_item->add(
-							array(
-								"menu_id"		=> $nav_menu->id,
-								"title"			=> $item["title"],
-								"target"		=> $item["target"],
-								"view_order"	=> $item["view_order"],
-								"alt"			=> $item["alt"],
-								"description"	=> $item["description"]
-							)
-						)) {
-							$this->install_log("Adding Menu Item ".$item["title"]);
+					elseif (! $nav_item->error()) {
+						$parameters['menu_id'] = $nav_menu->id;
+						$parameters['title'] = $item["title"];
+						$this->install_log("Adding Menu Item ".$item["title"]);
+						$nav_item->add($parameters); 
 					}
 					else {
 						$this->install_fail("Error adding menu item ".$item["title"].": ".$nav_item->error());
 					}
-					foreach ($item['items'] as $subitem) {
+
+					if (isset($item['items']) && is_array($item['items'])) {
+						foreach ($item['items'] as $subitem) {
 						$subnav_item = new \Site\Navigation\Item();
+						$parameters = array();
+						if (!empty($subitem['target'])) $parameters['target'] = $subitem['target'];
+						if (!empty($subitem['view_order'])) $parameters['view_order'] = $subitem['view_order'];
+						if (!empty($subitem['description'])) $parameters['description'] = $subitem['description'];
+						if (!empty($subitem['alt'])) $parameters['alt'] = $subitem['alt'];
+						if (!empty($subitem['require_role'])) $parameters['require_role'] = $subitem['require_role'];
+
 						if ($subnav_item->getItem($nav_menu->id,$subitem["title"],$nav_item)) {
-							$subnav_item->update(
-								array(
-									"view_order"	=> $subitem["view_order"],
-									"target"		=> $subitem["target"],
-									"alt"			=> $subitem["alt"],
-									"description"	=> $subitem["description"]
-								)
-							);
+							$subnav_item->update($parameters);
 							$this->install_log("Sub Menu Item ".$subitem["title"]." updated");
 						}
-						elseif (! $subnav_item->error() && $subnav_item->add(
-								array(
-									"menu_id"		=> $nav_menu->id,
-									"parent_id"		=> $nav_item->id,
-									"title"			=> $subitem["title"],
-									"target"		=> $subitem["target"],
-									"view_order"	=> $subitem["view_order"],
-									"alt"			=> $subitem["alt"],
-									"description"	=> $subitem["description"]
-								)
-							)) {
-								$this->install_log("Adding SubMenu Item ".$subitem["title"]);
+						elseif (! $subnav_item->error()) {
+							$this->install_log("Adding SubMenu Item ".$subitem["title"]);
+							$parameters['menu_id'] = $nav_menu->id;
+							$parameters['parent_id'] = $nav_item->id;
+							$parameters['title'] = $subitem["title"];
+							$subnav_item->add($parameters);
 						}
 						else {
 							$this->install_fail("Error adding menu item ".$subitem["title"].": ".$subnav_item->error());
 						}
+					}
 					}
 				}
 			}
@@ -199,47 +215,35 @@
 			print "<meta charset='UTF-8'>\n";
 			print "<meta name='viewport' content='width=device-width, initial-scale=1.0'>\n";
 			print "<title>Porkchop Site Upgrade</title>\n";
-			print "<style>\n";
-			print "body { font-family: Arial, sans-serif; color: #333; }\n";
-			print ".install_page { width: 100%; height: 100%; background-color: #fff; padding: 20px; }\n";
-			print ".install_page h1 { color: #333; }\n";
-			print ".install_page p { margin: 10px 0; }\n";
-			print ".install_page div.logger { background-color: #eaeaea; padding: 10px; border-radius: 5px; border: 1px solid #333; overflow: auto; max-height: 700px; }\n";
-			print ".install_page div.logger h2 { margin-top: 0; }\n";
-			print ".install_page div.logger p { margin: 5px 0; }\n";
-			print ".install_page div.logger div.logger_line { padding: 3px; border-bottom: 1px solid #ccc; }\n";
-			print ".install_page div.logger div.logger_line:nth-of-type(even) { background-color: #f9f9f9; }\n";
-			print ".install_page div.logger div.logger_line span.date { color: #666; width: 150px; display: inline-block; }\n";
-			print ".install_page div.logger div.logger_line span.pid { display: inline-block; margin-right: 10px; margin-left: 10px; width: 70px;}\n";
-			print ".install_page div.logger div.logger_line span.pid::before { content: \"[\"; }\n";
-			print ".install_page div.logger div.logger_line span.pid::after { content: \"]\"; }\n";
-			print ".install_page div.logger div.logger_line span.level { color: #111; font-weight: bold; display: inline-block; width: 50px; margin-right: 10px; }\n";
-			print ".install_page div.logger div.logger_line span.module_view { display: inline-block; min-width: 120px; }\n";
-			print ".install_page div.logger div.logger_line span.module { color: #007bff; font-weight: bold; }\n";
-			print ".install_page div.logger div.logger_line span.view { color: #28a745; }\n";
-			print ".install_page div.logger div.logger_line span.file { display: inline-block; width: 250px; color: #6c757d; }\n";
-			print ".install_page div.logger div.logger_line span.line { display: inline-block; width: 50px; color: #6c757d; }\n";
-			print ".install_page div.logger div.logger_line span.session { display: inline-block; width: 70px; color: #17a2b8; }\n";
-			print ".install_page div.logger div.logger_line span.customer { display: inline-block; width: 70px; color: #ffc107; }\n";
-			print ".install_page div.logger div.logger_line span.message { display: inline-block; width: 750px; overflow: auto; color: #dc3545; }\n";
-			print ".install_page div.logger div.logger_line .error { color: red; }\n";
-			print ".install_page div.logger div.logger_line .warning { color: orange; }\n";
-			print ".install_page div.logger div.logger_line .info { color: green; }\n";
-			print ".install_page div.logger div.logger_line .debug { color: blue; }\n";
-			print "</style>\n";
+			$__pathPrefix = defined('PATH') ? rtrim((string) PATH, '/') : '';
+			$__installCss = htmlspecialchars($__pathPrefix . '/css/porkchop-install.css', ENT_QUOTES, 'UTF-8');
+			print "<link rel=\"stylesheet\" href=\"".$__installCss."\" />\n";
 			print "</head>\n";
 			print "<body>\n";
 			print "<div class='install_page'>";
 			print "<h1>Porkchop Site Upgrade</h1>";
-			print "<p><h3 style='display:inline-block'>Log Level</h3> <span id='log_level'>".$this->logLevel()."</span></p>";
+			print "<p><h3 class=\"install-log-level-heading\">Log Level</h3> <span id='log_level'>".$this->logLevel()."</span></p>";
 			print "<div class='logger'><div class='logger_line'><span class='logger date'>Date</span> <span class='logger pid'>PID</span><span class='logger level'>Level</span><span class='module_view'><span class='module'>Module</span><span class='view'>View</span></span><span class='file'>File</span><span class='logger line'>Line</span><span class='session'>Session</span><span class='customer'>CustID</span><span class='logger message'>Message</span></div></div>";
 			print "<div class=\"logger\">";
 			flush();
 		}
 
+		/** @method install_log(message, level)
+		 * Log a message during the installation process.
+		 * @param string $message The message to log.
+		 * @param string $level The log level (e.g., 'trace', 'debug', 'info', 'warning', 'notice', 'error').
+		 */
 		public function install_log($message = '',$level = 'info') {
 			if (! $this->log_display($level)) return;
-			app_log($message,$level);
+			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[0] ?? null;
+			if (isset($caller['file']) && isset($caller['function'])) {
+				$file = str_replace(BASE,"",$caller['file']);
+				$line = $caller['line'];
+				$class = $caller['class'] ?? '';
+				$function = $caller['function'] ?? '';
+			}
+
+			app_log($message,$level,$file, $line, $class, $function);
 			if (false) {
 				print date('Y/m/d H:i:s');
 				print " [".getmypid()."]";
@@ -248,13 +252,17 @@
 				flush();
 			}
 		}
-	
+
+		/** @method install_fail(message)
+		 * Log a message indicating the installation has failed and exit the script.
+		 * @param string $message The failure message.
+		 */
 		public function install_fail($message) {
 			$this->install_log("Upgrade failed: $message",'error');
 			exit;
 		}
 
-		/**
+		/** @method logLevel(level)
 		 * Get/Set the log level - New CamelCase version
 		 * @param mixed $level 
 		 * @return string 
@@ -264,7 +272,7 @@
 			return $this->_log_level;
 		}
 
-		/**
+		/** @method log_level(level)
 		 * Get/Set the log level
 		 * @param mixed $level 
 		 * @return string 
@@ -273,7 +281,12 @@
 			if (isset($level)) $this->_log_level = $level;
 			return $this->_log_level;
 		}
-	
+
+		/** @method public log_display(level)
+		 * Determine if a log message should be displayed based on the current log level setting.
+		 * @param string $level The level of the log message (e.g., 'trace', 'debug', 'info', 'warning', 'notice', 'error').
+		 * @return bool True if the message should be displayed, false otherwise.
+		 */
 		public function log_display($level = 'info') {
 			if (isset($_REQUEST['log_level'])) $log_level = $_REQUEST['log_level'];
 			else $log_level = $this->_log_level;
@@ -287,15 +300,31 @@
 			return false;
 		}
 
+		/** @method url()
+		 * Get the base URL of the site, including protocol and hostname.
+		 * @return string The base URL of the site.
+		 */
 		public function url() {
 			if ($GLOBALS['_config']->site->https) return 'https://'.$GLOBALS['_config']->site->hostname;
 			else return 'http://'.$GLOBALS['_config']->site->hostname;
 		}
 
+		/** @method page(module, view, index)
+		 * Get a page object for the specified module, view, and index.
+		 * @param string $module The module name.
+		 * @param string $view The view name.
+		 * @param string $index The index name.
+		 * @return Site\Page The page object.
+		 */
 		public function page($module = null, $view = null, $index = null) {
 			return new \Site\Page($module,$view,$index);
 		}
 
+		/** @method configuration(key)
+		 * Get a configuration value by key.
+		 * @param string $key The configuration key.
+		 * @return mixed The configuration value.
+		 */
         public function configuration($key) {
             $config = new \Site\Configuration();
 			$config->get($key);
@@ -304,7 +333,64 @@
 			return null;
         }
 
+		/** @method module_list()
+		 * Get a list of all modules.
+		 * @return Site\ModuleList The list of modules.
+		 */
 		public function module_list() {
 			return new \Site\ModuleList();
+		}
+
+		/** @method findModule(name) 
+		 * Find a module by name - Case Insensitive
+		 * @param string $name Name of the module to find
+		 * @return Site\Module|null The module if found, null otherwise
+		*/
+		public function findModule($name) {
+			$module_list = $this->module_list();
+			foreach ($module_list->find(["name" => $name]) as $module) {
+				if (strtolower($module->name()) == strtolower($name)) {
+					return $module;
+				}
+			}
+			return null;
+		}
+
+		/** @method findModuleName(name)
+		 * Get the module name from a file path
+		 * @param string $name File path - Case Insensitive
+		 * @return string|null Module name if found, null otherwise
+		*/
+		public function findModuleName($name) {
+			$module_list = $this->module_list();
+			foreach ($module_list->find(["name" => $name]) as $module) {
+				$module_path = MODULES."/".$module->name();
+				if (stripos($name,$module_path) === 0) {
+					app_log("Found module ".$module->name()." for path $name",'debug');
+					return $module->name();
+				}
+			}
+			return null;
+		}
+
+		/** @method findModuleAPI(name)
+		 * Get the module API class from the class file matching the name - Case Insensitive
+		 * @param string $name Module Name
+		 * @return string|null Module API class if found, null otherwise
+		 */
+		public function findModuleAPI($name): ?string {
+			if (!is_dir(CLASS_PATH)) return null;
+			$handle = opendir(CLASS_PATH);
+			if ($handle) {
+				while (false !== ($module_name = readdir($handle))) {
+					if (!preg_match('/^[\w\-\_]+$/',$module_name)) continue;
+					if (!is_file(CLASS_PATH."/".$module_name."/API.php")) continue;
+					if (strtolower($module_name) != strtolower($name)) continue;
+					closedir($handle);
+					return $module_name;
+				}
+			}
+			closedir($handle);
+			return null;
 		}
 	}

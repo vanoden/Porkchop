@@ -26,46 +26,111 @@
 	}
 	else $organization = $GLOBALS['_SESSION_']->customer->organization();
 
+	$locations = array();
 	if ($organization->id) {
-		// get locations for organization
-		$locationList = new \Register\LocationList();
-		$locations = $locationList->find(array("organization_id" => $organization->id));
-		if ($locationList->error()) {
-			$page->addError("Error finding organization locations: ".$locationList->error());
-			app_log("Error finding organization locations: ".$locationList->error(),'error',__FILE__,__LINE__);
-		}
 
 		// Update Existing Organization default billing
 		if (!empty($_REQUEST['setDefaultBilling']) && is_numeric($_REQUEST['setDefaultBilling'])) {
+		    $old_billing_location_id = $organization->default_billing_location_id;
+		    $new_billing_location_id = $_REQUEST['setDefaultBilling'];
+		    
 		    $updateParameters = array();
-		    $updateParameters['default_billing_location_id'] = $_REQUEST['setDefaultBilling'];
+		    $updateParameters['default_billing_location_id'] = $new_billing_location_id;
 		    $organization->update($updateParameters);
 		    if ($organization->error()) {
 			    $page->addError("Error updating organization");
 		    } else {
+			    // Log the change to organization audit log
+			    $old_location_name = "None";
+			    if ($old_billing_location_id) {
+			        $old_location = new \Register\Location($old_billing_location_id);
+			        if ($old_location->id) {
+			            $old_location_name = $old_location->name;
+			        }
+			    }
+			    $new_location = new \Register\Location($new_billing_location_id);
+			    $new_location_name = $new_location->id ? $new_location->name : "Unknown";
+			    
+			    $audit_notes = "Default billing location changed from '{$old_location_name}' to '{$new_location_name}'";
+			    $organization->auditRecord('ORGANIZATION_UPDATED', $audit_notes);
+			    
 			    $page->appendSuccess("Organization Updated Successfully");
 		    }		
 		}
 		
+		// Hide or unhide a location (must belong to this organization)
+		if ((!empty($_REQUEST['setHidden']) || !empty($_REQUEST['setVisible'])) && is_numeric($_REQUEST['setHidden'] ?: $_REQUEST['setVisible'])) {
+		    $loc_id = (int)($_REQUEST['setHidden'] ?: $_REQUEST['setVisible']);
+		    $loc = new \Register\Location($loc_id);
+		    if ($loc->id) {
+		        if ($loc->belongsToOrganization($organization->id)) {
+		            $hidden = !empty($_REQUEST['setHidden']) ? 1 : 0;
+		            if ($loc->update(array('hidden' => $hidden))) {
+		                $page->appendSuccess($hidden ? "Address hidden." : "Address visible again.");
+		                $organization->auditRecord('ORGANIZATION_UPDATED', $hidden ? "Location '{$loc->name}' hidden" : "Location '{$loc->name}' unhidden");
+		            } else {
+		                $page->addError("Could not update location.");
+		            }
+		        } else {
+		            $page->addError("Location does not belong to this organization.");
+		        }
+		    } else {
+		        $page->addError("Location not found.");
+		    }
+		}
+
 		// Update Existing Organization default shipping
         if (!empty($_REQUEST['setDefaultShipping']) && is_numeric($_REQUEST['setDefaultShipping'])) {
+		    $old_shipping_location_id = $organization->default_shipping_location_id;
+		    $new_shipping_location_id = $_REQUEST['setDefaultShipping'];
+		    
 		    $updateParameters = array();
-		    $updateParameters['default_shipping_location_id'] = $_REQUEST['setDefaultShipping'];
+		    $updateParameters['default_shipping_location_id'] = $new_shipping_location_id;
 		    $organization->update($updateParameters);
 		    if ($organization->error()) {
 			    $page->addError("Error updating organization");
 		    } else {
+			    // Log the change to organization audit log
+			    $old_location_name = "None";
+			    if ($old_shipping_location_id) {
+			        $old_location = new \Register\Location($old_shipping_location_id);
+			        if ($old_location->id) {
+			            $old_location_name = $old_location->name;
+			        }
+			    }
+			    $new_location = new \Register\Location($new_shipping_location_id);
+			    $new_location_name = $new_location->id ? $new_location->name : "Unknown";
+			    
+			    $audit_notes = "Default shipping location changed from '{$old_location_name}' to '{$new_location_name}'";
+			    $organization->auditRecord('ORGANIZATION_UPDATED', $audit_notes);
+			    
 			    $page->appendSuccess("Organization Updated Successfully");
 		    }
 		}
+
+		// get locations for organization (after actions so list shows current state; exclude hidden when show_hidden not set)
+		$show_hidden = !empty($_REQUEST['show_hidden']);
+		$locations = $organization->locations(array('include_hidden' => $show_hidden));
+		if ($organization->error()) {
+			$page->addError("Error finding organization locations: ".$organization->error());
+			app_log("Error finding organization locations: ".$organization->error(),'error',__FILE__,__LINE__);
+		}
+		if (!is_array($locations)) {
+			$locations = array();
+		}
+	} else {
+		$show_hidden = false;
 	}
 
 	// Set page title and admin menu section
 	$page->title = "Organization Locations";
 	$page->setAdminMenuSection("Customer");  // Keep Customer section open
 	$page->addBreadcrumb("Customer");
-	$page->addBreadcrumb("Organizations", "/_register/organizations");
+	$page->addBreadcrumb("Organizations", "/_register/admin_organizations");
 	if (isset($organization->id)) {
 		$page->addBreadcrumb($organization->name, "/_register/admin_organization?organization_id=".$organization->id);
 	}
 	$page->addBreadcrumb("Locations");
+	$page->instructions = "Manage locations for this organization. Existing addresses are view-only; use Copy to create a new address with changes, or Hide/Unhide for addresses no longer used.";
+	
+	$activeTab = 'locations';

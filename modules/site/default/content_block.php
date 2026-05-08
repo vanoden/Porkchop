@@ -1,3 +1,4 @@
+<?php /* TinyMCE: If you see "invalid-origin" or read-only editors, add this site's domain (e.g. https://yoursite.com) in Tiny Cloud dashboard under Domain registration. Use HTTPS in production. */ ?>
 <script src="https://cdn.tiny.cloud/1/owxjg74mr7ujxhw9soo7iquo7iul2mclregqovcp7ophazmn/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
 	tinymce.init({
@@ -56,17 +57,19 @@
 				<div class="tableCell tableCell-width-33">Search Tag</div>
 			</div>
 			<?php
-			foreach ($registerCustomerSearchTags as $searchTag) {
+			foreach ($registerCustomerSearchTags as $row) {
+				$searchTag = $row->searchTag;
+				$xrefId = $row->xrefId;
 			?>
 				<div class="tableRow">
 					<div class="tableCell">
-						<input type="button" onclick="removeSearchTagById('<?= $searchTag->id ?>')" name="removeSearchTag" value="Remove" class="button" /> 
+						<input type="button" onclick="removeSearchTagById('<?= (int)$xrefId ?>')" name="removeSearchTag" value="Remove" class="button" />
 					</div>
 					<div class="tableCell">
-						<?= $searchTag->category ?>
+						<?= htmlspecialchars($searchTag->category) ?>
 					</div>
 					<div class="tableCell">
-						<?= $searchTag->value ?>
+						<?= htmlspecialchars($searchTag->value) ?>
 					</div>
 				</div>
 			<?php

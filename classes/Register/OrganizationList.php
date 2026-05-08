@@ -157,19 +157,21 @@
 			}
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {
-				if (1) {
-					$organization = new Organization($id,array('nocache' => true));
-					$this->incrementCount();
-					array_push($organizations,$organization);
-				}
-				else {
-					array_push($organizations,$id);
-					$this->incrementCount();
-				}
+				if (false && $GLOBALS['_SESSION_']->customer()->organization_id != $id && !$GLOBALS['_SESSION_']->customer()->can('manage organizations',\Register\PrivilegeLevel::ORGANIZATION_MANAGER) && !$GLOBALS['_SESSION_']->customer()->organization()->associatedWith($id)) continue;
+				$organization = new Organization($id,array('nocache' => true));
+				$this->incrementCount();
+				array_push($organizations,$organization);
 			}
 			return $organizations;
 		}
 
+		/** @method public findAdvanced($parameters, $advanced, $controls)
+		 * Find organizations based on advanced search parameters and controls
+		 * @param array $parameters Associative array of search parameters (e.g. 'name', 'code', 'status', 'is_reseller', 'is_customer', 'is_vendor')
+		 * @param array $advanced Associative array of advanced search parameters (e.g. 'tags')
+		 * @param array $controls Associative array of search controls (e.g. 'sort', 'order', 'limit', 'offset')
+		 * @return array Array of matching Organization objects
+		 */
 		public function findAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
@@ -319,6 +321,15 @@
 						AND	ro.is_vendor = ?";
 				$database->AddParam($parameters['is_vendor']);
 			}
+
+			// Limit Access to Other Organizations for Non-Admin Users
+			if (!$GLOBALS['_SESSION_']->customer()?->can('manage organizations',\Register\PrivilegeLevel::ADMINISTRATOR)
+			) {
+				$find_objects_query .= "
+				AND ro.id = ?";
+				$database->AddParam($GLOBALS['_SESSION_']->customer()->organization_id);
+			}
+				
             if (isset($controls['sort'])) {
                 if (!$workingClass->hasField($controls['sort'])) {
                     $this->error("Invalid sort field");
@@ -348,7 +359,7 @@
 			// Execute Query
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return [];
 			}
 
@@ -366,29 +377,40 @@
 			
 			return $organizations;
 		}
-		
+
+		/** @method expire(threshold)
+		 * Expire organizations that have been inactive for a specified threshold
+		 * @param int $threshold Number of days of inactivity before expiration
+		 * @return int|null Number of organizations expired, or null on error
+		 */
 		public function expire($threshold = 365) {
-		
+			// Clear any existing errors
+			$this->clearError();
+
+			// Validate threshold parameter
 			if (! is_numeric($threshold)) {
 				$this->error("threshold must be numeric");
 				return null;
 			}
 
-			# Find Existing Active Organizations
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Find Existing Active Organizations
 			$find_organizations_query = "
 				SELECT	id
 				FROM	register_organizations
 				WHERE	status in ('NEW','ACTIVE')
 				AND		date_created < date_sub(sysdate(),interval 3 month)
 			";
-			$rs = $GLOBALS['_database']->Execute($find_organizations_query);
+			$rs = $database->Execute($find_organizations_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			$counter = 0;
 			while (list($id) = $rs->FetchRow()) {
-				# Get Active Accounts
+				// Get Active Accounts
 				$organization = new Organization($id);
 				$active = $organization->activeCount();
 				app_log("Organization ".$organization->name." has $active members",'debug',__FILE__,__LINE__);
@@ -398,5 +420,121 @@
 				}
 			}
 			return $counter;
+		}
+
+		/** @method findDuplicateGroups(match_length, min_matches)
+		 * Find groups of duplicate organizations based on normalized name matching
+		 * @param int $match_length Length of normalized string to match (1-50)
+		 * @param int $min_matches Minimum number of matches required (2-100)
+		 * @return array|null Array of duplicate groups with 'match_count' and 'nickname' keys, or null on error
+		 */
+		public function findDuplicateGroups($match_length = 10, $min_matches = 2): ?array {
+			app_log("Register::OrganizationList::findDuplicateGroups()",'trace',__FILE__,__LINE__);
+			
+			$this->clearError();
+			
+			// Validate parameters
+			if ($match_length < 1 || $match_length > 50) {
+				$this->error("Match length must be between 1 and 50");
+				return null;
+			}
+			if ($min_matches < 2 || $min_matches > 100) {
+				$this->error("Minimum matches must be between 2 and 100");
+				return null;
+			}
+			
+			// Initialize Database Service
+			$database = new \Database\Service();
+			
+			$match_length_int = (int) $match_length;
+			$min_matches_int = (int) $min_matches;
+			$get_duplicates_query = "
+				SELECT	COUNT(*) as match_count,
+						SUBSTRING(
+							REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+								REPLACE(LOWER(name),'&','and'),
+							' ',''),'.',''),'-',''),';',''),':',''),CHAR(9),''),
+							1,{$match_length_int}) as nickname
+				FROM	register_organizations
+				WHERE	status = 'ACTIVE'
+				GROUP BY nickname
+				HAVING COUNT(*) >= {$min_matches_int}
+				ORDER BY match_count DESC, nickname
+			";
+			
+			$rs = $database->Execute($get_duplicates_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return null;
+			}
+			
+			$duplicate_groups = array();
+			while ($row = $rs->FetchRow()) {
+				$duplicate_groups[] = array(
+					'match_count' => $row[0],
+					'nickname' => $row[1]
+				);
+			}
+			
+			return $duplicate_groups;
+		}
+
+		/** @method findByMatchString(match_string, match_length)
+		 * Find organizations matching a specific normalized name string
+		 * @param string $match_string The normalized string to match against
+		 * @param int $match_length Length of normalized string to match (1-50)
+		 * @return array|null Array of organizations with 'id', 'name', 'code', 'status', 'date_created', 'user_count', or null on error
+		 */
+		public function findByMatchString($match_string, $match_length = 10): ?array {
+			app_log("Register::OrganizationList::findByMatchString()",'trace',__FILE__,__LINE__);
+			
+			$this->clearError();
+			
+			// Validate parameters
+			if (empty($match_string)) {
+				$this->error("Match string is required");
+				return null;
+			}
+			if ($match_length < 1 || $match_length > 50) {
+				$this->error("Match length must be between 1 and 50");
+				return null;
+			}
+			
+			// Initialize Database Service
+			$database = new \Database\Service();
+			
+			$match_length_int = (int) $match_length;
+			$get_organizations_query = "
+				SELECT	id, name, code, status, date_created,
+						(SELECT COUNT(*) FROM register_users WHERE organization_id = register_organizations.id) as user_count
+				FROM	register_organizations
+				WHERE	status = 'ACTIVE'
+				AND		SUBSTRING(
+							REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+								REPLACE(LOWER(name),'&','and'),
+							' ',''),'.',''),'-',''),';',''),':',''),CHAR(9),''),
+						1,?) = ?
+				ORDER BY name
+			";
+			
+			$rs = $database->Execute($get_organizations_query, array($match_length_int, $match_string));
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return null;
+			}
+			
+			$organizations = array();
+			while ($row = $rs->FetchRow()) {
+				$organizations[] = array(
+					'id' => $row[0],
+					'name' => $row[1],
+					'code' => $row[2],
+					'status' => $row[3],
+					'date_created' => $row[4],
+					'user_count' => $row[5]
+				);
+			}
+			
+			return $organizations;
 		}
 	}

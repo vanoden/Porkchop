@@ -16,7 +16,7 @@
 		 * @param array $array Incoming buffer
 		 * @return bool True if successful
 		 */
-		public function parse(array $array = null): bool {
+		public function parse(?array $array = null): bool {
 			if ($array[0] == 1) {
 				$this->_success = true;
 			}
@@ -40,5 +40,9 @@
 				$array[0] = chr(0);
 			}
 			return count($array);
+		}
+
+		public function readable(): string {
+			return "Auth Response: ".($this->_success ? "Success" : "Failure");
 		}
 	}

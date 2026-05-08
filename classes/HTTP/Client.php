@@ -5,11 +5,12 @@ use function Amp\now;
 
 	class Client Extends \BaseClass {
 		private $_socket;
-		private $_connected = false;
+		private bool $_connected = false;
 		private $_response;
 		private $_cookiejar;
-		private $_timeout = 3; // Default timeout in seconds
+		private $_timeout = 10; // Default timeout in seconds
 		private $_status = 'UNKNOWN';
+		private $_start_time;
 
 		/** @constructor
 		 * Initializes the HTTP client
@@ -64,14 +65,18 @@ use function Amp\now;
 
 			if ($ssl) $service = "ssl://".$host.":".$port;
 			else $service = "tcp://".$host.":".$port;
+
+			app_log("Connecting to $service",'debug');
 			$this->_socket = stream_socket_client($service, $errno, $errstr, $this->_timeout);
 
 			if (!$this->_socket) {
 				$this->error("Unable to connect to host: ".$errstr);
 				return false;
 			}
+			app_log("Connected to $service",'debug');
 			$this->_status = 'CONNECTED';
 			$this->_connected = true;
+			$this->_start_time = microtime(true);
 			return true;
 		}
 
@@ -112,12 +117,13 @@ use function Amp\now;
 				return null;
 			}
 
-			$start_time = time();
+			$start_time = microtime(true);
 	
 			// Send Request to the Server
+			$this->_start_time = microtime(true);
 			$this->_status = 'SENDING';
 			fwrite($this->_socket,$string);
-			app_log("Message sent at ".(time() - $start_time)." seconds",'trace');
+			app_log("Message sent at ".(microtime(true) - $start_time)." seconds",'trace');
 
 			/** @section Collect Response
 			 * Listen for and store bytes returned from the server
@@ -126,44 +132,90 @@ use function Amp\now;
 			$body = "";
 			$content_length = 0;
 			$this->_status = 'RECEIVING';
-			$content = fread($this->_socket, 1);
-			app_log("First byte received at ".(time() - $start_time)." seconds",'trace');
-			while ($buffer = fread($this->_socket, 2048)) {
+			while (!feof($this->_socket) && (time() - $start_time) < $this->_timeout && strlen($content) < 1) {
+				$content = fread($this->_socket, 1);
+			}
+			if (strlen($content) < 1) {
+				$this->error("No response received");
+				return null;
+			}
+			app_log("First byte received at ".(microtime(true) - $start_time)." seconds",'trace');
+			while ($buffer = fread($this->_socket, 256)) {
 				$content .= $buffer;
 				if ($this->_status == 'RECEIVING' && strpos($content, "\r\n\r\n") !== false) {
-					app_log("Headers received at ".(time() - $start_time)." seconds",'trace');
+					app_log("Headers received at ".(microtime(true) - $start_time)." seconds",'trace');
 					// We have received the headers, stop reading
 					if (preg_match('/Content\-Length:\s*(\d+)/i', $content, $matches)) {
 						$content_length = (int)$matches[1];
+						app_log("Content-Length: $content_length",'trace');
 						$this->_status = 'BODY';
-						$body = substr($content, strpos($content, "\r\n\r\n") + 4);
+						// Get Size of Headers
+						$header_chars = strpos($content, "\r\n\r\n") + 4;
+						app_log("Header size: $header_chars characters at ".(microtime(true) - $start_time)." seconds",'trace');
+						$body = substr($content, $header_chars);
+						app_log("Received ".strlen($body)." bytes of body data with headers at ".(microtime(true) - $start_time)." seconds",'trace');
 					}
 				}
 				if ($this->_status == 'BODY') {
+					// Exit if Content-Length is set to 0
+					if ($content_length == 0) {
+						app_log("Content-Length is 0, no body to receive at ".(microtime(true) - $start_time)." seconds",'trace');
+						break;
+					}
+					// Exit if End of File is reached
+					if (feof($this->_socket)) {
+						app_log("End of file reached at ".(microtime(true) - $start_time)." seconds",'trace');
+						break;
+					}
+					// Exit if Full Content-Length is received
+					if (strlen($body) >= $content_length) {
+						app_log("Full body received at ".(microtime(true) - $start_time)." seconds",'trace');
+						break;
+					}
+					// Exit if Connection is closed by the server
+					if (!is_resource($this->_socket) || !stream_socket_get_name($this->_socket, true)) {
+						app_log("Connection closed by server at ".(microtime(true) - $start_time)." seconds",'trace');
+						break;
+					}
+					// Exit if Timeout is reached
+					if ((time() - $start_time) >= $this->_timeout) {
+						app_log("Timeout reached at ".(microtime(true) - $start_time)." seconds",'trace');
+						break;
+					}
 					// Grab the rest of the body
 					// If we have already received some body data
-					if ($content_length - strlen($body) > 0) {
-						app_log("Receiving remaining ".$content_length." bytes of body data at ".(time() - $start_time)." seconds",'trace');
-						$buffer = fread($this->_socket, $content_length - strlen($body));
-						$content .= $buffer;
-						app_log("Received ".strlen($buffer)." bytes of body data at ".(time() - $start_time)." seconds",'trace');
-					}
-					// We are still receiving the body
-					if (strlen($content) >= $content_length + strlen($body)) {
-						// We have received the full body, stop reading
-						app_log("Got ".$content_length." bytes of body data at ".(time() - $start_time)." seconds",'trace');
-						app_log("Full body received at ".(time() - $start_time)." seconds",'trace');
+					app_log("Receiving remaining ".($content_length - strlen($body))." bytes of body data at ".(microtime(true) - $start_time)." seconds",'trace');
+					$buffer = fread($this->_socket, $content_length - strlen($body));
+					$content .= $buffer;
+					$body .= $buffer;
+					app_log("Received ".strlen($body)." bytes of body data at ".(microtime(true) - $start_time)." seconds",'trace');
+					// Exit if Full Content-Length is received
+					if (strlen($body) >= $content_length) {
+						app_log("Full body received at ".(microtime(true) - $start_time)." seconds",'trace');
 						break;
 					}
 				}
 			}
 			fclose($this->_socket);
+			if (!isset($GLOBALS['_HTTP_CLIENT_STATS_'])) {
+				$GLOBALS['_HTTP_CLIENT_STATS_'] = array('requests' => 0, 'time' => 0);
+			}
+			if (!isset($GLOBALS['_HTTP_CLIENT_STATS_']['requests'])) {
+				$GLOBALS['_HTTP_CLIENT_STATS_']['requests'] = 0;
+			}
+			if (!isset($GLOBALS['_HTTP_CLIENT_STATS_']['time'])) {
+				$GLOBALS['_HTTP_CLIENT_STATS_']['time'] = 0;
+			}
+			$GLOBALS['_HTTP_CLIENT_STATS_']['requests'] ++;
+			$GLOBALS['_HTTP_CLIENT_STATS_']['time'] += microtime(true) - $this->_start_time;
+			app_log("Connection closed at ".(microtime(true) - $start_time)." seconds",'debug');
+
 			if (strlen($content) < 1) {
 				$this->error("No response received");
 				return null;
 			}
 			else {
-				app_log("Received: ".strlen($content)." char");
+				app_log("Received: ".strlen($content)." characters at ".(microtime(true) - $start_time)." seconds",'debug');
 			}
 
 			/** @section Parse Response

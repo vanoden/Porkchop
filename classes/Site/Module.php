@@ -6,6 +6,7 @@
 		private $_name;
 		private $_path;
 		private $_metadata;
+		private $_caseName;
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'site_modules';
@@ -68,6 +69,17 @@
 		 */
 		public function name() {
 			return $this->_name;
+		}
+
+		/**
+		 * Get/Set the name with cases matching file path
+		 * @return mixed|null 
+		 */
+		public function caseName($name = null): ?string {
+			if (!empty($name)) {
+				$this->_caseName = $name;
+			}
+			return $this->_caseName;
 		}
 
 		/**

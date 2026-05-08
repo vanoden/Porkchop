@@ -10,13 +10,17 @@
 		public $description;
 		public $parent_id;
 		public $required_role_id;
+		public $required_product_id;
+		public $authentication_required = false;
 		public $external = false;
 		public $ssl = false;
+		public $thumbnail_url;
 		public $item; // Array of child navigation items
 
 		public function __construct($id = null) {
 			$this->_tableName = 'navigation_menu_items';
 			$this->_tableUKColumn = null;
+			$this->_cacheKeyPrefix = 'navigation.item';
 			parent::__construct($id);
 		}
 
@@ -45,7 +49,7 @@
 
 			// Add Parameters
 			if ($this->validTarget($target)) {
-				$this->AddParam($target);
+				$database->AddParam($target);
 			}
 			else {
 				$this->error("Invalid Target");
@@ -152,7 +156,8 @@
 			$database = new \Database\Service();
 
 			// Prepare Query
-			if (!empty($view_order)) {
+			// Check if view_order is set (including 0, but not null)
+			if (isset($view_order) && $view_order !== null && $view_order !== '') {
 				$get_object_query = "
 					SELECT  id
 					FROM	navigation_menu_items
@@ -161,7 +166,7 @@
 					AND		menu_id = ?
 				";
 
-				$database->AddParams($parent_id,$view_order,$menu_id);
+				$database->AddParams(array($parent_id,$view_order,$menu_id));
 			}
 			else {
 				$get_object_query = "
@@ -170,7 +175,7 @@
 					WHERE	parent_id = ?
 					AND		menu_id = ?
 				";
-				$database->AddParams($parent_id,$menu_id);
+				$database->AddParams(array($parent_id,$menu_id));
 			}
 
 			// Execute Query
@@ -202,6 +207,41 @@
 			// Initialize Database Service
 			$database = new \Database\Service();
 
+			if (empty($menu_id) or !is_numeric($menu_id)) {
+				$this->error("Valid Menu ID Required");
+				return false;
+			}
+			else {
+				$menu = new Menu($menu_id);
+				if (! $menu->id) {
+					$this->error("Menu not found");
+					return false;
+				}
+			}
+			if (empty($code) or ! $this->validMenuCode($code)) {
+				$this->error("Valid Code Required");
+				return false;
+			}
+			if (!empty($parent)) {
+				if (is_numeric($parent)) {
+					$parent = new Item($parent);
+				}
+				elseif (is_object($parent)) {
+					// do nothing
+				}
+				elseif (is_string($parent)) {
+					$parent_item = new Item();
+					if (! $parent_item->get('menu_id',$menu_id,'title',$parent)) {
+						$this->error("Parent not found");
+						return false;
+					}
+					$parent = $parent_item;
+				}
+				else {
+					$this->error("Invalid Parent");
+					return false;
+				}
+			}
 			// Prepare Query
 			$get_object_query = "
 				SELECT	id
@@ -211,7 +251,8 @@
 			";
 
 			// Add Parameters
-			$database->AddParams($menu_id,$code);
+			$database->AddParam($menu->id);
+			$database->AddParam($code);
 
 			if (isset($parent) and is_object($parent)) {
 				$get_object_query .= "
@@ -250,6 +291,9 @@
 
 			// Initialize Database Service
 			$database = new \Database\Service();
+
+			// Clear Cache
+			$this->clearCache();
 
 			// Prepare Query
 			$update_object_query = "
@@ -293,20 +337,28 @@
 				}
 			}
 			if (isset($parameters['parent_id'])) {
-				$parent = new Item($parameters['parent_id']);
-				if (! $parent->id) {
-					$this->error("Parent not found");
-					return false;
-				}
-				elseif ($parent->id == $this->id) {
-					$this->error("Parent cannot be the same as this item");
-					return false;
+				// parent_id of 0 means no parent (root level item)
+				if ($parameters['parent_id'] == 0 || $parameters['parent_id'] === '0' || empty($parameters['parent_id'])) {
+					$update_object_query .= ",
+						parent_id = 0
+					";
 				}
 				else {
-					$update_object_query .= ",
-						parent_id = ?
-					";
-					$database->AddParam($parameters['parent_id']);
+					$parent = new Item($parameters['parent_id']);
+					if (! $parent->id) {
+						$this->error("Parent not found");
+						return false;
+					}
+					elseif ($parent->id == $this->id) {
+						$this->error("Parent cannot be the same as this item");
+						return false;
+					}
+					else {
+						$update_object_query .= ",
+							parent_id = ?
+						";
+						$database->AddParam($parameters['parent_id']);
+					}
 				}
 			}
 			if (!empty($parameters['alt'])) {
@@ -343,21 +395,69 @@
 				}
 			}
 			if (isset($parameters['required_role_id'])) {
-				if ($parameters['required_role_id'] == "")
+				if ($parameters['required_role_id'] == "" || $parameters['required_role_id'] == 0 || $parameters['required_role_id'] === null) {
 					$update_object_query .= ",
 					required_role_id = NULL";
+				}
 				elseif (is_numeric($parameters['required_role_id'])) {
 					$role = new \Register\Role($parameters['required_role_id']);
 					if (! $role->exists()) {
-						$this->error("Required Role not found");
-						return false;
+						// Role doesn't exist - set to NULL instead of failing (useful during imports)
+						// This allows the import to succeed even if roles haven't been imported yet
+						$update_object_query .= ",
+						required_role_id = NULL";
 					}
-					$update_object_query .= ",
-						required_role_id = ?";
-					$database->AddParam($parameters['required_role_id']);
+					else {
+						$update_object_query .= ",
+							required_role_id = ?";
+						$database->AddParam($parameters['required_role_id']);
+					}
 				}
 				else {
 					$this->error("Invalid required role id");
+					return false;
+				}
+			}
+			if (isset($parameters['authentication_required'])) {
+				if ($parameters['authentication_required'] == true) $parameters['authentication_required'] = 1;
+				elseif ($parameters['authentication_required'] == false) $parameters['authentication_required'] = 0;
+
+				$update_object_query .= ",
+					authentication_required = ?";
+				$database->AddParam($parameters['authentication_required'] ? 1 : 0);
+			}
+			if (isset($parameters['required_product_id'])) {
+				if ($parameters['required_product_id'] == "" || $parameters['required_product_id'] == 0 || $parameters['required_product_id'] === null) {
+					$update_object_query .= ",
+					required_product_id = NULL";
+				}
+				elseif (is_numeric($parameters['required_product_id'])) {
+					$product = new \Product\Item($parameters['required_product_id']);
+					if (! $product->exists()) {
+						// Product doesn't exist - set to NULL instead of failing (useful during imports)
+						// This allows the import to succeed even if products haven't been imported yet
+						$update_object_query .= ",
+						required_product_id = NULL";
+					}
+					else {
+						$update_object_query .= ",
+							required_product_id = ?";
+						$database->AddParam($parameters['required_product_id']);
+					}
+				}
+				else {
+					$this->error("Invalid required product id");
+					return false;
+				}
+			}
+			if (isset($parameters['thumbnail_url'])) {
+				if ($this->validTarget($parameters['thumbnail_url'])) {
+					$update_object_query .= ",
+						thumbnail_url = ?";
+					$database->AddParam($parameters['thumbnail_url']);
+				}
+				else {
+					$this->error("Invalid Thumbnail URL");
 					return false;
 				}
 			}
@@ -380,7 +480,11 @@
 		}
 
 		public function required_role() {
-				return new \Register\Role($this->required_role_id);
+			return new \Register\Role($this->required_role_id);
+		}
+
+		public function required_product() {
+			return new \Product\Item($this->required_product_id);
 		}
 
 		/** @method public details()
@@ -393,6 +497,18 @@
 
 			// Initialize Database Service
 			$database = new \Database\Service();
+
+			// Initialize Cache
+			$cache = $this->cache();
+			$cachedData = $cache->get();
+			if (!empty($cachedData)) {
+				foreach ($cachedData as $key => $value) {
+					if (property_exists($this,$key)) $this->$key = $value;
+				}
+				$this->cached(true);
+				$this->exists(true);
+				return true;
+			}
 
 			// Prepare Query
 			$get_object_query = "
@@ -422,10 +538,17 @@
 				$this->description = $object->description;
 				$this->parent_id = $object->parent_id;
 				$this->required_role_id = $object->required_role_id;
+				$this->required_product_id = $object->required_product_id;
+				$this->thumbnail_url = $object->thumbnail_url;
 				if ($object->external) $this->external = true;
 				else $this->external = false;
 				if ($object->ssl) $this->ssl = true;
 				else $this->ssl = false;
+				if ($object->authentication_required) $this->authentication_required = true;
+				else $this->authentication_required = false;
+				$this->exists(true);
+
+				if (!empty($this->_cacheKeyPrefix)) $cache->set($object);
 			}
 			else {
 				$this->id = -1;
@@ -438,6 +561,10 @@
 				$this->parent_id = null;
 				$this->external = null;
 				$this->ssl = null;
+				$this->authentication_required = false;
+				$this->required_role_id = null;
+				$this->required_product_id = null;
+				$this->exists(false);
 			}
 			return true;
 		}
@@ -447,14 +574,22 @@
 		}
 
 		public function hasChildren() {
+			// Clear Errors
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$get_children_query = "
 					SELECT  count(*)
 					FROM    navigation_menu_items
 					WHERE   parent_id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($get_children_query,array($this->id));
+			$database->AddParam($this->id);
+			$rs = $database->Execute($get_children_query);
 			if (! $rs) {
-					$this->SQLError($GLOBALS['_database']->ErrorMsg());
+					$this->SQLError($database->ErrorMsg());
 					return null;
 			}
 			list($count) = $rs->FetchRow();
@@ -469,10 +604,21 @@
 		public function children() {
 			$itemList = new \Site\Navigation\ItemList();
 			$items = $itemList->find(array('parent_id' => $this->id));
+			if ($itemList->error()) {
+				$this->error($itemList->error());
+				return array();
+			}
+			if (!is_array($items)) {
+				return array();
+			}
 			return $items;
 		}
 
 		public function validTitle($string): bool {
+			// Special Dynamic Links
+			if (preg_match('/^\[[\w\-\.\_]+\:\:[\w\-\.\_]+\]$/',$string)) return true;
+
+			// Otherwise, just Valid Name
 			return $this->validName($string);
 		}
 

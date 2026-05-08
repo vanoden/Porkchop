@@ -23,8 +23,7 @@
 			$find_objects_query = "
 				SELECT	`".$workingClass->_tableIDColumn()."`
 				FROM	`".$workingClass->_tableName()."`
-				WHERE	`".$workingClass->_tableIDColumn()."` = `".$workingClass->_tableIDColumn()."`
-				AND		`order_type` = ?
+				WHERE	`type` = ?
 			";
 
 			// Add Parameters
@@ -71,8 +70,12 @@
 								return [];
 							}
 						}
+						$placeholders = implode(',', array_fill(0, count($statii), '?'));
 						$find_objects_query .= "
-							AND status in ('".implode("','",$statii)."')";
+							AND status in ({$placeholders})";
+						foreach ($statii as $s) {
+							$database->AddParam($s);
+						}
 					}
 					else {
 						$find_objects_query .= "
@@ -103,8 +106,6 @@
 			// Limit Clause
 			$find_objects_query .= $this->limitClause($controls);
 
-			$database->debug = 'screen';
-			$database->trace(9);
 			// Execute Query
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {

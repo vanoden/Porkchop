@@ -16,7 +16,7 @@
 		 * @param array $array Incoming buffer
 		 * @return bool True if successful
 		 */
-		public function parse(array $array = null): bool {
+		public function parse(array $array, $length = 0): bool {
 			if ($array[0] == 1) {
 				$this->_success = true;
 			}

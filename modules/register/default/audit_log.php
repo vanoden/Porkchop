@@ -8,24 +8,36 @@
 		<div class="tableCell width-10per">Action</div>
 		<div class="tableCell width-60per">Notes</div>
 	</div>
-<?php	foreach ($records as $record) { 
-			if (isset($users[$record->user_id])) $user = $users[$record->user_id];
-			else {
-				$user = $record->user();
-				$users[$record->user_id] = $user;
+<?php if (!empty($records)) {
+	$targets = [];
+	$actors = [];
+	foreach ($records as $record) {
+		$target = null;
+		if (!empty($record->instance_id)) {
+			if (!isset($targets[$record->instance_id])) {
+				$targets[$record->instance_id] = new \Register\Customer($record->instance_id);
 			}
-			if (isset($users[$record->admin_id])) $admin = $users[$record->admin_id];
-			else {
-				$admin = $record->admin();
-				$users[$record->admin_id] = $admin;
+			$target = $targets[$record->instance_id];
+		}
+		$actor = null;
+		if (!empty($record->user_id)) {
+			if (!isset($actors[$record->user_id])) {
+				$actors[$record->user_id] = new \Register\Customer($record->user_id);
 			}
+			$actor = $actors[$record->user_id];
+		}
 ?>
 	<div class="tableRow">
 		<div class="tableCell"><?=shortDate($record->event_date)?></div>
-		<div class="tableCell"><?=$user->code?></div>
-		<div class="tableCell"><?=$admin->code?></div>
-		<div class="tableCell"><?=$record->event_class?></div>
-		<div class="tableCell"><?=$record->event_notes?></div>
+		<div class="tableCell"><?= $target ? $target->code : 'N/A' ?></div>
+		<div class="tableCell"><?= $actor ? $actor->code : 'System' ?></div>
+		<div class="tableCell"><?= htmlspecialchars($record->class_method ?? '') ?></div>
+		<div class="tableCell"><?= htmlspecialchars($record->description ?? '') ?></div>
 	</div>
-<?php	} ?>
+<?php }
+} else { ?>
+	<div class="tableRow">
+		<div class="tableCell" colspan="5">No audit log records found.</div>
+	</div>
+<?php } ?>
 </div>

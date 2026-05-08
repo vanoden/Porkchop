@@ -24,6 +24,9 @@
     <a href="/_register/admin_account_images?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='images'?'active':'' ?>">User Images</a>
     <a href="/_register/admin_account_backup_codes?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='backup_codes'?'active':'' ?>">Backup Codes</a>
     <a href="/_register/admin_account_search_tags?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='search_tags'?'active':'' ?>">Search Tags</a>
+    <a href="/_register/admin_account_audit_log?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
+    <a href="/_register/admin_account_register_audit?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='register_audit'?'active':'' ?>">Failed Logins</a>
+	<a href="/_register/admin_account_privileges?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='privileges'?'active':'' ?>">Assigned Privileges</a>
 </div>
 
 <form id="admin-account-form" name="register" action="<?= PATH ?>/_register/admin_account?customer_id=<?= $customer_id ?>" method="POST">
@@ -78,7 +81,9 @@
       </div>
 	</div>
 	<div class="tableRow">
-      <?php if ($GLOBALS['_config']->register->use_otp) { ?>
+      <?php 
+		$configuration = new \Site\Configuration();
+	  	if ($configuration->getValueBool("use_otp")) { ?>
         <div class="tableCell width-50per">Time Based Password [Authenticator App]
           <input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?> <?php 
             $roles = $customer->roles();

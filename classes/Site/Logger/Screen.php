@@ -17,23 +17,23 @@
 			parent::__construct($parameters);
 		}
 
-		public function connect() {
+		public function connect(): bool {
 			return true;
 		}
 
-		public function write($message,$level = 'debug',$file = null,$line = null) {
-			if (! $this->compares($level)) return 1;
+		public function write($message,$level = 'debug',$file = null,$line = null, $module = null, $view = null): bool {
+			if (! $this->compares($level)) return true;
 			list($file,$line) = $this->caller($file,$line);
 
-			print_r($this->formatted($message,$level,$file,$line));
-			return 1;
+			print_r($this->formatted($message,$level,$file,$line,$module,$view));
+			return true;
 		}
 
-		public function writeln($message,$level = 'debug',$file = null,$line = null) {
+		public function writeln($message,$level = 'debug',$file = null,$line = null, $module = null, $view = null): void {
 			list($file,$line) = $this->caller($file,$line);
 			if ($this->linefeed) {
 				$message .= "\n";
 			}
-			$this->write($message,$level,$file,$line);
+			$this->write($message,$level,$file,$line,$module,$view);
 		}
 	}

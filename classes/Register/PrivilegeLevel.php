@@ -6,20 +6,20 @@
 	 * 
 	 * Handles multi-level privilege calculations using bitwise operations.
 	 * Levels are defined as:
-	 * - administrator = 63 (all levels)
-	 * - distributor = 15 (distributor + organization + sub-organization + customer)
-	 * - organization_manager = 7 (organization + sub-organization + customer)
-	 * - sub_organization_manager = 3 (sub-organization + customer)
+	 * - administrator = 7
+	 * - distributor = 5
+	 * - organization_manager = 3
+	 * - sub_organization_manager = 2
 	 * - customer = 0 (customer only)
 	 */
 	class PrivilegeLevel {
 
 	// Level constants
-	const CUSTOMER = 0;
-	const SUB_ORGANIZATION_MANAGER = 3;
-	const ORGANIZATION_MANAGER = 7;
-	const DISTRIBUTOR = 15;
-	const ADMINISTRATOR = 63;
+	const CUSTOMER = 1;
+	const SUB_ORGANIZATION_MANAGER = 2;
+	const ORGANIZATION_MANAGER = 3;
+	const DISTRIBUTOR = 5;
+	const ADMINISTRATOR = 7;
 
 	// Level names for display
 	const LEVEL_NAMES = [
@@ -40,19 +40,38 @@
 	];
 
 		/**
+		 * Check if a privilege level explicitly includes a specific level (for form display)
+		 * This is different from hasLevel() - it doesn't treat administrator as "includes all"
+		 * It checks if the level was explicitly composed using the required level
+		 * @param int $privilege_level The combined privilege level
+		 * @param int $required_level The level to check for
+		 * @return bool True if the privilege level explicitly includes the required level
+		 */
+		public static function levelIncludesExplicitly(int $privilege_level, int $required_level): bool {
+			return inMatrix($privilege_level, $required_level);
+		}
+
+		/**
 		 * Check if a privilege level includes a specific level
 		 * @param int $privilege_level The combined privilege level
 		 * @param int $required_level The level to check for
 		 * @return bool True if the privilege level includes the required level
 		 */
 		public static function hasLevel(int $privilege_level, int $required_level): bool {
-			// Administrator has all levels
-			if ($privilege_level >= self::ADMINISTRATOR) {
+			if (inMatrix($privilege_level,$required_level)) {
 				return true;
 			}
-			
-			// Check if the privilege level includes the required level
-			return ($privilege_level & $required_level) === $required_level;
+			return false;
+		}
+
+		/**
+		 * Check if a number can be expressed as a sum of valid base levels
+		 * @param int $level The level to check
+		 * @return bool True if the level is valid (0 - 7)
+		 */
+		private static function isValidLevelCombination(int $level): bool {
+			if (is_numeric($level) && $level >= 0 && $level <= 7) return true;
+			return false;
 		}
 
 		/**
@@ -61,7 +80,7 @@
 		 * @return bool True if administrator level
 		 */
 		public static function isAdministrator(int $privilege_level): bool {
-			return $privilege_level >= self::ADMINISTRATOR;
+			return inMatrix($privilege_level, self::ADMINISTRATOR);
 		}
 
 		/**
@@ -70,7 +89,7 @@
 		 * @return bool True if distributor level or higher
 		 */
 		public static function isDistributor(int $privilege_level): bool {
-			return $privilege_level >= self::DISTRIBUTOR;
+			return inMatrix($privilege_level, self::DISTRIBUTOR);
 		}
 
 		/**
@@ -79,7 +98,7 @@
 		 * @return bool True if organization manager level or higher
 		 */
 		public static function isOrganizationManager(int $privilege_level): bool {
-			return $privilege_level >= self::ORGANIZATION_MANAGER;
+			return inMatrix($privilege_level, self::ORGANIZATION_MANAGER);
 		}
 
 		/**
@@ -88,28 +107,7 @@
 		 * @return bool True if sub-organization manager level or higher
 		 */
 		public static function isSubOrganizationManager(int $privilege_level): bool {
-			return $privilege_level >= self::SUB_ORGANIZATION_MANAGER;
-		}
-
-		/**
-		 * Get the highest level name for a privilege level
-		 * @param int $privilege_level The privilege level to check
-		 * @return string The name of the highest level
-		 */
-		public static function getHighestLevelName(int $privilege_level): string {
-			if ($privilege_level >= self::ADMINISTRATOR) {
-				return self::LEVEL_NAMES[self::ADMINISTRATOR];
-			}
-			if ($privilege_level >= self::DISTRIBUTOR) {
-				return self::LEVEL_NAMES[self::DISTRIBUTOR];
-			}
-			if ($privilege_level >= self::ORGANIZATION_MANAGER) {
-				return self::LEVEL_NAMES[self::ORGANIZATION_MANAGER];
-			}
-			if ($privilege_level >= self::SUB_ORGANIZATION_MANAGER) {
-				return self::LEVEL_NAMES[self::SUB_ORGANIZATION_MANAGER];
-			}
-			return self::LEVEL_NAMES[self::CUSTOMER];
+			return inMatrix($privilege_level, self::SUB_ORGANIZATION_MANAGER);
 		}
 
 		/**
@@ -119,33 +117,13 @@
 		 */
 		public static function getIncludedLevels(int $privilege_level): array {
 			$levels = [];
-			
-			if ($privilege_level >= self::ADMINISTRATOR) {
-				$levels[] = self::LEVEL_NAMES[self::ADMINISTRATOR];
-			} elseif ($privilege_level >= self::DISTRIBUTOR) {
-				$levels[] = self::LEVEL_NAMES[self::DISTRIBUTOR];
-			} elseif ($privilege_level >= self::ORGANIZATION_MANAGER) {
-				$levels[] = self::LEVEL_NAMES[self::ORGANIZATION_MANAGER];
-			} elseif ($privilege_level >= self::SUB_ORGANIZATION_MANAGER) {
-				$levels[] = self::LEVEL_NAMES[self::SUB_ORGANIZATION_MANAGER];
-			} else {
-				$levels[] = self::LEVEL_NAMES[self::CUSTOMER];
+			$arr = byte2Matrix($privilege_level);
+			foreach ($arr as $elem) {
+				if (isset(self::LEVEL_NAMES[$elem])) {
+					$levels[] = self::LEVEL_NAMES[$elem];
+				}
 			}
-			
 			return $levels;
-		}
-
-		/**
-		 * Combine multiple privilege levels
-		 * @param array $levels Array of privilege levels to combine
-		 * @return int Combined privilege level
-		 */
-		public static function combineLevels(array $levels): int {
-			$combined = 0;
-			foreach ($levels as $level) {
-				$combined |= $level;
-			}
-			return $combined;
 		}
 
 		/**
@@ -154,7 +132,7 @@
 		 * @return bool True if valid
 		 */
 		public static function isValidLevel(int $level): bool {
-			return $level >= 0 && $level <= 127; // Allow for future expansion
+			return is_numeric($level) && $level >= 0 && $level <= 7; // Allow for future expansion
 		}
 
 		/**

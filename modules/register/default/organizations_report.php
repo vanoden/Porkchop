@@ -67,7 +67,7 @@
 	<div class="tableBody">
 		<div class="tableRowHeader">
 			<div class="tableCell">Match Count</div>
-			<div class="tableCell">Normalized Name</div>
+			<div class="tableCell">Repeating Characters</div>
 			<div class="tableCell">Actions</div>
 		</div>
 		<?php

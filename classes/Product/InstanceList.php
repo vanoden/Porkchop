@@ -144,4 +144,47 @@
 			}
 			return $objects;
 		}
+
+		/**
+		 * Count duplicate monitors with the same asset code (serial number)
+		 * @param string $code The asset code (serial number) to check
+		 * @return int The count of monitors with the same code, or 0 if none found or error
+		 */
+		public function countDuplicatesByCode($code): int {
+			$this->clearError();
+
+			// Validate code
+			$validationClass = new $this->_modelName();
+			if (!$validationClass->validCode($code)) {
+				$this->error("Invalid asset code");
+				return 0;
+			}
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
+			$duplicate_query = "
+				SELECT	COUNT(*) as count
+				FROM	monitor_assets
+				WHERE	asset_code = ?
+				GROUP BY asset_code
+				HAVING COUNT(*) > 1
+			";
+			$database->AddParam($code);
+
+			// Execute Query
+			$rs = $database->Execute($duplicate_query);
+			if (!$rs) {
+				$this->SQLError($database->ErrorMsg());
+				return 0;
+			}
+
+			// Get result
+			if ($row = $rs->FetchRow()) {
+				return (int)$row['count'];
+			}
+
+			return 0;
+		}
 	}

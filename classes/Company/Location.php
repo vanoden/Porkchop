@@ -303,7 +303,6 @@
 
 			$database->AddParam($this->id);
 
-			$database->trace(9);
 			$database->Execute($update_object_query);
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());

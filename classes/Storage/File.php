@@ -64,8 +64,9 @@ class File extends \BaseModel {
 			$this->error("Invalid repository_id '" . $parameters['repository_id'] . "'");
 			return false;
 		}
-		$repository = new \Storage\Repository($parameters['repository_id']);
-		if (! $repository->id) {
+		$repositoryFactory = new \Storage\RepositoryFactory();
+		$repository = $repositoryFactory->createWithID($parameters['repository_id']);
+		if (! $repository || ! $repository->id) {
 			app_log("Repository not found for file upload: " . $parameters['repository_id'], 'error');
 			app_log(print_r(debug_backtrace(), true), 'notice');
 			$this->error("Repository not found for file upload");
@@ -104,7 +105,6 @@ class File extends \BaseModel {
 		$database->AddParam($parameters['path']);
 
 		// Execute Query
-		$database->trace(9);
 		$database->Execute($add_object_query);
 
 		// Check for Errors
@@ -347,7 +347,7 @@ class File extends \BaseModel {
 				AND		path = ?";
 			$database->AddParam($path);
 		}
-		$database->trace(9);
+
 		// Execute Query
 		$rs = $database->Execute($get_file_query);
 
@@ -405,8 +405,9 @@ class File extends \BaseModel {
 	 * @return instance of file's Storage/Repository 
 	 */
 	public function repository() {
-		$repository = new \Storage\Repository($this->_repository_id);
-		return $repository->getInstance();
+		$factory = new \Storage\RepositoryFactory();
+		$repository = $factory->createWithID($this->_repository_id);
+		return $repository;
 	}
 
 	/**
@@ -623,10 +624,55 @@ class File extends \BaseModel {
 	 * @return string - Content of the file
 	 */
 	public function content() {
+		// Initialize Repository
 		$repository = $this->repository();
-		$repository->content($this);
 		if ($repository->error()) $this->error($repository->error());
-		return $repository->content($this);
+
+		// See If Cache Configured
+		if (empty($GLOBALS['_config']->storage->cache_path) || !is_dir($GLOBALS['_config']->storage->cache_path)) {
+			// Cache not configured, load from repository
+			app_log("Cache path not configured, loading from repository", 'debug');
+			return $repository->content($this);
+		}
+
+		// Check Cache
+		$cachePath = $GLOBALS['_config']->storage->cache_path . "/" . $this->code;
+		if (file_exists($cachePath)) {
+			if (filesize($cachePath) > 0) {
+				// File Found in Cache!
+				app_log("Loading file from cache: " . $cachePath, 'debug');
+				return file_get_contents($cachePath);
+			}
+			else {
+				// Cached File is Zero Bytes, Remove It
+				app_log("Cached file is zero bytes, removing: " . $cachePath, 'debug');
+				unlink($cachePath);
+			}
+		}
+
+		// File Not Found in Cache, Load from Repository and Cache It
+		app_log("File not found in cache: " . $cachePath.", loading from repository", 'debug');
+		$file_handle = fopen($cachePath, 'w');
+		if (! $file_handle) {
+			// Can't cache file, return content directly
+			$this->error("Unable to open cache file for writing: " . $cachePath);
+			return $repository->content($this);
+		}
+		app_log("Caching file to: " . $cachePath, 'debug');
+		fwrite($file_handle, $repository->content($this));
+		fclose($file_handle);
+
+		// Return from Cache
+		return file_get_contents($cachePath);
+	}
+
+	/** @method cacheFile()
+	 * Cache the file locally and return the local path
+	 * @return string - Local path of the cached file
+	 */
+	public function cacheFile() {
+		$repository = $this->repository();
+		$localPath = $GLOBALS['_CONFIG_']->storage->cache_path . "/" . $this->code;
 	}
 
 	public function code() {
@@ -664,25 +710,15 @@ class File extends \BaseModel {
 		if (! preg_match('/^\//', $parameters['path'])) $parameters['path'] = '/' . $parameters['path'];
 
 		// Load the repository based on the parameters provided
+		$repositoryFactory = new \Storage\RepositoryFactory();
 		if (!empty($parameters['repository_id'])) {
-			$repository = new \Storage\Repository($parameters['repository_id']);
+			$repository = $repositoryFactory->createWithID($parameters['repository_id']);
 		}
 		elseif (!empty($parameters['repository_code'])) {
-			$repository = new \Storage\Repository();
-			$repository->get($parameters['repository_code']);
+			$repository = $repositoryFactory->createWithCode($parameters['repository_code']);
 		}
 		elseif (!empty($parameters['repository_name'])) {
-			$repositoryBase = new \Storage\Repository();
-			$repositoryBase->get($parameters['repository_name']);
-			if ($repositoryBase->error()) {
-				$this->addError("Error finding repository: " . $repositoryBase->error());
-				return false;
-			}
-			$repository = $repositoryBase->getInstance();
-			if ($repositoryBase->error()) {
-				$this->addError("Error loading repository: " . $repositoryBase->error());
-				return false;
-			}
+			$repository = $repositoryFactory->createWithCode($parameters['repository_name']);
 		}
 		else {
 			$this->addError("Repository not specified");

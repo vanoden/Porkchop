@@ -1,7 +1,7 @@
 <?php
 	namespace Site\Logger;
 
-	class Log Extends \BaseClass {
+	abstract class Log Extends \BaseClass {
 		public $level = 'debug';
 		public $connected = false;
 		public $html = false;
@@ -14,6 +14,10 @@
 				$this->level = $parameters['level'];
 			}
 		}
+
+		abstract public function write($message,$level = 'debug',$file = null,$line = null, $module = null, $view = null): bool;
+		abstract public function writeln($message,$level = 'debug',$file = null,$line = null, $module = null, $view = null): void;
+		abstract public function connect(): bool;
 
 		public function caller($file,$line) {
 			if (isset($file)) return array($file,$line);
@@ -28,7 +32,7 @@
 			return date($format);
 		}
 
-		public function formatted($message,$level = 'debug',$file = null,$line = null) {
+		public function formatted($message,$level = 'debug',$file = null,$line = null, $module = null, $view = null) {
 			# Replace Carriage Returns
 			$message = preg_replace('/\r*\n$/',"",$message);
 	
@@ -37,9 +41,9 @@
 			$file = preg_replace('#^'.BASE.'/#','',$file);
 			$pid = getMyPid();
 
-			if ((array_key_exists('_page',$GLOBALS)) and (property_exists($GLOBALS['_page'],'module'))) $module = $GLOBALS['_page']->module;
+			if (empty($module) and (array_key_exists('_page',$GLOBALS)) and (property_exists($GLOBALS['_page'],'module'))) $module = $GLOBALS['_page']->module;
 			else $module = 'core';
-			if ((array_key_exists('_page',$GLOBALS)) and (property_exists($GLOBALS['_page'],'view'))) $view = $GLOBALS['_page']->view;
+			if (empty($view) and (array_key_exists('_page',$GLOBALS)) and (property_exists($GLOBALS['_page'],'view'))) $view = $GLOBALS['_page']->view;
 			else $view = 'index';
 			if (array_key_exists('_SESSION_',$GLOBALS)) {
 				if (!is_null($GLOBALS['_SESSION_']) && property_exists($GLOBALS['_SESSION_'],'id')) $session_id = $GLOBALS['_SESSION_']->id;
@@ -65,6 +69,7 @@
 		}
 
 		public function compares ($level = "debug") {
+			if ($level == "warn") $level = "warning";
 			# Filter on log level
 			if ($this->level == "trace2") return true;
 			elseif ($this->level == "trace"		&& in_array($level,array('trace','debug','info','notice','warning','error','critical','alert','emergency'))) return true;

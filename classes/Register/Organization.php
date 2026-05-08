@@ -15,10 +15,10 @@
 		public ?int $password_expiration_days = null;
 		public ?int $default_billing_location_id = null;
 		public ?int $default_shipping_location_id = null;
-	public string $website_url = "";
-	public ?int $time_based_password = 0;
-	public ?string $account_number = null;
-	private bool $_nocache = false;
+		public string $website_url = "";
+		public ?int $time_based_password = 0;
+		public ?string $account_number = null;
+		private bool $_nocache = false;
 
 		/** @constructor */
 		public function __construct($id = null,$options = array()) {
@@ -84,10 +84,13 @@
 		 * @return bool
 		 */
 		public function update($parameters = []): bool {
+			// Reset any previous errors
+			$this->clearError();
+
+			// Initiate Database Service
+			$database = new \Database\Service;
 
 			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
-			$this->clearError();
-			$bind_params = array();
 
 			// Bust Cache
 			$cache_key = "organization[".$this->id."]";
@@ -99,104 +102,111 @@
 				SET		id = id
 			";
 
-			if (isset($parameters['name'])) {
+			$audit_message = "";
+			if (!empty($parameters['name']) && $parameters['name'] != $this->name) {
+				if (! $this->validName($parameters['name'])) {
+					$this->error("Valid name required for Organization::update");
+					return false;
+				}
 				$update_object_query .= ",
 						name = ?";
-				array_push($bind_params,$parameters['name']);
+				$database->AddParam($parameters['name']);
+				$audit_message .= "name updated to '".$parameters['name']."'. ";
 			}
-			if (isset($parameters['status'])) {
+			if (!empty($parameters['status']) && $parameters['status'] != $this->status) {
+				if (! $this->validStatus($parameters['status'])) {
+					$this->error("Valid status required for Organization::update");
+					return false;
+				}
 				$update_object_query .= ",
 						status = ?";
-				array_push($bind_params,$parameters['status']);
+				$database->AddParam($parameters['status']);
+				$audit_message .= "status updated to '".$parameters['status']."'. ";
 			}
-			if (isset($parameters['is_reseller']) && is_numeric($parameters['is_reseller'])) {
+			if (!empty($parameters['is_reseller']) && is_numeric($parameters['is_reseller']) && $parameters['is_reseller'] != $this->is_reseller) {
 				$update_object_query .= ",
 						is_reseller = ?";
-				array_push($bind_params,$parameters['is_reseller']);
+				$database->AddParam($parameters['is_reseller']);
+				$audit_message .= "is_reseller updated to '".$parameters['is_reseller']."'. ";
 			}
-			if (isset($parameters['is_customer']) && is_numeric($parameters['is_customer'])) {
+			if (!empty($parameters['is_customer']) && is_numeric($parameters['is_customer']) && $parameters['is_customer'] != $this->is_customer) {
 				$update_object_query .= ",
 						is_customer = ?";
-				array_push($bind_params,$parameters['is_customer']);
+				$database->AddParam($parameters['is_customer']);
+				$audit_message .= "is_customer updated to '".$parameters['is_customer']."'. ";
 			}
-			if (isset($parameters['is_vendor']) && is_numeric($parameters['is_vendor'])) {
+			if (!empty($parameters['is_vendor']) && is_numeric($parameters['is_vendor']) && $parameters['is_vendor'] != $this->is_vendor) {
 				$update_object_query .= ",
 						is_vendor = ?";
-				array_push($bind_params,$parameters['is_vendor']);
+				$database->AddParam($parameters['is_vendor']);
+				$audit_message .= "is_vendor updated to '".$parameters['is_vendor']."'. ";
 			}
-			if (isset($parameters['assigned_reseller_id']) && is_numeric($parameters['assigned_reseller_id'])) {
+			if (!empty($parameters['assigned_reseller_id']) && is_numeric($parameters['assigned_reseller_id']) && $parameters['assigned_reseller_id'] != $this->assigned_reseller_id) {
 				$update_object_query .= ",
 						assigned_reseller_id = ?";
-				array_push($bind_params,$parameters['assigned_reseller_id']);
+				$database->AddParam($parameters['assigned_reseller_id']);
+				$audit_message .= "assigned_reseller_id updated to '".$parameters['assigned_reseller_id']."'. ";
 			}
-			if (isset($parameters['notes'])) {
+			if (isset($parameters['notes']) && $parameters['notes'] != $this->notes) {
 				$update_object_query .= ",
 						notes = ?";
-				array_push($bind_params,$parameters['notes']);
+				$database->AddParam($parameters['notes']);
+				$audit_message .= "notes updated. ";
 			}
-			if (isset($parameters['password_expiration_days'])) {
+			if (!empty($parameters['password_expiration_days']) && is_numeric($parameters['password_expiration_days']) && $parameters['password_expiration_days'] != $this->password_expiration_days) {
 				$update_object_query .= ",
 						password_expiration_days = ?";
-                array_push($bind_params,$parameters['password_expiration_days']);
+                $database->AddParam($parameters['password_expiration_days']);
+				$audit_message .= "password_expiration_days updated to '".$parameters['password_expiration_days']."'. ";
             }
-            if (isset($parameters['default_billing_location_id'])) {
+            if (!empty($parameters['default_billing_location_id']) && $parameters['default_billing_location_id'] != $this->default_billing_location_id) {
 			    $update_object_query .= ",
 			    default_billing_location_id = ?";
-			    array_push($bind_params,$parameters['default_billing_location_id']);
+			    $database->AddParam($parameters['default_billing_location_id']);
+				$audit_message .= "default_billing_location_id updated to '".$parameters['default_billing_location_id']."'. ";
     		}
-		    if (isset($parameters['default_shipping_location_id'])) {
+		    if (!empty($parameters['default_shipping_location_id']) && $parameters['default_shipping_location_id'] != $this->default_shipping_location_id	) {
 			    $update_object_query .= ",
 			    default_shipping_location_id = ?";
-			    array_push($bind_params,$parameters['default_shipping_location_id']);
+			    $database->AddParam($parameters['default_shipping_location_id']);
+			    $audit_message .= "default_shipping_location_id updated to '".$parameters['default_shipping_location_id']."'. ";
 		    }
-			if (isset($parameters['website_url'])) {
+			if (!empty($parameters['website_url']) && $parameters['website_url'] != $this->website_url) {
 				$update_object_query .= ",
 						website_url = ?";
-				array_push($bind_params,$parameters['website_url']);
+				$database->AddParam($parameters['website_url']);
+				$audit_message .= "website_url updated to '".$parameters['website_url']."'. ";
 			}
-			if (isset($parameters['time_based_password']) && is_numeric($parameters['time_based_password'])) {
+			if (!empty($parameters['time_based_password']) && is_numeric($parameters['time_based_password']) && $parameters['time_based_password'] != $this->time_based_password) {
 				$update_object_query .= ",
 						time_based_password = ?";
-				array_push($bind_params,$parameters['time_based_password']);
+				$database->AddParam($parameters['time_based_password']);
+				$audit_message .= "time_based_password updated to '".$parameters['time_based_password']."'. ";
 			}
-			if (isset($parameters['account_number'])) {
+			if (!empty($parameters['account_number']) && $parameters['account_number'] != $this->account_number) {
 				$update_object_query .= ",
 						account_number = ?";
-				array_push($bind_params,$parameters['account_number']);
+				$database->AddParam($parameters['account_number']);
+				$audit_message .= "account_number updated to '".$parameters['account_number']."'. ";
 			}
 
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-			array_push($bind_params,$this->id);
+			$database->AddParam($this->id);
 			query_log($update_object_query);
-			$rs = $GLOBALS['_database']->Execute(
-				$update_object_query,
-				$bind_params
-			);
+			$rs = $database->Execute($update_object_query);
 
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-
-			// audit any/all the organization changes made
-			if (isset($parameters['notes']) && ($parameters['notes'] != $this->notes)) $this->auditRecord('ORGANIZATION_UPDATED','Organization notes have been updated: '.$parameters['notes']);
-			if (isset($parameters['website_url']) && ($parameters['website_url'] != $this->website_url)) $this->auditRecord('ORGANIZATION_UPDATED','Organization website_url has been updated: '.$parameters['website_url']);
-			if (isset($parameters['status']) && ($parameters['status'] != $this->status)) $this->auditRecord('ORGANIZATION_UPDATED','Organization status has been updated: '.$parameters['status']);
-			if (isset($parameters['name']) && ($parameters['name'] != $this->name)) $this->auditRecord('ORGANIZATION_UPDATED','Organization name has been changed: '.$parameters['name']);
-			if (isset($parameters['is_reseller']) && ($parameters['is_reseller'] != $this->is_reseller)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a reseller has been updated (is_reseller): '.$parameters['is_reseller']);
-			if (isset($parameters['is_customer']) && ($parameters['is_customer'] != $this->is_customer)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a customer has been updated (is_customer): '.$parameters['is_customer']);
-			if (isset($parameters['is_vendor']) && ($parameters['is_vendor'] != $this->is_vendor)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a vendor has been updated (is_vendor): '.$parameters['is_vendor']);
-			if (isset($parameters['time_based_password']) && ($parameters['time_based_password'] != $this->time_based_password)) $this->auditRecord('ORGANIZATION_UPDATED','Organization time based password has been updated (time_based_password): '.$parameters['time_based_password']);
-			if (isset($parameters['assigned_reseller_id']) && ($parameters['assigned_reseller_id'] != $this->assigned_reseller_id)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a reseller has been updated (assigned_reseller_id): '.$parameters['assigned_reseller_id']);
-			if (isset($parameters['account_number']) && ($parameters['account_number'] != $this->account_number)) $this->auditRecord('ORGANIZATION_UPDATED','Organization account number has been updated: '.$parameters['account_number']);
 
 			// audit the update event
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
 				'instance_id' => $this->id,
-				'description' => 'Updated '.$this->_objectName(),
+				'description' => $audit_message,
 				'class_name' => get_class($this),
 				'class_method' => 'update'
 			));	
@@ -318,7 +328,11 @@
 			return $customerlist->find(array('organization_id' => $this->id,'automation' => $automation, 'status' => $status));
 		}
 
-		public function product($product_id) {
+		/** @method product(id)
+		 * Get an owned product for this organization
+		 * @param int $product_id
+		 */
+		public function product($product_id): ?\Register\Organization\OwnedProduct {
 			$product = new \Product\Item($product_id);
 			if ($product->error()) {
 				$this->error($product->error());
@@ -329,6 +343,96 @@
 				return null;
 			}
 			return new \Register\Organization\OwnedProduct($this->id,$product->id);
+		}
+
+		/** @method hasProduct(product_code)
+		 * Check if organization has an owned product by product code
+		 * @param string $product_code
+		 * @return bool
+		 */
+		public function hasProduct($product_code): bool {
+			$product = new \Product\Item();
+			if (! $product->get($product_code)) {
+				$this->error("Product not found for code: ".$product_code);
+				return false;
+			}
+			return $this->hasProductID($product->id);
+		}
+
+		/** @method hasProductID(id)
+		 * Check if organization has an owned product
+		 * @param int $product_id
+		 * @return bool
+		 */
+		public function hasProductID($product_id): bool {
+			$owned_product = $this->product($product_id);
+			if ($owned_product->error()) {
+				$this->error($owned_product->error());
+				return false;
+			}
+			if ($owned_product->product_id) {
+				// See if they have any of the product in inventory
+				if ($owned_product->quantity > 0) {
+					if ($owned_product->expired()) return false;
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+			else return false;
+		}
+
+		/** @method addProduct(id,quantity,date_expires = '9999-12-31')
+		 * Add a product to this organization
+		 */
+		public function addProduct($product_id,$quantity,$date_expires = '9999-12-31'): bool {
+			$owned_product = $this->product($product_id);
+			if ($owned_product->error()) {
+				$this->error($owned_product->error());
+				return false;
+			}
+			if ($owned_product->product_id) {
+				// They already have this product, update quantity and expiration if needed
+				$new_quantity = $owned_product->quantity + $quantity;
+				if ($date_expires < $owned_product->date_expires) {
+					$new_date_expires = $date_expires;
+				}
+				else {
+					$new_date_expires = $owned_product->date_expires;
+				}
+				if (!$owned_product->update(array('quantity' => $new_quantity,'date_expires' => $new_date_expires))) {
+					$this->error($owned_product->error());
+					return false;
+				}
+			}
+			else {
+				// They don't have this product, add it
+				if (!$owned_product->add(array('quantity' => $quantity,'date_expires' => $date_expires))) {
+					$this->error($owned_product->error());
+					return false;
+				}
+			}
+			return true;
+		}
+
+		public function updateProduct($product_id,$quantity,$date_expires = '9999-12-31'): bool {
+			$owned_product = $this->product($product_id);
+			if ($owned_product->error()) {
+				$this->error($owned_product->error());
+				return false;
+			}
+			if ($owned_product->product_id) {
+				if (!$owned_product->update(array('quantity' => $quantity,'date_expires' => $date_expires))) {
+					$this->error($owned_product->error());
+					return false;
+				}
+			}
+			else {
+				$this->error("Product not found in organization");
+				return false;
+			}
+			return true;
 		}
 
 		public function activeCount() {
@@ -373,11 +477,20 @@
 		}
 
 		public function locations($parameters = array()) {
-			$get_locations_query = "
-				SELECT	location_id
-				FROM	register_organization_locations
-				WHERE	organization_id = ?";
-			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->id));
+			$include_hidden = isset($parameters['include_hidden']) ? (bool)$parameters['include_hidden'] : true;
+			if ($include_hidden) {
+				$get_locations_query = "
+					SELECT	location_id
+					FROM	register_organization_locations
+					WHERE	organization_id = ?";
+			} else {
+				$get_locations_query = "
+					SELECT	rol.location_id
+					FROM	register_organization_locations rol
+					INNER JOIN register_locations rl ON rl.id = rol.location_id
+					WHERE	rol.organization_id = ? AND rl.hidden = 0";
+			}
+			$rs = $GLOBALS['_database']->Execute($get_locations_query, array($this->id));
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
@@ -391,6 +504,14 @@
 		}
 
 		public function auditRecord($type,$notes,$admin_id = null) {
+			// Validate type and notes are not NULL
+			if (empty($type) || $type === null) {
+				$this->error("Audit type is required and cannot be NULL");
+				return false;
+			}
+			if ($notes === null) {
+				$notes = 'Value not found';
+			}
 
 			$audit = new \Register\OrganizationAuditEvent();
 			if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
@@ -425,4 +546,282 @@
 			}
 			return true;
 		}
-    }
+
+		public function associatedWith($organization_id) {
+			// Clear any previous errors
+			$this->clearError();
+
+			// Validate organization_id
+			if (empty($organization_id) || !is_numeric($organization_id)) {
+				$this->error("Valid organization_id is required for associatedWith");
+				return false;
+			}
+			$associated_organization = new \Register\Organization($organization_id);
+			if ($associated_organization->error()) {
+				$this->error("Error loading associated organization: ".$associated_organization->error());
+				return false;
+			}
+			if (! $associated_organization->id) {
+				$this->error("Associated organization not found");
+				return false;
+			}
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$check_association_query = "
+				SELECT	1
+				FROM	register_organization_associations
+				WHERE	organization_id = ?
+				AND		associated_organization_id = ?
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($organization_id);
+
+			// Execute Query
+			$rs = $database->Execute($check_association_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			list($association_found) = $rs->FetchRow();
+			if ($association_found) return true;
+			else return false;
+		}
+
+		/** @method public ownedProducts(parameters)
+		 * Get a list of products owned by this organization
+		 * @param array parameters - optional parameters for filtering products
+		 * @return array of Product\Item objects
+		 */
+		public function ownedProducts($parameters = array()) {
+			// Clear any previous errors
+			$this->clearError();
+
+			$parameters['organization_id'] = $this->id;
+			$owned_product_list = new \Register\Organization\OwnedProductList();
+			$products = $owned_product_list->find($parameters);
+			if ($owned_product_list->error()) {
+				$this->error("Error loading owned products: ".$owned_product_list->error());
+				return [];
+			}
+			return $products;
+		}
+
+		/** @method public ownedServices(parameters)
+		 * Get a list of services owned by this organization
+		 * @param array parameters - optional parameters for filtering services
+		 * @return array of Product\Item objects
+		 */
+		public function ownedServices($parameters = array()) {
+			// Clear any previous errors
+			$this->clearError();
+
+			// Return filtered list of owned products with type = service
+			return $this->ownedProducts(array_merge($parameters,array('type' => 'service')));
+		}
+
+		/**
+		 * Get all ACTIVE organizations for use as merge targets.
+		 * Optionally exclude a specific organization ID (typically the source org).
+		 *
+		 * @param int|null $exclude_id
+		 * @return array Array of simple row objects with id, name, code, status
+		 */
+		public static function activeOrganizations(?int $exclude_id = null): array {
+			$database = new \Database\Service();
+
+			$query = "
+				SELECT	id, name, code, status
+				FROM	register_organizations
+				WHERE	status = 'ACTIVE'
+			";
+			$params = array();
+			if (!empty($exclude_id)) {
+				$query .= "
+				AND		id != ?
+				";
+				$params[] = $exclude_id;
+			}
+			$query .= "
+				ORDER BY name
+			";
+
+			$rs = $database->Execute($query, $params);
+			if (! $rs) {
+				return array();
+			}
+
+			$results = array();
+			while ($row = $rs->FetchNextObject(false)) {
+				$results[] = $row;
+			}
+			return $results;
+		}
+
+		/**
+		 * Merge this organization into a target organization.
+		 * Moves all users (accounts and devices), owned products and location associations
+		 * from the current organization to the target organization.
+		 *
+		 * Also records an organization audit event on the current (source) organization
+		 * noting the merge and updates the source organization status to DELETED.
+		 *
+		 * @param int $target_organization_id ID of the organization to merge into
+		 * @return bool true on success, false on error
+		 */
+		public function mergeInto(int $target_organization_id): bool {
+			$this->clearError();
+
+			// Validate source organization
+			if (empty($this->id) || !is_numeric($this->id)) {
+				$this->error("Source organization is not set");
+				return false;
+			}
+
+			// Prevent merging into self
+			if ($target_organization_id === $this->id) {
+				$this->error("Cannot merge organization into itself");
+				return false;
+			}
+
+			// Load and validate target organization
+			$target = new \Register\Organization($target_organization_id);
+			if ($target->error()) {
+				$this->error("Error loading target organization: " . $target->error());
+				return false;
+			}
+			if (empty($target->id)) {
+				$this->error("Target organization not found");
+				return false;
+			}
+			if ($target->status !== 'ACTIVE') {
+				$this->error("Target organization must be ACTIVE");
+				return false;
+			}
+
+			$database = new \Database\Service();
+
+			// Begin transaction so that all moves succeed or fail together
+			if (! $database->BeginTrans()) {
+				$this->error("Database transactions not supported");
+				return false;
+			}
+
+			// Move all users (accounts and devices) to target organization
+			$database->resetParams();
+			$update_users_query = "
+				UPDATE	register_users
+				SET		organization_id = ?
+				WHERE	organization_id = ?
+			";
+			$database->Execute($update_users_query, array($target->id, $this->id));
+			if ($database->ErrorMsg()) {
+				$this->error("Error moving organization users: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+
+			// Move owned products to target organization, merging quantities where necessary.
+			// Use model logic per product to avoid ambiguous multi-table SQL in a single statement.
+			$database->resetParams();
+			$get_products_query = "
+				SELECT	product_id, quantity, date_expires
+				FROM	register_organization_products
+				WHERE	organization_id = ?
+			";
+			$rsProducts = $database->Execute($get_products_query, array($this->id));
+			if (! $rsProducts) {
+				$this->error("Error reading owned products for merge: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+			while ($row = $rsProducts->FetchNextObject(false)) {
+				// Use existing addProduct behavior to merge quantities/expiration into target
+				if (! $target->addProduct($row->product_id, $row->quantity, $row->date_expires)) {
+					$this->error("Error moving owned product ID ".$row->product_id.": " . $target->error());
+					$database->RollbackTrans();
+					return false;
+				}
+			}
+
+			// Remove any remaining product rows for the source organization
+			$database->resetParams();
+			$delete_products_query = "
+				DELETE FROM register_organization_products
+				WHERE organization_id = ?
+			";
+			$database->Execute($delete_products_query, array($this->id));
+			if ($database->ErrorMsg()) {
+				$this->error("Error cleaning up source organization products: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+
+			// Move location associations to target organization.
+			// Use per-location association to avoid ambiguous multi-table SQL.
+			$database->resetParams();
+			$get_locations_query = "
+				SELECT	location_id
+				FROM	register_organization_locations
+				WHERE	organization_id = ?
+			";
+			$rsLocations = $database->Execute($get_locations_query, array($this->id));
+			if (! $rsLocations) {
+				$this->error("Error reading organization locations for merge: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+			while (list($loc_id) = $rsLocations->FetchRow()) {
+				$location = new \Register\Location($loc_id);
+				if ($location->error()) {
+					$this->error("Error loading location ".$loc_id.": " . $location->error());
+					$database->RollbackTrans();
+					return false;
+				}
+				// This uses ON DUPLICATE KEY internally and will not create duplicates.
+				if (! $location->associateOrganization($target->id)) {
+					$this->error("Error associating location ".$loc_id." with target organization: " . $location->error());
+					$database->RollbackTrans();
+					return false;
+				}
+			}
+
+			// Remove location associations from the source organization
+			$database->resetParams();
+			$delete_locations_query = "
+				DELETE FROM register_organization_locations
+				WHERE organization_id = ?
+			";
+			$database->Execute($delete_locations_query, array($this->id));
+			if ($database->ErrorMsg()) {
+				$this->error("Error cleaning up source organization locations: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+
+			// Commit all moves
+			if (! $database->CommitTrans()) {
+				$this->error("Error committing organization merge transaction");
+				return false;
+			}
+
+			// Mark the source organization as deleted to prevent future use
+			if (! $this->update(array('status' => 'DELETED'))) {
+				// update() will set a detailed error
+				return false;
+			}
+
+			// Record audit event on the source organization describing the merge
+			$merge_notes = "Organization merged into ID {$target->id} ({$target->name})";
+			if (! $this->auditRecord('ORGANIZATION_UPDATED', $merge_notes)) {
+				// auditRecord sets its own error
+				return false;
+			}
+
+			return true;
+		}
+	}

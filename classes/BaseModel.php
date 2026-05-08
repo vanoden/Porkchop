@@ -22,6 +22,9 @@ class BaseModel extends \BaseClass {
 	// Name for Software Incrementing Number Field
 	protected $_tableNumberColumn;
 
+	// Name for Unique Object Name Column
+	protected $_tableNameColumn = 'name';
+
 	// field names for columns in database tables
 	protected $_fields = array();
 	protected $_aliasFields = array();
@@ -35,14 +38,25 @@ class BaseModel extends \BaseClass {
 	protected $_tableMetaFKColumn = 'instance_id';
 	protected $_tableMetaKeyColumn = 'key';
 
+	// Search Tag Table Info (for unified tag system)
+	protected $_searchTagTableName = 'search_tags';
+	protected $_searchTagXrefTableName = 'search_tags_xref';
+	protected $_tableSearchTagFKColumn = 'instance_id';
+	protected $_tableSearchTagKeyColumn = 'tag';
+
 	// Should we always audit events for this class?
 	protected $_auditEvents = false;
+
+	// Configuration option for controlling whether to automatically load related objects when loading details of this object.  Can be overridden by passing 'recursive' parameter to find() and get() methods.
+	protected $_flat = false;
 
 	/** @constructor($id = 0)
 	 * Load object base on ID if given
 	 * @param int $id
+	 * @param bool $flat Optional parameter to load object with only fields and no related objects.  Less DB load, response size and memory usage for list views, but requires additional calls to load related objects if needed.
 	 */
-	public function __construct($id = 0) {
+	public function __construct($id = 0, $flat = false) {
+		$this->_flat = $flat;
 		if (empty($this->_tableName)) {
 			$calledClass = get_called_class();
 			$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
@@ -68,6 +82,14 @@ class BaseModel extends \BaseClass {
 		} else {
 			$this->_exists = false;
 		}
+	}
+
+	/** @method _getActualClass()
+	 * Get the actual class name of the object
+	 * @return string
+	 */
+	public function _getActualClass(): string {
+		return get_class($this);
 	}
 
 	/** @method __call($name, $parameters)
@@ -111,7 +133,7 @@ class BaseModel extends \BaseClass {
 			$callerFunction = $caller["function"] ?? 'unknown';
 			$callerLine = $caller["line"] ?? 0;
 			app_log("$className: No function '$name' found with ".count($parameters)." parameters. Called by " . $callerClass . "::" . $callerFunction . "() Line " . $callerLine, 'warning');
-			$this->error("Invalid method '$name'"); // for ".$this->objectName());
+			$this->error("Invalid method '$name'"); // for ".$this->_getActualClass());
 		}
 	}
 
@@ -123,15 +145,15 @@ class BaseModel extends \BaseClass {
 		return $this->_tableName;
 	}
 
-	/**
-	 * Return the name of the table
+	/** @method _tableIDColumn()
+	 * Return the name of the primary key ID column, usually 'id'
 	 * @return string Name of Primary Key ID Column
 	 */
 	public function _tableIDColumn() {
 		return $this->_tableIDColumn;
 	}
 
-	/**
+	/** @method _fields()
 	 * Return List of Object Fields
 	 * Auto-populate if not provided by constructor
 	 * @return array Names of fields in object
@@ -148,7 +170,7 @@ class BaseModel extends \BaseClass {
 		return $this->_fields;
 	}
 
-	/**
+	/** @method hasField($name)
 	 * Does the table have specified field?
 	 * @param string $name
 	 * @return bool
@@ -157,10 +179,10 @@ class BaseModel extends \BaseClass {
 		return in_array($name, $this->_fields);
 	}
 
-	/**
-	 * update by params
-	 * 
+	/** @method update($parameters)
+	 * Update the object in the database using the given parameters and call details() to update the object properties
 	 * @param array $parameters, name value pairs to update object by
+	 * @return bool true if update successful, false otherwise
 	 */
 	public function update($parameters = []): bool {
 		$this->clearError();
@@ -170,7 +192,7 @@ class BaseModel extends \BaseClass {
 
 		// unique id is required to perform an update
 		if (!$this->id) {
-			$this->error('ERROR: id is required for ' . $this->_objectName() . ' update.');
+			$this->error('ERROR: id is required for ' . $this->_getActualClass() . ' update.');
 			return false;
 		}
 
@@ -182,9 +204,11 @@ class BaseModel extends \BaseClass {
 		}
 
 		$audit_message = "";
+		$validFieldPattern = '/^[a-z0-9_]+$/';
 		foreach ($parameters as $fieldKey => $fieldValue) {
-			if (in_array($fieldKey, $this->_fields)) {
-				if ($this->$fieldKey != $fieldValue) {
+			if ($fieldKey !== '' && is_string($fieldKey) && preg_match($validFieldPattern, $fieldKey) && in_array($fieldKey, $this->_fields)) {
+				$current = property_exists($this, $fieldKey) ? $this->$fieldKey : null;
+				if ($current != $fieldValue) {
 					$updateQuery .= ", `$fieldKey` = ?";
 					$database->AddParam($fieldValue);
 					if (strlen($audit_message) > 0) $audit_message .= ", ";
@@ -196,6 +220,12 @@ class BaseModel extends \BaseClass {
 		$updateQuery .= " WHERE	`$this->_tableIDColumn` = ?";
 
 		$database->AddParam($this->id);
+
+		if (strlen($audit_message) <1) {
+			// Nothing to do, exit to avoid unnecessary update and audit event
+			return true;
+		}
+
 		$database->Execute($updateQuery);
 
 		if ($database->ErrorMsg()) {
@@ -208,28 +238,21 @@ class BaseModel extends \BaseClass {
 		if (isset($cache)) $cache->delete();
 
 		// audit the update event
-		$auditLog = new \Site\AuditLog\Event();
-		$auditLog->add(array(
-			'instance_id' => $this->id,
-			'description' => 'Updated ' . $this->_objectName(),
-			'class_name' => get_class($this),
-			'class_method' => 'update'
-		));
+		if ($this->_auditEvents && strlen($audit_message) > 0) $this->recordAuditEvent($this->id, $audit_message);
 
 		return $this->details();
 	}
 
-	/**
-	 * Get ID of Object
+	/** @method id()
+	 * Get autoincremented ID of Object, usually the primary key in the database
 	 * @return int
 	 */
 	public function id() {
 		return $this->id;
 	}
 
-	/**
-	 * add by params
-	 * 
+	/** @method add($parameters)
+	 * Add an instance of the object to the database using the given parameters and return the new object
 	 * @param array $parameters, name value pairs to add and populate new object by
 	 */
 	public function add($parameters = []) {
@@ -268,11 +291,16 @@ class BaseModel extends \BaseClass {
 
 		$addQuery = "INSERT INTO `$this->_tableName` ";
 		$bindFields = array();
+		$validFieldPattern = '/^[a-z0-9_]+$/';
 		foreach ($parameters as $fieldKey => $fieldValue) {
-			if (in_array($fieldKey, $this->_fields())) {
+			if ($fieldKey !== '' && is_string($fieldKey) && preg_match($validFieldPattern, $fieldKey) && in_array($fieldKey, $this->_fields())) {
 				array_push($bindFields, $fieldKey);
 				$database->AddParam($fieldValue);
 			}
+		}
+		if (empty($bindFields)) {
+			$this->error("No valid fields to insert for " . $this->_getActualClass());
+			return false;
 		}
 		$addQuery .= '(`' . implode('`,`', $bindFields) . '`';
 		$addQuery .= ") VALUES (" . trim(str_repeat("?,", count($bindFields)), ',') . ")";
@@ -288,13 +316,7 @@ class BaseModel extends \BaseClass {
 		$this->id = $database->Insert_ID();
 
 		// audit the add event
-		$auditLog = new \Site\AuditLog\Event();
-		$auditLog->add(array(
-			'instance_id' => $this->id,
-			'description' => 'Added new ' . $this->_objectName(),
-			'class_name' => get_class($this),
-			'class_method' => 'add'
-		));
+		if ($this->_auditEvents) $this->recordAuditEvent($this->id, 'Added new ' . $this->_getActualClass());
 
 		return $this->update($parameters);
 	}
@@ -548,13 +570,7 @@ class BaseModel extends \BaseClass {
 		}
 
 		// audit the delete event
-		$auditLog = new \Site\AuditLog\Event();
-		$auditLog->add(array(
-			'instance_id' => $this->id,
-			'description' => 'Deleted ' . $this->_objectName(),
-			'class_name' => get_class($this),
-			'class_method' => 'delete'
-		));
+		if ($this->_auditEvents) $this->recordAuditEvent($this->id, 'Deleted ' . $this->_getActualClass());
 
 		return true;
 	}
@@ -593,13 +609,7 @@ class BaseModel extends \BaseClass {
 		}
 
 		// audit the update event
-		$auditLog = new \Site\AuditLog\Event();
-		$auditLog->add(array(
-			'instance_id' => $this->id,
-			'description' => 'Deleted ' . $this->_objectName(),
-			'class_name' => get_class($this),
-			'class_method' => 'deleteByKey'
-		));
+		if ($this->_auditEvents) $this->recordAuditEvent($this->id, 'Deleted ' . $this->_getActualClass());
 
 		return true;
 	}
@@ -640,16 +650,22 @@ class BaseModel extends \BaseClass {
 		return $rs;
 	}
 
-	/********************************************/
-	/* Track Fields Updateable in Table			*/
-	/********************************************/
+	/** @method _addFields($fields)
+	 * Add Fields to Fields Array - Generally called by class constructor with a suggested list of fields for the class
+	 * @param mixed $fields
+	 * @return void
+	 */
 	protected function _addFields($fields) {
 		if (is_array($fields)) {
-			foreach ($fields as $field) array_push($this->_fields, $field);
+			foreach ($fields as $field) {
+				if ($field !== '' && is_string($field) && preg_match('/^[a-z0-9_]+$/', $field)) {
+					array_push($this->_fields, $field);
+				}
+			}
 		}
 	}
 
-	/**
+	/** @method _aliasField($real, $alias)
 	 * Add a field alias.  This allows standardization of field names where older tables may have different names for the same field.
 	 * Used primarily for unique keys such as code, name, etc.
 	 * @param mixed $real - Real field name in database
@@ -660,7 +676,7 @@ class BaseModel extends \BaseClass {
 		$this->_aliasFields[$alias] = $real;
 	}
 
-	/**
+	/** @method _addMetadataKeys($keys)
 	 * Add Keys to Metadata Keys Array - Generally called by class constructor with a suggested list of keys for the class
 	 * @param mixed $keys
 	 * @return void
@@ -781,7 +797,7 @@ class BaseModel extends \BaseClass {
 			app_log("No ID defined for " . get_class($this),'debug');
 			return null;
 		} else {
-			app_log("No cache key defined for " . get_class($this),'debug');
+			app_log("No cache key defined for " . get_class($this),'trace');
 			return null;
 		}
 	}
@@ -796,6 +812,24 @@ class BaseModel extends \BaseClass {
 			$cache->delete();
 		}
 		return true;
+	}
+
+	/** @method setCacheElement(key, value)
+	 * Set a value in the cache for this object
+	 * @param string $key
+	 * @param mixed $value
+	 * @return bool True if set
+	 */
+	public function setCacheElement(string $key, $value): bool {
+		$cache = $this->cache();
+		if ($cache) {
+			$cachedObject = $cache->get();
+			if (!is_array($cachedObject)) $cachedObject = array();
+			$cachedObject[$key] = $value;
+			$cache->set($cachedObject);
+			return true;
+		}
+		return false;
 	}
 
 	/** @method cached($cached = null)
@@ -813,6 +847,48 @@ class BaseModel extends \BaseClass {
 		return $this->_cached;
 	}
 
+	/** @method getByName(value)
+	 * Get Object Record Using Name
+	 * @param string $value
+	 * @return bool True if object found
+	 */
+	public function getByName(string $value): bool {
+		if (empty($this->_tableNameColumn)) {
+			$this->error("No name field defined for " . get_class($this));
+			return false;
+		}
+		// Clear Errors
+		$this->clearError();
+		$database = new \Database\Service();
+
+		// Prepare Query
+		$get_object_query = "
+				SELECT	`$this->_tableIDColumn`
+				FROM	`$this->_tableName`
+				WHERE	`$this->_tableNameColumn` = ?";
+
+		// Bind Code to Query
+		$database->AddParam($value);
+
+		// Execute Query
+		$rs = $database->Execute($get_object_query);
+		if (! $rs) {
+			$this->SQLError($database->ErrorMsg());
+			return false;
+		}
+		// Fetch Results
+		list($id) = $rs->FetchRow();
+		if (is_numeric($id) && $id > 0) {
+			$this->id = $id;
+			return $this->details();
+		} else {
+			$cls = get_called_class();
+			$parts = explode("\\", $cls);
+			$this->warn($parts[1] . " with name '" . $value . "' not found");
+			return false;
+		}
+	}
+
 	/** @method setMetadataScalar(key, value)
 	 * Set Metadata Value for Key
 	 * @param string $key
@@ -821,7 +897,28 @@ class BaseModel extends \BaseClass {
 	 */
 	public function setMetadataScalar(string $key, string $value): bool {
 		$this->clearError();
+
 		if (! isset($value)) return $this->unsetMetadata($key);
+
+		// Validate that object has a valid ID before setting metadata
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			$this->error("Cannot set metadata: object ID is invalid or not set");
+			return false;
+		}
+
+		// Get Existing Metadata Value to determine if this is an update or create for audit purposes
+		$existing_value = $this->getMetadata($key);
+
+		// Compare to New Value and Audit if Changed, exit if not changed to avoid unnecessary audit events
+		if ($existing_value !== $value) {
+			if (isset($existing_value)) {
+				$audit_message = 'Updated metadata key ' . $key . ' to ' . $value . ' for ' . $this->_getActualClass();
+			} else {
+				$audit_message = 'Set metadata key ' . $key . ' to ' . $value . ' for ' . $this->_getActualClass();
+			}
+		}
+		else return true;
+
 		// Initialize Database Service
 		$database = new \Database\Service();
 
@@ -856,6 +953,8 @@ class BaseModel extends \BaseClass {
 			return false;
 		}
 
+		if ($this->_auditEvents) $this->recordAuditEvent($this->id, $audit_message);
+
 		return true;
 	}
 
@@ -867,6 +966,28 @@ class BaseModel extends \BaseClass {
 	 */
 	public function setMetadataObject(string $key, stdClass $value): bool {
 		$this->clearError();
+		// Get Existing Metadata Value to determine if this is an update or create for audit purposes
+		$existing_value = $this->getMetadata($key);
+
+		// Compare to New Value and Audit if Changed
+		if ($this->_auditEvents && $existing_value !== json_encode($value)) {
+			if (isset($existing_value)) {
+				$audit_message = 'Updated metadata key ' . $key . ' from ' . $existing_value . ' to ' . json_encode($value) . ' for ' . $this->_getActualClass();
+			} else {
+				$audit_message = 'Set metadata key ' . $key . ' to ' . json_encode($value) . ' for ' . $this->_getActualClass();
+			}
+		}
+
+		if ($existing_value == json_encode($value)) {
+			app_log("No change to metadata key " . $key . " for " . $this->_getActualClass() . ", so no audit event recorded", 'trace');
+			return true;
+		}
+
+		// Validate that object has a valid ID before setting metadata
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			$this->error("Cannot set metadata: object ID is invalid or not set");
+			return false;
+		}
 
 		// Initialize Database Service
 		$database = new \Database\Service();
@@ -916,6 +1037,20 @@ class BaseModel extends \BaseClass {
 		// Initialize Database Service
 		$database = new \Database\Service();
 
+		// Validate that object has a valid ID before unsetting metadata
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			$this->error("Cannot unset metadata: object ID is invalid or not set");
+			return false;
+		}
+
+		// Confirm there is an existing value to unset for audit purposes
+		// Leave if there is nothing to unset to avoid unnecessary audit events
+		$existing_value = $this->getMetadata($key);
+		if ($existing_value == false) {
+			// Nothing to do
+			return true;
+		}
+
 		// Prepare Query
 		$unset_metadata_query = "
 				DELETE FROM `$this->_metaTableName`
@@ -935,13 +1070,7 @@ class BaseModel extends \BaseClass {
 		}
 
 		// audit the delete event
-		$auditLog = new \Site\AuditLog\Event();
-		$auditLog->add(array(
-			'instance_id' => $this->id,
-			'description' => 'Deleted metadata key $key from ' . $this->_objectName() . ' id ' . $this->id,
-			'class_name' => get_class($this),
-			'class_method' => 'deleteMetadata'
-		));
+		if ($this->_auditEvents) $this->recordAuditEvent($this->id, 'Deleted metadata key ' . $key . ' from ' . $this->_getActualClass());
 
 		return true;
 	}
@@ -1311,6 +1440,563 @@ class BaseModel extends \BaseClass {
 		return $objects;
 	}
 
+	/** @method _normalizeClassName($class)
+	 * Convert fully qualified class name to search_tags format (e.g., \Product\Item -> Product::Item)
+	 * @param string $class Fully qualified class name or already normalized
+	 * @return string Normalized class name
+	 */
+	protected function _normalizeClassName(string $class): string {
+		// If already in Product::Item format, return as-is
+		if (preg_match('/^[A-Z][a-zA-Z0-9]*::[A-Z][a-zA-Z0-9]*$/', $class)) {
+			return $class;
+		}
+		
+		// Convert \Product\Item to Product::Item
+		$class = trim($class, '\\');
+		$class = str_replace('\\', '::', $class);
+		
+		return $class;
+	}
+
+	/** @method _getTagClass()
+	 * Get normalized class name for current object
+	 * @return string Normalized class name (e.g., Product::Item)
+	 */
+	protected function _getTagClass(): string {
+		$class = get_class($this);
+		return $this->_normalizeClassName($class);
+	}
+
+	/** @method getTagClass()
+	 * Get normalized class name for current object (public accessor)
+	 * @return string Normalized class name (e.g., Product::Item)
+	 */
+	public function getTagClass(): string {
+		return $this->_getTagClass();
+	}
+
+	/** @method validTagValue($value)
+	 * Validate tag value format
+	 * @param string $value Tag value to validate
+	 * @return bool True if valid
+	 */
+	public function validTagValue(string $value): bool {
+		if (preg_match('/^[\w\-\.\_\s]+$/', $value)) return true;
+		return false;
+	}
+
+	/** @method validTagCategory($category)
+	 * Validate tag category format
+	 * @param string $category Tag category to validate
+	 * @return bool True if valid
+	 */
+	public function validTagCategory(string $category): bool {
+		if (empty($category)) return true; // Empty category is allowed
+		if (preg_match('/^[a-zA-Z][a-zA-Z0-9\.\-\_\s]*$/', $category)) return true;
+		return false;
+	}
+
+	/** @method _getOrCreateTag($value, $category = '')
+	 * Get existing tag ID or create new tag in search_tags table
+	 * @param string $value Tag value
+	 * @param string $category Tag category (optional)
+	 * @return int|false Tag ID or false on error
+	 */
+	protected function _getOrCreateTag(string $value, string $category = ''): int {
+		$this->clearError();
+		
+		// Validate inputs
+		if (!$this->validTagValue($value)) {
+			$this->error("Invalid tag value format");
+			app_log("Invalid tag value format: " . $value, 'warning', __FILE__, __LINE__);
+			return false;
+		}
+		if (!$this->validTagCategory($category)) {
+			$this->error("Invalid tag category format");
+			app_log("Invalid tag category format: " . $category, 'warning', __FILE__, __LINE__);
+			return false;
+		}
+		
+		$class = $this->_getTagClass();
+		app_log("Getting or creating tag. Class: $class, Category: '$category', Value: '$value'", 'debug', __FILE__, __LINE__);
+		
+		$database = new \Database\Service();
+		
+		// Check if tag already exists
+		$get_tag_query = "
+			SELECT id
+			FROM `{$this->_searchTagTableName}`
+			WHERE `class` = ?
+			AND `category` = ?
+			AND `value` = ?
+		";
+		$database->AddParam($class);
+		$database->AddParam($category);
+		$database->AddParam($value);
+		
+		$rs = $database->Execute($get_tag_query);
+		if ($database->ErrorMsg()) {
+			$errorMsg = $database->ErrorMsg();
+			$this->SQLError($errorMsg);
+			app_log("Error checking for existing tag: " . $errorMsg, 'error', __FILE__, __LINE__);
+			return false;
+		}
+		
+		if ($rs && $row = $rs->FetchRow()) {
+			list($tag_id) = $row;
+			app_log("Found existing tag ID: $tag_id", 'debug', __FILE__, __LINE__);
+			return intval($tag_id);
+		}
+		
+		// Create new tag
+		$create_tag_query = "
+			INSERT INTO `{$this->_searchTagTableName}`
+			(`class`, `category`, `value`)
+			VALUES (?, ?, ?)
+		";
+		$create_database = new \Database\Service();
+		$create_database->AddParam($class);
+		$create_database->AddParam($category);
+		$create_database->AddParam($value);
+		
+		$rs = $create_database->Execute($create_tag_query);
+		if ($create_database->ErrorMsg()) {
+			$errorMsg = $create_database->ErrorMsg();
+			$this->SQLError($errorMsg);
+			app_log("Error creating tag: " . $errorMsg . " Query: " . $create_tag_query, 'error', __FILE__, __LINE__);
+			return false;
+		}
+		
+		$new_tag_id = intval($create_database->Insert_ID());
+		app_log("Created new tag ID: $new_tag_id", 'debug', __FILE__, __LINE__);
+		return $new_tag_id;
+	}
+
+	/** @method addTag($tag, $category = '')
+	 * Add a tag to this object
+	 * @param string $tag Tag value to add
+	 * @param string $category Optional category for the tag
+	 * @return bool True if successful
+	 */
+	public function addTag(string $tag, string $category = ''): bool {
+		$this->clearError();
+		
+		app_log("BaseModel::addTag called. Object ID: " . ($this->id ?? 'NULL') . ", Class: " . get_class($this) . ", Tag: '$tag', Category: '$category'", 'debug', __FILE__, __LINE__);
+		
+		// Validate object ID
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			$this->error("Cannot add tag: object ID is invalid or not set");
+			app_log("Cannot add tag - invalid object ID: " . ($this->id ?? 'NULL'), 'warning', __FILE__, __LINE__);
+			return false;
+		}
+		
+		// Get or create tag
+		$tag_id = $this->_getOrCreateTag($tag, $category);
+		if (!$tag_id) {
+			app_log("Failed to get or create tag. Error: " . $this->error(), 'error', __FILE__, __LINE__);
+			return false; // Error already set
+		}
+		
+		app_log("Got tag ID: $tag_id, now checking xref", 'debug', __FILE__, __LINE__);
+		
+		$database = new \Database\Service();
+		
+		// Check if xref already exists
+		$check_xref_query = "
+			SELECT id
+			FROM `{$this->_searchTagXrefTableName}`
+			WHERE `tag_id` = ?
+			AND `object_id` = ?
+		";
+		$database->AddParam($tag_id);
+		$database->AddParam($this->id);
+		
+		$rs = $database->Execute($check_xref_query);
+		if ($database->ErrorMsg()) {
+			$errorMsg = $database->ErrorMsg();
+			$this->SQLError($errorMsg);
+			app_log("Error checking xref: " . $errorMsg, 'error', __FILE__, __LINE__);
+			return false;
+		}
+		
+		if ($rs && $row = $rs->FetchRow()) {
+			// Tag already exists for this object
+			app_log("Tag xref already exists, returning true", 'debug', __FILE__, __LINE__);
+			return true;
+		}
+		
+		// Create xref entry
+		$create_xref_query = "
+			INSERT INTO `{$this->_searchTagXrefTableName}`
+			(`tag_id`, `object_id`)
+			VALUES (?, ?)
+		";
+		$create_database = new \Database\Service();
+		$create_database->AddParam($tag_id);
+		$create_database->AddParam($this->id);
+		
+		app_log("Creating xref entry. Tag ID: $tag_id, Object ID: " . $this->id . ", Table: {$this->_searchTagXrefTableName}", 'debug', __FILE__, __LINE__);
+		$rs = $create_database->Execute($create_xref_query);
+		
+		// Check for errors - Execute can return null on failure
+		if (!$rs || $create_database->ErrorMsg()) {
+			$errorMsg = $create_database->ErrorMsg() ?: "Query execution returned null/false";
+			$this->SQLError($errorMsg);
+			app_log("Error creating xref: " . $errorMsg . " Query: " . $create_xref_query . " Tag ID: $tag_id, Object ID: " . $this->id, 'error', __FILE__, __LINE__);
+			
+			// Also check the underlying connection error
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$connError = $GLOBALS['_database']->ErrorMsg();
+				app_log("Underlying database connection error: " . $connError, 'error', __FILE__, __LINE__);
+				$this->SQLError($connError);
+			}
+			return false;
+		}
+		
+		$xref_id = $create_database->Insert_ID();
+		app_log("Tag added successfully. Xref ID: " . $xref_id, 'info', __FILE__, __LINE__);
+		
+		// Verify the xref was actually created
+		if (empty($xref_id)) {
+			app_log("Warning: Insert_ID() returned empty, verifying xref was created...", 'warning', __FILE__, __LINE__);
+			$verify_db = new \Database\Service();
+			$verify_query = "SELECT id FROM `{$this->_searchTagXrefTableName}` WHERE `tag_id` = ? AND `object_id` = ?";
+			$verify_db->AddParam($tag_id);
+			$verify_db->AddParam($this->id);
+			$verify_rs = $verify_db->Execute($verify_query);
+			if ($verify_rs && $verify_row = $verify_rs->FetchRow()) {
+				app_log("Xref verified - ID: " . $verify_row[0], 'info', __FILE__, __LINE__);
+			} else {
+				app_log("Xref NOT found after insert! This is a problem.", 'error', __FILE__, __LINE__);
+				$this->error("Xref entry was not created successfully");
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
+	/** @method removeTag($tag, $category = '')
+	 * Remove a tag from this object
+	 * @param string $tag Tag value to remove
+	 * @param string $category Optional category for the tag
+	 * @return bool True if successful
+	 */
+	public function removeTag(string $tag, string $category = ''): bool {
+		$this->clearError();
+		
+		// Validate object ID
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			$this->error("Cannot remove tag: object ID is invalid or not set");
+			return false;
+		}
+		
+		// Validate inputs
+		if (!$this->validTagValue($tag)) {
+			$this->error("Invalid tag value format");
+			return false;
+		}
+		if (!$this->validTagCategory($category)) {
+			$this->error("Invalid tag category format");
+			return false;
+		}
+		
+		$class = $this->_getTagClass();
+		$database = new \Database\Service();
+		
+		// Find tag ID
+		$get_tag_query = "
+			SELECT id
+			FROM `{$this->_searchTagTableName}`
+			WHERE `class` = ?
+			AND `category` = ?
+			AND `value` = ?
+		";
+		$database->AddParam($class);
+		$database->AddParam($category);
+		$database->AddParam($tag);
+		
+		$rs = $database->Execute($get_tag_query);
+		if ($database->ErrorMsg()) {
+			$this->SQLError($database->ErrorMsg());
+			return false;
+		}
+		
+		if (!$rs || !($row = $rs->FetchRow())) {
+			// Tag doesn't exist, nothing to remove
+			return true;
+		}
+		
+		list($tag_id) = $row;
+		
+		// Remove xref entry
+		$remove_xref_query = "
+			DELETE FROM `{$this->_searchTagXrefTableName}`
+			WHERE `tag_id` = ?
+			AND `object_id` = ?
+		";
+		$remove_database = new \Database\Service();
+		$remove_database->AddParam($tag_id);
+		$remove_database->AddParam($this->id);
+		
+		$rs = $remove_database->Execute($remove_xref_query);
+		if ($remove_database->ErrorMsg()) {
+			$this->SQLError($remove_database->ErrorMsg());
+			return false;
+		}
+		
+		return true;
+	}
+
+	/** @method hasTag($tag, $category = '')
+	 * Check if this object has a specific tag
+	 * @param string $tag Tag value to check
+	 * @param string $category Optional category for the tag
+	 * @return bool True if object has the tag
+	 */
+	public function hasTag(string $tag, string $category = ''): bool {
+		$this->clearError();
+		
+		// Validate object ID
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			return false;
+		}
+		
+		// Validate inputs
+		if (!$this->validTagValue($tag)) {
+			return false;
+		}
+		if (!$this->validTagCategory($category)) {
+			return false;
+		}
+		
+		$class = $this->_getTagClass();
+		$database = new \Database\Service();
+		
+		// Check if tag exists for this object
+		$check_tag_query = "
+			SELECT COUNT(*)
+			FROM `{$this->_searchTagXrefTableName}` stx
+			INNER JOIN `{$this->_searchTagTableName}` st ON stx.tag_id = st.id
+			WHERE stx.object_id = ?
+			AND st.class = ?
+			AND st.category = ?
+			AND st.value = ?
+		";
+		$database->AddParam($this->id);
+		$database->AddParam($class);
+		$database->AddParam($category);
+		$database->AddParam($tag);
+		
+		$rs = $database->Execute($check_tag_query);
+		if ($database->ErrorMsg()) {
+			$this->SQLError($database->ErrorMsg());
+			return false;
+		}
+		
+		if ($rs && $row = $rs->FetchRow()) {
+			list($count) = $row;
+			return intval($count) > 0;
+		}
+		
+		return false;
+	}
+
+	/** @method getTags($category = null)
+	 * Get all tags for this object, optionally filtered by category
+	 * @param string|null $category Optional category filter
+	 * @return array Array of tag values
+	 */
+	public function getTags(?string $category = null): array {
+		$this->clearError();
+		
+		// Validate object ID
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			return [];
+		}
+		
+		$class = $this->_getTagClass();
+		$database = new \Database\Service();
+		
+		// Build query
+		$get_tags_query = "
+			SELECT st.value
+			FROM `{$this->_searchTagXrefTableName}` stx
+			INNER JOIN `{$this->_searchTagTableName}` st ON stx.tag_id = st.id
+			WHERE stx.object_id = ?
+			AND st.class = ?
+		";
+		$database->AddParam($this->id);
+		$database->AddParam($class);
+		
+		if ($category !== null) {
+			if (!$this->validTagCategory($category)) {
+				$this->error("Invalid tag category format");
+				return [];
+			}
+			$get_tags_query .= " AND st.category = ?";
+			$database->AddParam($category);
+		}
+		
+		$get_tags_query .= " ORDER BY st.category, st.value";
+		
+		$rs = $database->Execute($get_tags_query);
+		if ($database->ErrorMsg()) {
+			$this->SQLError($database->ErrorMsg());
+			return [];
+		}
+		
+		$tags = [];
+		if ($rs) {
+			while ($row = $rs->FetchRow()) {
+				list($value) = $row;
+				$tags[] = $value;
+			}
+		}
+		
+		return $tags;
+	}
+
+	/** @method setTags($tags, $category = '')
+	 * Replace all tags for this object with a new set (for a specific category)
+	 * @param array $tags Array of tag values
+	 * @param string $category Optional category (if provided, only replaces tags in that category)
+	 * @return bool True if successful
+	 */
+	public function setTags(array $tags, string $category = ''): bool {
+		$this->clearError();
+		
+		// Validate object ID
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			$this->error("Cannot set tags: object ID is invalid or not set");
+			return false;
+		}
+		
+		// Validate category
+		if (!$this->validTagCategory($category)) {
+			$this->error("Invalid tag category format");
+			return false;
+		}
+		
+		// Clear existing tags for this category
+		if (!$this->clearTags($category)) {
+			return false; // Error already set
+		}
+		
+		// Add new tags
+		foreach ($tags as $tag) {
+			if (!is_string($tag)) {
+				continue; // Skip non-string values
+			}
+			if (!$this->addTag($tag, $category)) {
+				return false; // Error already set
+			}
+		}
+		
+		return true;
+	}
+
+	/** @method clearTags($category = null)
+	 * Remove all tags from this object, optionally filtered by category
+	 * @param string|null $category Optional category filter
+	 * @return bool True if successful
+	 */
+	public function clearTags(?string $category = null): bool {
+		$this->clearError();
+		
+		// Validate object ID
+		if (empty($this->id) || !is_numeric($this->id) || $this->id <= 0) {
+			$this->error("Cannot clear tags: object ID is invalid or not set");
+			return false;
+		}
+		
+		$class = $this->_getTagClass();
+		$database = new \Database\Service();
+		
+		// Build query
+		$clear_tags_query = "
+			DELETE stx FROM `{$this->_searchTagXrefTableName}` stx
+			INNER JOIN `{$this->_searchTagTableName}` st ON stx.tag_id = st.id
+			WHERE stx.object_id = ?
+			AND st.class = ?
+		";
+		$database->AddParam($this->id);
+		$database->AddParam($class);
+		
+		if ($category !== null) {
+			if (!$this->validTagCategory($category)) {
+				$this->error("Invalid tag category format");
+				return false;
+			}
+			$clear_tags_query .= " AND st.category = ?";
+			$database->AddParam($category);
+		}
+		
+		$rs = $database->Execute($clear_tags_query);
+		if ($database->ErrorMsg()) {
+			$this->SQLError($database->ErrorMsg());
+			return false;
+		}
+		
+		return true;
+	}
+
+	/** @method findObjectsByTag($tag, $category = '', $class = null)
+	 * Find all objects with a specific tag (static method for cross-object queries)
+	 * @param string $tag Tag value to search for
+	 * @param string $category Optional category filter
+	 * @param string|null $class Optional class filter (e.g., 'Product::Item')
+	 * @return array Array of object IDs
+	 */
+	public static function findObjectsByTag(string $tag, string $category = '', string $class = null): array {
+		$database = new \Database\Service();
+		
+		// Validate tag value
+		if (!preg_match('/^[\w\-\.\_\s]+$/', $tag)) {
+			return [];
+		}
+		
+		// Build query
+		$find_query = "
+			SELECT DISTINCT stx.object_id
+			FROM `search_tags_xref` stx
+			INNER JOIN `search_tags` st ON stx.tag_id = st.id
+			WHERE st.value = ?
+		";
+		$database->AddParam($tag);
+		
+		if (!empty($category)) {
+			if (!preg_match('/^[a-zA-Z][a-zA-Z0-9\.\-\_\s]*$/', $category)) {
+				return [];
+			}
+			$find_query .= " AND st.category = ?";
+			$database->AddParam($category);
+		}
+		
+		if ($class !== null) {
+			// Normalize class name
+			$class = trim($class, '\\');
+			$class = str_replace('\\', '::', $class);
+			$find_query .= " AND st.class = ?";
+			$database->AddParam($class);
+		}
+		
+		$rs = $database->Execute($find_query);
+		if ($database->ErrorMsg()) {
+			return [];
+		}
+		
+		$object_ids = [];
+		if ($rs) {
+			while ($row = $rs->FetchRow()) {
+				list($object_id) = $row;
+				$object_ids[] = intval($object_id);
+			}
+		}
+		
+		return $object_ids;
+	}
+
 	/** @method images(object_type = null)
 	 * Get all images associated with the product
 	 * @param string|null $object_type The type of object to retrieve images for, defaults to class name
@@ -1442,6 +2128,11 @@ class BaseModel extends \BaseClass {
 	 * @return int|null 1 if has image, 0 if not, null on error
 	 */
 	public function hasImage($image_id, $object_type = null) {
+		// Clear Previous Errors
+		$this->clearError();
+
+		// Initialize Database Service
+		$database = new \Database\Service();
 
 		if (!$object_type) $object_type = get_class($this);
 
@@ -1453,9 +2144,12 @@ class BaseModel extends \BaseClass {
 				AND		object_type = ?
 				AND		image_id = ?
 			";
-		$rs = $GLOBALS['_database']->Execute($get_image_query, array($this->id, $object_type, $image_id));
+		$database->AddParam($this->id);
+		$database->AddParam($object_type);
+		$database->AddParam($image_id);
+		$rs = $database->Execute($get_image_query);
 		if (! $rs) {
-			$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$this->SQLError($database->ErrorMsg());
 			return null;
 		}
 		list($found) = $rs->FetchRow();
@@ -1484,10 +2178,10 @@ class BaseModel extends \BaseClass {
 		}
 
 		// Initialize the repository factory and load the repository
-		$repository = new \Storage\Repository();
-		$repository->get($repository_code);
+		$repositoryFactory = new \Storage\RepositoryFactory();
+		$repository = $repositoryFactory->createWithCode($repository_code);
 
-		if ($repository->error()) {
+		if ($repositoryFactory->error()) {
 			$this->error('Error loading repository: ' . $repository->error());
 			return false;
 		}
@@ -1521,7 +2215,8 @@ class BaseModel extends \BaseClass {
 		}
 
 		// Initialize the repository factory and load the repository
-		$repository = new \Storage\Repository($repository_id);
+		$repositoryFactory = new \Storage\RepositoryFactory();
+		$repository = $repositoryFactory->createWithID($repository_id);
 		if (! $repository->exists()) {
 			$this->error('Repository not found with ID ' . $repository_id);
 			return false;
@@ -1572,6 +2267,82 @@ class BaseModel extends \BaseClass {
 		}
 
 		return true;
+	}
+
+	/** @method recordAuditEvent(id, description, class_name, class_method)
+	 * Record an audit event for this object
+	 * @param int $id The ID of the object
+	 * @param string $description The description of the event
+	 * @param string $class_name (Optional) The class name of the object
+	 * @param string $class_method (Optional) The class method where the event occurred
+	 * @return bool True if successful
+	 */
+	public function recordAuditEvent(int $id, string $description, string $class_name = '', string $class_method = ''): bool {
+		$this->clearError();
+
+		if (empty($class_name)) $class_name = $this->_getActualClass();
+		if (empty($class_method)) {
+			$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+			if (isset($backtrace[1]['function'])) {
+				$class_method = $backtrace[1]['function'];
+			} else {
+				$class_method = 'unknown';
+			}
+		}
+		$auditLog = new \Site\AuditLog\Event();
+		$result = $auditLog->add(array(
+			'instance_id' => $id,
+			'description' => $description,
+			'class_name' => $class_name,
+			'class_method' => $class_method
+		));
+		return $result;
+	}
+
+	/** @method recordMyAuditEvent(id, description, class_name, class_method)
+	 * Record an audit event for this object using its own ID
+	 * @param string $description The description of the event
+	 * @param string $class_name (Optional) The class name of the object
+	 * @param string $class_method (Optional) The class method where the event occurred
+	 * @return bool True if successful
+	 */
+	public function recordMyAuditEvent(int $id, string $description, string $class_name = '', string $class_method = ''): bool {
+		$this->clearError();
+
+		if (empty($class_name)) $class_name = $this->_getActualClass();
+		if (empty($class_method)) {
+			$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+			if (isset($backtrace[1]['function'])) {
+				$class_method = $backtrace[1]['function'];
+			} else {
+				$class_method = 'unknown';
+			}
+		}
+		$auditLog = new \Site\AuditLog\Event();
+		$result = $auditLog->add(array(
+			'customer_id' => $id,
+			'instance_id' => $id,
+			'description' => $description,
+			'class_name' => $class_name,
+			'class_method' => $class_method
+		));
+		return $result;
+	}
+
+	/** @method public validClassName(string)
+	 * Validate a class name
+	 * @param string $class_name The class name to validate
+	 * @return bool True if valid class name
+	 */
+	public function validClassName(string $class_name): bool {
+		if (preg_match('/^[A-Za-z_][A-Za-z0-9_\\\\]*$/',$class_name)) {
+			if (class_exists($class_name)) return true;
+			else return false;
+		}
+		else {
+			app_log("Invalid class name: '$class_name'",'info');
+			return false;
+		}
 	}
 
 	/** @method validMetadataKey(string)

@@ -47,4 +47,8 @@
 		public function flush() {
 			return true;
 		}
+
+		public function exists() {
+			return false;
+		}
 	}

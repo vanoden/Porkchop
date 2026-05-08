@@ -4,28 +4,20 @@
 
 
 
-<form action="/_site/import_content" method="post">
+<form id="importForm" action="/_site/import_content" method="post">
 
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>"/>
 
-    <input type="checkbox" id="marketingContent" class="contentCheckbox" name="content[]" value="Marketing" <?=isChecked('Marketing')?>>
+    <input type="checkbox" id="marketingContent" class="contentCheckbox" name="content[]" value="Marketing" data-label="Marketing Content" <?=isChecked('Marketing')?>>
     <label for="marketingContent">Marketing Content - Web Site page content and page settings</label><br>
 
-    <input type="checkbox" id="navigation" class="contentCheckbox" name="content[]" value="Navigation" <?=isChecked('Navigation')?>>
+    <input type="checkbox" id="navigation" class="contentCheckbox" name="content[]" value="Navigation" data-label="Navigation" <?=isChecked('Navigation')?>>
     <label for="navigation">Navigation - Full menu hierarchy</label><br>
 
-    <input type="checkbox" id="configurations" class="contentCheckbox" name="content[]" value="Configurations" <?=isChecked('Configurations')?>>
-    <label for="configurations">Configurations - Site configuration data</label><br>
-
-    <input type="checkbox" id="termsOfUse" class="contentCheckbox" name="content[]" value="Terms" <?=isChecked('Terms')?>>
+    <input type="checkbox" id="termsOfUse" class="contentCheckbox" name="content[]" value="Terms" data-label="Terms of Use" <?=isChecked('Terms')?>>
     <label for="termsOfUse">Terms of Use - All TOU objects and versions</label><br>
 
-    <br/>Overwrite existing records?<br/>
-
-    <input type="radio" id="overwrite" name="overwrite" value="true" checked onclick="toggleSubmitButton()">
-    <label for="overwrite">Overwrite</label><br>
-    <input type="radio" id="existing" name="overwrite" value="false" onclick="toggleSubmitButton()">
-    <label for="overwrite">Keep Existing</label><br>
+    <br/>
 
     <input id="submitButton" type="submit" value="Import">
 
@@ -37,6 +29,7 @@
 <script>
     var checkboxes = document.querySelectorAll(".contentCheckbox");
     var submitButton = document.getElementById("submitButton");
+    var importForm = document.getElementById("importForm");
     submitButton.disabled = true;
 
     checkboxes.forEach(function(checkbox) {
@@ -52,4 +45,32 @@
         }
         submitButton.disabled = true;
     }
+
+    // Add confirmation alert on form submit
+    importForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Get checked checkboxes
+        var checkedItems = [];
+        checkboxes.forEach(function(checkbox) {
+            if (checkbox.checked) {
+                var label = checkbox.getAttribute('data-label') || checkbox.value;
+                checkedItems.push(label);
+            }
+        });
+        
+        if (checkedItems.length === 0) {
+            return false;
+        }
+        
+        // Build comma-separated list
+        var itemsList = checkedItems.join(', ');
+        
+        // Show confirmation alert
+        if (confirm('This will delete all existing data for ' + itemsList + '. Are you sure you want to continue?')) {
+            // User confirmed, submit the form
+            importForm.submit();
+        }
+        // If user cancels, do nothing (form won't submit)
+    });
 </script>

@@ -1,0 +1,26 @@
+<?php
+
+	namespace Calendar;
+
+	class Week Extends Block {
+		public function __construct($date = null) {
+			parent::__construct($date);
+		}
+
+		/** @method public days() : array
+		 * Get an array of Day objects for all days in the week
+		 * @return array - Array of Day objects
+		 */
+		public function days(): array {
+			$dayList = new \Calendar\DayList();
+			return $dayList->find(array('week' => $this->number(), 'year' => (int)date('Y', $this->_timestamp_start), 'month' => (int)date('m', $this->_timestamp_start)));
+		}
+
+		/** @method public number(): int
+		 * Get the week number for this Week object
+		 * @return int - Week number
+		 */
+		public function number(): int {
+			return (int)date('W', $this->_timestamp_start);
+		}
+	}

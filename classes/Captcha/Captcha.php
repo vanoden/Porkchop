@@ -52,31 +52,16 @@
 
         /**
          * get the client IP address
-         * via sanitized HAProxy HTTP_X_FORWARDED_FOR if possible
+         * Checks multiple server variables in order of priority
+         * Prioritizes HAProxy HTTP_X_FORWARDED_FOR header when available
+         * Handles comma-separated values (takes first IP)
+         * Validates IP address before returning
          *
-         * @return Ambigous <string, integer>
+         * @return string Client IP address
          */
         public function getClientIP() {
-	        $ipaddress = false;
-	        if (isset ( $_SERVER ['HTTP_X_FORWARDED_FOR'] )) {
-		        $ipaddress = $_SERVER ['HTTP_X_FORWARDED_FOR'];
-	        } elseif (isset ( $_SERVER ['HTTP_X_FORWARDED'] )) {
-		        $ipaddress = $_SERVER ['HTTP_X_FORWARDED'];
-	        } elseif (isset ( $_SERVER ['HTTP_FORWARDED_FOR'] )) {
-		        $ipaddress = $_SERVER ['HTTP_FORWARDED_FOR'];
-	        } elseif (isset ( $_SERVER ['HTTP_FORWARDED'] )) {
-		        $ipaddress = $_SERVER ['HTTP_FORWARDED'];
-	        } elseif (isset ( $_SERVER ['REMOTE_ADDR'] )) {
-		        $ipaddress = $_SERVER ['REMOTE_ADDR'];
-	        } elseif (isset ( $_SERVER ['HTTP_CLIENT_IP'] )) {
-		        $ipaddress = $_SERVER ['HTTP_CLIENT_IP'];
-	        }
-	        
-	        // if comma separated value from load balancing, the grab the first entry
-	        if (strpos ( $ipaddress, ',' ) !== false) {
-		        $ipaddressInfo = preg_split ( '/,/', $ipaddress );
-		        if (is_array ( $ipaddressInfo )) $ipaddress = array_shift ( $ipaddressInfo );
-	        }
-	        return $ipaddress;
+			$request = new \HTTP\Request();
+			$request->deconstruct();
+			return $request->client_ip;
         }
 	}

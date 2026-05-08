@@ -23,7 +23,7 @@
 			)
 		),
 		"Site"			=> array(
-			"schema"	=> 27,
+			"schema"	=> 33,
 			"privileges"	=> array(
 				'send admin in-site message',
 				'edit site pages',
@@ -49,10 +49,8 @@
 			),
 		),
 		"Geography"		=> array(
-			"schema"		=> 1,
+			"schema"		=> 3,
 			"roles"			=> array(
-				"geography manager"	=> array(),
-				"geography user"	=> array(),
 			),
 			"privileges"	=> array(
 				'manage geographical data',
@@ -69,7 +67,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 49,
+			"schema"		=> 55,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
@@ -79,19 +77,37 @@
 				"see register api"
 			),
 			"templates"		=> array(
-				"organizations"		=> $templates['admin'],
 				"organizations_report"	=> $templates['admin'],
+				"admin_organizations"	=> $templates['admin'],
 				"admin_organization"		=> $templates['admin'],
 				"admin_organization_users"	=> $templates['admin'],
 				"admin_organization_tags"	=> $templates['admin'],
 				"admin_organization_locations"	=> $templates['admin'],
 				"admin_organization_audit_log"	=> $templates['admin'],
-				"accounts"			=> $templates['admin'],
 				"admin_account"		=> $templates['admin'],
 				"pending_customers"	=> $templates['admin'],
+				"privileges"		=> $templates['admin'],
 				"roles"				=> $templates['admin'],
 				"role"				=> $templates['admin'],
-				"admin_location"	=> $templates['admin']
+				"admin_location"	=> $templates['admin'],
+				"admin_accounts"		=> $templates['admin'],
+				"admin_account_contacts"	=> $templates['admin'],
+				"admin_account_password"	=> $templates['admin'],
+				"admin_account_roles"		=> $templates['admin'],
+				"admin_account_auth_failures"	=> $templates['admin'],
+				"admin_account_terms"		=> $templates['admin'],
+				"admin_account_locations"	=> $templates['admin'],
+				"admin_account_images"		=> $templates['admin'],
+				"admin_account_backup_codes"	=> $templates['admin'],
+				"admin_account_search_tags"	=> $templates['admin'],
+				"admin_account_audit_log"	=> $templates['admin'],
+				"admin_account_register_audit"	=> $templates['admin'],
+				"ent_accounts"			=> $templates['support'],
+				"admin_account_privileges"	=> $templates['admin'],
+				"admin_organization_plans"	=> $templates['admin'],
+				"organization"				=> $templates['support'],
+				"organizations"			=> $templates['support'],
+				"accounts"				=> $templates['support']
 			),
 		),
 		"Contact"		=> array(
@@ -114,11 +130,52 @@
 			)
 		),
 		"S4Engine"		=> array(
-			"schema"	=> 1
+			"schema"	=> 3
 		),
 		"Search"		=> array(
-			"schema"	=> 1
-		)
+			"schema"	=> 3
+		),
+		"Engineering"	=> array(
+			"templates"	=> array(
+				"home"			=> $templates['admin'],
+				"tasks"			=> $templates['admin'],
+				"task"			=> $templates['admin'],
+				"releases"		=> $templates['admin'],
+				"release"		=> $templates['admin'],
+				"projects"		=> $templates['admin'],
+				"project"		=> $templates['admin'],
+				"products"		=> $templates['admin'],
+				"product"		=> $templates['admin'],
+				"event_report"	=> $templates['admin'],
+				"search"		=> $templates['admin'],
+			)
+		),
+		"Support"		=> array(
+			"templates"	=> array(
+				"request_new"	=> $templates['admin'],
+				"requests"		=> $templates['admin'],
+				"request_detail"	=> $templates['admin'],
+				"request_items"	=> $templates['admin'],
+				"request_item"	=> $templates['admin'],
+				"action"		=> $templates['admin'],
+				"admin_actions"	=> $templates['admin'],
+				"summary"		=> $templates['admin'],
+				"admin_rmas"	=> $templates['admin'],
+				"admin_rma"		=> $templates['admin'],
+			)
+		),
+		"Monitor"		=> array(
+			"templates"	=> array(
+				"admin_assets"	=> $templates['admin'],
+				"admin_details"	=> $templates['admin'],
+				"admin_collections"	=> $templates['admin'],
+				"comm_dashboard"	=> $templates['admin'],
+				"sensor_models"	=> $templates['admin'],
+				"sensor_model"	=> $templates['admin'],
+				"dashboards"	=> $templates['admin'],
+				"admin_dashboard"	=> $templates['admin'],
+			)
+		),
 	);
 
 	// Additional modules
@@ -126,8 +183,19 @@
 	include(MODULES."/sales/default/_metadata.php");
 	include(MODULES."/network/default/_metadata.php");
 	include(MODULES."/storage/default/_metadata.php");
+	include(MODULES."/shipping/default/_metadata.php");
+	include(MODULES."/package/default/_metadata.php");
+	include(MODULES."/support/default/_metadata.php");
+	include(MODULES."/form/default/_metadata.php");
 
 	$menus = array();
+	// Include upgrade.local.php from any module that has one (e.g. site, spectros)
+	foreach (array_keys($modules) as $module) {
+		$path = MODULES."/".strtolower($module)."/default/upgrade.local.php";
+		if (file_exists($path)) {
+			include($path);
+		}
+	}
 
 	// Common shipping vendors
 	$shipping_vendors = array('Aramex','Australia Post','Bombino','Blue Dart','Canada Post','DB Schenker','Delhivery','DHL','DPD','DTDC','FedEx','Hermes','Nippon','OnTrac Logistics','Parcelforce','PostNL','Purolator','Royal Mail','Spee-dee Delivery','Startrack','TNT','UPS','USPS','Yodel','ZTO Express');

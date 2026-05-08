@@ -31,7 +31,8 @@
 					$menu = new \Site\Navigation\Menu();
 					$menu->add(array(
 						'code' => $_REQUEST['code'],
-						'title' => $_REQUEST['title']
+						'title' => $_REQUEST['title'],
+						'show_close_button' => isset($_REQUEST['show_close_button']) ? 1 : 0
 					));
 					if ($menu->error()) {
 						$page->addError($menu->error());
@@ -50,7 +51,8 @@
 						} else {
 							$menu->update(array(
 								'code' => $_REQUEST['code'],
-								'title' => $_REQUEST['title']
+								'title' => $_REQUEST['title'],
+								'show_close_button' => isset($_REQUEST['show_close_button']) ? 1 : 0
 							));
 							if ($menu->error()) {
 								$page->addError($menu->error());

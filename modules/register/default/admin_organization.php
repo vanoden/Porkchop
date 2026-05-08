@@ -28,22 +28,13 @@
 <?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
-<?php $activeTab = 'details'; ?>
-<?php
-    // Show organization info container similar to product container
-    $title = htmlspecialchars($organization->name ?: $organization->code);
-?>
-<div class="product-container">
-    <div class="product-title"><?=$title?></div>
-</div>
-<?php
-?>
 <div class="tabs">
     <a href="/_register/admin_organization/<?= $organization->code ?>" class="tab <?= $activeTab==='details'?'active':'' ?>">Details</a>
     <a href="/_register/admin_organization_users/<?= $organization->code ?>" class="tab <?= $activeTab==='users'?'active':'' ?>">Users</a>
     <a href="/_register/admin_organization_tags/<?= $organization->code ?>" class="tab <?= $activeTab==='tags'?'active':'' ?>">Tags</a>
     <a href="/_register/admin_organization_locations/<?= $organization->code ?>" class="tab <?= $activeTab==='locations'?'active':'' ?>">Locations</a>
     <a href="/_register/admin_organization_audit_log/<?= $organization->code ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
+	<a href="/_register/admin_organization_plans/<?= $organization->code ?>" class="tab <?= $activeTab==='plans'?'active':'' ?>">Plans</a>
 </div>
 
 <form id="orgDetails" name="orgDetails" method="POST">
@@ -51,8 +42,6 @@
     <input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" id="removeTagId" name="removeTagId" value=""/>
-    
-    <div class="form_instruction">Make changes and click 'Apply' to complete.</div>
 
     <!--	Start First Row-->
     <div class="tableBody min-tablet marginTop_20">
@@ -136,6 +125,28 @@
 		    </div>
 	    </div>
     </div>
+    <?php if (!empty($organization->id) && !empty($mergeTargets)) { ?>
+    <div class="tableBody">
+        <div class="tableRowHeader">
+            <div class="tableCell width-100per">Merge Organization Into</div>
+        </div>
+        <div class="tableRow">
+            <div class="tableCell">
+                <select name="merge_into_organization_id" class="width-250px">
+                    <option value="">Select target organization</option>
+                    <?php foreach ($mergeTargets as $targetOrganization) { ?>
+                        <?php if ($targetOrganization->id == $organization->id) continue; ?>
+                        <option value="<?=$targetOrganization->id?>">
+                            <?=$targetOrganization->name?> (<?=$targetOrganization->code?>)
+                        </option>
+                    <?php } ?>
+                </select>
+                <input type="submit" name="method" value="Merge" class="button"
+                       onclick="return confirm('Are you sure you want to merge this organization into the selected organization? This action cannot be undone.');"/>
+            </div>
+        </div>
+    </div>
+    <?php } ?>
     <div><input type="submit" name="method" value="Apply" class="button"/></div>
 
     <!--End first row-->

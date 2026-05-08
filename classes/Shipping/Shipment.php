@@ -1,7 +1,7 @@
 <?php
 	namespace Shipping;
 	
-	class Shipment extends \BaseModel {
+class Shipment extends \BaseModel {
 
 		public $code;
 		public $document_number;
@@ -79,6 +79,30 @@
 		public function update($parameters = []): bool {
 			if (isset($parameters['type']) && isset($parameters['number'])) $parameters['document_number'] = sprintf("%s-%06d",$parameters['type'],$parameters['number']);
             return parent::update($parameters);
+		}
+
+		/**
+		 * Set ship-from address for this shipment (single-column update; values inlined to avoid driver prepare issues).
+		 * @param int $location_id register_locations.id
+		 * @return bool
+		 */
+		public function setSendLocationId($location_id) {
+			$this->clearError();
+			if (!$this->id) {
+				$this->error('Shipment id required');
+				return false;
+			}
+			$loc = (int)$location_id;
+			if ($loc < 1) return false;
+			$id = (int)$this->id;
+			$sql = "UPDATE shipping_shipments SET send_location_id = $loc WHERE id = $id";
+			$rs = $GLOBALS['_database']->Execute($sql);
+			if (!$rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+			$this->send_location_id = $loc;
+			return true;
 		}
 
         /**

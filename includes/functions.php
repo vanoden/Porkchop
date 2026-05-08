@@ -17,6 +17,15 @@
 			app_log("Porkchop autoloader found no class at '$path'",'error',__FILE__,__LINE__);
 		}
 	}
+
+	function shutDownFunction() {
+		$error = error_get_last();
+		if ($error && ($error['type'] == E_PARSE)) {
+			error_log("Fatal Parse Error: " . $error['message'] . " in " . $error['file'] . " on line " . $error['line']);
+			header('location: /_site/internal_error' );
+			exit;
+		}
+	}
 	function _debug_print($message) {
 		error_log("DEBUG: ".$message);
 	}
@@ -42,6 +51,13 @@
 		return array('function' => $caller['function'], 'class' => isset($caller['class']) ? $caller['class'] : '', 'file' => $caller['file'], 'line' => $caller['line']);
 	}
 
+	/** @function get_mysql_date(date, range)
+	 * Convert various date formats into MySQL formatted date string
+	 * Returns null if date is invalid
+	 * @param mixed $date
+	 * @param int $range
+	 * @return string|null
+	 */
 	function get_mysql_date($date = null,$range=0) {
 		if (empty($date)) {
 			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[1];
@@ -51,13 +67,19 @@
 			return null;
 		}
 
-		# Handle Some Keywords
+		// DateTime Object
+		if ($date instanceof \DateTime) {
+			return $date->format('Y-m-d H:i:s');
+		}
+
+		// Handle Some Keywords
 		if (preg_match("/today/i",$date)) return date("Y-m-d");
 		if (preg_match("/now/i",$date)) return date("Y-m-d h:i:s");
+		if (preg_match("/yesterday/i",$date)) return date("Y-m-d",time() - 86400);
 		if (preg_match("/tomorrow/i",$date)) return date("Y-m-d",time() + 86400);
 		if (preg_match('/^(19|20|21|22)\d{2}$/',$date)) return $date."-01-01 00:00:00";
 
-		# Handle OffSets
+		// Handle OffSets
 		if (preg_match('/(\+|\-)\s*(\d+)\s*(hour|day|week)s?/i',$date,$matches)) {
 			$operator = $matches[1];
 			$offset = $matches[2];
@@ -80,36 +102,35 @@
 			return $newdate;
 		}
 
-		# T Dates
+		// ISO 8601 international standard format (T separator between date and time)
 		if (preg_match('/^\d\d\d\d\-\d\d\-\d\dT/',$date)) {
 			$date = preg_replace('/T/',' ',$date);
 		}
 
-		# Ignore Empty Dates
+		// Ignore Empty Dates
 		if (! preg_match("/^[\d\-\/\:\s]+.$/",$date)) {
 			app_log("get_mysql_date found invalid date '$date', returns 0",'notice');
 			return null;
 		}
 		if (preg_match("/^0+\/0+\/0+\/$/",$date)) return "0000-00-00";
 
-		# Already SQL Formatted
+		// Already SQL Formatted
 		if (preg_match('/^\d\d\d\d\-\d\d\-\d\d/',$date)) {
 			app_log("get_mysql_date returns $date",'debug',__FILE__,__LINE__);
 			return $date;
 		}
 
-		# Unix Timestamp
-		if (preg_match('/^\d{10}$/',$date)) {
-			# Unix Timestamp
+		// Unix Timestamp
+		if (preg_match('/^\d{9,10}$/',$date)) {
 			return date('Y-m-d H:i:s',$date);
 		}
 		elseif (isset($debug) && $debug) {
 			error_log("Parsing regular date format $date");
 		}
 
-		# Regular Format (slash delimited)
+		// Regular Format (slash delimited)
 		if (preg_match('/^(\d+)\/(\d+)\/(\d+)\s(\d+)\:(\d+)\:?(\d+)?/',$date,$matches)) {
-			# mm/dd/yyyy hh:mm:ss
+			// mm/dd/yyyy hh:mm:ss
 			$year = $matches[3];
 			$month = $matches[1];
 			$day = $matches[2];
@@ -145,14 +166,14 @@
 			$second = isset($matches[5]) ? $matches[5] : 0;
 		}
 
-		# Default 0 Seconds
+		// Default 0 Seconds
 		if (! preg_match('/^\d+$/',$second)) $second = 0;
 
-		# Partial Year
+		// Partial Year
         if (strlen($year) < 3) $year = $year + 2000;
 
         if (checkdate($month,$day,$year)) {
-            # Build new date string
+            // Build new date string
             return sprintf("%04d-%02d-%02d %02d:%02d:%02d",$year,$month,$day,$hour,$minute,$second);
         }
         else {
@@ -160,7 +181,7 @@
 			return null;
         }
 
-        # If Range Given, See if Date In Range
+        // If Range Given, See if Date In Range
         if (($range > 0) and (strtotime($date) <= time())) {
             $date = "";
         }
@@ -168,12 +189,18 @@
             $date = "";
         }
 
-        # Return Formatted Date
+        // Return Formatted Date
         app_log("get_mysql_date returning $date",'debug');
         return $date;
     }
 
-	function shortDate($date) {
+	/** @function shortDate(date)
+	 * Convert MySQL date into short date format for display
+	 * @param string $date
+	 * @return string
+	 */
+	function shortDate($date): ?string {
+		$date = get_mysql_date($date);
 		if (preg_match('/^(\d\d\d\d)\-(\d\d)\-(\d\d)\s(\d\d)\:(\d\d)\:(\d\d)/',$date,$matches)) {
 			list($junk,$year,$month,$day,$hours,$minutes,$seconds) = $matches;
 			switch($month) {
@@ -269,15 +296,17 @@
 	}
 
 	# Application Logging (leave error_log for system errors)
-	function app_log($message, $level = 'debug', $path = null, $line = null) {
+	function app_log($message, $level = 'debug', $path = null, $line = null, $class = null, $function = null) {
 		if (! isset($path)) {
 			$trace = debug_backtrace();
 			$caller = $trace[0];
 			$path = $caller['file'];
 			$line = $caller['line'];
+			$class = isset($caller['class']) ? $caller['class'] : '';
+			$function = isset($caller['function']) ? $caller['function'] : '';
 		}
 
-		if (!empty($GLOBALS['logger'])) $GLOBALS['logger']->writeln($message,$level,$path,$line);
+		if (!empty($GLOBALS['logger'])) $GLOBALS['logger']->writeln($message,$level,$path,$line,$class,$function);
 	}
 	
 	function executeSQLByParams($query, $bindParams) {
@@ -506,4 +535,93 @@
 					return null;
 			}
 		}
+	}
+
+	/* @function byte2Matrix (byte)
+	 * Convert byte value into an array
+	 * of bit values
+	 * @param int $byte
+	 * @return array
+	 */
+	function byte2Matrix($byte) {
+		$bits = array();
+		for ($i = 7; $i >= 0; $i--) {
+			$bits[] = ($byte >> $i) & 1;
+		}
+		return $bits;
+	}
+
+	/** @function matrix2Byte(bit array)
+	 * Convert array of bit values into a byte
+	 * @param array $bits
+	 * @return int
+	 */
+	function matrix2Byte($bits) {
+		$byte = 0;
+		for ($i = 0; $i < 8; $i++) {
+			$byte = $byte << 1;
+			$byte = $byte | ($bits[$i] & 1);
+		}
+		return $byte;
+	}
+
+	/** @function inMatrix(byte, bit position) 
+	 * Check if bit at position is set in byte
+	 * @param int $byte
+	 * @param int $position
+	 * @return bool
+	 */
+	function inMatrix($byte,$position) {
+		$mask = 1 << (7 - $position);
+		return ($byte & $mask) ? true : false;
+	}
+
+	/** @function setMatrix(byte, bit position, value) 
+	 * Set bit at position in byte to value
+	 * @param int $byte
+	 * @param int $position
+	 * @param bool $value
+	 * @return int
+	 */
+	function setMatrix($byte,$position,$value) {
+		app_log("setMatrix called with byte=$byte, position=$position, value=".($value ? "true" : "false"),'debug',__FILE__,__LINE__);
+		$mask = 1 << (7 - $position);
+		if ($value) {
+			$byte = $byte | $mask;
+		}
+		else {
+			$byte = $byte & (~$mask);
+		}
+		app_log("setMatrix returning byte=$byte",'debug',__FILE__,__LINE__);
+		return $byte;
+	}
+
+	/** @function matrix2Elements(byte)
+	 * Convert byte value into an array of element numbers
+	 * where bits are set
+	 * @param int $byte
+	 * @return array
+	 */
+	function matrix2Elements($byte) {
+		$elements = array();
+		for ($i = 0; $i < 8; $i++) {
+			if (inMatrix($byte,$i)) {
+				$elements[] = $i;
+			}
+		}
+		return $elements;
+	}
+
+	function convertMySQLDateTimeToDateTime(?string $mysqlDateTime): ?\DateTime {
+		if (empty($mysqlDateTime) || $mysqlDateTime === '0000-00-00 00:00:00') {
+			return null;
+		}
+		return new \DateTime($mysqlDateTime);
+	}
+
+	function convertDateTimeToMySQLDateTime(?\DateTime $dateTime): ?string {
+		if (empty($dateTime)) {
+			return null;
+		}
+		return $dateTime->format('Y-m-d H:i:s');
 	}

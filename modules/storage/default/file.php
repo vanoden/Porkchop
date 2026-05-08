@@ -109,12 +109,12 @@
 		</div>
 		<div class="container fileDetailContainer">
 			<span class="label">Download URI</span>
-			<span class="value"><?= $file->downloadURI() ?></span>
+			<span class="value"><a href="<?= $file->downloadURI() ?>"><?= $file->downloadURI() ?></a></span>
 		</div>
 		<?php if ($file->mime_type == "image/jpeg" || $file->mime_type == "image/png" || $file->mime_type == "image/gif") { ?>
 			<h3>Preview</h3>
 			<div id="image_preview" class="img-preview">
-				<img src="<?= $file->downloadURI() ?>" id="image_preview" class="img-max-width-300 img-max-height-300 border-1" />
+				<a href="<?= $file->downloadURI() ?>" target="_blank"><img src="<?= $file->downloadURI() ?>" id="image_preview" class="img-max-width-300 img-max-height-300 border-1" /></a>
 			</div>
 		<?php   } ?>
 		<h3>Permissions</h3>

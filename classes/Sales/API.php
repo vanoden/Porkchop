@@ -5,8 +5,8 @@
 		public function __construct() {
 			$this->_admin_role = 'sales manager';
 			$this->_name = 'sales';
-			$this->_version = '0.2.3';
-			$this->_release = '2021-06-16';
+			$this->_version = '0.3.4';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Sales\Schema();
 			parent::__construct();
 
@@ -404,7 +404,7 @@
 		public function findOrderEvents() {
 			if (! $GLOBALS['_SESSION_']->authenticated()) $this->error("Authentication required");
 
-			$eventList = new \Sales\Order\EventList();
+			$eventList = new \Sales\Document\EventList();
 
 			$parameters = array();
 			if (empty($_REQUEST['order_code'])) $this->error("Order code required");

@@ -24,6 +24,9 @@
     <a href="/_register/admin_account_images?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='images'?'active':'' ?>">User Images</a>
     <a href="/_register/admin_account_backup_codes?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='backup_codes'?'active':'' ?>">Backup Codes</a>
     <a href="/_register/admin_account_search_tags?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='search_tags'?'active':'' ?>">Search Tags</a>
+    <a href="/_register/admin_account_audit_log?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
+    <a href="/_register/admin_account_register_audit?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='register_audit'?'active':'' ?>">Failed Logins</a>
+	<a href="/_register/admin_account_privileges?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='privileges'?'active':'' ?>">Assigned Privileges</a>
 </div>
 
 <form id="admin-account-form" name="register" action="<?= PATH ?>/_register/admin_account_search_tags?customer_id=<?= $customer_id ?>" method="POST">
@@ -52,17 +55,19 @@
       <div class="tableCell width-33per">&nbsp;</div>
     </div>
     <?php
-    if (!empty($registerCustomerSearchTags)) { foreach ($registerCustomerSearchTags as $searchTag) {
+    if (!empty($registerCustomerSearchTags)) { foreach ($registerCustomerSearchTags as $row) {
+      $searchTag = $row->searchTag;
+      $xrefId = $row->xrefId;
     ?>
       <div class="tableRow">
         <div class="tableCell">
-          <?= $searchTag->category ?>
+          <?= htmlspecialchars($searchTag->category) ?>
         </div>
         <div class="tableCell">
-          <?= $searchTag->value ?>
+          <?= htmlspecialchars($searchTag->value) ?>
         </div>
         <div class="tableCell">
-          <img src="/img/icons/icon_tools_trash_active.svg" onclick="removeSearchTagById('<?= $searchTag->id ?>')" style="cursor: pointer; width: 20px; height: 20px;" alt="Remove" title="Remove" />
+          <img src="/img/icons/icon_tools_trash_active.svg" onclick="removeSearchTagById('<?= (int)$xrefId ?>')" style="cursor: pointer; width: 20px; height: 20px;" alt="Remove" title="Remove" />
         </div>
 
       </div>

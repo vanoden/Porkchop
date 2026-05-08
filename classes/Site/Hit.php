@@ -8,12 +8,14 @@
 		public $secure;
 		public $script;
 		public $query_string;
-		
+
 		function __construct($id = 0) {
 			$this->_tableName = "session_hits";
     		parent::__construct($id);
 		}
-		function add($parameters = []) {
+
+		function add($parameters = []): ?true {
+			// Validate required parameters
 			if (! $parameters['session_id']) {
 				$this->error("session_id required");
 				return null;
@@ -23,6 +25,10 @@
 
 			if (empty($parameters['module_id'])) $parameters['module_id'] = 0;
 
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query to Insert Hit Record
 			$insert_hit_query = "
 				INSERT
 				INTO	session_hits
@@ -38,21 +44,21 @@
 				(		?,sysdate(),?,?,?,?,?
 				)
 			";
-			$GLOBALS['_database']->Execute(
-				$insert_hit_query,
-				array(
-					$parameters['session_id'],
-					$_SERVER['REMOTE_ADDR'],
-					$secure,
-					$_SERVER['SCRIPT_NAME'],
-					$_SERVER['REQUEST_URI'],
-					$parameters['module_id']
-				)
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+
+			// Add Parameters
+			$database->AddParam($parameters['session_id']);
+			$database->AddParam($GLOBALS['_REQUEST_']->client_ip ?? '');
+			$database->AddParam($secure);
+			$database->AddParam($_SERVER['SCRIPT_NAME']);
+			$database->AddParam($_SERVER['REQUEST_URI']);
+			$database->AddParam($parameters['module_id']);
+
+			// Execute Query
+			$database->Execute($insert_hit_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
-			return 1;
+			return true;
 		}
 	}

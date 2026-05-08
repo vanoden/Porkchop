@@ -1,6 +1,4 @@
-<?=$page->showBreadcrumbs();?>
-<?=$page->showTitle();?>
-<?=$page->showMessages();?>
+<?=$page->showAdminPageInfo();?>
 
 <form method="post">
 <div class="tableBody">

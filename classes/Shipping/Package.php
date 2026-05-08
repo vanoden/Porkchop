@@ -17,10 +17,14 @@
 		public $shipping_cost;
 		public $date_received;
 		public $user_received_id;
+		public $ups_status;
+		public $ups_status_datetime;
+		public $ups_status_location;
+		public $ups_last_queried_at;
 
 		public function __construct($id = 0) {		
 			$this->_tableName = 'shipping_packages';
-			$this->_addFields(array('id','shipment_id','number','tracking_code','status','condition','height','width','depth','weight','shipping_cost','date_received','user_received_id','vendor_id'));
+			$this->_addFields(array('id','shipment_id','number','tracking_code','status','condition','height','width','depth','weight','shipping_cost','date_received','user_received_id','vendor_id','ups_status','ups_status_datetime','ups_status_location','ups_last_queried_at'));
 			parent::__construct($id);
 		}
 

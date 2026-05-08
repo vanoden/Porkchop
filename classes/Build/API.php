@@ -6,8 +6,8 @@
 		public function __construct() {
 			$this->_admin_role = 'build manager';
 			$this->_name = 'build';
-			$this->_version = '0.2.1';
-			$this->_release = '2020-01-15';
+			$this->_version = '0.3.2';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Build\Schema();
 			parent::__construct();
 		}
@@ -27,11 +27,10 @@
 			if (isset($_REQUEST['minor_version'])) $parameters['minor_version'] = $_REQUEST['minor_version'];
 			if (! $product->add($parameters)) app_error("Error adding product: ".$product->error());
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->product = $product;
+			$response = new \APIResponse();
+			$response->addElement('product', $product);
 
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
 		###################################################
@@ -40,7 +39,7 @@
 		public function updateProduct() {
 			$product = new \Build\Product();
 			$product->get($_REQUEST['code']);
-			if ($product->error) app_error("Error finding product: ".$product->error(),'error',__FILE__,__LINE__);
+			if ($product->error()) app_error("Error finding product: ".$product->error(),'error',__FILE__,__LINE__);
 			if (! $product->id) error("Request not found");
 	
 			$parameters = array();
@@ -53,9 +52,8 @@
 	
 			$product->update($parameters);
 			if ($product->error()) app_error("Error updating product: ".$product->error(),'error',__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->product = $product;
+			$response = new \APIResponse();
+			$response->addElement('product', $product);
 	
 			print $this->formatOutput($response);
 		}
@@ -68,11 +66,10 @@
 			$product->get($_REQUEST['name']);
 			if ($product->error()) app_error($product->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->product = $product;
+			$response = new \APIResponse();
+			$response->addElement('product', $product);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
 		###################################################
@@ -85,13 +82,12 @@
 			if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
 			
 			$countries = $productList->find($parameters);
-			if ($productList->error) app_error("Error finding countries: ".$productList->error());
+			if ($productList->error()) app_error("Error finding countries: ".$productList->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->product = $countries;
+			$response = new \APIResponse();
+			$response->addElement('product', $countries);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 		###################################################
 		### Add a Version								###
@@ -129,11 +125,10 @@
 			$parameters['product_id'] = $product->id;
 			if (! $version->add($parameters)) app_error("Error adding version: ".$version->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->version = $version;
+			$response = new \APIResponse();
+			$response->addElement('version', $version);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -149,12 +144,11 @@
 			$version->update(
 				$parameters
 			);
-			if ($version->error) app_error("Error updating version: ".$version->error(),'error',__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->version = $version;
+			if ($version->error()) app_error("Error updating version: ".$version->error(),'error',__FILE__,__LINE__);
+			$response = new \APIResponse();
+			$response->addElement('version', $version);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -170,11 +164,10 @@
 			$version = new \Build\Version();
 			if (! $version->get($product->id,$_REQUEST['number'])) app_error("Version not found");
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->version = $version;
+			$response = new \APIResponse();
+			$response->addElement('version', $version);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -203,13 +196,12 @@
 			if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
 			
 			$versions = $versionList->find($parameters);
-			if ($versionList->error) app_error("Error finding versions: ".$versionList->error());
+			if ($versionList->error()) app_error("Error finding versions: ".$versionList->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->version = $versions;
+			$response = new \APIResponse();
+			$response->addElement('version', $versions);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -224,11 +216,10 @@
 			if (isset($_REQUEST['url'])) $parameters['url'] = $_REQUEST['url'];
 			if (! $repository->add($parameters)) app_error("Error adding repository: ".$repository->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->repository = $repository;
+			$response = new \APIResponse();
+			$response->addElement('repository', $repository);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -237,7 +228,7 @@
 		public function updateRepository() {
 			$repository = new \Build\Repository();
 			$repository->get($_REQUEST['url']);
-			if ($repository->error) app_error("Error finding repository: ".$repository->error(),'error',__FILE__,__LINE__);
+			if ($repository->error()) app_error("Error finding repository: ".$repository->error(),'error',__FILE__,__LINE__);
 			if (! $repository->id) error("Request not found");
 	
 			$parameters = array();
@@ -245,12 +236,11 @@
 			$repository->update(
 				$parameters
 			);
-			if ($repository->error) app_error("Error updating repository: ".$repository->error(),'error',__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->repository = $repository;
+			if ($repository->error()) app_error("Error updating repository: ".$repository->error(),'error',__FILE__,__LINE__);
+			$response = new \APIResponse();
+			$response->addElement('repository', $repository);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -260,11 +250,10 @@
 			$repository = new \Build\Repository();
 			if (! $repository->get($_REQUEST['url'])) app_error("Product not found");
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->repository = $repository;
+			$response = new \APIResponse();
+			$response->addElement('repository', $repository);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -275,13 +264,12 @@
 	
 			$parameters = array();
 			$repositories = $repositoryList->find($parameters);
-			if ($repositoryList->error) app_error("Error finding repositories: ".$repositoryList->error());
+			if ($repositoryList->error()) app_error("Error finding repositories: ".$repositoryList->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->repository = $repositories;
+			$response = new \APIResponse();
+			$response->addElement('repository', $repositories);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 		
 		###################################################
@@ -303,7 +291,7 @@
 			$parameters['repository_id'] = $repository->id;
 			$parameters['hash'] = $repository->hash;
 			if (isset($parameters['timestamp'])) {
-				if (get_mysql_time($_REQUEST['timestamp'])) $parameters['timestamp'] = get_mysql_time($_REQUEST['timestamp']);
+				if (get_mysql_date($_REQUEST['timestamp'])) $parameters['timestamp'] = get_mysql_date($_REQUEST['timestamp']);
 				else app_error("Invalid timestamp");
 			}
 			if (isset($_REQUEST['author'])) {
@@ -313,11 +301,10 @@
 			}
 			if (! $commit->add($parameters)) app_error("Error adding commit: ".$commit->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->commit = $commit;
+			$response = new \APIResponse();
+			$response->addElement('commit', $commit);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -343,12 +330,11 @@
 			$commit->update(
 				$parameters
 			);
-			if ($commit->error) app_error("Error updating commit: ".$commit->error(),'error',__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->commit = $commit;
+			if ($commit->error()) app_error("Error updating commit: ".$commit->error(),'error',__FILE__,__LINE__);
+			$response = new \APIResponse();
+			$response->addElement('commit', $commit);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -366,14 +352,13 @@
 	
 			$commit = new \Build\Commit();
 			$commit->get($repository->id,$_REQUEST['hash']);
-			if ($commit->error) app_error("Error finding commit: ".$commit->error(),'error',__FILE__,__LINE__);
+			if ($commit->error()) app_error("Error finding commit: ".$commit->error(),'error',__FILE__,__LINE__);
 			if (! $commit->id) error("Commit not found");
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->commit = $commit;
+			$response = new \APIResponse();
+			$response->addElement('commit', $commit);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 	
 		###################################################
@@ -407,13 +392,12 @@
 			if ($author->id) $parameters['author_id'] = $author->id;
 	
 			$commits = $commitList->find($parameters);
-			if ($commitList->error) app_error("Error finding commits: ".$commitList->error());
+			if ($commitList->error()) app_error("Error finding commits: ".$commitList->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->commit = $commits;
+			$response = new \APIResponse();
+			$response->addElement('commit', $commits);
 	
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
 		public function _methods() {
@@ -459,7 +443,7 @@
 				),
 				'findRepositories'	=> array(),
 				'getRepository'		=> array(
-					'url'			=> array('required'),
+					'url'			=> array('required' => true),
 				),
 			);
 		}

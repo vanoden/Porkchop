@@ -288,6 +288,30 @@
 			// Check if privilege already exists to determine if this is an update
 			$existing_level = $this->getPrivilegeLevel($privilege->id);
 			$is_update = $existing_level !== null;
+
+		// Prevent self-privilege escalation: Users cannot increase privilege levels on roles they have
+		// Exception: Users with administrator level for 'manage privileges' can modify any role
+		if (!$GLOBALS['_SESSION_']->elevated() && isset($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->id) {
+			$current_user = $GLOBALS['_SESSION_']->customer;
+			
+			// Skip escalation check if user has administrator level for 'manage privileges'
+			$has_admin_privilege_manage = $current_user->has_privilege('manage privileges', \Register\PrivilegeLevel::ADMINISTRATOR);
+			
+			if (!$has_admin_privilege_manage) {
+				// Check if the current user has this role
+				if ($current_user->has_role_id($this->id)) {
+					// User has this role - prevent them from increasing privilege levels
+					// Get user's current level for this privilege
+					$user_current_level = $this->getUserPrivilegeLevel($current_user->id, $privilege->id);
+					
+					// If the new level is higher than what the user currently has, prevent it
+					if ($level > $user_current_level) {
+						$this->error("You cannot increase privilege levels on roles you have");
+						return false;
+					}
+				}
+			}
+		}
 			
 			$add_privilege_query = "
 				INSERT	INTO	register_roles_privileges
@@ -323,6 +347,41 @@
 			}
 			
 			return true;
+		}
+
+		/**
+		 * Get the maximum privilege level a user has for a specific privilege
+		 * @param int $user_id The user ID
+		 * @param int $privilege_id The privilege ID
+		 * @return int The maximum privilege level (0 if user has no privilege)
+		 */
+		private function getUserPrivilegeLevel(int $user_id, int $privilege_id): int {
+			$database = new \Database\Service();
+
+			$get_level_query = "
+				SELECT	MAX(rrp.level) as max_level
+				FROM	register_users_roles rur,
+						register_roles_privileges rrp
+				WHERE	rur.user_id = ?
+				AND		rrp.role_id = rur.role_id
+				AND		rrp.privilege_id = ?
+			";
+
+			$database->AddParam($user_id);
+			$database->AddParam($privilege_id);
+
+			$rs = $database->Execute($get_level_query);
+			if (!$rs || $database->ErrorMsg()) {
+				return 0;
+			}
+
+			$row = $rs->FetchRow();
+			if ($row) {
+				list($max_level) = $row;
+				return $max_level ?? 0;
+			}
+
+			return 0;
 		}
 
 		/**
@@ -415,7 +474,7 @@
 		 * @param $param
 		 * @return bool
 		 */
-		public function has_privilege($param): bool {
+		public function has_privilege($param, $level = 7): bool {
 			$this->clearError();
 
 			// Validate Input
@@ -434,58 +493,6 @@
 
 			// Build Query
 			$get_privilege_query = "
-				SELECT	1
-				FROM	register_roles_privileges
-				WHERE	role_id = ?
-				AND		privilege_id = ?
-			";
-
-			// Add Parameters
-			$database->AddParam($this->id);
-			$database->AddParam($privilege->id);
-
-			// Execute Query
-			$rs = $database->Execute($get_privilege_query);
-			if (! $rs) {
-				$this->SQLError($database->ErrorMsg());
-				return false;
-			}
-
-			// Assemble Results
-			list($found) = $rs->FetchRow();
-			if ($found == 1) {
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
-
-		/**
-		 * Check if a role has a privilege with specific level
-		 * @param mixed $param Privilege name or ID
-		 * @param int $required_level Required privilege level
-		 * @return bool
-		 */
-		public function has_privilege_level($param, int $required_level = \Register\PrivilegeLevel::CUSTOMER): bool {
-			$this->clearError();
-
-			// Validate Input
-			if (is_numeric($param)) {
-				$privilege = new \Register\Privilege($param);
-			}
-			else {
-	   			$privilege = new \Register\Privilege();
-				if (! $privilege->get($param)) {
-					return false;
-				}
-			}
-
-			// Initialize Database Service
-			$database = new \Database\Service();
-
-			// Level column exists, use it
-			$get_privilege_query = "
 				SELECT	level
 				FROM	register_roles_privileges
 				WHERE	role_id = ?
@@ -503,15 +510,12 @@
 				return false;
 			}
 
-			// Check if privilege exists and has sufficient level
-			$row = $rs->FetchRow();
-			if ($row) {
-				list($level) = $row;
-				return \Register\PrivilegeLevel::hasLevel($level, $required_level);
+			while (list($found_level) = $rs->FetchRow()) {
+				if (inMatrix($found_level, $level)) {
+					return true;
+				}
 			}
-			else {
-				return false;
-			}
+			return false;
 		}
 
 		/**
@@ -552,6 +556,37 @@
 			}
 			else {
 				return null;
+			}
+		}
+
+		/** @method public setPrivilegeLevel(int $privilege_id, int $level) */
+		public function setPrivilegeLevel(int $privilege_id, int $level): bool {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
+			$set_privilege_query = "
+				INSERT INTO	register_roles_privileges
+				(			role_id, privilege_id, level)
+				VALUES		(?,?,?)
+				ON DUPLICATE KEY
+				UPDATE		level = ?
+			";
+
+			// Add Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($privilege_id);
+			$database->AddParam($level);
+			$database->AddParam($level);
+
+			// Execute Query
+			if ($database->Execute($set_privilege_query)) {
+				return true;
+			} else {
+				$this->SQLError($database->ErrorMsg());
+				return false;
 			}
 		}
 

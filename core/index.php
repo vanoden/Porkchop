@@ -65,6 +65,8 @@
 
 	# Debug Variables
 	$_debug_queries = array();
+	$_page_query_count = 0;
+	$_page_query_time = 0;
 
 	###################################################
 	### Initialize Site Instance					###
@@ -76,6 +78,18 @@
 	###################################################
 	if (! defined('APPLICATION_LOG_HOST')) define('APPLICATION_LOG_HOST','127.0.0.1');
 	if (! defined('APPLICATION_LOG_PORT')) define('APPLICATION_LOG_PORT','514');
+	if (! defined('APPLICATION_LOG_TYPE')) {
+		define(
+			'APPLICATION_LOG_TYPE',
+			(defined('LOG_ROOT') && LOG_ROOT !== '') ? 'file' : 'syslog'
+		);
+	}
+	if (! defined('APPLICATION_LOG')) {
+		define(
+			'APPLICATION_LOG',
+			(defined('LOG_ROOT') && LOG_ROOT !== '') ? LOG_ROOT.'/application' : ''
+		);
+	}
 	$logger = \Site\Logger::get_instance(array('type' => APPLICATION_LOG_TYPE,'path' => APPLICATION_LOG,'host' => APPLICATION_LOG_HOST,'port' => APPLICATION_LOG_PORT));
 	if ($logger->error()) {
 		error_log("Error initializing logger: ".$logger->error());
@@ -86,27 +100,6 @@
 	if ($logger->error()) {
 		error_log("Error initializing logger: ".$logger->error());
 		print "Logger error\n";
-		exit;
-	}
-
-
-	###################################################
-	### Parse Request								###
-	###################################################
-	$_REQUEST_ = new \HTTP\Request();
-	$_REQUEST_->deconstruct();
-	
-	# Identify Remote IP.  User X-Forwarded-For if local address
-	if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) and preg_match('/^(192\.168|172\.16|10|127\.)\./',$_SERVER['REMOTE_ADDR'])) $_REQUEST_->client_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-	else $_REQUEST_->client_ip = $_SERVER['REMOTE_ADDR'];
-
-	###################################################
-	### Traffic Management							###
-	###################################################
-	if (preg_match('/(GPTBot|SemrushBot|AhrefsBot|MJ12bot|ZoominfoBot|DotBot|MauiBot)/i',$_REQUEST_->user_agent)) {
-		$logger->writeln("Search Engine Bot Detected: ".$_REQUEST_->user_agent,'info');
-		$logger->writeln("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info');
-		header("HTTP/1.1 403 Forbidden");
 		exit;
 	}
 
@@ -139,6 +132,22 @@
 	$logger->writeln("Cache Initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
+	### Parse Request								###
+	###################################################
+	$_REQUEST_ = new \HTTP\Request();
+	$_REQUEST_->deconstruct();
+
+	###################################################
+	### Traffic Management							###
+	###################################################
+	$logger->writeln("Request for ".$_REQUEST_->uri()." from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info');
+	if ($_REQUEST_->riskLevel() >= 100) {
+		$logger->writeln("Probable Malicious Request Detected: ".$_REQUEST_->user_agent,'info');
+		header("HTTP/1.1 403 Forbidden");
+		exit;
+	}
+
+	###################################################
 	### Initialize Session							###
 	###################################################
 	$_SESSION_ = new \Site\Session();
@@ -157,7 +166,12 @@
 	if ($_SESSION_->message) $page_message = $_SESSION_->message;
 
 	# Access Logging in Application Log
-	$logger->writeln("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info',__FILE__,__LINE__);
+	$logger->writeln("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' for '".$_REQUEST_->uri()."'Risk Score: ".$_REQUEST_->riskLevel(),'info',__FILE__,__LINE__);
+	if ($_REQUEST_->riskLevel() >= 100) {
+		$logger->writeln("High Risk Request Rejected: URI: ".$_REQUEST_->uri()." Agent: ".$_REQUEST_->user_agent,'warning',__FILE__,__LINE__);
+		header("HTTP/1.1 403 Forbidden");
+		exit;
+	}
 
 	# Load Page Information
 	$page = $site->page();
@@ -198,4 +212,19 @@
 	$counter = new \Site\Counter("view.".$page->module.".".$page->view);
 	$counter->increment();
 
+	// Module-specific template override (e.g. FumeConnect upgrade uses install.html)
+	$set_template = MODULES . '/' . $page->module() . '/default/set_template.php';
+	if (file_exists($set_template)) {
+		include $set_template;
+	}
+
 	print $page->load_template();
+
+	$stats_string = "PAGE STATS: ".$page->module."/".$page->view." executed ".$_page_query_count." queries in ".$_page_query_time." seconds";
+	if (!empty($GLOBALS['_HTTP_CLIENT_STATS_'])) {
+		$stats_string .= ", Made :";
+		$stats_string .= $GLOBALS['_HTTP_CLIENT_STATS_']['requests']." HTTP requests;";
+		$stats_string .= " in ".$GLOBALS['_HTTP_CLIENT_STATS_']['time']." seconds;";
+	}
+
+	app_log($stats_string,'debug',__FILE__,__LINE__);

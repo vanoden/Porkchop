@@ -30,17 +30,26 @@ class PriceAudit Extends \BaseModel {
 			return false;
 		}
 		
-		if (empty($parameters['note'])) $parameters['note'] = "";
+		// note can be empty, but if NULL, set a message
+		if ($parameters['note'] === null) {
+			$parameters['note'] = 'Value not found';
+		} elseif (empty($parameters['note'])) {
+			$parameters['note'] = "";
+		}
 		
 	    // check valid user
 		if (isset($parameters['user_id'])) {
+			if ($parameters['user_id'] === null) {
+				$this->error("User ID cannot be NULL");
+				return false;
+			}
 			$user = new \Register\Customer($parameters['user_id']);
 			if (!$user->id) {
                 $this->error("User not found");
                 return false;
 			}
 		} elseif (empty($parameters['user_id'])) {
-            $this->error("User not found");
+            $this->error("User ID is required and cannot be NULL");
             return false;		    
 		}
 
@@ -73,10 +82,17 @@ class PriceAudit Extends \BaseModel {
 		$this->id = $GLOBALS['_database']->Insert_ID();
 
 		// add audit log
+		$audit_description = 'Added new Price Audit';
+		if (!empty($parameters['note'])) {
+			$audit_description .= ': ' . $parameters['note'];
+		} else {
+			$audit_description .= ' for price ID ' . $productPrice->id;
+		}
+		
 		$auditLog = new \Site\AuditLog\Event();
 		$auditLog->add(array(
 			'instance_id' => $this->id,
-			'description' => 'Added new '.$this->_objectName(),
+			'description' => $audit_description,
 			'class_name' => get_class($this),
 			'class_method' => 'add'
 		));

@@ -22,7 +22,7 @@
 			</div>
 			<div>
 				<h3>⏳ Wait for Approval</h3>
-				<p>Our staff will review and approve your account shortly. You'll receive an email notification once approved.</p>
+				<p>Our staff will review and approve your account shortly. You'll receive an email notification once approved from <strong>no-reply@spectrosinstruments.com</strong>. Please add this address to your email address book and check your spam folder if needed.</p>
 			</div>
 		</div>
 		

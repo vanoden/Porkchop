@@ -33,6 +33,14 @@
 				}
 			}
 
+			// Records only after start date if provided
+			if (isset($parameters['date_start']) && get_mysql_date($parameters['date_start'])) {
+				$find_objects_query .= "
+				AND		date_fail > ?";
+				$database->AddParam($parameters['date_start']);
+			}
+
+			// Records only matchin provided login
 			if (isset($parameters['login']) && preg_match('/^[\w\-\.\_\@]{2,100}$/',$parameters['login'])) {
 				$find_objects_query .= "
 				AND		login = ?";
@@ -61,6 +69,7 @@
 			while (list($id) = $rs->FetchRow()) {
 				$object = new $this->_modelName($id);
 				array_push($objects,$object);
+				$this->incrementCount();
 			}
 			return $objects;
 		}

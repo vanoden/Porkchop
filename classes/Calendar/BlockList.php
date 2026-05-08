@@ -7,14 +7,13 @@
 	 * events within.
 	 * Not extending BaseListClass because this is math, not database related
      */
-	class BlockList {
+	class BlockList Extends \BaseListClass{
 		/** @method public findFrom
 		 * Get blocks of time starting with provided time
 		 */
-		public function findFrom($start_time, $blockType = 'day') {
-		}
+		public function find($parameters = [], $controls = []): array {
+			$results = [];
 
-		/** @method public findTo
-		 * Get blocks of time ending with provided time
-		 */
+			return $results;
+		}
 	}

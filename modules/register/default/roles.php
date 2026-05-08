@@ -1,10 +1,10 @@
 <!-- Page Header -->
-<?=$page->showTitle()?>
-<?=$page->showBreadcrumbs()?>
-<?=$page->showMessages()?>
+<?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
-<a class="button" href="/_register/role">Create Role</a>
+<form action="/_register/role" method="get" class="register-roles-create-form">
+	<button type="submit" class="button">Create Role</button>
+</form>
 
 <div class="tableBody">
 	<div class="tableRowHeader">

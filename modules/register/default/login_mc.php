@@ -15,13 +15,19 @@
 	// Set CAPTCHA public key for template use
 	if (isset($GLOBALS['_config']->captcha->public_key)) $captcha_public_key = $GLOBALS['_config']->captcha->public_key;
 	else app_log("CAPTCHA Not Configured",'warn');
+
+	// reCAPTCHA configurable on/off for login
+	$rc = $GLOBALS['_config']->register->requireCAPTCHA ?? null;
+	$require_captcha_login = ($rc && isset($rc->login)) ? $rc->login : true;
 	
     // Check Risk Level from Host
 	$CAPTCHA_GO = false;
-	$remote_host = new \Network\Host();
-	if ($remote_host->getByIPAddress($_SERVER['REMOTE_ADDR'])) {
-		if ($remote_host->CAPTCHARequired()) {
-			$CAPTCHA_GO = true;
+	if ($require_captcha_login) {
+		$remote_host = new \Network\Host();
+		if ($remote_host->getByIPAddress($GLOBALS['_REQUEST_']->client_ip ?? '')) {
+			if ($remote_host->CAPTCHARequired()) {
+				$CAPTCHA_GO = true;
+			}
 		}
 	}
 
@@ -48,18 +54,18 @@
 	elseif (isset($_POST['login_target'])) {
 		# This is how the SHOULD come in from FORM submit
 		$target = $_POST['login_target'];
-		if (!preg_match('/[-\.\/\?\=\&a-zA-Z0-9]+$/',$target)) $target = '';
+		if (!preg_match('/[-\.\/\?\=\&_a-zA-Z0-9]+$/',$target)) $target = '';
 		if (!isset($GLOBALS['_config']->register->auth_target)) app_log("auth_target not configured",'warning');
-		else app_log("login_target = ".$GLOBALS['_config']->register->auth_target);
+		else app_log("login_target = ".$target,'debug',__FILE__,__LINE__);
 	}
 	elseif(isset($_REQUEST['target'])) {
 
 		# Translate target
 		$target = urldecode($_REQUEST['target']);
 		
-		# Validate URL characters
- 		if (!preg_match('/[-\.\/\?\=\&a-zA-Z0-9]+$/',$target)) $target = '';
-		app_log("target = ".$GLOBALS['_config']->register->auth_target);
+		# Validate URL characters (include underscore for module/view names and path segments like RMA codes)
+		if (!preg_match('/[-\.\/\?\=\&_a-zA-Z0-9]+$/',$target)) $target = '';
+		app_log("target = ".$target,'debug',__FILE__,__LINE__);
 	}
 	elseif($GLOBALS['_config']->register->auth_target) {
 		$target = $GLOBALS['_config']->register->auth_target;
@@ -67,6 +73,13 @@
 	}
 
 	if (! preg_match('/^\//',$target)) $target = '/'.$target;
+
+	// Reject targets that point to login - prevents redirect loop when target=/_register/login?target=...
+	$target_stripped = preg_replace('/\?.*$/', '', $target);
+	if (preg_match('#^/_register/login/?$#', $target_stripped)) {
+		$target = '';
+		app_log("Rejected login-as-target to break redirect loop", 'notice');
+	}
 
 	if (($GLOBALS['_SESSION_']->customer_id) and ($target != '/'))	{
 		app_log("Redirecting ".$GLOBALS['_SESSION_']->customer->code." to ".PATH.$target,'notice',__FILE__,__LINE__);
@@ -113,7 +126,8 @@
 				if ( !$GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 					$page->addError("Invalid Request");
 					$failure = new \Register\AuthFailure();
-					$failure->add($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'CSRFTOKEN',$_SERVER['PHP_SELF']);
+					$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
+					$failure->add(array($GLOBALS['_REQUEST_']->client_ip ?? '',$_REQUEST['login'],'CSRFTOKEN',$endpoint));
 				}
 				else {
 					if ($customer->isBlocked()) {
@@ -121,14 +135,15 @@
 						$counter = new \Site\Counter("auth_failed");
 						$counter->increment();
 						$failure = new \Register\AuthFailure();
-						$failure->add($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'INACTIVE',$_SERVER['PHP_SELF']);
+						$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
+						$failure->add(array($GLOBALS['_REQUEST_']->client_ip ?? '',$_REQUEST['login'],'INACTIVE',$endpoint));
 						app_log("EXIT 1",'notice');
 						return;
 					}
 					elseif (!empty($GLOBALS['_config']->captcha->bypass_key) && !empty($_REQUEST['captcha_bypass_key']) && $GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key']) {
 						//Don't require catcha
 					}
-					elseif ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3) {
+					elseif ($require_captcha_login && ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3)) {
 						$CAPTCHA_GO = true;
 						if (!isset($_REQUEST['g-recaptcha-response'])) {
 							// CAPTCHA Required but not done
@@ -154,7 +169,7 @@
 						$counter = new \Site\Counter("auth_failed");
 						$counter->increment();
 						$page->addError("Authentication Failed");
-						if ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3) $CAPTCHA_GO = true;
+						if ($require_captcha_login && ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3)) $CAPTCHA_GO = true;
 					}
 					elseif ($customer->error()) {
 						app_log("Error in authentication: ".$customer->error(),'error',__FILE__,__LINE__);
@@ -165,6 +180,9 @@
 					}
 					elseif (!$customer->isActive()) {
 						$page->addError("This account is ".$customer->status);
+						$failure = new \Register\AuthFailure();
+						$endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : (isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
+						$failure->add(array($GLOBALS['_REQUEST_']->client_ip ?? '',$_REQUEST['login'],'INACTIVE',$endpoint));
 					} else {
 
 						// populate the final target after the user logs in
@@ -185,8 +203,9 @@
 							$GLOBALS['_SESSION_']->touch();
 							$GLOBALS['_SESSION_']->setOTPVerified(false);
 
-							// Optionally update customer status/auth_failures
-							$customer->update(array("status" => "ACTIVE", "auth_failures" => 0));
+							// Update customer status and reset auth failures in statistics
+							$customer->update(array("status" => "ACTIVE"));
+							$customer->statistics()->resetFailedLogins();
 
 							// Redirect to OTP verification page
 							header("Location: $target");

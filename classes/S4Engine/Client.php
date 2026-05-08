@@ -131,7 +131,7 @@
 		 * @param int|null $id
 		 * @return int
 		 */
-		public function id(int $id = null): int {
+		public function id(?int $id = null): int {
 			if (!is_null($id)) {
 				$this->id = $id;
 			}
@@ -175,7 +175,7 @@
 		 * @param int|null $number
 		 * @return int
 		 */
-		public function number(int $number = null): int {
+		public function number(?int $number = null): int {
 			if (!is_null($number)) {
 				$this->update(array("number" => $number));
 			}
@@ -186,7 +186,7 @@
 		 * Accept/Return 2 byte Client Code
 		 * @return array 2 Byte Client Code
 		 */
-		public function codeArray(array $code = null): array {
+		public function codeArray(?array $code = null): array {
 			if (!is_null($code)) {
 				$this->_number = $code[0] * 256 + $code[1];
 			}
@@ -198,7 +198,7 @@
 		 * Accept/Return 2 Char Client Code
 		 * @return string 2 Char Client Code
 		 */
-		public function codeString(string $code = null): string {
+		public function codeString(?string $code = null): string {
 			if (!is_null($code)) {
 				$this->_number = ord($code[0]) * 256 + ord($code[1]);
 			}

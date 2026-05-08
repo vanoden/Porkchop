@@ -34,6 +34,17 @@
 					return [];
 				}
 			}
+			if (!empty($params['code'])) {
+				if ($workingClass->validCode($params['code'])) {
+					$find_objects_query .= "
+						AND		code = ?";
+					$database->AddParam($params['code']);
+				}
+				else {
+					$this->error("Invalid code");
+					return [];
+				}
+			}
 
 			// Execute Query
 			$rs = $database->Execute($find_objects_query);

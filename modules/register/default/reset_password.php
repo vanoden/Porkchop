@@ -1,3 +1,5 @@
+<script type="text/javascript" src="/includes/register-reset-password.js"></script>
+
 <section>
     <h1 class="pageSect_full">Password Reset</h1>
 </section>
@@ -8,12 +10,6 @@
 	</ul>
 </section>
 <?php	} else { ?>
-<section id="form-message">
-	<ul class="connectBorder infoText">
-		<li>This site is for authorized use by employees and customers of <r7 object="company" property="name"/>. No other use is permitted.</li>
-	</ul>
-</section>
-
 <?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">
 	<ul class="connectBorder errorText">
@@ -28,7 +24,6 @@
 <?php return; } ?>
 <section id="reg_form" class="body">
 	<form name="loginForm" method="post" action="<?=PATH?>/_register/reset_password">
-	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 <?php
 	if (! $GLOBALS['_SESSION_']->superElevated()) { ?>
 	<h3>Enter current password</h3>

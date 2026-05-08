@@ -7,8 +7,8 @@
 		public function __construct() {
 			$this->_admin_role = 'bench operator';
 			$this->_name = 'bench';
-			$this->_version = '0.1.1';
-			$this->_release = '2021-08-16';
+			$this->_version = '0.3.2';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Bench\Schema();
 			parent::__construct();
 		}
@@ -19,17 +19,17 @@
         public function registerAsset() {
             if ($_REQUEST['code']) {
                 # Find Requested Organization
-                $asset = new \Bench\Asset('code');
-                if ($asset->error) $this->app_error("Error registering asset: ".$asset->error,__FILE__,__LINE__);
+                $asset = new \Product\Instance($_REQUEST['code']);
+                if ($asset->error()) $this->app_error("Error registering asset: ".$asset->error(),__FILE__,__LINE__);
             }
             else {
                 $this->app_error("'code' required for new asset");
             }
 
-            $this->response->success = 1;
-            $this->response->asset = $asset;
+			$response = new \APIResponse();
+            $response->addElement('asset', $asset);
 
-            print $this->formatOutput($this->response);
+            $response->print();
         }
 
         public function testRequest() {
@@ -68,38 +68,41 @@
                 )
             );
 
-            $this->response->success = 1;
-            $this->response->asset = $obj;
+			$response = new \APIResponse();
+			$response->addElement('asset', $obj);
 
-            print $this->formatOutput($this->response);
+            $response->print();
         }
 
         ###################################################
         ### Get Bench Inventory							###
         ###################################################
         public function findAssets() {
-            $assetList = new \Bench\AssetList();
-            if ($assetList->error) $this->app_error("Error initializing Asset List: ".$assetList->error,__FILE__,__LINE__);
+            $assetList = new \Product\InstanceList();
+            if ($assetList->error()) $this->app_error("Error initializing Asset List: ".$assetList->error(),__FILE__,__LINE__);
 
             if ($_REQUEST['code']) {
+				$asset = $assetList->find(['code' => $_REQUEST['code']]);
+				if ($assetList->error()) $this->app_error("Error finding asset: ".$assetList->error(),__FILE__,__LINE__);
             }
             else {
+				$asset = new \Product\Instance();
             }
 
-            $this->response->success = 1;
-            $this->response->asset = $asset;
+            $response = new \APIResponse();
+            $response->addElement('asset', $asset);
 
-            print $this->formatOutput($this->response);
+            $response->print();
         }
 
         public function pingBuildService() {
             $buildService = new \Build\API();
             $result = $buildService->ping();
 
-            $this->response->success = 1;
-            $this->response->info = $result;
+            $response = new \APIResponse();
+            $response->addElement('info', $result);
 
-            print $this->formatOutput($this->response);
+            $response->print();
         }
 
 		public function _methods() {
