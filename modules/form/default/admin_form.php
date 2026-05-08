@@ -27,6 +27,7 @@
 </div>
 
 <?php	if ($form->exists()) { ?>
+<p class="section"><a href="/_form/admin_submissions/<?= htmlspecialchars((string)$form->code, ENT_QUOTES, 'UTF-8') ?>">View submissions &amp; answers</a></p>
 <div class="tableBody">
 	<div class="tableRowHeader">
 		<div class="tableCell">Version</div>

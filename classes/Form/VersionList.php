@@ -29,4 +29,49 @@
 			}
 			return (string)max(1, count($versions) + 1);
 		}
+
+		/**
+		 * Suggested label for “Add New Version”: "{title} - Version N".
+		 * Infers N from legacy numeric names, "{title} - Version k", "{title} k", exact "{title}", or falls back to nextVersionNumber() if title is empty.
+		 */
+		public function nextDefaultVersionName(int $form_id, string $formTitle = ''): string {
+			$title = trim($formTitle);
+			if ($title === '') {
+				return $this->nextVersionNumber($form_id);
+			}
+			$versions = $this->find(array('form_id' => $form_id));
+			$max = 0;
+			$escaped = preg_quote($title, '/');
+			foreach ($versions as $v) {
+				$name = trim((string)($v->name ?? ''));
+				if ($name === '') {
+					continue;
+				}
+				if (ctype_digit($name)) {
+					$n = (int)$name;
+					if ($n > $max) {
+						$max = $n;
+					}
+					continue;
+				}
+				if ($name === $title) {
+					$max = max($max, 1);
+					continue;
+				}
+				if (preg_match('/^' . $escaped . '\s*-\s*Version\s+(\d+)$/u', $name, $m)) {
+					$n = (int)$m[1];
+					if ($n > $max) {
+						$max = $n;
+					}
+					continue;
+				}
+				if (preg_match('/^' . $escaped . '\s+(\d+)$/u', $name, $m)) {
+					$n = (int)$m[1];
+					if ($n > $max) {
+						$max = $n;
+					}
+				}
+			}
+			return $title . ' - Version ' . (string)($max + 1);
+		}
 	}

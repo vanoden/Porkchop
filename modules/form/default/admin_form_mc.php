@@ -1,14 +1,12 @@
 <?php
-	/** @view /_form/edit
+	/** @view /_form/admin_form
 	 * View for editing a form.  Displays a form with
 	 * fields for the form code, title, description,
 	 * instructions, and questions.  Provides a link
 	 * to save the form and add new questions.
 	 */
-	// Load Page
+	$page = new \Site\Page();
 	$porkchop = new \Porkchop();
-	$site = $porkchop->site();
-	$page = $site->page();
 	$can_proceed = true;
 
 	// Load Form based on parameters

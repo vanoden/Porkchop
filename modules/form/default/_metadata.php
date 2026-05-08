@@ -5,11 +5,10 @@
 			"manage forms"
 		),
 		'templates'		=> array(
-			"admin_forms" => $templates['admin'],
-			"admin_form" => $templates['admin'],
-			"admin_version" => $templates['admin'],
-			"preview" => $templates['admin'],
-			"show" => $templates['default'],
-			"embed" => $templates['default'],
+			"admin_forms" => "admin.html",
+			"admin_form" => "admin.html",
+			"admin_submissions" => "admin.html",
+			"admin_submission" => "admin.html",
+			"admin_version" => "admin.html",
 		)
 	);

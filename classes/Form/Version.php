@@ -150,6 +150,43 @@
 			return true;
 		}
 
+		/**
+		 * Aggregate keys that originate from a previously-published version of the same form
+		 * (excluding this version). Used by the admin editor to render copied questions as
+		 * read-only so a draft can never silently rewrite content that's already been published.
+		 *
+		 * @return string[] de-duplicated list of aggregate_key values
+		 */
+		public function inheritedAggregateKeys(): array {
+			if ((int)$this->form_id < 1) {
+				return array();
+			}
+			$sql = "
+				SELECT DISTINCT q.aggregate_key
+				FROM form_questions q
+				INNER JOIN form_question_groups g ON g.id = q.group_id
+				INNER JOIN form_versions v ON v.id = g.version_id
+				WHERE v.form_id = ?
+				  AND v.id <> ?
+				  AND v.date_activated IS NOT NULL
+				  AND q.aggregate_key IS NOT NULL
+				  AND q.aggregate_key <> ''
+			";
+			$rs = $GLOBALS['_database']->Execute($sql, array((int)$this->form_id, (int)$this->id));
+			if (! $rs) {
+				$this->error('Could not load inherited aggregate keys');
+				return array();
+			}
+			$keys = array();
+			while ($row = $rs->FetchRow()) {
+				$k = (string)($row['aggregate_key'] ?? '');
+				if ($k !== '') {
+					$keys[$k] = true;
+				}
+			}
+			return array_keys($keys);
+		}
+
 		/** Human-readable name for {@see $user_id_activated}, or `User #id` if the account is missing. */
 		public function activatedByDisplayName(): string {
 			if (empty($this->user_id_activated)) {
