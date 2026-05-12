@@ -1730,6 +1730,35 @@
 				$database->CommitTrans();
 			}
 
+			if ($this->version() < 56) {
+				app_log("Upgrading Register schema to version 56 (register_locations_metadata)", 'notice', __FILE__, __LINE__);
+				if (!$database->BeginTrans()) {
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				}
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `register_locations_metadata` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`location_id` int(11) NOT NULL,
+						`key` varchar(64) NOT NULL,
+						`value` text,
+						PRIMARY KEY (`id`),
+						UNIQUE KEY `location_meta_unique` (`location_id`,`key`),
+						CONSTRAINT `register_locations_metadata_ibfk_1` FOREIGN KEY (`location_id`) REFERENCES `register_locations` (`id`) ON DELETE CASCADE
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+				";
+
+				if (!$database->Execute($create_table_query)) {
+					$this->SQLError("Error creating register_locations_metadata in Register::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(56);
+				$database->CommitTrans();
+			}
+
 			return true;
 		}
 	}

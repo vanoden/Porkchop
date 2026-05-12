@@ -17,4 +17,9 @@
 			parent::__construct($id);
 			$this->_fields();
 		}
+
+		/** Alias for {@see \BaseModel::delete()}; used by Question::dropOptions() and API. */
+		public function drop(): bool {
+			return $this->delete();
+		}
 	}

@@ -10,5 +10,6 @@
 			"admin_submissions" => "admin.html",
 			"admin_submission" => "admin.html",
 			"admin_version" => "admin.html",
+			"form" => "default.html",
 		)
 	);

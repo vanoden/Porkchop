@@ -27,7 +27,7 @@
 			}
 		}
 	}
-	elseif ($_REQUEST['form_id']) {
+	elseif (!empty($_REQUEST['form_id'])) {
 		$form = new \Form\Form($_REQUEST['form_id']);
 		if (!$form->exists()) {
 			$page->addError("Form not found!");

@@ -86,4 +86,9 @@
 			}
 			return true;
 		}
+
+		/** Alias for {@see \BaseModel::delete()}; used by admin and API. */
+		public function drop(): bool {
+			return $this->delete();
+		}
 	}

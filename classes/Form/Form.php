@@ -1,6 +1,7 @@
 <?php
 	/** @class Form\Form
 	 * Represents a form, which can have multiple versions.  Only one version of a form can be active at a time.  A form has a code, title, description, instructions, action, and method.  The code is used to load the form, and must be unique.
+	 * Use render() to obtain a complete HTML fragment for the published version (optionally verifying a specific form_versions.id).
 	 */
 	namespace Form;
 
@@ -64,6 +65,44 @@
 				return false;
 			}
 			return true;
+		}
+
+		/**
+		 * Load by form code: unique-key lookup first, then case-insensitive TRIM match on `form_forms.code`
+		 * (helps when collation or spacing differs from a pasted URL).
+		 */
+		public function loadByFlexibleCode(string $code): bool {
+			$this->clearError();
+			$code = trim($code);
+			if ($code === '' || ! $this->validCode($code)) {
+				return false;
+			}
+			if ($this->get($code)) {
+				return true;
+			}
+			$database = new \Database\Service();
+			$sql = "
+				SELECT `id`
+				FROM `form_forms`
+				WHERE LOWER(TRIM(`code`)) = LOWER(?)
+				LIMIT 1
+			";
+			$database->AddParam($code);
+			$rs = $database->Execute($sql);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			$row = $rs->FetchRow();
+			if (! is_array($row)) {
+				return false;
+			}
+			$fid = isset($row['id']) ? (int)$row['id'] : (int)($row[0] ?? 0);
+			if ($fid < 1) {
+				return false;
+			}
+			$this->id = $fid;
+			return $this->details() && $this->exists();
 		}
 
 		/** @return Version|null Published version for public display and submissions */
@@ -277,19 +316,50 @@
 		}
 
 		/**
-		 * @param array $extraHiddens name => value for optional passthrough fields (e.g. object_type, object_id for linking)
-		 * @param Version|null $versionOverride render this version instead of the published one; adds preview_version_id hidden field when set
+		 * Build the full HTML for a form submission UI for one version (typically the published version).
+		 *
+		 * @param int|null $publishedVersionId If set, render only when this version id is the currently published (active) version. Use null to render whatever is published.
+		 * @param array $extraHiddens name => value for optional passthrough fields (e.g. object_type, object_id)
+		 * @return string Complete HTML fragment (instructions + form), or a short error paragraph
 		 */
-		public function render(array $extraHiddens = array(), ?Version $versionOverride = null): void {
-			$activeVersion = $versionOverride ?? $this->activeVersion();
-			if (! $activeVersion) {
-				print '<p class="form_error">This form is not available.</p>';
-				return;
+		public function render(?int $publishedVersionId = null, array $extraHiddens = array()): string {
+			$published = $this->activeVersion();
+			if (! $published) {
+				return '<p class="form_error">This form is not available.</p>';
 			}
-			if ($versionOverride !== null && (int)$versionOverride->form_id !== (int)$this->id) {
-				print '<p class="form_error">Invalid form version.</p>';
-				return;
+			if ($publishedVersionId !== null) {
+				if ((int)$this->active_version_id !== (int)$publishedVersionId) {
+					return '<p class="form_error">No published form found for this version.</p>';
+				}
+				$v = new Version((int)$publishedVersionId);
+				if (! $v->exists() || (int)$v->form_id !== (int)$this->id) {
+					return '<p class="form_error">No published form found for this version.</p>';
+				}
+				$activeVersion = $v;
 			}
+			else {
+				$activeVersion = $published;
+			}
+			return $this->buildFormMarkup($activeVersion, $extraHiddens, null);
+		}
+
+		/**
+		 * Staff preview: render a specific version and include preview_version_id so submit handlers can use submitAnswersForVersion().
+		 */
+		public function renderPreview(Version $version, array $extraHiddens = array()): string {
+			if ((int)$version->form_id !== (int)$this->id) {
+				return '<p class="form_error">Invalid form version.</p>';
+			}
+			return $this->buildFormMarkup($version, $extraHiddens, (int)$version->id);
+		}
+
+		/**
+		 * @param Version $activeVersion version row to render (questions for this version)
+		 * @param array $extraHiddens name => value hidden fields
+		 * @param int|null $previewVersionId if set, emit preview_version_id hidden input
+		 */
+		private function buildFormMarkup(Version $activeVersion, array $extraHiddens, ?int $previewVersionId): string {
+			ob_start();
 			$questions = $activeVersion->questions();
 			$groups = array();
 			$groupList = new \Form\GroupList();
@@ -307,8 +377,8 @@
 			foreach ($extraHiddens as $hk => $hv) {
 				print '<input type="hidden" name="'.htmlspecialchars((string)$hk, ENT_QUOTES, 'UTF-8').'" value="'.htmlspecialchars((string)$hv, ENT_QUOTES, 'UTF-8').'">';
 			}
-			if ($versionOverride !== null) {
-				print '<input type="hidden" name="preview_version_id" value="'.(int)$versionOverride->id.'">';
+			if ($previewVersionId !== null) {
+				print '<input type="hidden" name="preview_version_id" value="'.(int)$previewVersionId.'">';
 			}
 			$renderQuestion = function ($question): void {
 				if (strtolower((string)$question->type) === 'submit') {
@@ -484,5 +554,6 @@
 			$btn = trim($submitButtonLabel) !== '' ? $submitButtonLabel : 'Submit';
 			print '<p class="formSubmit"><button type="submit" name="form_submit" value="1">'.htmlspecialchars($btn, ENT_QUOTES, 'UTF-8').'</button></p>';
 			print '</form>';
+			return (string)ob_get_clean();
 		}
 	}
