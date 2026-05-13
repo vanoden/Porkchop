@@ -85,7 +85,7 @@
 						`help` varchar(256) DEFAULT NULL,
 						PRIMARY KEY (`id`),
 						KEY `idx_form_question` (`group_id`,`sort_order`)
-					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+					) 
 				";
 				if (! $this->executeSQL($create_form_questions)) {
 					$this->SQLError($this->error());
