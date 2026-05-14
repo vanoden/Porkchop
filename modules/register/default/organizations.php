@@ -14,18 +14,30 @@
 <?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
-<form id="orgSearch" method="get" class="float: left">
-<div id="search_container">
+<form id="orgSearch" method="get">
+<div id="search_container" class="section-flex cluster--wide">
 	<div class="form-field">
     <label for="searchOrganizationInput">Organization Name</label>
     <input type="text" id="searchOrganizationInput" name="name" placeholder="organization name" value="<?php if (!empty($_REQUEST["name"])) print $_REQUEST["name"];?>"/>
   </div>
-  <div class="form-group-row">
-	<div><input type="checkbox" name="hidden" class="checkbox" value="1" <?php if (!empty($_REQUEST['hidden'])) print "checked"; ?> /><label>Hidden</label></div>
-	<div><input type="checkbox" name="expired" class="checkbox" value="1" <?php if (!empty($_REQUEST['expired'])) print "checked"; ?> /><label>Expired</label></div>
-	<div><input type="checkbox" name="deleted" class="checkbox" value="1" <?php if (!empty($_REQUEST['deleted'])) print "checked"; ?> /><label>Deleted</label></div>
+  <!-- Check boxes -->
+  <div class="section-flex cluster--tight">
+    <div class="section-flex cluster">
+      <input type="checkbox" name="hidden" class="checkbox" value="1" <?php if (!empty($_REQUEST['hidden'])) print "checked"; ?> />
+      <label>Hidden</label>
+    </div>
+    <div class="section-flex cluster">
+      <input type="checkbox" name="expired" class="checkbox" value="1" <?php if (!empty($_REQUEST['expired'])) print "checked"; ?> />
+      <label>Expired</label>
+    </div>
+    <div class="section-flex cluster">
+      <input type="checkbox" name="deleted" class="checkbox" value="1" <?php if (!empty($_REQUEST['deleted'])) print "checked"; ?> />
+      <label>Deleted</label>
+    </div>
   </div>
-	<div class="form-field"><label></label><input type="hidden" id="start" name="start" value="0"></div>
+
+	<input type="hidden" id="start" name="start" value="0">
+
 	<div class="form-field">
 		<label>Filter by Tag:</label>
 		<select name="searchedTag" id="organizationStatusValue" class="">
@@ -35,11 +47,15 @@
 		<?php	} ?>
 		</select>
 	</div>
+
 	<div class="form-field">
     <label>Records per page:</label><input type="text" name="<?=$pagination->sizeElemName?>" class="value input register-organizations-pagination-size" value="<?=$pagination->size()?>" />
   </div>
-	<button id="searchOrganizationButton" name="btn_search" onclick="submitSearch(0)">Search</button>
+
+  <button id="searchOrganizationButton" name="btn_search" onclick="submitSearch(0)">Search</button>
 </div>
+
+
 
 <div class="tableBody">
 	<div class="tableRowHeader">
@@ -78,5 +94,7 @@
 </form>
 
 <form action="<?=PATH?>/_register/admin_organization" method="get">
-	<div class="button-bar"><span class="register-organizations-button-center"><input type="submit" name="button_submit" value="Add Organization" class="input button"/></span></div>
+	<div class="button-bar"><span class="register-organizations-button-center">
+    <button type="submit" name="button_submit" value="Add Organization">Add Organization</button>
+  </span></div>
 </form>
