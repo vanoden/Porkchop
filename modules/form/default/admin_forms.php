@@ -1,6 +1,6 @@
 <?= $page->showAdminPageInfo(); ?>
 
-<a href="/_form/admin_form">Add New Form</a>
+<a class="button" href="/_form/admin_form">Add New Form</a>
 <div class="table">
 	<div class="tableRowHeader">
 		<div class="tableCell">Title</div>

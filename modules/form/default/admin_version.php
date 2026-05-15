@@ -157,17 +157,27 @@ $postArrList = function ($name, $key) use ($hasErrors) {
 <span name="form_title"><?=$form->title?></span>
 <?php } ?>
 
-<label for="code">Version code</label>
-<input type="text" name="code" value="<?= $h($postScalar('code', $version->code ?? '')) ?>" placeholder="Unique per form; leave blank to generate on save" />
+<div class="section-grid grid-col-3">
+  <div class="form-field">
+  <label for="code">Version code</label>
+  <input type="text" name="code" value="<?= $h($postScalar('code', $version->code ?? '')) ?>" placeholder="Unique per form; leave blank to generate on save" />
+  </div>
 
-<label for="name">Version Name</label>
-<input type="text" name="name" value="<?= $h($postScalar('name', $version->name ?? '')) ?>" />
+  <div class="form-field">
+  <label for="name">Version Name</label>
+  <input type="text" name="name" value="<?= $h($postScalar('name', $version->name ?? '')) ?>" />
+  </div>
 
-<label for="description">Description</label>
-<input type="text" name="description" value="<?= $h($postScalar('description', strip_tags((string)($version->description ?? '')))) ?>" />
+  <div class="form-field">
+  <label for="description">Description</label>
+  <input type="text" name="description" value="<?= $h($postScalar('description', strip_tags((string)($version->description ?? '')))) ?>" />
+  </div>
+</div>
 
+<div class="form-field">
 <label for="instructions" style="display:block;margin:.35em 0">Instructions</label>
 <textarea id="instructions" name="instructions"><?= $h($postScalar('instructions', $version->instructions ?? '')) ?></textarea>
+</div>
 
 <h3>Groups</h3>
 <div class="tableBody">
