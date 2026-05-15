@@ -91,46 +91,39 @@
     <!--End first row-->
 
     <div class="user_accounts_container">
-        <h3>Current Users</h3>
-        <input type="checkbox" id="showAllUsers" name="showAllUsers" value="showAllUsers" onclick="showHidden()" <?=(isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? 'checked' : ''?>> SHOW ALL (Expired/Hidden/Deleted)
-        <!--	Start First Row-->
-        <div class="tableBody bandedRows">
-	        <div class="tableRowHeader">
-		        <div class="tableCell">Username</div>
-		        <div class="tableCell">First Name</div>
-		        <div class="tableCell">Last Name</div>
-		        <div class="tableCell">Status</div>
-		        <div class="tableCell">Last Active</div>
-				<div class="tableCell">Last Password Change</div>
-	        </div>
-        <?php	foreach ($members as $member) {
-			$statistics = new \Register\User\Statistics($member->id);
-			if ($can_manage) $sub_url = 'org_account';
-			else $sub_url = 'account';
-		?>
-	        <div class="tableRow member_status_<?=strtolower($member->status)?>">
-		        <div class="tableCell">
-			        <a href="/_register/<?=$sub_url?>?customer_id=<?=$member->id?>"><?=$member->code?></a>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->first_name?>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->last_name?>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->status?>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->last_active()?>
-		        </div>
-				<div class="tableCell">
-			        <?=$statistics?->last_password_change_date?->format('Y-m-d H:i:s')?>
-				</div>
-	        </div>
-        <?php	} ?>
-        </div>
-        <!--End first row-->
+      <h3>Current Users</h3>
+      <label for="showAllUsers">
+        <input type="checkbox" id="showAllUsers" name="showAllUsers" value="showAllUsers" onclick="showHidden()" <?= (isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? 'checked' : '' ?>>SHOW ALL (Expired/Hidden/Deleted)
+      </label>
+        
+      <table class="responsive-table bandedRows">
+        <thead>
+          <tr>
+            <th scope="col">Username</th>
+            <th scope="col">First Name</th>
+            <th scope="col">Last Name</th>
+            <th scope="col">Status</th>
+            <th scope="col">Last Active</th>
+            <th scope="col">Last Password Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($members as $member) {
+            $statistics = new \Register\User\Statistics($member->id);
+            if ($can_manage) $sub_url = 'org_account';
+            else $sub_url = 'account';
+          ?>
+          <tr class="member_status_<?= strtolower($member->status) ?>">
+            <td data-label="Username"><a href="/_register/<?= $sub_url ?>?customer_id=<?= $member->id ?>"><?= $member->code ?></a></td>
+            <td data-label="First Name"><?= $member->first_name ?></td>
+            <td data-label="Last Name"><?= $member->last_name ?></td>
+            <td data-label="Status"><?= $member->status ?></td>
+            <td data-label="Last Active"><?= $member->last_active() ?></td>
+            <td data-label="Last Password Change"><?= $statistics?->last_password_change_date?->format('Y-m-d H:i:s') ?></td>
+          </tr>
+          <?php } ?>
+        </tbody>
+      </table>
 
         <h3>Automation Users</h3>
         <!--	Start First Row-->
