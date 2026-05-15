@@ -50,87 +50,119 @@ $postArrList = function ($name, $key) use ($hasErrors) {
 ?>
 <div class="formVersionReadonly">
 
-<p class="formVersionLockedBanner"><strong>Read-only</strong> &mdash; this version has been published and cannot be edited.<?php
-	if ($publishedDate !== '') { ?> Published <?= $h($publishedDate) ?><?php }
-	if ($activatedBy !== '') { ?> by <?= $h($activatedBy) ?><?php }
-?>. To make changes, create a new draft.</p>
+  <ul class="connectBorder pageMessage warningText">
+    <li class="pageMessage--warning">Read-only: this version has been published and cannot be edited.<?php
+      if ($publishedDate !== '') { ?> Published <?= $h($publishedDate) ?><?php }
+      if ($activatedBy !== '') { ?> by <?= $h($activatedBy) ?><?php }
+    ?>. To make changes, create a new draft.
+    </li>
+  </ul>
 
-<div class="section">
-	<div class="tableBody">
-		<div class="tableRowHeader">
-			<div class="tableCell">Field</div>
-			<div class="tableCell">Value</div>
-		</div>
-		<div class="tableRow"><div class="tableCell">Version code</div><div class="tableCell"><?= $h($version->code) ?></div></div>
-		<div class="tableRow"><div class="tableCell">Version name</div><div class="tableCell"><?= $h($version->name) ?></div></div>
-		<div class="tableRow"><div class="tableCell">Description</div><div class="tableCell"><?= $h(strip_tags((string)$version->description)) ?></div></div>
-		<div class="tableRow"><div class="tableCell">Instructions</div><div class="tableCell"><?= nl2br($h($version->instructions)) ?></div></div>
-	</div>
-</div>
 
-<h3>Groups</h3>
-<div class="tableBody">
-	<div class="tableRowHeader">
-		<div class="tableCell">Title</div>
-		<div class="tableCell">Instructions</div>
-		<div class="tableCell">View Order</div>
-	</div>
-<?php	if (empty($groups)) { ?>
-	<div class="tableRow"><div class="tableCell">&mdash;</div><div class="tableCell"></div><div class="tableCell"></div></div>
-<?php	} else { foreach ($groups as $group) { ?>
-	<div class="tableRow">
-		<div class="tableCell"><?= $h($group->title) ?></div>
-		<div class="tableCell"><?= $h($group->instructions) ?></div>
-		<div class="tableCell"><?= (int)$group->sort_order ?></div>
-	</div>
-<?php	}} ?>
-</div>
+  <table class="responsive-table">
+    <thead>
+      <tr>
+        <th scope="col">Field</th>
+        <th scope="col">Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td data-label="Field">Version code</td>
+        <td data-label="Value"><?= $h($version->code) ?></td>
+      </tr>
+      <tr>
+        <td data-label="Field">Version name</td>
+        <td data-label="Value"><?= $h($version->name) ?></td>
+      </tr>
+      <tr>
+        <td data-label="Field">Description</td>
+        <td data-label="Value"><?= $h(strip_tags((string)$version->description)) ?></td>
+      </tr>
+      <tr>
+        <td data-label="Field">Instructions</td>
+        <td data-label="Value"><?= nl2br($h($version->instructions)) ?></td>
+      </tr>
+    </tbody>
+  </table>
 
-<h3>Questions</h3>
-<div class="tableBody">
-	<div class="tableRowHeader">
-		<div class="tableCell">Type</div>
-		<div class="tableCell">Question</div>
-		<div class="tableCell">Prompt</div>
-		<div class="tableCell">Required</div>
-		<div class="tableCell">Group</div>
-		<div class="tableCell">View Order</div>
-		<div class="tableCell">Choices</div>
-	</div>
-<?php	if (empty($questions)) { ?>
-	<div class="tableRow"><div class="tableCell" colspan="7"><em>No questions defined.</em></div></div>
-<?php	} else { foreach ($questions as $question) {
-		$choiceTypes = array('select', 'radio', 'checkbox');
-		$showChoices = in_array($question->type, $choiceTypes, true);
-		$gid = (int)($question->group_id ?? 0);
-		$groupName = ($gid > 0 && isset($groupsById[$gid])) ? (string)$groupsById[$gid]->title : '';
-?>
-	<div class="tableRow">
-		<div class="tableCell"><?= $h($question->type) ?></div>
-		<div class="tableCell"><?= $h(strip_tags((string)$question->text)) ?></div>
-		<div class="tableCell"><?= $h($question->prompt) ?></div>
-		<div class="tableCell"><?= ! empty($question->required) ? 'Yes' : 'No' ?></div>
-		<div class="tableCell"><?= $groupName !== '' ? $h($groupName) : '<em>Ungrouped</em>' ?></div>
-		<div class="tableCell"><?= (int)$question->sort_order ?></div>
-		<div class="tableCell">
-<?php		if ($showChoices) {
-			$opts = $question->options();
-			if (empty($opts)) { ?>
-			<span class="formChoiceNa">&mdash;</span>
-<?php		} else { ?>
-			<ul class="formChoiceListReadonly">
-<?php			foreach ($opts as $opt) { ?>
-				<li><?= $h($opt->text) ?> <span class="formChoiceValueReadonly">(<?= $h($opt->value) ?>)</span></li>
-<?php			} ?>
-			</ul>
-<?php		}
-		} else { ?>
-			<span class="formChoiceNa">&mdash;</span>
-<?php	} ?>
-		</div>
-	</div>
-<?php	}} ?>
-</div>
+  <h3>Groups</h3>
+  <table class="responsive-table">
+    <thead>
+      <tr>
+        <th scope="col">Title</th>
+        <th scope="col">Instructions</th>
+        <th scope="col">View Order</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php if (empty($groups)) { ?>
+      <tr>
+        <td data-label="Title">&mdash;</td>
+        <td data-label="Instructions"></td>
+        <td data-label="View Order"></td>
+      </tr>
+      <?php } else { foreach ($groups as $group) { ?>
+      <tr>
+        <td data-label="Title"><?= $h($group->title) ?></td>
+        <td data-label="Instructions"><?= $h($group->instructions) ?></td>
+        <td data-label="View Order"><?= (int)$group->sort_order ?></td>
+      </tr>
+      <?php }} ?>
+    </tbody>
+  </table>
+
+  <h3>Questions</h3>
+  <table class="responsive-table">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+        <th scope="col">Question</th>
+        <th scope="col">Prompt</th>
+        <th scope="col">Required</th>
+        <th scope="col">Group</th>
+        <th scope="col">View Order</th>
+        <th scope="col">Choices</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php if (empty($questions)) { ?>
+          <tr>
+            <td colspan="7"><em>No questions defined.</em></td>
+          </tr>
+      <?php } else { foreach ($questions as $question) {
+        $choiceTypes = array('select', 'radio', 'checkbox');
+        $showChoices = in_array($question->type, $choiceTypes, true);
+        $gid = (int)($question->group_id ?? 0);
+        $groupName = ($gid > 0 && isset($groupsById[$gid])) ? (string)$groupsById[$gid]->title : '';
+      ?>
+      <tr>
+        <td data-label="Type"><?= $h($question->type) ?></td>
+        <td data-label="Question"><?= $h(strip_tags((string)$question->text)) ?></td>
+        <td data-label="Prompt"><?= $h($question->prompt) ?></td>
+        <td data-label="Required"><?= ! empty($question->required) ? 'Yes' : 'No' ?></td>
+        <td data-label="Group"><?= $groupName !== '' ? $h($groupName) : '<em>Ungrouped</em>' ?></td>
+        <td data-label="View Order"><?= (int)$question->sort_order ?></td>
+        <td data-label="Choices">
+          <?php if ($showChoices) {
+            $opts = $question->options();
+            if (empty($opts)) { ?>
+                  <span class="formChoiceNa">&mdash;</span>
+          <?php } else { ?>
+                  <ul class="formChoiceListReadonly">
+          <?php foreach ($opts as $opt) { ?>
+                    <li><?= $h($opt->text) ?> <span class="formChoiceValueReadonly">(<?= $h($opt->value) ?>)</span></li>
+          <?php } ?>
+                  </ul>
+          <?php }
+          } else { ?>
+                  <span class="formChoiceNa">&mdash;</span>
+          <?php } ?>
+        </td>
+      </tr>
+      <?php }} ?>
+    </tbody>
+  </table>
 
 <div class="section formVersionReadonlyActions">
 	<p><a class="formVersionAction" href="<?= $h($createDraftUrl) ?>">Create new draft from this version</a></p>
