@@ -170,11 +170,11 @@
     <h2>Locations</h2>
     <table class="responsive-table">
       <colgroup>
-        <col class="col-w-5">
-        <col class="col-w-5">
-        <col class="col-w-20">
-        <col class="col-w-20">
-        <col class="col-w-20">
+        <col class="col-w-15">
+        <col class="col-w-15">
+        <col>
+        <col>
+        <col>
         <col>
       </colgroup>
       <thead>
