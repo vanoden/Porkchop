@@ -144,7 +144,6 @@
 
     <div class="section-flex cluster">
       <button href="/_register/privileges">Manage Privileges</button>
-
       <?php 
       // Check if user can modify role privileges
       $can_modify_privileges = true;
@@ -152,7 +151,6 @@
           $can_modify_privileges = $GLOBALS['_SESSION_']->customer->canModifyRolePrivileges($role);
       }
       ?>
-
       <?php if ($can_modify_privileges): ?>
         <button type="button" onclick="setAllNone()" class="btn-secondary">Set All None</button>
       <?php else: ?>
@@ -263,13 +261,11 @@
     </section>
 
   <!-- entire page button submit -->
-  <div id="submit-button-container" class="tableBody min-tablet">
-    <div class="tableRow button-bar">
-      <?php if (isset($role->id)) { ?>
-        <input type="submit" name="btn_submit" class="button" value="Update">
+  <div class="section-flex cluster">
+    <?php if (isset($role->id)) { ?>
+        <button type="submit" name="btn_submit" class="button" value="Update">Update</button>
       <?php } else { ?>
-        <input type="submit" name="btn_submit" class="button" value="Create">
+        <button type="submit" name="btn_submit" class="button" value="Create">Create</button>
       <?php } ?>
-    </div>
   </div>
 </form>
