@@ -160,79 +160,93 @@
     <?php else: ?>
       <div class="note" style="margin-bottom: 10px;">You do not have permission to modify role privileges.</div>
     <?php endif; ?>
-    <div class="tableBody">
-
-      <div class="tableRowHeader">
-        <div class="tableCell width-16per">Module</div>
-        <div class="tableCell width-40per">Description</div>
-        <div class="tableCell width-16per text-center role-column-cell">
-          <span style="display: block;">Customer</span>
-          <input type="checkbox" onclick="setAllCustomer()"/>
-        </div>
-        <div class="tableCell width-16per">
-          <span style="display: block;">Sub-Org Mgr</span>
-          <input type="checkbox" onclick="setAllSubOrg()"/>
-        </div>
-        <div class="tableCell width-16per">
-          <span>Org Mgr</span>
-          <input type="checkbox" onclick="setAllOrgManager()"/>
-        </div>
-        <div class="tableCell width-16per">
-          <span>Distributor</span>
-          <input type="checkbox" onclick="setAllDistributor()"/>
-        </div>
-        <div class="tableCell width-16per">
-          <span>Administrator</span>
-          <input type="checkbox" onclick="setAllAdministrator()"/>
-        </div>
-      </div>
-
-      <?php
-      // Get current privilege levels for this role
-      $current_privilege_levels = array();
-      if ($role->id) {
-        $role_privileges = $role->privileges();
-        foreach ($role_privileges as $role_privilege) {
-          $current_privilege_levels[$role_privilege->id] = $role_privilege->level ?? 0;
-        }
+    <table class="responsive-table responsive-table-banded">
+      <colgroup>
+        <col class="col-w-15">
+        <col class="col-w-40">
+        <col>
+        <col>
+        <col>
+        <col>
+        <col>
+      </colgroup>
+      <thead>
+        <tr>
+          <th scope="col">Module</th>
+          <th scope="col">Description</th>
+          <th scope="col" class="text-center role-column-cell">
+            <span style="display: block;">Customer</span>
+            <input type="checkbox" onclick="setAllCustomer()">
+          </th>
+          <th scope="col" class="role-column-cell">
+            <span style="display: block;">Sub-Org Mgr</span>
+            <input type="checkbox" onclick="setAllSubOrg()">
+          </th>
+          <th scope="col" class="role-column-cell">
+            <span>Org Mgr</span>
+            <input type="checkbox" onclick="setAllOrgManager()">
+          </th>
+          <th scope="col" class="role-column-cell">
+            <span>Distributor</span>
+            <input type="checkbox" onclick="setAllDistributor()">
+          </th>
+          <th scope="col" class="role-column-cell">
+            <span>Administrator</span>
+            <input type="checkbox" onclick="setAllAdministrator()">
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+    <?php
+    // Get current privilege levels for this role
+    $current_privilege_levels = array();
+    if ($role->id) {
+      $role_privileges = $role->privileges();
+      foreach ($role_privileges as $role_privilege) {
+        $current_privilege_levels[$role_privilege->id] = $role_privilege->level ?? 0;
       }
+    }
 
-      foreach ($privileges as $privilege) {
-        ?>
-        <div class="tableRow">
-          <div class="tableCell"><?= $privilege->module ?: 'No Module' ?></div>
-          <div class="tableCell">
-            <?= $privilege->description ?: $privilege->name ?: 'No Description' ?>
-          </div>
-           <div class="tableCell role-column-cell">
-             <label class="checkbox-label-container">
-               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::CUSTOMER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::CUSTOMER)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
-             </label>
-           </div>
-           <div class="tableCell role-column-cell">
-             <label class="checkbox-label-container">
-               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
-             </label>
-           </div>
-          <div class="tableCell role-column-cell">
+    foreach ($privileges as $privilege) {
+    ?>
+        <tr>
+          <td data-label="Module"><?= $privilege->module ?: 'No Module' ?></td>
+          <td data-label="Description"><?= $privilege->description ?: $privilege->name ?: 'No Description' ?></td>
+
+          <td data-label="Customer" class="role-column-cell">
+            <label class="checkbox-label-container">
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::CUSTOMER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::CUSTOMER)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+            </label>
+          </td>
+
+          <td data-label="Sub-Org Mgr" class="role-column-cell">
+            <label class="checkbox-label-container">
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+            </label>
+          </td>
+
+          <td data-label="Org Mgr" class="role-column-cell">
             <label class="checkbox-label-container">
               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::ORGANIZATION_MANAGER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::ORGANIZATION_MANAGER)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
             </label>
-          </div>
-          <div class="tableCell role-column-cell">
+          </td>
+
+          <td data-label="Distributor" class="role-column-cell">
             <label class="checkbox-label-container">
               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::DISTRIBUTOR ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::DISTRIBUTOR)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
             </label>
-          </div>
-          <div class="tableCell role-column-cell">
+          </td>
+
+          <td data-label="Administrator" class="role-column-cell">
             <label class="checkbox-label-container">
               <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::ADMINISTRATOR ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::ADMINISTRATOR)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
             </label>
-          </div>
-        </div>
-      <?php } ?>
-
-    </div>
+          </td>
+        </tr>
+        <?php } ?>
+      </tbody>
+    </table>
+    <!-- END TABLE -->
 
   </div>
 
