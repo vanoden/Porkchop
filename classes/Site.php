@@ -68,14 +68,14 @@
 						if ($role->error()) {
 							$this->install_fail("Error adding role '$role_name': ".$role->error());
 						}
-						elseif (isset($role_data['privileges'])) {
-							foreach ($role_data['privileges'] as $privilege_name) {
-								$role->addPrivilege($privilege_name);
-							}
-						}
 					}
 					else {
 						$this->install_log("Found role $role_name",'debug');
+					}
+					if ($role->id && isset($role_data['privileges'])) {
+						foreach ($role_data['privileges'] as $privilege_name) {
+							$role->addPrivilege($privilege_name, \Register\PrivilegeLevel::ADMINISTRATOR);
+						}
 					}
 				}
 
