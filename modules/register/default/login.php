@@ -36,10 +36,10 @@
 			<?php	}	?>
 		</ul>
 
-		<div class="button-group">
+		<section class="section-flex cluster">
 			<button type="button" onclick="document.loginForm.submit();">Sign In</button>
 			<a href="/_register/forgot_password" class="button btn-secondary">Recover Password</a>
 			<a href="<?=PATH?>/_register/new_customer" class="button btn-secondary">Register Now</a>
-		</div>
+    </section>
 	</form>
 </section>
