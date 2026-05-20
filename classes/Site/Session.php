@@ -500,8 +500,9 @@ use Register\Customer;
 				else
 					$this->isMobile = false;
 
-				// Generate CSRF Token if not already set
-				$this->generateCSRFToken();
+				// Ensure CSRF token exists and is stored on the session cache object
+				$this->csrfToken = $this->getCSRFToken();
+				$object->csrfToken = $this->csrfToken;
 				
 				// Initialize OTP verification status - check cache first, then set defaults
 				$cachedOTPVerified = null;

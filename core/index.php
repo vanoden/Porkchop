@@ -191,6 +191,21 @@
 	# Require Terms Of Use Acceptance per page configuration
 	$page->confirmTOUAcceptance();
 
+	# JSON API: dispatch directly so CMS page/template resolution cannot return HTML
+	if ($_REQUEST_->view === 'api' && !empty($_REQUEST['method'])) {
+		$siteApi = new \Site();
+		$moduleName = $siteApi->findModuleAPI($_REQUEST_->module);
+		if ($moduleName) {
+			$apiClass = '\\' . $moduleName . '\\API';
+			$api = new $apiClass();
+			$method = $_REQUEST['method'];
+			if (method_exists($api, $method)) {
+				$api->$method();
+				exit;
+			}
+		}
+	}
+
 	# Static HTML - Skip CMS Processing
 	if ($page->module() == 'static') {
 		// All Set!
