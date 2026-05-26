@@ -14,7 +14,115 @@
 		}
 
 		###################################################
-		### Add a Sales Order							###
+		### Add a Sales Order (SalesOrder / sales_documents) ###
+		###################################################
+		public function addSalesOrder() {
+			if (! $this->validCSRFToken()) {
+				$this->error("Invalid Request");
+			}
+			if (! $GLOBALS['_SESSION_']->customer->can('create sales order')) {
+				$this->error("Permission denied");
+			}
+
+			$order = new \Sales\SalesOrder();
+			$parameters = [];
+
+			if (! empty($_REQUEST['customer_code'])) {
+				$customer = new \Register\Customer();
+				if (! $customer->get($_REQUEST['customer_code'])) {
+					$this->error("Customer '".$_REQUEST['customer_code']."' not found");
+				}
+				$parameters['customer_id'] = $customer->id;
+				$parameters['organization_id'] = $customer->organization_id;
+			}
+			elseif (! empty($_REQUEST['customer_id'])) {
+				$parameters['customer_id'] = (int) $_REQUEST['customer_id'];
+			}
+			else {
+				$this->error("customer_code or customer_id required");
+			}
+
+			if (! empty($_REQUEST['status'])) {
+				$parameters['status'] = $_REQUEST['status'];
+			}
+			if (! empty($_REQUEST['code'])) {
+				$parameters['code'] = $_REQUEST['code'];
+			}
+			if (! empty($_REQUEST['customer_order_number'])) {
+				$parameters['customer_order_number'] = $_REQUEST['customer_order_number'];
+			}
+			if (! empty($_REQUEST['local_order_number'])) {
+				$parameters['local_order_number'] = $_REQUEST['local_order_number'];
+			}
+			if (! empty($_REQUEST['salesperson_code'])) {
+				$salesperson = new \Register\Customer();
+				if (! $salesperson->get($_REQUEST['salesperson_code'])) {
+					$this->error("Salesperson '".$_REQUEST['salesperson_code']."' not found");
+				}
+				$parameters['salesperson_id'] = $salesperson->id;
+			}
+			elseif (! empty($_REQUEST['salesperson_id'])) {
+				$parameters['salesperson_id'] = (int) $_REQUEST['salesperson_id'];
+			}
+			else {
+				$parameters['salesperson_id'] = $GLOBALS['_SESSION_']->customer->id;
+			}
+
+			if (! $order->add($parameters)) {
+				$this->error("Error adding order: ".$order->error());
+			}
+
+			$response = new \APIResponse();
+			$response->AddElement('order', $order);
+			$response->print();
+		}
+
+		###################################################
+		### Add a line item to a SalesOrder				###
+		###################################################
+		public function addSalesOrderItem() {
+			if (! $this->validCSRFToken()) {
+				$this->error("Invalid Request");
+			}
+			if (
+				! $GLOBALS['_SESSION_']->customer->can('edit sales order')
+				&& ! $GLOBALS['_SESSION_']->customer->can('create sales order')
+			) {
+				$this->error("Permission denied");
+			}
+
+			$order = new \Sales\SalesOrder();
+			if (empty($_REQUEST['order_code'])) {
+				$this->error("order_code required");
+			}
+			if (! $order->get($_REQUEST['order_code'])) {
+				$this->error("Order not found: ".$order->error());
+			}
+
+			$product = new \Product\Item();
+			if (empty($_REQUEST['product_code']) || ! $product->get($_REQUEST['product_code'])) {
+				$this->error("Product not found");
+			}
+
+			$parameters = [
+				'product_id' => $product->id,
+				'quantity' => $_REQUEST['quantity'] ?? 1,
+				'unit_price' => $_REQUEST['unit_price'] ?? 0,
+				'description' => $_REQUEST['description'] ?? $product->name,
+			];
+
+			$item = $order->addItem($parameters);
+			if ($item === null) {
+				$this->error("Error adding order item: ".$order->error());
+			}
+
+			$response = new \APIResponse();
+			$response->AddElement('item', $item);
+			$response->print();
+		}
+
+		###################################################
+		### Add a Sales Order (legacy)					###
 		###################################################
 		public function addOrder() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
@@ -157,7 +265,7 @@
 		### Get Specified Sales Order					###
 		###################################################
 		public function getOrder() {
-			$order = new \Sales\Order();
+			$order = new \Sales\SalesOrder();
 
 			if (! $order->get($_REQUEST['code'])) $this->error("Error getting order: ".$order->error());
 			if (! $GLOBALS['_SESSION_']->customer->can('browse sales orders') && $GLOBALS['_SESSION_']->customer->id != $order->customer_id) $this->error("Permission denied");
@@ -429,6 +537,34 @@
 		public function _methods() {
 			return array(
 				'ping'			=> array(),
+				'addSalesOrder'	=> array(
+					'description'	=> 'Add a new sales document (SalesOrder)',
+					'authorization_required' => true,
+					'token_required' => true,
+					'privilege_required' => 'create sales order',
+					'parameters' => array(
+						'code' => array('required' => false),
+						'customer_code' => array('required' => false),
+						'customer_id' => array('required' => false),
+						'status' => array('required' => false),
+						'salesperson_code' => array('required' => false),
+						'customer_order_number' => array('required' => false),
+						'local_order_number' => array('required' => false),
+					),
+				),
+				'addSalesOrderItem' => array(
+					'description'	=> 'Add a line item to a sales order',
+					'authorization_required' => true,
+					'token_required' => true,
+					'privilege_required' => 'edit sales order',
+					'parameters' => array(
+						'order_code' => array('required' => true),
+						'product_code' => array('required' => true),
+						'quantity' => array('required' => false),
+						'unit_price' => array('required' => false),
+						'description' => array('required' => false),
+					),
+				),
 				'addOrder'		=> array(
 					'description'	=> 'Add a new sales order',
 					'authorization_required' => true,

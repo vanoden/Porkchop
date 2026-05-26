@@ -427,12 +427,19 @@
 			return true;
 		}
 
-		public function transfer($org_id,$reason) {
+		/**
+		 * Move this instance to another organization (organization_id update only).
+		 *
+		 * @param int $org_id Target organization ID
+		 * @param string $reason Reason for the move (logged)
+		 * @return bool True on success, false on failure (see error())
+		 */
+		public function transferToOrganization(int $org_id, string $reason): bool {
 			if ($this->update(array('organization_id' => $org_id))) {
 				app_log("Transfered ".$this->code." to $org_id",'notice');
 				return true;
 			}
-			else return false;
+			return false;
 		}
 
 		/**

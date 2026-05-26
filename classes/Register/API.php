@@ -1430,15 +1430,24 @@
 			$parameters->city = $_REQUEST['city'];
 			$parameters->zip_code = $_REQUEST['zip_code'];
 
+			$admin = null;
 			if ($_REQUEST['admin_id']) {
 				$parameters->admin_id = $_REQUEST['admin_id'];
+				$admin = new \Geography\Admin((int) $_REQUEST['admin_id']);
+				if (! $admin->id) {
+					$this->notFound("Province not found");
+					return false;
+				}
 			}
 			elseif ($_REQUEST['admin_code']) {
-				$admin = new Admin();
+				$admin = new \Geography\Admin();
 				if (! $admin->get($_REQUEST['admin_code'])) {
 					$this->notFound("Province not found");
 					return false;
 				}
+			}
+			if (! $admin || ! $admin->id) {
+				$this->invalidRequest("admin_id or admin_code required");
 			}
 			$province = new \Geography\Province();
 			if (! $province->get($admin->id,$_REQUEST['province'])) $this->error("Province not found");
@@ -1453,6 +1462,198 @@
 			else {
 				$this->error("Cannot add location: ".$location->error());
 			}
+		}
+
+		/** @apiMethod addAssociatedLocation()
+		 * Add a new location and optionally associate it to an org/user and set defaults.
+		 *
+		 * Parameters:
+		 * - name, address_1, address_2, city, zip_code, province_id (required)
+		 * - organization_id OR organization_code (optional)
+		 * - customer_id OR customer_code/login (optional)
+		 * - default_billing (0/1), default_shipping (0/1) (optional)
+		 * - hidden (0/1), notes (optional)
+		 */
+		public function addAssociatedLocation() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+			$this->requirePrivilege("manage customers");
+
+			// Validate required fields
+			if (empty($_REQUEST['name'])) $this->invalidRequest("name required");
+			if (empty($_REQUEST['address_1'])) $this->invalidRequest("address_1 required");
+			if (!isset($_REQUEST['address_2'])) $_REQUEST['address_2'] = '';
+			if (empty($_REQUEST['city'])) $this->invalidRequest("city required");
+			if (empty($_REQUEST['zip_code'])) $this->invalidRequest("zip_code required");
+			$province = null;
+			if (!empty($_REQUEST['province_id']) && is_numeric($_REQUEST['province_id'])) {
+				$province = new \Geography\Province((int)$_REQUEST['province_id']);
+				if (!$province->id) $this->notFound("Province not found");
+			}
+			else {
+				// Fallback: resolve province from country + province string (name or abbreviation)
+				$country_abbrev = $_REQUEST['country_abbreviation'] ?? $_REQUEST['country'] ?? null;
+				$province_name = $_REQUEST['province'] ?? $_REQUEST['province_abbreviation'] ?? null;
+				if (empty($country_abbrev) || empty($province_name)) {
+					$this->invalidRequest("province_id or (country_abbreviation + province) required");
+				}
+				$country = new \Geography\Country();
+				if (!$country->get($country_abbrev)) $this->notFound("Country not found");
+				$province = new \Geography\Province();
+				if (!$province->getProvince($country->id, $province_name)) $this->notFound("Province not found");
+			}
+
+			// Resolve optional organization
+			$organization = null;
+			if (!empty($_REQUEST['organization_id']) && is_numeric($_REQUEST['organization_id'])) {
+				$organization = new \Register\Organization((int)$_REQUEST['organization_id']);
+				if (!$organization->exists()) $this->notFound("Organization not found");
+			}
+			elseif (!empty($_REQUEST['organization_code'])) {
+				$organization = new \Register\Organization();
+				$organization->get($_REQUEST['organization_code']);
+				if (!$organization->id) $this->notFound("Organization not found");
+			}
+
+			// Resolve optional customer
+			$customer = null;
+			if (!empty($_REQUEST['customer_id']) && is_numeric($_REQUEST['customer_id'])) {
+				$customer = new \Register\Customer((int)$_REQUEST['customer_id']);
+				if (!$customer->exists()) $this->notFound("Customer not found");
+			}
+			elseif (!empty($_REQUEST['customer_code'])) {
+				$customer = new \Register\Customer();
+				$customer->get($_REQUEST['customer_code']);
+				if (!$customer->id) $this->notFound("Customer not found");
+			}
+			elseif (!empty($_REQUEST['login'])) {
+				$customer = new \Register\Customer();
+				$customer->get($_REQUEST['login']);
+				if (!$customer->id) $this->notFound("Customer not found");
+			}
+
+			$locationParams = array(
+				'name' => $_REQUEST['name'],
+				'address_1' => $_REQUEST['address_1'],
+				'address_2' => $_REQUEST['address_2'] ?? '',
+				'city' => $_REQUEST['city'],
+				'zip_code' => $_REQUEST['zip_code'],
+				'province_id' => (int)$province->id,
+			);
+			if (isset($_REQUEST['notes'])) $locationParams['notes'] = $_REQUEST['notes'];
+			if (isset($_REQUEST['hidden'])) $locationParams['hidden'] = (int)!!$_REQUEST['hidden'];
+
+			$location = new \Register\Location();
+			if (!$location->add($locationParams)) {
+				$this->error("Cannot add location: ".$location->error());
+			}
+
+			// Associate location
+			if ($organization && $organization->id) {
+				if (!$location->associateOrganization($organization->id)) {
+					$this->error("Cannot associate organization: ".$location->error());
+				}
+			}
+			if ($customer && $customer->id) {
+				if (!$location->associateUser($customer->id)) {
+					$this->error("Cannot associate user: ".$location->error());
+				}
+			}
+
+			// Defaults
+			$default_billing = !empty($_REQUEST['default_billing']);
+			$default_shipping = !empty($_REQUEST['default_shipping']);
+
+			if ($organization && $organization->id) {
+				$update = array();
+				if ($default_billing) $update['default_billing_location_id'] = $location->id;
+				if ($default_shipping) $update['default_shipping_location_id'] = $location->id;
+				if (count($update)) {
+					$organization->update($update);
+					if ($organization->error()) $this->error("Error setting organization defaults: ".$organization->error());
+				}
+			}
+			if ($customer && $customer->id) {
+				$update = array('code' => $customer->code);
+				if ($default_billing) $update['default_billing_location_id'] = $location->id;
+				if ($default_shipping) $update['default_shipping_location_id'] = $location->id;
+				if (count($update) > 1) {
+					$customer->update($update);
+					if ($customer->error()) $this->error("Error setting customer defaults: ".$customer->error());
+				}
+			}
+
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('location', $location);
+			if ($organization && $organization->id) $response->addElement('organization', $organization);
+			if ($customer && $customer->id) $response->addElement('customer', $customer);
+			$response->print();
+		}
+
+		/** @apiMethod getCustomerLocations()
+		 * Return locations for a given customer (admin use).
+		 */
+		public function getCustomerLocations() {
+			$this->requirePrivilege("manage customers");
+
+			$customer = null;
+			if (!empty($_REQUEST['customer_id']) && is_numeric($_REQUEST['customer_id'])) {
+				$customer = new \Register\Customer((int)$_REQUEST['customer_id']);
+			}
+			elseif (!empty($_REQUEST['customer_code'])) {
+				$customer = new \Register\Customer();
+				$customer->get($_REQUEST['customer_code']);
+			}
+			elseif (!empty($_REQUEST['login'])) {
+				$customer = new \Register\Customer();
+				$customer->get($_REQUEST['login']);
+			}
+			else {
+				$this->invalidRequest("customer_id or customer_code required");
+			}
+
+			if (!$customer || !$customer->id) $this->notFound("Customer not found");
+
+			$include_hidden = !empty($_REQUEST['include_hidden']);
+			$locations = $customer->locations(array('include_hidden' => $include_hidden));
+			if (!is_array($locations)) $locations = array();
+
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('customer', $customer);
+			$response->addElement('location', $locations);
+			$response->print();
+		}
+
+		/** @apiMethod getOrganizationLocations()
+		 * Return locations for a given organization (admin use).
+		 */
+		public function getOrganizationLocations() {
+			$this->requirePrivilege("manage customers");
+
+			$organization = null;
+			if (!empty($_REQUEST['organization_id']) && is_numeric($_REQUEST['organization_id'])) {
+				$organization = new \Register\Organization((int)$_REQUEST['organization_id']);
+			}
+			elseif (!empty($_REQUEST['organization_code'])) {
+				$organization = new \Register\Organization();
+				$organization->get($_REQUEST['organization_code']);
+			}
+			else {
+				$this->invalidRequest("organization_id or organization_code required");
+			}
+
+			if (!$organization || !$organization->id) $this->notFound("Organization not found");
+
+			$include_hidden = !empty($_REQUEST['include_hidden']);
+			$locations = $organization->locations(array('include_hidden' => $include_hidden));
+			if (!is_array($locations)) $locations = array();
+
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('organization', $organization);
+			$response->addElement('location', $locations);
+			$response->print();
 		}
 
 		/** @apiMethod findPrivileges()
@@ -1547,6 +1748,144 @@
 
 			$response = new \APIResponse();
 			$response->addElement('registration',$queue);
+			$response->print();
+		}
+
+		/** @apiMethod addPendingRegistration()
+		 * Create a customer registration queue entry (for admin seeding / testing).
+		 */
+		public function addPendingRegistration() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+			$this->requirePrivilege("manage customers");
+
+			if (empty($_REQUEST['login'])) $this->error("login required");
+
+			$login = trim($_REQUEST['login']);
+			$customer = new \Register\Customer();
+			if (!$customer->validLogin($login)) $this->error("Invalid login");
+
+			$queue = new \Register\Queue();
+			if ($queue->get($login)) {
+				$this->error("Pending registration already exists for this login");
+				return;
+			}
+
+			$existing = new \Register\Customer();
+			if ($existing->get($login)) {
+				$this->error("Login already in use");
+				return;
+			}
+
+			if (empty($_REQUEST['password'])) $this->error("password required");
+			if (empty($_REQUEST['first_name'])) $this->error("first_name required");
+			if (empty($_REQUEST['last_name'])) $this->error("last_name required");
+			if (empty($_REQUEST['organization_name'])) $this->error("organization_name required");
+
+			$validation_key = !empty($_REQUEST['validation_key'])
+				? $_REQUEST['validation_key']
+				: md5(uniqid((string)mt_rand(), true));
+
+			$params = array(
+				'login' => $login,
+				'password' => $_REQUEST['password'],
+				'first_name' => noXSS(trim($_REQUEST['first_name'])),
+				'last_name' => noXSS(trim($_REQUEST['last_name'])),
+				'validation_key' => $validation_key,
+				'automation' => true,
+				'status' => 'NEW',
+			);
+
+			$customer->add($params);
+			if ($customer->error()) {
+				$this->error($customer->error());
+				return;
+			}
+
+			if (!empty($_REQUEST['email'])) {
+				$customer->addContact(array(
+					'type' => 'email',
+					'description' => !empty($_REQUEST['email_description']) ? $_REQUEST['email_description'] : 'Primary',
+					'value' => trim($_REQUEST['email']),
+					'notify' => 1,
+				));
+				if ($customer->error()) {
+					$this->error($customer->error());
+					return;
+				}
+			}
+
+			if (!empty($_REQUEST['phone'])) {
+				$customer->addContact(array(
+					'type' => 'phone',
+					'description' => !empty($_REQUEST['phone_description']) ? $_REQUEST['phone_description'] : 'Primary',
+					'value' => trim($_REQUEST['phone']),
+				));
+				if ($customer->error()) {
+					$this->error($customer->error());
+					return;
+				}
+			}
+
+			$product_id = 0;
+			if (!empty($_REQUEST['product_code'])) {
+				$product = new \Product\Item();
+				if ($product->get($_REQUEST['product_code'])) {
+					$product_id = $product->id;
+				} else {
+					$this->error("Product not found");
+					return;
+				}
+			} elseif (!empty($_REQUEST['product_id']) && is_numeric($_REQUEST['product_id'])) {
+				$product_id = (int)$_REQUEST['product_id'];
+			}
+
+			$queue_code = !empty($_REQUEST['queue_code']) ? trim($_REQUEST['queue_code']) : ('pending-' . $login);
+
+			$queueParams = array(
+				'name' => noXSS(trim($_REQUEST['organization_name'])),
+				'code' => $queue_code,
+				'is_reseller' => !empty($_REQUEST['is_reseller']) ? 1 : 0,
+				'assigned_reseller_id' => (int)($_REQUEST['assigned_reseller_id'] ?? 0),
+				'address' => noXSS(trim($_REQUEST['address'] ?? '')),
+				'city' => noXSS(trim($_REQUEST['city'] ?? '')),
+				'state' => noXSS(trim($_REQUEST['state'] ?? '')),
+				'zip' => noXSS(trim($_REQUEST['zip'] ?? '')),
+				'product_id' => $product_id,
+				'serial_number' => $_REQUEST['serial_number'] ?? '',
+				'register_user_id' => $customer->id,
+			);
+
+			$queue->add($queueParams);
+			if ($queue->error()) {
+				$this->error($queue->error());
+				return;
+			}
+
+			$status = !empty($_REQUEST['status']) ? strtoupper($_REQUEST['status']) : 'VERIFYING';
+			if ($queue->validStatus($status)) {
+				$queue->update(array('status' => $status));
+				if ($queue->error()) {
+					$this->error($queue->error());
+					return;
+				}
+			} else {
+				$this->error("Invalid status");
+				return;
+			}
+
+			if (isset($_REQUEST['notes'])) {
+				$queue->update(array('notes' => noXSS(trim($_REQUEST['notes']))));
+				if ($queue->error()) {
+					$this->error($queue->error());
+					return;
+				}
+			}
+
+			$queue->details();
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('registration', $queue);
+			$response->addElement('customer', $customer);
 			$response->print();
 		}
 
@@ -2420,6 +2759,73 @@
 						)
 					)
 				),
+				'findLocations' => array(
+					'description' => 'Find locations for an organization',
+					'authentication_required' => true,
+					'privilege_required' => 'manage customers',
+					'return_element' => 'location',
+					'return_type' => 'Register::Location',
+					'parameters' => array(
+						'organization_code' => array(
+							'required' => false,
+							'validation_method' => 'Register::Organization::validCode()'
+						),
+						'organization_id' => array(
+							'required' => false,
+							'content-type' => 'int',
+						)
+					)
+				),
+				'addAssociatedLocation' => array(
+					'description' => 'Add a location and optionally associate it to org/user and set defaults',
+					'authentication_required' => true,
+					'privilege_required' => 'manage customers',
+					'return_element' => 'location',
+					'return_type' => 'Register::Location',
+					'parameters' => array(
+						'name' => array('required' => true),
+						'address_1' => array('required' => true),
+						'address_2' => array('required' => false),
+						'city' => array('required' => true),
+						'zip_code' => array('required' => true),
+						'province_id' => array('required' => false, 'content-type' => 'int'),
+						'country_abbreviation' => array('required' => false),
+						'province' => array('required' => false),
+						'organization_code' => array('required' => false, 'validation_method' => 'Register::Organization::validCode()'),
+						'organization_id' => array('required' => false, 'content-type' => 'int'),
+						'customer_id' => array('required' => false, 'content-type' => 'int'),
+						'customer_code' => array('required' => false, 'validation_method' => 'Register::Customer::validCode()'),
+						'default_billing' => array('required' => false),
+						'default_shipping' => array('required' => false),
+						'hidden' => array('required' => false),
+						'notes' => array('required' => false),
+					)
+				),
+				'getCustomerLocations' => array(
+					'description' => 'Get locations for a customer (admin)',
+					'authentication_required' => true,
+					'privilege_required' => 'manage customers',
+					'return_element' => 'location',
+					'return_type' => 'Register::Location',
+					'parameters' => array(
+						'customer_id' => array('required' => false, 'content-type' => 'int'),
+						'customer_code' => array('required' => false, 'validation_method' => 'Register::Customer::validCode()'),
+						'login' => array('required' => false, 'validation_method' => 'Register::Customer::validCode()'),
+						'include_hidden' => array('required' => false),
+					)
+				),
+				'getOrganizationLocations' => array(
+					'description' => 'Get locations for an organization (admin)',
+					'authentication_required' => true,
+					'privilege_required' => 'manage customers',
+					'return_element' => 'location',
+					'return_type' => 'Register::Location',
+					'parameters' => array(
+						'organization_id' => array('required' => false, 'content-type' => 'int'),
+						'organization_code' => array('required' => false, 'validation_method' => 'Register::Organization::validCode()'),
+						'include_hidden' => array('required' => false),
+					)
+				),
 				'findPendingRegistrations' => array(
 					'description'	=> 'Get list of queued customer registrations',
 					'authentication_required'	=> true,
@@ -2445,6 +2851,26 @@
 							'required' => true,
 							'validation_method'	=> 'Register::Customer::validCode()'
 						)
+					)
+				),
+				'addPendingRegistration' => array(
+					'description'	=> 'Add a pending customer registration (admin seeding)',
+					'authentication_required'	=> true,
+					'privilege_required' => 'manage customers',
+					'return_element'	=> 'registration',
+					'return_type'		=> 'Register::Queue',
+					'parameters'	=> array(
+						'login'	=> array(
+							'required' => true,
+							'validation_method'	=> 'Register::Customer::validCode()'
+						),
+						'password' => array('required' => true),
+						'first_name' => array('required' => true),
+						'last_name' => array('required' => true),
+						'organization_name' => array('required' => true),
+						'status' => array(
+							'options' => $queue->statii()
+						),
 					)
 				),
 				'getRegistrationVerificationURL' => array(
