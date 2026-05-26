@@ -23,7 +23,7 @@
 	abstract class Document extends \BaseModel {
 		public $code;						// Unique Code for Document
 		public $status;						// Document Status (string value)
-		protected DocumentType $type;		// Document Type
+		public $type;						// Document Type (SALES_ORDER, PURCHASE_ORDER, …)
 		public $customer_id;				// ID of \Register\Customer purchasing product
 		public $customer_organization_id;	// ID of \Register\Organization to which the customer belongs
 		public $seller_id;					// ID of \Register\Customer selling product
@@ -36,80 +36,99 @@
 
 		public function __construct($id = 0) {
 			$this->_tableName = "sales_documents";
-			$this->_tableNumberColumn = 'local_document_number';
-			$this->_addTypes(array('SALE','PURCHASE','INVENTORY','RETURN'));
+			// DB column is `local_order_number` (legacy code refers to "local_document_number")
+			$this->_tableNumberColumn = 'local_order_number';
+			$this->_addTypes([
+				DocumentType::SALES->value,
+				DocumentType::PURCHASE->value,
+				DocumentType::INVENTORY->value,
+				DocumentType::RETURN->value,
+			]);
 			$this->_addStatus(array('NEW','QUOTE','CANCELLED','APPROVED','ACCEPTED','COMPLETE'));
 			parent::__construct($id);
 		}
 
 		public function add($parameters = []) {
-			// Clear Previous Errors
 			$this->clearError();
-
-			// Initialize Database Service
 			$database = new \Database\Service();
 
-			// Validate Inputs
-			$customer = new \Register\Customer($parameters['customer_id']);
+			$customer = new \Register\Customer($parameters['customer_id'] ?? 0);
 			if (! $customer->id) {
 				$this->error("Customer not found");
 				return false;
 			}
 
-            if (isset($parameters['seller_id'])) {
-    			$seller = new \Register\Admin($parameters['seller_id']);
-	    		if (! $seller->id) {
-		    		$this->error("Seller not found");
-			    	return false;
-			    }
-            }
-
-			if (!empty($parameters['type'])) {
-				if ($this->validType($parameters['type'])) $type = $parameters['type'];
-				else {
+			if (! empty($parameters['type'])) {
+				if (! $this->validType($parameters['type'])) {
 					$this->addError("Invalid type");
 					return false;
 				}
+				$type = $parameters['type'];
+			}
+			elseif ($this->type instanceof DocumentType) {
+				$type = $this->type->value;
+			}
+			elseif (is_string($this->type) && $this->type !== '') {
+				$type = $this->type;
 			}
 			else {
 				$this->error("Document Type Required");
 				return false;
 			}
 
-			if (!empty($parameters['status'])) {
-				if ($this->validStatus($parameters['status'])) $status = $parameters['status'];
-				else {
+			if (! empty($parameters['status'])) {
+				if (! $this->validStatus($parameters['status'])) {
 					$this->addError("Invalid status");
 					return false;
 				}
+				$status = $parameters['status'];
 			}
-			else $status = 'NEW';
-			if (!empty($parameters['code'])) {
-				if ($this->validCode($parameters['code'])) $code = $parameters['code'];
-				else {
+			else {
+				$status = 'NEW';
+			}
+
+			if (! empty($parameters['code'])) {
+				if (! $this->validCode($parameters['code'])) {
 					$this->addError("Invalid code");
 					return false;
 				}
+				$code = $parameters['code'];
 			}
-			else $code = uniqid();
+			else {
+				$code = uniqid();
+			}
 
-			// Prepare Query
+			$organization_id = $parameters['organization_id'] ?? $customer->organization_id;
+			$salesperson_id = $parameters['salesperson_id'] ?? ($GLOBALS['_SESSION_']->customer->id ?? null);
+			$customer_order_number = $parameters['customer_order_number'] ?? null;
+			$local_order_number = $parameters['local_document_number']
+				?? $parameters['local_order_number']
+				?? $parameters['order_number']
+				?? null;
+			$remote_order_number = $parameters['remote_document_number'] ?? $parameters['remote_order_number'] ?? null;
+			$billing_location_id = $parameters['billing_location_id'] ?? null;
+			$shipping_location_id = $parameters['shipping_location_id'] ?? null;
+
 			$add_object_query = "
-				INSERT
-				INTO	`".$this->_tableName."`
-				(		id,code,type,status,customer_id,customer_organization_id,seller_id,seller_organization_id)
-				VALUES
-				(		null,?,?,?,?,?,?,?)
+				INSERT INTO `".$this->_tableName."`
+				(	code, type, document_type, status, customer_id, organization_id, salesperson_id,
+					customer_order_number, local_order_number, remote_order_number,
+					billing_location_id, shipping_location_id)
+				VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
 			";
 
-			// Bind Parameters
 			$database->AddParam($code);
+			$database->AddParam($type);
 			$database->AddParam($type);
 			$database->AddParam($status);
 			$database->AddParam($customer->id);
-			$database->AddParam($customer->organization_id);
-			$database->AddParam($seller->id);
-			$database->AddParam($seller->organization_id);
+			$database->AddParam($organization_id);
+			$database->AddParam($salesperson_id);
+			$database->AddParam($customer_order_number);
+			$database->AddParam($local_order_number);
+			$database->AddParam($remote_order_number);
+			$database->AddParam($billing_location_id);
+			$database->AddParam($shipping_location_id);
 
 			$database->Execute($add_object_query);
 			if ($database->ErrorMsg()) {
@@ -117,17 +136,23 @@
 				return false;
 			}
 			$this->id = $database->Insert_ID();
-			
-            // audit the add event
-            $auditLog = new \Site\AuditLog\Event();
-            $auditLog->add(array(
-                'instance_id' => $this->id,
-                'description' => 'Added new '.$this->_objectName(),
-                'class_name' => get_class($this),
-                'class_method' => 'add'
-            ));
+			$this->code = $code;
+			$this->status = $status;
+			$this->exists(true);
 
-			$this->addEvent(array('new_status' => $status,'user_id' => $GLOBALS['_SESSION_']->customer->id,'type' => "CREATE"));
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add([
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add',
+			]);
+
+			$this->addEvent([
+				'new_status' => $status,
+				'user_id' => $GLOBALS['_SESSION_']->customer->id,
+				'type' => 'CREATE',
+			]);
 			return $this->update($parameters);
 		}
 
@@ -298,6 +323,19 @@
 		return new \Register\Customer($this->customer_id);
 	}
 
+	/** @method public organization()
+	 * Get the \Register\Organization for the buyer on this document.
+	 * @return \Register\Organization
+	 */
+	public function organization(): \Register\Organization {
+		$orgId = $this->customer_organization_id ?? null;
+		if (empty($orgId) && !empty($this->customer_id)) {
+			$cust = new \Register\Customer($this->customer_id);
+			$orgId = $cust->organization_id ?? null;
+		}
+		return new \Register\Organization((int)($orgId ?? 0));
+	}
+
 
 	/** @method public salesperson()
 	 *  Get the \Register\Admin who is the salesperson for this order
@@ -450,15 +488,15 @@
 		/** @method public items(parameters)
 		 * Get a list of items in the order
 		 * @param array $parameters Optional parameters for filtering items
-		 * @return \Sales\Document\ItemList|null List of items or null on error
+		 * @return array List of \Sales\Document\Item objects
 		 */
-		public function items($parameters = array()): \Sales\Document\ItemList|null {
+		public function items($parameters = array()): array {
 			$parameters['order_id'] = $this->id;
 			$itemList = new \Sales\Document\ItemList();
 			$items = $itemList->find($parameters);
 			if ($itemList->error()) {
 				$this->error($itemList->error());
-				return null;
+				return [];
 			}
 			else {
 				return $items;
@@ -498,7 +536,11 @@
 		 * @return string Customer order number
 		 */
 		public function number(): string {
-			return $this->local_document_number;
+			// Prefer the actual DB column name when present.
+			$number = $this->local_order_number ?? $this->local_document_number ?? null;
+			if (is_string($number) && $number !== '') return $number;
+			// Fall back to document code so UI doesn't fatally error.
+			return (string)($this->code ?? '');
 		}
 
 		/** @method public total()
@@ -540,8 +582,8 @@
 			// Prepare Query
 			$get_object_query = "
 				SELECT	MAX(`line_number`)
-				FROM	`$this->_tableName`
-				WHERE	`order_id` = ?
+				FROM	`sales_document_items`
+				WHERE	`document_id` = ?
 			";
 
 			// Bind Parameters

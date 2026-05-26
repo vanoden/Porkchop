@@ -21,7 +21,7 @@
 
 			$database = new \Database\Service();
 
-			$order = new \Sales\Document($parameters['order_id'] ?? $parameters['document_id'] ?? null);
+			$order = new \Sales\SalesOrder($parameters['order_id'] ?? $parameters['document_id'] ?? null);
 			if (! $order->exists()) {
 				$this->error("Document not found");
 				return false;

@@ -254,6 +254,30 @@
 		}
 	}
 
+	/** @function displayDateTime(date)
+	 * Format a MySQL datetime for display (e.g. May 26th, 9:30AM).
+	 * @param string|null $date
+	 * @return string
+	 */
+	function displayDateTime(?string $date): string {
+		if (empty($date) || preg_match('/^0000-00-00/', trim($date))) {
+			return '--';
+		}
+		try {
+			$tzName = !empty($GLOBALS['_SESSION_']->timezone) ? $GLOBALS['_SESSION_']->timezone : date_default_timezone_get();
+			$dt = new \DateTime($date, new \DateTimeZone($tzName));
+		} catch (\Exception $e) {
+			return $date;
+		}
+		$day = (int) $dt->format('j');
+		if (in_array($day % 100, [11, 12, 13], true)) {
+			$suffix = 'th';
+		} else {
+			$suffix = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][$day % 10];
+		}
+		return $dt->format('F') . ' ' . $day . $suffix . ', ' . $dt->format('g:i A');
+	}
+
 	function cache_set($key,$value,$expires=0) {
 		$cache = new \Cache\Item($GLOBALS['_CACHE_'],$key);
 		return $cache->set($value);

@@ -12,6 +12,7 @@
 		public $timestamp;
 		public $platform;
 		public $package_version_id;
+		public ?int $owner_id = null;
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'package_packages';
@@ -210,8 +211,13 @@
 			$this->platform = $object->platform;
 			$this->package_version_id = isset($object->package_version_id) ? $object->package_version_id : null;
 			$this->repository_id = $object->repository_id;
+			$this->owner_id = $object->owner_id;
 
 			return true;
+		}
+
+		public function owner(): \Register\Customer {
+			return new \Register\Customer($this->owner_id);
 		}
 
 		public function repository() {

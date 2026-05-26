@@ -79,8 +79,8 @@ class Event Extends \BaseModel {
 
 		if (empty($GLOBALS['_SESSION_']->customer->id)) {
 			if (!empty($params['customer_id'])) $customer_id = $params['customer_id'];
-			elseif ($_SERVER['SCRIPT_FILENAME'] == BASE."/core/install.php") {
-				// Allow install.php to run without a customer ID
+			elseif ($this->isMaintenanceScript()) {
+				// Install/upgrade run without a logged-in customer; skip audit
 				return true;
 			}
 			else {
@@ -187,5 +187,16 @@ class Event Extends \BaseModel {
 	public function appendDescription($description) {
 		if (!empty($this->description)) $this->description .= ', ';
 		$this->description .= $description;
+	}
+
+	/** True when running install/upgrade scripts (no session customer). */
+	private function isMaintenanceScript(): bool {
+		$script = $_SERVER['SCRIPT_FILENAME'] ?? '';
+		return in_array($script, [
+			BASE."/core/install.php",
+			BASE."/cli/install.php",
+			BASE."/core/upgrade.php",
+			BASE."/cli/upgrade.php",
+		], true);
 	}
 }

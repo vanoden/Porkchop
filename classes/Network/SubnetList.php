@@ -198,6 +198,11 @@
 				return false;
 			}
 
+			// Table may not exist yet during install/upgrade (risk scoring runs first)
+			if (! $this->subnetsTableExists()) {
+				return false;
+			}
+
 			// Prepare Query to Check if IP is in Subnet
 			$order_by = "`address` DESC, `size` ASC, `managed` DESC";
 			$check_ip_query = "
@@ -311,5 +316,14 @@
 				}
 			}
 			return $subnets;
+		}
+
+		/** network_subnets exists (may be false during install/upgrade before Network schema). */
+		private function subnetsTableExists(): bool {
+			static $exists = null;
+			if ($exists === true) return true;
+			$tables = $GLOBALS['_database']->MetaTables();
+			$exists = in_array('network_subnets', $tables, true);
+			return $exists;
 		}
 	}
