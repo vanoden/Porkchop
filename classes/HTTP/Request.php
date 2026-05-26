@@ -494,7 +494,18 @@
 				}
 			}
 
-			if (preg_match('/^([\/\w\-\_\.]+)\?(.*)$/',$uri,$matches)) {
+			if (preg_match('/^https?\:\/\/(\w[\w\-\.]*)(\/.*)/',$uri)) {
+				$uri = $matches[2];
+			}
+
+			if ($url == "") {
+				$uri = "/";
+			}
+			if ($url == "/") {
+				# All Set
+				$query_string = "";
+			}
+			elseif (preg_match('/^([\/\w\-\_\.]+)\?(.*)$/',$uri,$matches)) {
 				$uri = $matches[1];
 				$query_string = $matches[2];
 			}
@@ -504,7 +515,7 @@
 			}
 			else {
 				# Unparseable URI
-				app_log("WAF RULE: unparseable URI",'info');
+				app_log("WAF RULE: unparseable URI: '".$uri."'",'info');
 				$risk_level += 80;
 				$uri = null;
 			}
