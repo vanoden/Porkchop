@@ -159,6 +159,9 @@ class BaseModel extends \BaseClass {
 	 * @return array Names of fields in object
 	 */
 	public function _fields() {
+		if (! is_array($this->_fields)) {
+			$this->_fields = array();
+		}
 		if (count($this->_fields) < 1) {
 			$properties = get_object_vars($this);
 			foreach ($properties as $property => $stuff) {
@@ -527,6 +530,7 @@ class BaseModel extends \BaseClass {
 				elseif (gettype($this->$key) == "float") $this->$key = 0.0;
 				elseif (gettype($this->$key) == "boolean") $this->$key = false;
 				elseif (gettype($this->$key) == "string") $this->$key = '';
+				elseif (gettype($this->$key) == "array") $this->$key = array();
 				else $this->$key = null;
 			}
 			$this->exists(false);

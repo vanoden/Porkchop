@@ -144,8 +144,18 @@
 	###################################################
 	if (! defined('APPLICATION_LOG_HOST')) define('APPLICATION_LOG_HOST','127.0.0.1');
 	if (! defined('APPLICATION_LOG_PORT')) define('APPLICATION_LOG_PORT','514');
-	if (! defined('APPLICATION_LOG_TYPE')) define('APPLICATION_LOG_TYPE','syslog');
-	if (! defined('APPLICATION_LOG')) define('APPLICATION_LOG','');
+	if (! defined('APPLICATION_LOG_TYPE')) {
+		define(
+			'APPLICATION_LOG_TYPE',
+			(defined('LOG_ROOT') && LOG_ROOT !== '') ? 'file' : 'syslog'
+		);
+	}
+	if (! defined('APPLICATION_LOG')) {
+		define(
+			'APPLICATION_LOG',
+			(defined('LOG_ROOT') && LOG_ROOT !== '') ? LOG_ROOT.'/application' : ''
+		);
+	}
 	$logger = \Site\Logger::get_instance(array('type' => $GLOBALS['_config']->log_type,'path' => APPLICATION_LOG,'host' => APPLICATION_LOG_HOST, 'port' => APPLICATION_LOG_PORT, 'level' => $GLOBALS['_config']->log_level));
 	if ($logger->error()) {
 		error_log("Error initializing logger: ".$logger->error());

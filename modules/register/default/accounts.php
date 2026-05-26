@@ -24,43 +24,76 @@
 <!-- Page Header -->
 <?= $page->showAdminPageInfo() ?>
 
-<form id="custSearch" method="get">
-    <div id="search_container">
-	    <input type="text" id="searchAccountInput" name="search" placeholder="account name" value="<?=isset($_REQUEST['search']) ? htmlspecialchars($_REQUEST['search']) : ''?>"/>
-	    <div><input type="checkbox" name="hidden" value="1" <?php if (isset($_REQUEST['hidden'])) print "checked"; ?> /><label>Hidden</label></div>
-	    <div><input type="checkbox" name="expired" value="1" <?php if (isset($_REQUEST['expired'])) print "checked"; ?> /><label>Expired</label></div>
-	    <div><input type="checkbox" name="blocked" value="1" <?php if (isset($_REQUEST['blocked'])) print "checked"; ?> /><label>Blocked</label></div>
-	    <div><input type="checkbox" name="deleted" value="1" <?php if (isset($_REQUEST['deleted'])) print "checked"; ?> /><label>Deleted</label></div>
-	    <div><input type="hidden" id="start" name="start" value="0"></div>
-        <div><label>Records per page:</label><input type="text" name="<?=$pagination->sizeElemName?>" class="value input width-45px" value="<?=$pagination->size()?>" /></div>
-      <button id="searchOrganizationButton" name="btn_search" onclick="submitSearch(0)">Search</button>
-    </div>
+<form id="custSearch" class="filter-bar" method="get">
+  <input type="text" id="searchAccountInput" name="search" placeholder="account name" value="<?=isset($_REQUEST['search']) ? htmlspecialchars($_REQUEST['search']) : ''?>">
+
+  <label class="check-field">
+    <input type="checkbox" name="hidden" value="1" <?php if (isset($_REQUEST['hidden'])) print "checked"; ?>>
+    Hidden
+  </label>
+
+  <label class="check-field">
+    <input type="checkbox" name="expired" value="1" <?php if (isset($_REQUEST['expired'])) print "checked"; ?>>
+    Expired
+  </label>
+
+  <label class="check-field">
+    <input type="checkbox" name="blocked" value="1" <?php if (isset($_REQUEST['blocked'])) print "checked"; ?>>
+    Blocked
+  </label>
+
+  <label class="check-field">
+    <input type="checkbox" name="deleted" value="1" <?php if (isset($_REQUEST['deleted'])) print "checked"; ?>>
+    Deleted
+  </label>
+
+  <input type="hidden" id="start" name="start" value="0">
+
+  <div class="form-field form-field--cluster">
+    <label for="<?=$pagination->sizeElemName?>">Records per page:</label>
+    <input type="text" id="<?=$pagination->sizeElemName?>" name="<?=$pagination->sizeElemName?>" class="value input width-45px" value="<?=$pagination->size()?>">
+  </div>
+
+  <div class="button-group">
+    <button type="submit" id="searchOrganizationButton" name="btn_search" onclick="submitSearch(0)">Search</button>
+  </div>
 </form>
 
-<div class="tableBody">
-  <div class="tableRowHeader">
-    <div class="tableCell width-18per">Login</div>
-    <div class="tableCell width-15per">First Name</div>
-    <div class="tableCell width-15per">Last Name</div>
-    <div class="tableCell width-10per">Status</div>
-    <div class="tableCell width-18per">Last Active</div>
-  </div>
-  <?php
-    if (! $page->errorCount()) {
-    foreach ($customers as $customer) { 
-        if (isset($greenbar)) $greenbar = ''; else $greenbar = " greenbar";
-  ?>
-  <div class="tableRow">
-    <div class="tableCell"><label for="customer" class="display-none">Login</label><a class="value<?=$greenbar?>" href="<?=PATH."/_register/account?customer_id=".$customer->id?>"><?=$customer->code?></a></div>
-    <div class="tableCell"><label for="first" class="display-none">First Name</label><?=htmlspecialchars($customer->first_name)?></div>
-    <div class="tableCell"><label for="last" class="display-none">Last Name</label><?=htmlspecialchars($customer->last_name)?></div>
-    <div class="tableCell"><label for="status" class="display-none">Status</label><?=htmlspecialchars($customer->status)?></div>
-    <div class="tableCell"><label for="activity" class="display-none">Last Active</label><?=$customer->last_active()?></div>
-  </div>
-  <?php		
-    }}
-  ?>
-</div>
+<table class="responsive-table responsive-table--banded">
+  <colgroup>
+    <col class="col-w-15">
+    <col class="col-w-15">
+    <col class="col-w-15">
+    <col class="col-w-10">
+    <col>
+  </colgroup>
+  <thead>
+    <tr>
+      <th scope="col">Login</th>
+      <th scope="col">First Name</th>
+      <th scope="col">Last Name</th>
+      <th scope="col">Status</th>
+      <th scope="col">Last Active</th>
+    </tr>
+  </thead>
+  <tbody>
+<?php
+  if (! $page->errorCount()) {
+  foreach ($customers as $customer) { 
+    if (isset($greenbar)) $greenbar = ''; else $greenbar = " greenbar";
+?>
+    <tr>
+      <td data-label="Login"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/account?customer_id=".$customer->id?>"><?=$customer->code?></a></td>
+      <td data-label="First Name"><?=htmlspecialchars($customer->first_name)?></td>
+      <td data-label="Last Name"><?=htmlspecialchars($customer->last_name)?></td>
+      <td data-label="Status"><?=htmlspecialchars($customer->status)?></td>
+      <td data-label="Last Active"><?=$customer->last_active()?></td>
+    </tr>
+<?php		
+  }}
+?>
+  </tbody>
+</table>
 
 <!--    Standard Page Navigation Bar -->
 <div class="pagination" id="pagination">

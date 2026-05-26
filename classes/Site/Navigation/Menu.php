@@ -307,8 +307,33 @@ class Menu Extends \BaseModel {
 	 * @return bool
 	 */
 	private function moduleExists($module) {
-		if (empty($module) || !defined('MODULES')) return false;
-		return is_dir(MODULES . '/' . $module);
+		if (empty($module) || !defined('MODULES')) {
+			return false;
+		}
+		$base = rtrim(MODULES, '/');
+		if (is_dir($base . '/' . $module)) {
+			return true;
+		}
+		// Linux case-sensitive FS: /_form/... yields "form" but module dir may be "Form" etc.
+		$need = strtolower((string) $module);
+		if (!is_dir($base)) {
+			return false;
+		}
+		$dh = @opendir($base);
+		if ($dh === false) {
+			return false;
+		}
+		while (($entry = readdir($dh)) !== false) {
+			if ($entry === '.' || $entry === '..') {
+				continue;
+			}
+			if (strtolower($entry) === $need && is_dir($base . '/' . $entry)) {
+				closedir($dh);
+				return true;
+			}
+		}
+		closedir($dh);
+		return false;
 	}
 
 	/** @method private shouldShowMenuItem($item)
@@ -412,12 +437,12 @@ class Menu Extends \BaseModel {
 					if (in_array($item->id, $expandedItems)) $html .= ' style="display: block"';
 					$html .= '>';
 					foreach ( $item->item as $subitem ) {
-						// Sub Nav Button - no longer append expandNav parameter
-						$subButtonClass = $parameters ['subnav_button_class'];
-						if (in_array($subitem->id, $currentPageItems)) {
-							$subButtonClass .= ' current-page';
-						}
-						$html .= '<a href="' . $subitem->target . '" class="' . $subButtonClass . '">' . $subitem->title . '</a>';
+							// Sub Nav Button - no longer append expandNav parameter
+							$subLinkClass = 'nav-menu__link nav-menu__link--sub';
+							if (in_array($subitem->id, $currentPageItems)) {
+								$subLinkClass .= ' nav-menu__link--current';
+							}
+							$html .= '<a class="' . $subLinkClass . '" href="' . $subitem->target . '">' . $subitem->title . '</a>';
 					}
 					$html .= '</div>';
 				}
@@ -444,18 +469,17 @@ class Menu Extends \BaseModel {
 		if (count($items)) {
 			if ($enhanced) {
 				$buffer = <<<END
-<ul>
-	<li class="nav-toggle">
-		<input type="checkbox" id="collapse" aria-label="Toggle menu" aria-haspopup="true" aria-expanded="false" />
-		<label for="collapse" aria-label="Open menu"></label>
-	</li>
+        <input class="nav-check" type="checkbox" id="collapse" aria-label="Toggle menu" aria-haspopup="true" aria-expanded="false" />
+        <label class="nav-burger" for="collapse" aria-label="Open menu"></label>
+        <ul class="nav-menu__list">
 
-END;
+        END;
+
 			} else {
 					$buffer = <<<END
-<ul>
-	<input type="checkbox" id="collapse" aria-haspopup="true"/>
-	<label for="collapse"></label>
+          <input class="nav-check" type="checkbox" id="collapse" aria-haspopup="true"/>
+          <label class="nav-burger" for="collapse"></label>
+          <ul class="nav-menu__list">
 
 END;
 			}
@@ -537,10 +561,16 @@ END;
 					// When mainNav and logged in, add My Account link before the Logout/Login item
 					$is_logout_login = (strpos($item->target, '/_register/logout') !== false || (stripos($item->title, 'logout') !== false && strpos($item->target, '_register') !== false) || $item->target === '/_register/login');
 					if (!empty($parameters['code']) && $parameters['code'] === 'mainNav' && $GLOBALS['_SESSION_']->customer->id && $is_logout_login) {
-						$buffer .= "\t<li><a href=\"/_register/account\">My Account</a></li>\n";
+							$buffer .= "\t<li class=\"nav-menu__item nav-menu__item--top\"><a class=\"nav-menu__link nav-menu__link--top\" href=\"/_register/account\">My Account</a></li>\n";
+
 					}
 				}
-				if (empty($item->target)) $buffer .= "\t<li><button aria-expanded=\"false\" aria-controls=\"m".$item->id."\">".$item->title."</button>\n";
+					$children = $item->children();
+					$has_children = count($children) > 0;
+							$nav_item_class = $has_children ? 'nav-menu__item nav-menu__item--top nav-menu__item--has-sub' : 'nav-menu__item nav-menu__item--top';
+					$subnav_id = 'm'.$item->id;
+					$submenu_attrs = $has_children ? " aria-expanded=\"false\" aria-controls=\"".$subnav_id."\"" : "";
+							if (empty($item->target)) $buffer .= "\t<li class=\"".$nav_item_class."\"><button class=\"nav-menu__link nav-menu__link--top\"".$submenu_attrs.">".$item->title."</button>\n";
 				else {
 					$target = $item->target;
 					if (preg_match('/\[organization.code\]/', $target)) {
@@ -557,11 +587,10 @@ END;
 							continue; // skip this item if customer id is required but not available
 						}
 					}
-					$buffer .= "\t<li><a href=\"".$target."\">".$item->title."</a>\n";
-				}
-				$children = $item->children();
-				if (count($children)) {
-					$buffer .= "\t<ul>\n";
+								$buffer .= "\t<li class=\"".$nav_item_class."\"><a class=\"nav-menu__link nav-menu__link--top\" href=\"".$target."\"".$submenu_attrs.">".$item->title."</a>\n";
+					}
+					if (count($children)) {
+								$buffer .= "\t<ul id=\"".$subnav_id."\" class=\"nav-menu__sublist\">\n";
 					foreach ( $children as $child ) {
 						if ($child->authentication_required && ! $GLOBALS['_SESSION_']->customer->id) {
 							continue;
@@ -586,7 +615,8 @@ END;
 								continue; // skip this item if customer id is required but not available
 							}
 						}
-						$buffer .= "\t\t<li><a href=\"".$child->target."\">".$child->title."</a></li>\n";
+            // Individual Subnav Items
+								$buffer .= "\t\t<li class=\"nav-menu__item nav-menu__item--sub\"><a class=\"nav-menu__link nav-menu__link--sub\" href=\"".$child->target."\">".$child->title."</a></li>\n";
 					}
 					$buffer .= "\t</ul>\n";
 				}

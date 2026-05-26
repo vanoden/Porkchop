@@ -35,15 +35,27 @@
         <div class="tableCell tableCell-width-15">Description</div>
     </div>
 
-    <?php foreach ($auditsCurrentPage as $audit) { ?>
+    <?php
+    $customerCache = [];
+    $organizationCache = [];
+    foreach ($auditsCurrentPage as $audit) {
+    ?>
     <div class="tableRow">
       <div class="tableCell"><?php echo date('F j, Y, g:i a', strtotime($audit->event_date)); ?></div>
       <div class="tableCell">
         <?php
-        $registerCustomer = new \Register\Customer($audit->user_id);
-        $registerOrganization = new \Register\Organization($registerCustomer->organization_id);
+        if (!isset($customerCache[$audit->user_id])) {
+            $customerCache[$audit->user_id] = new \Register\Customer($audit->user_id);
+        }
+        $registerCustomer = $customerCache[$audit->user_id];
+
+        $organizationId = (int)($registerCustomer->organization_id ?? 0);
+        if ($organizationId > 0 && !isset($organizationCache[$organizationId])) {
+            $organizationCache[$organizationId] = new \Register\Organization($organizationId);
+        }
+        $registerOrganization = $organizationId > 0 ? $organizationCache[$organizationId] : null;
         ?>        
-        <strong><?=$registerOrganization->name?> </strong><br/>&nbsp;&nbsp;&nbsp;&nbsp;<?=$registerCustomer->first_name?> <?=$registerCustomer->last_name?>
+        <strong><?=htmlspecialchars($registerOrganization->name ?? 'Unknown Organization')?> </strong><br/>&nbsp;&nbsp;&nbsp;&nbsp;<?=htmlspecialchars(trim(($registerCustomer->first_name ?? '') . ' ' . ($registerCustomer->last_name ?? '')))?>
       </div>
         <div class="tableCell"><?=$audit->class_method?></div>
         <div class="tableCell"><?=$audit->instance_id?></div>

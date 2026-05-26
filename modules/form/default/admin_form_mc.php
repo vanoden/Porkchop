@@ -1,14 +1,13 @@
 <?php
-	/** @view /_form/edit
+	/** @view /_form/admin_form
 	 * View for editing a form.  Displays a form with
 	 * fields for the form code, title, description,
 	 * instructions, and questions.  Provides a link
 	 * to save the form and add new questions.
 	 */
-	// Load Page
+	$page = new \Site\Page();
 	$porkchop = new \Porkchop();
-	$site = $porkchop->site();
-	$page = $site->page();
+	$can_proceed = true;
 
 	// Load Form based on parameters
 	if ($_POST['id'] ?? false) {
@@ -60,8 +59,11 @@
 					'description' => $_POST['description'] ?? '',
 					'action' => $_POST['action'] ?? '',
 					'method' => $_POST['method'] ?? 'post',
-					'instructions' => $_POST['instructions'] ?? '',
 				];
+				// Instructions are edited on versions; preserve existing form-level value unless explicitly posted.
+				if (array_key_exists('instructions', $_POST)) {
+					$parameters['instructions'] = $_POST['instructions'];
+				}
 				if (!$form->exists()) {
 					// Add new form
 					$parameters['code'] = $_POST['code'] ?? $form->code;
@@ -94,12 +96,12 @@
 
 	if ($form->exists()) {
 		$page->title("Edit Form");
-		$page->setAdminMenuSection("Forms");  // Keep Forms section open
+		$page->setAdminMenuSection("Site");
 		$page->addBreadcrumb("Forms","/_form/admin_forms");
 		$page->addBreadcrumb($form->title,"/_form/admin_form/".$form->code);
 	} else {
 		$page->title("Add Form");
-		$page->setAdminMenuSection("Forms");  // Keep Forms section open
+		$page->setAdminMenuSection("Site");
 		$page->addBreadcrumb("Forms","/_form/admin_forms");
 		$page->addBreadcrumb("Add Form");
 	}

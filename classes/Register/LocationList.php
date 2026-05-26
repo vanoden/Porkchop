@@ -3,6 +3,7 @@
 
 	class LocationList Extends \BaseListClass {
 		public function __construct() {
+			$this->_tableName = 'register_locations';
 			$this->_modelName = '\Register\Location';
 		}
 

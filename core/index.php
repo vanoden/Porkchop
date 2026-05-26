@@ -78,8 +78,18 @@
 	###################################################
 	if (! defined('APPLICATION_LOG_HOST')) define('APPLICATION_LOG_HOST','127.0.0.1');
 	if (! defined('APPLICATION_LOG_PORT')) define('APPLICATION_LOG_PORT','514');
-	if (! defined('APPLICATION_LOG_TYPE')) define('APPLICATION_LOG_TYPE','syslog');
-	if (! defined('APPLICATION_LOG')) define('APPLICATION_LOG','');
+	if (! defined('APPLICATION_LOG_TYPE')) {
+		define(
+			'APPLICATION_LOG_TYPE',
+			(defined('LOG_ROOT') && LOG_ROOT !== '') ? 'file' : 'syslog'
+		);
+	}
+	if (! defined('APPLICATION_LOG')) {
+		define(
+			'APPLICATION_LOG',
+			(defined('LOG_ROOT') && LOG_ROOT !== '') ? LOG_ROOT.'/application' : ''
+		);
+	}
 	$logger = \Site\Logger::get_instance(array('type' => APPLICATION_LOG_TYPE,'path' => APPLICATION_LOG,'host' => APPLICATION_LOG_HOST,'port' => APPLICATION_LOG_PORT));
 	if ($logger->error()) {
 		error_log("Error initializing logger: ".$logger->error());
@@ -180,6 +190,21 @@
 
 	# Require Terms Of Use Acceptance per page configuration
 	$page->confirmTOUAcceptance();
+
+	# JSON API: dispatch directly so CMS page/template resolution cannot return HTML
+	if ($_REQUEST_->view === 'api' && !empty($_REQUEST['method'])) {
+		$siteApi = new \Site();
+		$moduleName = $siteApi->findModuleAPI($_REQUEST_->module);
+		if ($moduleName) {
+			$apiClass = '\\' . $moduleName . '\\API';
+			$api = new $apiClass();
+			$method = $_REQUEST['method'];
+			if (method_exists($api, $method)) {
+				$api->$method();
+				exit;
+			}
+		}
+	}
 
 	# Static HTML - Skip CMS Processing
 	if ($page->module() == 'static') {

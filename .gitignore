@@ -35,3 +35,4 @@ docker-compose-lamp
 .codegpt
 *.code-workspace
 FPDF_Fonts/
+html.backup/

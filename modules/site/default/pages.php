@@ -72,3 +72,6 @@
   </div>
   <div class="button-bar"><input type="submit" name="button_submit" value="Update" class="input button"/></div>
 </form>
+<div class="pagination" id="pagination">
+	<?=$pagination->renderPages(); ?>
+</div>

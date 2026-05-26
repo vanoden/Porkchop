@@ -7,6 +7,28 @@
 		protected string $password = '';
 		private \Register\User\Statistics|null $_statistics = null;
 
+		/** @var array<int, Role[]> Roles list per customer ID within this request */
+		private static $_rolesQueryCacheByUserId = array();
+
+		/** @var array<string, bool> Per-request memo for identical has_privilege() checks */
+		private static $_hasPrivilegeRequestCache = array();
+
+		/** @var array<int, bool> Memo requiresOTP() per customer per request */
+		private static $_requiresOTPRequestMemo = array();
+
+		private static function clearHasPrivilegeRequestCache(?int $customer_id = null): void {
+			if ($customer_id !== null && $customer_id > 0) {
+				$p = $customer_id.'|';
+				foreach (array_keys(self::$_hasPrivilegeRequestCache) as $k) {
+					if (strpos($k, $p) === 0) {
+						unset(self::$_hasPrivilegeRequestCache[$k]);
+					}
+				}
+			} else {
+				self::$_hasPrivilegeRequestCache = array();
+			}
+		}
+
 		/**
 		 * Constructor
 		 * @param int $id 
@@ -219,6 +241,8 @@
 			$cache_key = "customer[" . $this->id . "]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
 			$cache->delete();
+			unset(self::$_rolesQueryCacheByUserId[$this->id]);
+			self::clearHasPrivilegeRequestCache((int) $this->id);
 
 			$this->recordAuditEvent($this->id,'Role '.$role->name.' assigned');
 			return true;
@@ -260,6 +284,8 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+			unset(self::$_rolesQueryCacheByUserId[$this->id]);
+			self::clearHasPrivilegeRequestCache((int) $this->id);
 			$this->recordAuditEvent($this->id,'Role '.$role->name.' removed');
 			return true;
 		}
@@ -630,6 +656,14 @@
 		 */
 		public function has_privilege($privilege_name, ?int $required_level = \Register\PrivilegeLevel::ADMINISTRATOR): bool {
 			$this->clearError();
+			$req = $required_level ?? \Register\PrivilegeLevel::ADMINISTRATOR;
+			if ($this->id) {
+				$cacheKey = $this->id.'|'.$privilege_name.'|'.$req;
+				if (isset(self::$_hasPrivilegeRequestCache[$cacheKey])) {
+					return self::$_hasPrivilegeRequestCache[$cacheKey];
+				}
+			}
+
 			$database = new \Database\Service();
 			$privilege = new \Register\Privilege();
 
@@ -660,9 +694,15 @@
 				//print_r("Privilege ".$privilege->name."[".$privilege->id."]:  User Level: ".var_export($level,true)." Required Level: ".var_export($required_level,true)."\n");
 				// Is the required level present in user's privilege level?
 				// Use bitwise check for privilege levels
-				if (inMatrix($level,$required_level)) {
+				if (inMatrix($level,$req)) {
+					if ($this->id) {
+						self::$_hasPrivilegeRequestCache[$cacheKey] = true;
+					}
 					return true;
 				}
+			}
+			if ($this->id) {
+				self::$_hasPrivilegeRequestCache[$cacheKey] = false;
 			}
 			return false;
 		}
@@ -828,6 +868,10 @@
 		public function roles() {
 			// Clear previous errors
 			$this->clearError();
+
+			if ($this->id && isset(self::$_rolesQueryCacheByUserId[$this->id])) {
+				return self::$_rolesQueryCacheByUserId[$this->id];
+			}
 	
 			// Initialize Database Service
 			$database = new \Database\Service();
@@ -857,6 +901,10 @@
 			while (list($id) = $rs->FetchRow()) {
 				$role = new Role($id);
 				array_push($roles,$role);
+			}
+
+			if ($this->id) {
+				self::$_rolesQueryCacheByUserId[$this->id] = $roles;
 			}
 			
 			return $roles;
@@ -1238,15 +1286,25 @@
 			
 			app_log("requiresOTP() called for customer ID: ".$this->id, 'trace', __FILE__, __LINE__);
 
+			if ($this->id && array_key_exists($this->id, self::$_requiresOTPRequestMemo)) {
+				return self::$_requiresOTPRequestMemo[$this->id];
+			}
+
 			// If use_otp false, return false immediately
 			$configuration = new \Site\Configuration();
 			if (!$configuration->getValueBool("use_otp")) {
+				if ($this->id) {
+					self::$_requiresOTPRequestMemo[$this->id] = false;
+				}
 				return false;
 			}
 		
 			// Check organization setting
 			$organization = $this->organization();
 			if ($organization && !empty($organization->time_based_password)) {
+				if ($this->id) {
+					self::$_requiresOTPRequestMemo[$this->id] = true;
+				}
 				return true;
 			}
 			
@@ -1254,15 +1312,24 @@
 			$userRoles = $this->roles();
 			foreach ($userRoles as $role) {
 				if (!empty($role->time_based_password)) {
+					if ($this->id) {
+						self::$_requiresOTPRequestMemo[$this->id] = true;
+					}
 					return true;
 				}
 			}
 
 			// Check user setting
 			if (!empty($this->time_based_password)) {
+				if ($this->id) {
+					self::$_requiresOTPRequestMemo[$this->id] = true;
+				}
 				return true;
 			}
-			
+
+			if ($this->id) {
+				self::$_requiresOTPRequestMemo[$this->id] = false;
+			}
 			return false;
 		}
 

@@ -3,6 +3,9 @@
 	
 	class Configuration Extends \BaseModel {
 
+		/** @var array<string, array{result: bool, key: mixed, value: mixed, readOnly: bool}> Per-request memo for Configuration::get */
+		private static $_requestGetCache = array();
+
 		public $key;
 		public $value;
 		public bool $readOnly = false;
@@ -45,12 +48,101 @@
 			else {
 				$this->value = $value;
 				app_log("Set ".$this->key." to $value");
+				unset(self::$_requestGetCache[$this->key]);
+				$this->purgeSharedConfigurationCache($this->key);
 				return true;
 			}
 		}
+
+		private function configurationKeyMayUseSharedCache(string $key): bool {
+			return $key !== '' && ! preg_match($this->_sensitivePattern, $key);
+		}
+
+		private static function sharedConfigurationCacheKey(string $key): string {
+			return 'site.configuration.snapshot.'.$key;
+		}
+
+		private function fillFromSharedConfigurationCache(string $key): bool {
+			if (! $this->configurationKeyMayUseSharedCache($key)) {
+				return false;
+			}
+			$cache = isset($GLOBALS['_CACHE_']) ? $GLOBALS['_CACHE_'] : null;
+			if (! $cache || ! $cache->connected()) {
+				return false;
+			}
+			$blob = $cache->get(self::sharedConfigurationCacheKey($key));
+			if (! is_array($blob) || ! array_key_exists('result', $blob)) {
+				return false;
+			}
+			$this->key = $blob['key'];
+			$this->value = $blob['value'];
+			$this->readOnly = isset($blob['readOnly']) ? (bool) $blob['readOnly'] : false;
+			self::$_requestGetCache[$key] = array(
+				'result' => (bool) $blob['result'],
+				'key' => $this->key,
+				'value' => $this->value,
+				'readOnly' => $this->readOnly,
+			);
+			return true;
+		}
+
+		private function pushSharedConfigurationCache(string $key, bool $result): void {
+			if (! $this->configurationKeyMayUseSharedCache($key)) {
+				return;
+			}
+			$cache = isset($GLOBALS['_CACHE_']) ? $GLOBALS['_CACHE_'] : null;
+			if (! $cache || ! $cache->connected()) {
+				return;
+			}
+			$expires = isset($GLOBALS['_config']->cache->default_expire_seconds)
+				? (int) $GLOBALS['_config']->cache->default_expire_seconds
+				: 3600;
+			$blob = array(
+				'result' => $result,
+				'key' => $this->key,
+				'value' => $this->value,
+				'readOnly' => $this->readOnly,
+			);
+			$cache->set(self::sharedConfigurationCacheKey($key), $blob, $expires);
+		}
+
+		private function purgeSharedConfigurationCache(string $key): void {
+			if (! $this->configurationKeyMayUseSharedCache($key)) {
+				return;
+			}
+			$cache = isset($GLOBALS['_CACHE_']) ? $GLOBALS['_CACHE_'] : null;
+			if (! $cache || ! $cache->connected()) {
+				return;
+			}
+			$cache->delete(self::sharedConfigurationCacheKey($key));
+		}
+
+		private function rememberGet(string $key, bool $result): bool {
+			self::$_requestGetCache[$key] = array(
+				'result' => $result,
+				'key' => $this->key,
+				'value' => $this->value,
+				'readOnly' => $this->readOnly,
+			);
+			$this->pushSharedConfigurationCache($key, $result);
+			return $result;
+		}
 		
 		public function get($key): bool {
+			if (isset(self::$_requestGetCache[$key])) {
+				$snap = self::$_requestGetCache[$key];
+				$this->key = $snap['key'];
+				$this->value = $snap['value'];
+				$this->readOnly = $snap['readOnly'];
+				return $snap['result'];
+			}
+
+			if ($this->fillFromSharedConfigurationCache($key)) {
+				return self::$_requestGetCache[$key]['result'];
+			}
+
 			$this->clearError();
+			$this->readOnly = false;
 			$database = new \Database\Service();
 
 			$get_config_query = "
@@ -72,24 +164,26 @@
 					$this->key = $key;
 					$this->value = $GLOBALS['_config']->site->{$key};
 					$this->readOnly = true;
-					return true;
+					return $this->rememberGet($key, true);
 				}
 				// Also check register config section
 				elseif (isset($GLOBALS['_config']->register->{$key})) {
 					$this->key = $key;
 					$this->value = $GLOBALS['_config']->register->{$key};
 					$this->readOnly = true;
-					return true;
+					return $this->rememberGet($key, true);
 				}
 				else {
 					$this->key = $key;
 					$this->value = null;
-					return false;
+					$this->readOnly = false;
+					return $this->rememberGet($key, false);
 				}
 			}
 			else {
 				app_log("Config record ".$this->key." found with ".$this->value);
-				return true;
+				$this->readOnly = false;
+				return $this->rememberGet($key, true);
 			}
 		}
 
@@ -184,6 +278,9 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+
+			unset(self::$_requestGetCache[$this->key]);
+			$this->purgeSharedConfigurationCache($this->key);
 
 			// audit the update event
 			$auditLog = new \Site\AuditLog\Event();

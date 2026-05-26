@@ -57,37 +57,33 @@
 				$parameters['instance_id'] = $class->id;
 
 				$pagination_start_id = $_REQUEST['pagination_start_id'] ?? 0;
-				if (!is_numeric($_REQUEST['pagination_start_id'])) $pagination_start_id = 0;
+				if (!is_numeric($pagination_start_id)) $pagination_start_id = 0;
+				$pagination_start_id = (int)$pagination_start_id;
+				if ($pagination_start_id < 0) $pagination_start_id = 0;
+
+				$recordsPerPage = 10;
 
 				// find audits
-				$controls = array('sort' => $sort_direction, 'order' => $order_by, 'pagination_start_id' => $pagination_start_id);
+				$controls = array(
+					'sort' => $sort_direction,
+					'order' => $order_by,
+					'offset' => $pagination_start_id,
+					'limit' => $recordsPerPage
+				);
 				$auditList = new \Site\AuditLog\EventList();
-				$audits = $auditList->find($parameters, $controls);
+				$auditsCurrentPage = $auditList->find($parameters, $controls);
 				if ($auditList->error()) {
 					$page->addError("Error retrieving audits: " . $auditList->error());
-					$audits = [];
+					$auditsCurrentPage = [];
 				}
 
-				// paginate results
-				$pageNumber = isset($_GET['pagination_start_id']) && is_numeric($_GET['pagination_start_id']) ? (int)$_GET['pagination_start_id'] : 1;
-				$recordsPerPage = 10;
-				$offset = ($pageNumber - 1) * $recordsPerPage;
-				$totalResults = count($audits);
-				$auditsCurrentPage = array_slice($audits, $offset, $recordsPerPage);
-				$totalPages = ceil($totalResults / $recordsPerPage);
+				$totalResults = $auditList->countMatching($parameters);
+				if ($auditList->error()) {
+					$page->addError("Error counting audits: " . $auditList->error());
+					$totalResults = 0;
+				}
 
-				$start = $_REQUEST['start'] ?? 0;
-				if (!is_numeric($_REQUEST['start'])) $start = 0;
-
-				if ($start < $recordsPerPage)
-					$prev_offset = 0;
-				else
-					$prev_offset = $start - $recordsPerPage;
-
-				$next_offset = $start + $recordsPerPage;
-				$last_offset = $totalResults - $recordsPerPage;
-
-				if ($next_offset > $totalResults) $next_offset = $pagination_start_id + $totalResults;
+				$pageNumber = (int)floor($pagination_start_id / $recordsPerPage) + 1;
 
 				$pagination = new \Site\Page\Pagination();
 				$pagination->forwardParameters(array('class_name','code','btn_submit','sort_by','order_by'));

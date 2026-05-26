@@ -9,63 +9,144 @@
 
 			if ($this->version() < 1) {
 				app_log("Upgrading ".$this->module." schema to version 1",'notice',__FILE__,__LINE__);
-				$create_table_query = "
-					CREATE TABLE IF NOT EXISTS `form_forms` (
-						`id` int(5) NOT NULL AUTO_INCREMENT,
+
+				$create_form_versions = "
+					CREATE TABLE IF NOT EXISTS `form_versions` (
+						`id` int NOT NULL AUTO_INCREMENT,
+						`form_id` int NOT NULL DEFAULT '0',
 						`code` varchar(32) NOT NULL DEFAULT '',
-						`title` varchar(64) NOT NULL DEFAULT '',
-						`user_created` int(6) DEFAULT NULL,
-						`date_created` datetime,
+						`name` varchar(64) NOT NULL DEFAULT '',
 						`description` text,
 						`instructions` text,
-						`action` varchar(128),
-						`method` enum('get','post') NOT NULL DEFAULT 'post',
+						`user_id_activated` int DEFAULT NULL,
+						`date_activated` datetime DEFAULT NULL,
 						PRIMARY KEY (`id`),
-						UNIQUE KEY `idx_form_code` (`code`)
+						UNIQUE KEY `idx_form_version_code` (`form_id`,`code`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
+				if (! $this->executeSQL($create_form_versions)) {
 					$this->SQLError($this->error());
 					return false;
 				}
 
-				$create_table_query = "
+				$create_form_forms = "
+					CREATE TABLE IF NOT EXISTS `form_forms` (
+						`id` int NOT NULL AUTO_INCREMENT,
+						`code` varchar(32) NOT NULL DEFAULT '',
+						`title` varchar(64) NOT NULL DEFAULT '',
+						`user_created` int DEFAULT NULL,
+						`date_created` datetime DEFAULT NULL,
+						`description` text,
+						`instructions` text,
+						`action` varchar(128) DEFAULT NULL,
+						`method` enum('get','post') NOT NULL DEFAULT 'post',
+						`active_version_id` int DEFAULT NULL,
+						PRIMARY KEY (`id`),
+						UNIQUE KEY `idx_form_code` (`code`),
+						KEY `idx_form_active_version` (`active_version_id`),
+						CONSTRAINT `fk_form_active_version` FOREIGN KEY (`active_version_id`) REFERENCES `form_versions` (`id`) ON DELETE SET NULL
+					) 
+				";
+				if (! $this->executeSQL($create_form_forms)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				$create_question_groups = "
+					CREATE TABLE IF NOT EXISTS `form_question_groups` (
+						`id` int NOT NULL AUTO_INCREMENT,
+						`version_id` int NOT NULL,
+						`title` varchar(128) NOT NULL DEFAULT '',
+						`instructions` text,
+						`sort_order` int NOT NULL DEFAULT '50',
+						PRIMARY KEY (`id`),
+						KEY `idx_form_question_groups` (`version_id`,`sort_order`),
+						CONSTRAINT `fk_form_question_groups_version` FOREIGN KEY (`version_id`) REFERENCES `form_versions` (`id`) ON DELETE CASCADE
+					)
+				";
+				if (! $this->executeSQL($create_question_groups)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				$create_form_questions = "
 					CREATE TABLE IF NOT EXISTS `form_questions` (
-						`id` int(10) NOT NULL AUTO_INCREMENT,
-						`form_id` int(5) NOT NULL DEFAULT '0',
+						`id` int NOT NULL AUTO_INCREMENT,
+						`aggregate_key` varchar(32) NOT NULL DEFAULT '',
 						`type` enum('hidden','text','textarea','select','checkbox','radio','submit') NOT NULL DEFAULT 'text',
 						`text` varchar(64) NOT NULL,
 						`prompt` varchar(256) NOT NULL,
 						`example` varchar(64) DEFAULT NULL,
-						`validation_pattern` varchar(128),
+						`validation_pattern` varchar(128) DEFAULT NULL,
 						`group_id` varchar(64) DEFAULT NULL,
 						`default` varchar(64) DEFAULT NULL,
-						`sort_order` INT(3) DEFAULT 50,
-						`required` INT(1) DEFAULT 0,
-						`help` varchar(256),
+						`sort_order` int DEFAULT '50',
+						`required` int DEFAULT '0',
+						`help` varchar(256) DEFAULT NULL,
 						PRIMARY KEY (`id`),
-						INDEX `idx_form_question` (`form_id`, `group_id`, `sort_order`),
-						FOREIGN KEY `fk_form_question` (`form_id`) REFERENCES `form_forms` (`id`)
-					)
+						KEY `idx_form_question` (`group_id`,`sort_order`)
+					) 
 				";
-				if (! $this->executeSQL($create_table_query)) {
+				if (! $this->executeSQL($create_form_questions)) {
 					$this->SQLError($this->error());
 					return false;
 				}
 
-				$create_table_query = "
+				$create_form_question_options = "
 					CREATE TABLE IF NOT EXISTS `form_question_options` (
-						`id` int(10) NOT NULL AUTO_INCREMENT,
-						`question_id` int(5) NOT NULL DEFAULT '0',
+						`id` int NOT NULL AUTO_INCREMENT,
+						`question_id` int NOT NULL DEFAULT '0',
 						`text` varchar(128) NOT NULL,
-						`value`	varchar(128) NOT NULL,
-						`sort_order` INT(3) NOT NULL DEFAULT 50,
+						`value` varchar(128) NOT NULL,
+						`sort_order` int NOT NULL DEFAULT '50',
 						PRIMARY KEY (`id`),
-						INDEX `idx_form_question_` (`question_id`, `sort_order`),
-						FOREIGN KEY `fk_form_option_question` (`question_id`) REFERENCES `form_questions` (`id`)
+						KEY `idx_form_question_` (`question_id`,`sort_order`),
+						CONSTRAINT `form_question_options_ibfk_1` FOREIGN KEY (`question_id`) REFERENCES `form_questions` (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
+				if (! $this->executeSQL($create_form_question_options)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				$create_form_submissions = "
+					CREATE TABLE IF NOT EXISTS `form_submissions` (
+						`id` int NOT NULL AUTO_INCREMENT,
+						`form_id` int NOT NULL,
+						`version_id` int NOT NULL,
+						`date_submitted` datetime DEFAULT NULL,
+						`object_type` varchar(64) DEFAULT NULL,
+						`object_id` int DEFAULT NULL,
+						`remote_addr` varchar(45) DEFAULT NULL,
+						PRIMARY KEY (`id`),
+						KEY `idx_form_submissions_form` (`form_id`),
+						KEY `idx_form_submissions_version` (`version_id`),
+						KEY `idx_form_submissions_object` (`object_type`,`object_id`),
+						CONSTRAINT `fk_form_submission_form` FOREIGN KEY (`form_id`) REFERENCES `form_forms` (`id`),
+						CONSTRAINT `fk_form_submission_version` FOREIGN KEY (`version_id`) REFERENCES `form_versions` (`id`)
+					)
+				";
+				if (! $this->executeSQL($create_form_submissions)) {
+					$this->SQLError($this->error());
+					return false;
+				}
+
+				$create_form_submission_answers = "
+					CREATE TABLE IF NOT EXISTS `form_submission_answers` (
+						`id` int NOT NULL AUTO_INCREMENT,
+						`submission_id` int NOT NULL,
+						`question_id` int NOT NULL,
+						`aggregate_key` varchar(32) NOT NULL DEFAULT '',
+						`value` text,
+						PRIMARY KEY (`id`),
+						KEY `idx_fsa_submission` (`submission_id`),
+						KEY `idx_fsa_question` (`question_id`),
+						KEY `idx_fsa_aggregate` (`aggregate_key`),
+						CONSTRAINT `fk_fsa_question` FOREIGN KEY (`question_id`) REFERENCES `form_questions` (`id`),
+						CONSTRAINT `fk_fsa_submission` FOREIGN KEY (`submission_id`) REFERENCES `form_submissions` (`id`) ON DELETE CASCADE
+					)
+				";
+				if (! $this->executeSQL($create_form_submission_answers)) {
 					$this->SQLError($this->error());
 					return false;
 				}
@@ -74,78 +155,6 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
-			if ($this->version() < 2) {
-				app_log("Upgrading ".$this->module." schema to version 2",'notice',__FILE__,__LINE__);
-
-				// Initialize Database Service
-				$database = new \Database\Service();
-
-				$create_table_query = "
-					CREATE TABLE IF NOT EXISTS `form_versions` (
-						`id` int(10) NOT NULL AUTO_INCREMENT,
-						`form_id` int(5) NOT NULL DEFAULT '0',
-						`code` varchar(32) NOT NULL DEFAULT '',
-						`name` varchar(64) NOT NULL DEFAULT '',
-						`description` text,
-						`instructions` text,
-						`user_id_activated` int(6) DEFAULT NULL,
-						`date_activated` datetime,
-						PRIMARY KEY (`id`),
-						UNIQUE KEY `idx_form_version_code` (`form_id`, `code`)
-					)
-				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->SQLError($this->error());
-					return false;
-				}
-
-				// See if fk_form_question exists before trying to drop it, since some users may have already manually altered their tables
-				$schema = new \Database\Schema();
-				$table = $schema->table('form_questions');
-				if ($table->has_constraint('fk_form_question')) {
-					$alter_table_query = "
-						ALTER TABLE `form_questions`
-						DROP FOREIGN KEY `fk_form_question`
-					";
-					if (! $this->executeSQL($alter_table_query)) {
-						$this->SQLError($this->error());
-						return false;
-					}
-				}
-				elseif ($table->has_constraint('form_questions_ibfk_1')) {
-					$alter_table_query = "
-						ALTER TABLE `form_questions`
-						DROP FOREIGN KEY `form_questions_ibfk_1`
-					";
-					if (! $this->executeSQL($alter_table_query)) {
-						$this->SQLError($this->error());
-						return false;
-					}
-				}
-
-				$alter_table_query = "
-					ALTER TABLE `form_questions`
-					ADD COLUMN `version_id` int(10) NOT NULL DEFAULT '0' AFTER `id`,
-					DROP COLUMN `form_id`
-				";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->SQLError($this->error());
-					return false;
-				}
-
-				$alter_table_query = "
-					ALTER TABLE `form_questions`
-					ADD FOREIGN KEY `fk_form_question_version` (`version_id`) REFERENCES `form_versions` (`id`)
-				";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->SQLError($this->error());
-					return false;
-				}
-
-				$this->setVersion(2);
-				$GLOBALS['_database']->CommitTrans();
-			}
-		
 			return true;
 		}
 	}

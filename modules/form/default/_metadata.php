@@ -1,12 +1,15 @@
 <?php
 	$modules['Form'] = array(
-		"schema"    => 2,
+		"schema"    => 1,
 		"privileges"	=> array(
 			"manage forms"
 		),
 		'templates'		=> array(
-			"admin_forms" => $templates['admin'],
-			"admin_form" => $templates['admin'],
-			"admin_version" => $templates['admin'],
+			"admin_forms" => "admin.html",
+			"admin_form" => "admin.html",
+			"admin_submissions" => "admin.html",
+			"admin_submission" => "admin.html",
+			"admin_version" => "admin.html",
+			"form" => "default.html",
 		)
 	);

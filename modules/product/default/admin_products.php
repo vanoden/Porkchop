@@ -6,25 +6,42 @@
 	}
 </script>
 
-<?=$totalRecords?> Products Found
-<a href="/_product/admin_product">New Product</a>
+<h4><?=$totalRecords?> Products Found</h4>
+<a class="button" href="/_product/admin_product">New Product</a>
 <div id="search_container">
-    <form method="get">
-        <input type="text" name="search" id="search" placeholder="search" value="<?=$_REQUEST['search'] ?? ''?>" />
-        <select name="product_type" id="product_type">
-            <option value="">All</option>
-            <option value="inventory"<?php if (($_REQUEST['product_type'] ?? '') == "inventory") { print " selected"; } ?>>Inventory</option>
-            <option value="unique"<?php if (($_REQUEST['product_type'] ?? '') == "unique") { print " selected"; } ?>>Unique</option>
-            <option value="group"<?php if (($_REQUEST['product_type'] ?? '') == "group") { print " selected"; } ?>>Group</option>
-            <option value="kit"<?php if (($_REQUEST['product_type'] ?? '') == "kit") { print " selected"; } ?>>Kit</option>
-            <option value="note"<?php if (($_REQUEST['product_type'] ?? '') == "note") { print " selected"; } ?>>Note</option>
-        </select>
-        <input type="checkbox" name="status_active" value="1" <?php if (($_REQUEST['status_active'] ?? 0) == 1) { print "checked"; } ?>/><label>Active</label>
-        <input type="checkbox" name="status_hidden" value="1" <?php if (($_REQUEST['status_hidden'] ?? 0) == 1) { print "checked"; } ?>/><label>Hidden</label>
-        <input type="checkbox" name="status_deleted" value="1" <?php if (($_REQUEST['status_deleted'] ?? 0) == 1) { print "checked"; } ?>/><label>Deleted</label>
-        <input type="submit" name="btn_search" value="Search" />
-    </form>
+  <form class="filter-bar" method="get">
+    <input type="text" name="search" id="search" placeholder="search" value="<?=htmlspecialchars($_REQUEST['search'] ?? '', ENT_QUOTES, 'UTF-8')?>">
+
+    <select name="product_type" id="product_type">
+      <option value="">All</option>
+      <option value="inventory"<?php if (($_REQUEST['product_type'] ?? '') == "inventory") { print " selected"; } ?>>Inventory</option>
+      <option value="unique"<?php if (($_REQUEST['product_type'] ?? '') == "unique") { print " selected"; } ?>>Unique</option>
+      <option value="group"<?php if (($_REQUEST['product_type'] ?? '') == "group") { print " selected"; } ?>>Group</option>
+      <option value="kit"<?php if (($_REQUEST['product_type'] ?? '') == "kit") { print " selected"; } ?>>Kit</option>
+      <option value="note"<?php if (($_REQUEST['product_type'] ?? '') == "note") { print " selected"; } ?>>Note</option>
+    </select>
+
+    <label class="check-field">
+      <input type="checkbox" name="status_active" value="1" <?php if (($_REQUEST['status_active'] ?? 0) == 1) { print "checked"; } ?>>
+      Active
+    </label>
+
+    <label class="check-field">
+      <input type="checkbox" name="status_hidden" value="1" <?php if (($_REQUEST['status_hidden'] ?? 0) == 1) { print "checked"; } ?>>
+      Hidden
+    </label>
+
+    <label class="check-field">
+      <input type="checkbox" name="status_deleted" value="1" <?php if (($_REQUEST['status_deleted'] ?? 0) == 1) { print "checked"; } ?>>
+      Deleted
+    </label>
+
+    <div class="button-group">
+      <button type="submit" name="btn_search" value="Search">Search</button>
+    </div>
+  </form>
 </div>
+
 <div class="tableBody">
     <div class="tableRowHeader">
         <div class="tableCell width-21per">Code</div>

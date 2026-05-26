@@ -198,223 +198,257 @@
 </div>
 
 <!-- ============================================== -->
-<!-- FILTER FORM -->
+<!-- FILTER FORM                                    -->
 <!-- ============================================== -->
 <div id="search_container">
-	<form method="GET" action="/_register/pending_customers">
-		<input type="text" name="search" id="search" placeholder="search" value="<?=htmlspecialchars($_REQUEST['search'] ?? '')?>">
-		<input type="text" id="dateStart" name="dateStart" placeholder="From Date" value="<?=htmlspecialchars($_REQUEST['dateStart'] ?? '')?>">
-		<input type="text" id="dateEnd" name="dateEnd" placeholder="To Date" value="<?=htmlspecialchars($_REQUEST['dateEnd'] ?? '')?>">
-		<input type="checkbox" name="VERIFYING" value="VERIFYING" <?=isset($_REQUEST['VERIFYING']) ? 'checked' : ''?>><label>Verifying</label>
-		<input type="checkbox" name="PENDING" value="PENDING" <?=isset($_REQUEST['PENDING']) || (empty($_REQUEST['VERIFYING']) && empty($_REQUEST['PENDING']) && empty($_REQUEST['APPROVED']) && empty($_REQUEST['DENIED'])) ? 'checked' : ''?>><label>Pending</label>
-		<input type="checkbox" name="APPROVED" value="APPROVED" <?=isset($_REQUEST['APPROVED']) ? 'checked' : ''?>><label>Approved</label>
-		<input type="checkbox" name="DENIED" value="DENIED" <?=isset($_REQUEST['DENIED']) ? 'checked' : ''?>><label>Denied</label>
-		<div class="button-group">
-			<input type="submit" name="btn_search" value="Search">
-			<input type="button" value="Clear" onclick="window.location.href='/_register/pending_customers'">
-		</div>
-	</form>
+  <form class="filter-bar" method="GET" action="/_register/pending_customers">
+    <input type="text" name="search" id="search" placeholder="search" value="<?= htmlspecialchars($_REQUEST['search'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <input type="text" id="dateStart" name="dateStart" placeholder="From Date" value="<?= htmlspecialchars($_REQUEST['dateStart'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <input type="text" id="dateEnd" name="dateEnd" placeholder="To Date" value="<?= htmlspecialchars($_REQUEST['dateEnd'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+
+    <label class="check-field">
+      <input type="checkbox" name="VERIFYING" value="VERIFYING" <?= isset($_REQUEST['VERIFYING']) ? 'checked' : '' ?>>Verifying</label>
+    <label class="check-field">
+      <input type="checkbox" name="PENDING" value="PENDING" <?= isset($_REQUEST['PENDING']) || (empty($_REQUEST['VERIFYING']) && empty($_REQUEST['PENDING']) && empty($_REQUEST['APPROVED']) && empty($_REQUEST['DENIED'])) ? 'checked' : '' ?>>Pending
+    </label>
+    <label class="check-field">
+      <input type="checkbox" name="APPROVED" value="APPROVED" <?= isset($_REQUEST['APPROVED']) ? 'checked' : '' ?>>Approved
+    </label>
+    <label class="check-field">
+      <input type="checkbox" name="DENIED" value="DENIED" <?= isset($_REQUEST['DENIED']) ? 'checked' : '' ?>>Denied
+    </label>
+
+    <div class="button-group">
+      <button type="submit" name="btn_search" value="Search">Search</button>
+      <button type="button" onclick="window.location.href='/_register/pending_customers'">Clear</button>
+    </div>
+  </form>
 </div>
 
 <!-- ============================================== -->
 <!-- PENDING CUSTOMERS LIST -->
 <!-- ============================================== -->
 <h3>Pending Customers</h3>
-<section class="tableBody clean min-tablet">
-  <div class="tableRowHeader">
-    <div class="tableCell width-15per">Organization</div>
-    <div class="tableCell width-15per">Customer Info</div>
-    <div class="tableCell width-12per">Status</div>
-    <div class="tableCell width-10per">Date</div>
-    <div class="tableCell width-15per">Address</div>
-    <div class="tableCell width-13per">Contact</div>
-    <div class="tableCell width-10per">Product</div>
-    <div class="tableCell width-10per">Admin Notes</div>
-  </div>
-  <?php
-    foreach ($queuedCustomersList as $queuedCustomer) {
-      $registerCustomer = $queuedCustomer->customer();
-      $productItem = new \Product\Item($queuedCustomer->product_id);
-      $phone = isset($registerCustomer->contacts(array('type' => 'phone'))[0]) ? $registerCustomer->contacts(array('type' => 'phone'))[0] : "";
-      $email = isset($registerCustomer->contacts(array('type' => 'email'))[0]) ? $registerCustomer->contacts(array('type' => 'email'))[0] : "";
-	?>
-	<div class="tableRow">
-		<div class="tableCell">
-			<div class="value"><?= htmlspecialchars($queuedCustomer->name) ?></div>
-			<?php if ($queuedCustomer->is_reseller) { ?>
-			<span class="label reseller-label">[Reseller]</span>
-			<?php } ?>
-			
-			<form method="POST" id="customer_add_form_<?=$queuedCustomer->id?>" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
-				<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-				<?php
-				switch ($queuedCustomer->status) {
-				case 'PENDING':
-				?>
-				<div class="marginTop_10">
-					<input list="organization_list_<?=$queuedCustomer->id?>" class="organization value input width-100per" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?= htmlspecialchars($queuedCustomer->name) ?>" placeholder="Match Organization"/>
-					<datalist id="organization_list_<?=$queuedCustomer->id?>"></datalist>
-					<div class="button-group marginTop_5">
-						<div class="button-item">
-							<input type="image" class="width-30px" src="/img/icons/icon_cust_add-existing.svg" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignExistingCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" title="Assign customer to existing organization" disabled="disabled"/> 
-							<div class="button-label">Assign</div>
-						</div>
-						<div class="button-item">
-							<input type="image" class="width-30px" src="/img/icons/icon_cust_add-new.svg" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="addNewCustomer(<?=$queuedCustomer->id?>)" alt="Add as New" title="Assign customer to new organization" disabled="disabled"/> 
-							<div class="button-label">New</div>
-						</div>
-						<div class="button-item">
-							<input type="image" class="width-30px" src="/img/icons/icon_cust_deny.svg" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)" alt="Deny" title="Deny customer creation" />
-							<div class="button-label">Deny</div>
-						</div>
-					</div>
-				</div>
-				<?php
-				break;
-				case 'VERIFYING':
-				?>
-				<div class="marginTop_10">
-					<span class="register-pending-customers-status-verifying">
-						<img src="/img/contact/icon_form-mail.svg" alt="Email Validating" class="status-icon"> Email Validating
-					</span>
-				</div>
-				<?php
-				break;
-				case 'APPROVED':
-				?>
-				<div class="marginTop_10">
-					<span class="register-pending-customers-status-approved">
-						<img src="/img/_global/circ-letter.svg" alt="Approved" class="status-icon"> Approved
-					</span>
-				</div>
-				<?php
-				break;
-				default:
-				?>
-				<div class="marginTop_10">
-					<span class="register-pending-customers-status-denied">
-						<img src="/img/_global/icon_error.svg" alt="Denied" class="status-icon"> Denied
-					</span>
-				</div>
-				<?php
-				break;
-				}
-				?>
-				<input id="customer_add_<?=$queuedCustomer->id?>" type="hidden" name="action" value="assignCustomer"/>
-				<input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/>
-			</form>
-		</div>
-    
-	  <div class="tableCell">
-		  <div class="value"><?= htmlspecialchars($registerCustomer->first_name . ' ' . $registerCustomer->last_name) ?></div>
-		  <div class="value marginTop_5 login-info">Login: <?= htmlspecialchars($registerCustomer->code) ?></div>
-	  </div>
-	  <div class="tableCell">
-		  <div id="customer_status_form_<?=$queuedCustomer->id?>" class="hidden customer_status_form">
-		    <form method="POST" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
-		      <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-			    <select name="status" class="value input status-select">
-				    <?php foreach ($possibleStatii as $possibleStatus) { ?>
-				      <option value="<?=$possibleStatus?>" <?=($queuedCustomer->status == $possibleStatus) ? 'selected="selected"' : ""?>><?=$possibleStatus?></option>
-				    <?php } ?>
-			    </select>
-			    <input type="hidden" name="action" value="updateStatus"/>
-			    <input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/>
-			    <div class="button-group-spacing">
-			      <button type="submit" class="button small-button">Save</button>
-			      <button type="button" class="button secondary small-button" onclick="cancelEditStatus(<?=$queuedCustomer->id?>)">Cancel</button>
-			    </div>
-			  </form>
-		  </div>
-		  <div id="customer_status_form_links_<?=$queuedCustomer->id?>" class="customer_status_form_links">
-			  <span class="register-pending-customers-status-<?=strtolower($queuedCustomer->status)?>"><?=$queuedCustomer->status?></span><br/>
-			  <a class="small-text cursor-pointer" onclick="editStatus(<?=$queuedCustomer->id?>)"><img src="/img/icons/edit_dk.svg" alt="Edit Status" class="edit-icon"> Edit Status</a>
-			  <?php if ($queuedCustomer->status == 'VERIFYING') { ?>
-			  <div class="marginTop_5">
-				  <button type="button" class="button secondary" onclick="resend(<?=$queuedCustomer->register_user_id?>, this)">Resend Email</button>
-			  </div>
-			  <?php } ?>
-		  </div>
-	  </div>
-	  <div class="tableCell">
-		  <div class="value"><?=date("M j, Y", strtotime($queuedCustomer->date_created))?></div>
-		  <div class="value time-info"><?=date("g:i a", strtotime($queuedCustomer->date_created))?></div>
-	  </div>
-	  <div class="tableCell">
-		  <div class="value"><?= htmlspecialchars($queuedCustomer->address) ?></div>
-		  <div class="value"><?= htmlspecialchars($queuedCustomer->city . ', ' . $queuedCustomer->state . ' ' . $queuedCustomer->zip) ?></div>
-	  </div>
-	  <div class="tableCell">
-		  <?php if (isset($phone->value)) { ?>
-		  <div class="value"><strong>Phone:</strong> <?= htmlspecialchars($phone->value) ?></div>
-		  <?php } ?>
-		  <?php if (isset($email->value)) { ?>
-		  <div class="value"><strong>Email:</strong> <?= htmlspecialchars($email->value) ?></div>
-		  <?php } ?>
-	  </div>
-	  <div class="tableCell">
-		  <?php if ($queuedCustomer->product_id) { ?>
-		  <div class="value"><?= htmlspecialchars($productItem->name) ?></div>
-		  <div class="value product-code">[<?= htmlspecialchars($productItem->code) ?>]</div>
-		  <div class="value marginTop_5 serial-info">Serial: <?= htmlspecialchars($queuedCustomer->serial_number) ?></div>
-		  <?php } else { ?>
-		  <div class="value no-product">No product</div>
-		  <?php } ?>
-	  </div>
-	  <div class="tableCell">
-		  <div id="customer_notes_form_<?=$queuedCustomer->id?>" class="hidden customer_notes_form">
-        <form method="POST" action="/_register/pending_customers">
-          <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-          <div>
-            <textarea name="notes" class="value input notes-textarea" placeholder="Enter admin notes..."><?=htmlspecialchars($queuedCustomer->notes ?? '')?></textarea>
-          </div>
-          <input type="hidden" name="action" value="updateNotes"/>
-          <input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/>
-          <!-- Preserve search parameters -->
-          <?php if (!empty($_REQUEST['search'])) { ?>
-          <input type="hidden" name="search" value="<?=htmlspecialchars($_REQUEST['search'])?>">
-          <?php } ?>
-          <?php if (!empty($_REQUEST['dateStart'])) { ?>
-          <input type="hidden" name="dateStart" value="<?=htmlspecialchars($_REQUEST['dateStart'])?>">
-          <?php } ?>
-          <?php if (!empty($_REQUEST['dateEnd'])) { ?>
-          <input type="hidden" name="dateEnd" value="<?=htmlspecialchars($_REQUEST['dateEnd'])?>">
-          <?php } ?>
-          <?php if (isset($_REQUEST['VERIFYING'])) { ?>
-          <input type="hidden" name="VERIFYING" value="VERIFYING">
-          <?php } ?>
-          <?php if (isset($_REQUEST['PENDING'])) { ?>
-          <input type="hidden" name="PENDING" value="PENDING">
-          <?php } ?>
-          <?php if (isset($_REQUEST['APPROVED'])) { ?>
-          <input type="hidden" name="APPROVED" value="APPROVED">
-          <?php } ?>
-          <?php if (isset($_REQUEST['DENIED'])) { ?>
-          <input type="hidden" name="DENIED" value="DENIED">
-          <?php } ?>
-          <br/><br/><br/>
-          <div class="button-spacing">
-            <button type="submit" class="button save-button">Save</button>
-            <button type="button" class="button secondary small-button" onclick="cancelEditNote(<?=$queuedCustomer->id?>)">Cancel</button>
-          </div>
-        </form>
-		  </div>
-		  <div id="customer_notes_edit_links_<?=$queuedCustomer->id?>" class="customer_notes_edit_links">
-		    <?php if ($queuedCustomer->notes) { ?>
-		    <div class="value"><?= htmlspecialchars($queuedCustomer->notes) ?></div>
-		    <?php } else { ?>
-		    <div class="value no-notes">No notes</div>
-		    <?php } ?>
-		    <?php if ($queuedCustomer->notes) { ?>
-		    <a class="small-text cursor-pointer" onclick="editNote(<?=$queuedCustomer->id?>)"><img src="/img/icons/edit_on.svg" alt="Edit Note" class="edit-icon"> Edit Note</a>
-		    <?php } else { ?>
-		    <a class="small-text cursor-pointer" onclick="editNote(<?=$queuedCustomer->id?>)"><img src="/img/icons/icon_tools_add.svg" alt="Add Note" class="edit-icon"> Add Note</a>
-		    <?php } ?>
-		  </div>
-	  </div>
-  </div>
-  <?php	} ?>
-</section>
-<!--	END Pending Customers Table -->
+<table class="responsive-table clean min-tablet pending-customers-table">
+  <colgroup>
+    <col class="col-w-15"> <!-- Organization -->
+    <col class="col-w-15"> <!-- Customer Info -->
+    <col class="col-w-10"> <!-- Status -->
+    <col class="col-w-10"> <!-- Date -->
+    <col class="col-w-15"> <!-- Address -->
+    <col class="col-w-10"> <!-- Contact -->
+    <col class="col-w-10"> <!-- Product -->
+    <col> <!-- Admin Notes: flexible remaining width -->
+  </colgroup>
+  <thead>
+    <tr>
+      <th scope="col">Organization</th>
+      <th scope="col">Customer Info</th>
+      <th scope="col">Status</th>
+      <th scope="col">Date</th>
+      <th scope="col">Address</th>
+      <th scope="col">Contact</th>
+      <th scope="col">Product</th>
+      <th scope="col">Admin Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+<?php
+foreach ($queuedCustomersList as $queuedCustomer) {
+  $registerCustomer = $queuedCustomer->customer();
+  $productItem = new \Product\Item($queuedCustomer->product_id);
+  $phone = isset($registerCustomer->contacts(array('type' => 'phone'))[0]) ? $registerCustomer->contacts(array('type' => 'phone'))[0] : "";
+  $email = isset($registerCustomer->contacts(array('type' => 'email'))[0]) ? $registerCustomer->contacts(array('type' => 'email'))[0] : "";
+?>
+    <tr>
+      <td data-label="Organization">
+        <div class="value"><?= htmlspecialchars($queuedCustomer->name) ?></div>
+        <?php if ($queuedCustomer->is_reseller) { ?>
+          <span class="label reseller-label">[Reseller]</span>
+        <?php } ?>
 
-</div> End pending-customers-container
+        <form method="POST" id="customer_add_form_<?=$queuedCustomer->id?>" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
+          <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+
+<?php
+  switch ($queuedCustomer->status) {
+    case 'PENDING':
+?>
+          <div class="marginTop_10">
+            <input list="organization_list_<?=$queuedCustomer->id?>" class="organization value input width-100per" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?= htmlspecialchars($queuedCustomer->name) ?>" placeholder="Match Organization">
+            <datalist id="organization_list_<?=$queuedCustomer->id?>"></datalist>
+
+            <div class="button-group marginTop_5">
+              <div class="button-item">
+                <input type="image" class="width-30px" src="/img/icons/icon_cust_add-existing.svg" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignExistingCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" title="Assign customer to existing organization" disabled="disabled">
+                <div class="button-label">Assign</div>
+              </div>
+              <div class="button-item">
+                <input type="image" class="width-30px" src="/img/icons/icon_cust_add-new.svg" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="addNewCustomer(<?=$queuedCustomer->id?>)" alt="Add as New" title="Assign customer to new organization" disabled="disabled">
+                <div class="button-label">New</div>
+              </div>
+              <div class="button-item">
+                <input type="image" class="width-30px" src="/img/icons/icon_cust_deny.svg" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)" alt="Deny" title="Deny customer creation">
+                <div class="button-label">Deny</div>
+              </div>
+            </div>
+          </div>
+<?php
+      break;
+    case 'VERIFYING':
+?>
+          <div class="marginTop_10">
+            <span class="register-pending-customers-status-verifying">
+              <img src="/img/contact/icon_form-mail.svg" alt="Email Validating" class="status-icon"> Email Validating
+            </span>
+          </div>
+<?php
+      break;
+    case 'APPROVED':
+?>
+          <div class="marginTop_10">
+            <span class="register-pending-customers-status-approved">
+              <img src="/img/_global/circ-letter.svg" alt="Approved" class="status-icon"> Approved
+            </span>
+          </div>
+<?php
+      break;
+    default:
+?>
+          <div class="marginTop_10">
+            <span class="register-pending-customers-status-denied">
+              <img src="/img/_global/icon_error.svg" alt="Denied" class="status-icon"> Denied
+            </span>
+          </div>
+<?php
+      break;
+  }
+?>
+          <input id="customer_add_<?=$queuedCustomer->id?>" type="hidden" name="action" value="assignCustomer">
+          <input type="hidden" name="id" value="<?=$queuedCustomer->id?>">
+        </form>
+      </td>
+
+      <td data-label="Customer Info">
+        <div class="value"><?= htmlspecialchars($registerCustomer->first_name . ' ' . $registerCustomer->last_name) ?></div>
+        <div class="value marginTop_5 login-info">Login: <?= htmlspecialchars($registerCustomer->code) ?></div>
+      </td>
+
+      <td data-label="Status">
+        <div id="customer_status_form_<?=$queuedCustomer->id?>" class="hidden customer_status_form">
+          <form method="POST" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
+            <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+            <select name="status" class="value input status-select">
+<?php foreach ($possibleStatii as $possibleStatus) { ?>
+              <option value="<?=$possibleStatus?>" <?=($queuedCustomer->status == $possibleStatus) ? 'selected="selected"' : ""?>><?=$possibleStatus?></option>
+<?php } ?>
+            </select>
+            <input type="hidden" name="action" value="updateStatus">
+            <input type="hidden" name="id" value="<?=$queuedCustomer->id?>">
+            <div class="button-group-spacing">
+              <button type="submit" class="button small-button">Save</button>
+              <button type="button" class="button secondary small-button" onclick="cancelEditStatus(<?=$queuedCustomer->id?>)">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <div id="customer_status_form_links_<?=$queuedCustomer->id?>" class="customer_status_form_links">
+          <span class="register-pending-customers-status-<?=strtolower($queuedCustomer->status)?>"><?=$queuedCustomer->status?></span><br>
+          <a class="small-text cursor-pointer" onclick="editStatus(<?=$queuedCustomer->id?>)"><img src="/img/icons/edit_dk.svg" alt="Edit Status" class="edit-icon"> Edit Status</a>
+<?php if ($queuedCustomer->status == 'VERIFYING') { ?>
+          <div class="marginTop_5">
+            <button type="button" class="button secondary" onclick="resend(<?=$queuedCustomer->register_user_id?>, this)">Resend Email</button>
+          </div>
+<?php } ?>
+        </div>
+      </td>
+
+      <td data-label="Date">
+        <div class="value"><?=date("M j, Y", strtotime($queuedCustomer->date_created))?></div>
+        <div class="value time-info"><?=date("g:i a", strtotime($queuedCustomer->date_created))?></div>
+      </td>
+
+      <td data-label="Address">
+        <div class="value"><?= htmlspecialchars($queuedCustomer->address) ?></div>
+        <div class="value"><?= htmlspecialchars($queuedCustomer->city . ', ' . $queuedCustomer->state . ' ' . $queuedCustomer->zip) ?></div>
+      </td>
+
+      <td data-label="Contact">
+<?php if (isset($phone->value)) { ?>
+        <div class="value"><strong>Phone:</strong> <?= htmlspecialchars($phone->value) ?></div>
+<?php } ?>
+<?php if (isset($email->value)) { ?>
+        <div class="value"><strong>Email:</strong> <?= htmlspecialchars($email->value) ?></div>
+<?php } ?>
+      </td>
+
+      <td data-label="Product">
+<?php if ($queuedCustomer->product_id) { ?>
+        <div class="value"><?= htmlspecialchars($productItem->name) ?></div>
+        <div class="value product-code">[<?= htmlspecialchars($productItem->code) ?>]</div>
+        <div class="value marginTop_5 serial-info">Serial: <?= htmlspecialchars($queuedCustomer->serial_number) ?></div>
+<?php } else { ?>
+        <div class="value no-product">No product</div>
+<?php } ?>
+      </td>
+
+      <td data-label="Admin Notes">
+        <div id="customer_notes_form_<?=$queuedCustomer->id?>" class="hidden customer_notes_form">
+          <form method="POST" action="/_register/pending_customers">
+            <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+            <div>
+              <textarea name="notes" class="value input notes-textarea" placeholder="Enter admin notes..."><?=htmlspecialchars($queuedCustomer->notes ?? '')?></textarea>
+            </div>
+            <input type="hidden" name="action" value="updateNotes">
+            <input type="hidden" name="id" value="<?=$queuedCustomer->id?>">
+
+<?php if (!empty($_REQUEST['search'])) { ?>
+            <input type="hidden" name="search" value="<?=htmlspecialchars($_REQUEST['search'])?>">
+<?php } ?>
+<?php if (!empty($_REQUEST['dateStart'])) { ?>
+            <input type="hidden" name="dateStart" value="<?=htmlspecialchars($_REQUEST['dateStart'])?>">
+<?php } ?>
+<?php if (!empty($_REQUEST['dateEnd'])) { ?>
+            <input type="hidden" name="dateEnd" value="<?=htmlspecialchars($_REQUEST['dateEnd'])?>">
+<?php } ?>
+<?php if (isset($_REQUEST['VERIFYING'])) { ?>
+            <input type="hidden" name="VERIFYING" value="VERIFYING">
+<?php } ?>
+<?php if (isset($_REQUEST['PENDING'])) { ?>
+            <input type="hidden" name="PENDING" value="PENDING">
+<?php } ?>
+<?php if (isset($_REQUEST['APPROVED'])) { ?>
+            <input type="hidden" name="APPROVED" value="APPROVED">
+<?php } ?>
+<?php if (isset($_REQUEST['DENIED'])) { ?>
+            <input type="hidden" name="DENIED" value="DENIED">
+<?php } ?>
+
+            <br><br><br>
+            <div class="button-spacing">
+              <button type="submit" class="button save-button">Save</button>
+              <button type="button" class="button secondary small-button" onclick="cancelEditNote(<?=$queuedCustomer->id?>)">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <div id="customer_notes_edit_links_<?=$queuedCustomer->id?>" class="customer_notes_edit_links">
+<?php if ($queuedCustomer->notes) { ?>
+          <div class="value"><?= htmlspecialchars($queuedCustomer->notes) ?></div>
+<?php } else { ?>
+          <div class="value no-notes">No notes</div>
+<?php } ?>
+
+<?php if ($queuedCustomer->notes) { ?>
+          <a class="small-text cursor-pointer" onclick="editNote(<?=$queuedCustomer->id?>)"><img src="/img/icons/edit_on.svg" alt="Edit Note" class="edit-icon"> Edit Note</a>
+<?php } else { ?>
+          <a class="small-text cursor-pointer" onclick="editNote(<?=$queuedCustomer->id?>)"><img src="/img/icons/icon_tools_add.svg" alt="Add Note" class="edit-icon"> Add Note</a>
+<?php } ?>
+        </div>
+      </td>
+    </tr>
+<?php } ?>
+  </tbody>
+</table>
+
+</div>

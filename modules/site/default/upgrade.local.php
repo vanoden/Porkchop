@@ -33,3 +33,25 @@
 			)
 		)
 	);
+
+	// Ensure Admin > Site includes Forms when running core upgrade flow (/_spectros/upgrade).
+	$menus["admin"] = array(
+		"title"	=> "Admin Left Nav",
+		"items"	=> array(
+			array(
+				"title"			=> "Site",
+				"view_order"	=> 80,
+				"alt"			=> "Site Management",
+				"description"	=> "Site Management",
+				"items"			=> array(
+					array(
+						"title"			=> "Forms",
+						"target"		=> "/_form/admin_forms",
+						"view_order"	=> 15,
+						"alt"			=> "Form Management",
+						"description"	=> "Form Management"
+					)
+				)
+			)
+		)
+	);

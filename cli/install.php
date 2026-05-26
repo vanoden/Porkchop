@@ -110,23 +110,11 @@
 ?>
 <html>
 <head>
-	<style>
-		table {
-			width: 400px;
-			border: 1px solid black;
-		}
-		th {
-			width: 200px;
-		}
-		td.error {
-			border: 1px solid red;
-			width: 100%;
-			background-color: pink;
-			color: red;
-		}
-	</style>
+	<title>Porkchop Web Installer</title>
+<?php $__pp = defined('PATH') ? rtrim((string) PATH, '/') : ''; ?>
+	<link rel="stylesheet" href="<?= htmlspecialchars($__pp.'/css/porkchop-install.css', ENT_QUOTES, 'UTF-8') ?>" />
 </head>
-<body>
+<body class="porkchop-cli-install-shell">
 <form method="post" action="_install">
 <table>
 <tr><th colspan="2">Porchop Web Installer V2.0</th></tr>

@@ -22,24 +22,24 @@
 		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 
 		<h2>Sign in</h2>
-		<ul id="register_form" class="form-grid four-col connectBorder">
-			<li>
+		<ul id="register_form" class="section-grid grid-col-4">
+			<li class="form-field">
 				<label for="login">Login</label>
 				<input type="text" id="login" name="login" autofocus/>
 			</li>
-			<li>
+			<li class="form-field">
 				<label for="password">Password</label>
 				<input type="password" id="password" name="password"/>
-			</li>
+			</li class="form-field">
 			<?php	if ($CAPTCHA_GO) { ?>
 				<li class="g-recaptcha" data-sitekey="<?=$captcha_public_key?>"></li>
 			<?php	}	?>
 		</ul>
 
-		<div class="button-group">
+		<section class="section-flex cluster">
 			<button type="button" onclick="document.loginForm.submit();">Sign In</button>
 			<a href="/_register/forgot_password" class="button btn-secondary">Recover Password</a>
 			<a href="<?=PATH?>/_register/new_customer" class="button btn-secondary">Register Now</a>
-		</div>
+    </section>
 	</form>
 </section>

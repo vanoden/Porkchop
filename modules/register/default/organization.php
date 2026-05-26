@@ -39,169 +39,171 @@
     <div class="form_instruction">Make changes and click 'Apply' to complete.</div>
 
     <!--	Start First Row-->
-    <div class="tableBody min-tablet marginTop_20">
-	    <div class="tableRowHeader">
-		    <div class="tableCell">Code</div>
-		    <div class="tableCell">Name</div>
-		    <div class="tableCell">Status</div>
-		    <div class="tableCell">Can Resell</div>
-		    <div class="tableCell">Reseller</div>
-	    </div> <!-- end row header -->
-	    <div class="tableRow">
-		    <div class="tableCell"><?=$organization->code?></div>
-		    <div class="tableCell"><?=$organization->name?></div>
-		    <div class="tableCell"><?=$organization->status?></div>
-		    <div class="tableCell"><?=$organization->is_reseller ? "Yes" : "No"?></div>
-		    <div class="tableCell"><?=($organization->reseller && isset($organization->reseller->name)) ? $organization->reseller->name : ''?></div>
-	    </div>
-    </div>
-    <div class="tableBody">
-	    <div class="tableRowHeader">
-		    <div class="tableCell">Require Two-Factor Authentication for All Users</div>
-		    <div class="tableCell">Password Expires after # Days (0 Never Expires)</div>
-		    <div class="tableCell">Website URL</div>
-	    </div> <!-- end row header -->
-	    <div class="tableRow">
-		    <div class="tableCell">
-<?php	if ($can_manage) { ?>
-			    <input name="time_based_password" type="checkbox" value="1" <?php if($organization->time_based_password) print " checked"?> />
-<?php	} elseif ($organization->time_based_password) { ?>
-			    <span class="value">Yes</span>
-<?php	} else { ?>
-			    <span class="value">No</span>
-<?php	} ?>
-			</div>
-			<div class="tableCell">
-<?php	if ($can_manage) { ?>
-			    <input name="password_expiration_days" type="number" step="1" min="0" max="365" id="password_expiration_days" style="width: 40px; max-width: 40px" value="<?=$organization->password_expiration_days?>" />
-<?php	} else { ?>
-			    <span class="value"><?=$organization->password_expiration_days?></span>
-<?php	} ?>
-		    </div>
-			<div class="tableCell">
-<?php	if ($can_manage) { ?>
-			    <input type="text" id="website_url" name="website_url" style="width: 450px; max-width: 450px;" placeholder="http://" value="<?=$organization->website_url?>"/>
-<?php	} else { ?>
-			    <span class="value"><?=$organization->website_url?></span>
-<?php	} ?>
-		    </div>
-	    </div>
-    </div>	
-    <div><input type="submit" name="method" value="Apply" class="button"/></div>
-    <!--End first row-->
+    <table class="responsive-table min-tablet marginTop_20">
+      <thead>
+        <tr>
+          <th scope="col">Code</th>
+          <th scope="col">Name</th>
+          <th scope="col">Status</th>
+          <th scope="col">Can Resell</th>
+          <th scope="col">Reseller</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Code"><?=$organization->code?></td>
+          <td data-label="Name"><?=$organization->name?></td>
+          <td data-label="Status"><?=$organization->status?></td>
+          <td data-label="Can Resell"><?=$organization->is_reseller ? "Yes" : "No"?></td>
+          <td data-label="Reseller"><?=($organization->reseller && isset($organization->reseller->name)) ? $organization->reseller->name : ''?></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="responsive-table">
+      <thead>
+        <tr>
+          <th scope="col">Require Two-Factor Authentication for All Users</th>
+          <th scope="col">Password Expires after # Days (0 Never Expires)</th>
+          <th scope="col">Website URL</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Require Two-Factor Authentication for All Users">
+            <?php	if ($can_manage) { ?>
+            <input name="time_based_password" type="checkbox" value="1" <?php if($organization->time_based_password) print " checked"?> />
+            <?php	} elseif ($organization->time_based_password) { ?>
+            <span class="value">Yes</span>
+            <?php	} else { ?>
+            <span class="value">No</span>
+            <?php	} ?>
+          </td>
+
+          <td data-label="Password Expires after # Days (0 Never Expires)">
+            <?php	if ($can_manage) { ?>
+            <input name="password_expiration_days" type="number" step="1" min="0" max="365" id="password_expiration_days" style="width: 40px; max-width: 40px" value="<?=$organization->password_expiration_days?>" />
+            <?php	} else { ?>
+            <span class="value"><?=$organization->password_expiration_days?></span>
+            <?php	} ?>
+          </td>
+
+          <td data-label="Website URL">
+            <?php	if ($can_manage) { ?>
+            <input type="text" id="website_url" name="website_url" style="width: 450px; max-width: 450px;" placeholder="http://" value="<?=$organization->website_url?>"/>
+            <?php	} else { ?>
+            <span class="value"><?=$organization->website_url?></span>
+            <?php	} ?>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+      
+    <button type="submit" name="method" value="Apply">Submit</button>
 
     <div class="user_accounts_container">
-        <h3>Current Users</h3>
-        <input type="checkbox" id="showAllUsers" name="showAllUsers" value="showAllUsers" onclick="showHidden()" <?=(isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? 'checked' : ''?>> SHOW ALL (Expired/Hidden/Deleted)
-        <!--	Start First Row-->
-        <div class="tableBody bandedRows">
-	        <div class="tableRowHeader">
-		        <div class="tableCell">Username</div>
-		        <div class="tableCell">First Name</div>
-		        <div class="tableCell">Last Name</div>
-		        <div class="tableCell">Status</div>
-		        <div class="tableCell">Last Active</div>
-				<div class="tableCell">Last Password Change</div>
-	        </div>
-        <?php	foreach ($members as $member) {
-			$statistics = new \Register\User\Statistics($member->id);
-			if ($can_manage) $sub_url = 'org_account';
-			else $sub_url = 'account';
-		?>
-	        <div class="tableRow member_status_<?=strtolower($member->status)?>">
-		        <div class="tableCell">
-			        <a href="/_register/<?=$sub_url?>?customer_id=<?=$member->id?>"><?=$member->code?></a>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->first_name?>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->last_name?>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->status?>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->last_active()?>
-		        </div>
-				<div class="tableCell">
-			        <?=$statistics?->last_password_change_date?->format('Y-m-d H:i:s')?>
-				</div>
-	        </div>
-        <?php	} ?>
-        </div>
-        <!--End first row-->
+      <h3>Current Users</h3>
+      <label for="showAllUsers">
+        <input type="checkbox" id="showAllUsers" name="showAllUsers" value="showAllUsers" onclick="showHidden()" <?= (isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? 'checked' : '' ?>>SHOW ALL (Expired/Hidden/Deleted)
+      </label>
+        
+      <table class="responsive-table responsive-table--banded">
+        <thead>
+          <tr>
+            <th scope="col">Username</th>
+            <th scope="col">First Name</th>
+            <th scope="col">Last Name</th>
+            <th scope="col">Status</th>
+            <th scope="col">Last Active</th>
+            <th scope="col">Last Password Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($members as $member) {
+            $statistics = new \Register\User\Statistics($member->id);
+            if ($can_manage) $sub_url = 'org_account';
+            else $sub_url = 'account';
+          ?>
+          <tr class="member_status_<?= strtolower($member->status) ?>">
+            <td data-label="Username"><a href="/_register/<?= $sub_url ?>?customer_id=<?= $member->id ?>"><?= $member->code ?></a></td>
+            <td data-label="First Name"><?= $member->first_name ?></td>
+            <td data-label="Last Name"><?= $member->last_name ?></td>
+            <td data-label="Status"><?= $member->status ?></td>
+            <td data-label="Last Active"><?= $member->last_active() ?></td>
+            <td data-label="Last Password Change"><?= $statistics?->last_password_change_date?->format('Y-m-d H:i:s') ?></td>
+          </tr>
+          <?php } ?>
+        </tbody>
+      </table>
 
-        <h3>Automation Users</h3>
-        <!--	Start First Row-->
-        <?php	if ($organization->id) {
-			if ($can_manage) $sub_url = 'org_account';
-			else $sub_url = 'account';
-		?>
-        <div class="tableBody min-tablet">
-	        <div class="tableRowHeader">
-		        <div class="tableCell value tableCell-width-20">Username</div>
-		        <div class="tableCell value tableCell-width-10">Status</div>
-		        <div class="tableCell value tableCell-width-30">Last Active</div>
-	        </div>
-        <?php	foreach ($automationMembers as $member) { ?>
-	        <div class="tableRow member_status_<?=strtolower($member->status)?>">
-		        <div class="tableCell">
-			        <a href="/_register/<?=$sub_url?>?customer_id=<?=$member->id?>"><?=$member->code?></a>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->status?>
-		        </div>
-		        <div class="tableCell">
-			        <?=$member->last_active()?>
-		        </div>
-	        </div>
-        <?php	} ?>
-        </div>
-        <!--End first row-->
-        <?php	} ?>
+      <h3>Automation Users</h3>
+      <?php	if ($organization->id) {
+        if ($can_manage) $sub_url = 'org_account';
+        else $sub_url = 'account';
+      ?>
+      <table class="responsive-table min-tablet">
+        <colgroup>
+          <col class="col-w-20">
+          <col class="col-w-10">
+          <col>
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col">Username</th>
+            <th scope="col">Status</th>
+            <th scope="col">Last Active</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php	foreach ($automationMembers as $member) { ?>
+          <tr class="member_status_<?=strtolower($member->status)?>">
+            <td data-label="Username"><a href="/_register/<?=$sub_url?>?customer_id=<?=$member->id?>"><?=$member->code?></a></td>
+            <td data-label="Status"><?=$member->status?></td>
+            <td data-label="Last Active"><?=$member->last_active()?></td>
+          </tr>
+          <?php	} ?>
+        </tbody>
+      </table>
+      <?php	} ?>
     </div>
 
-    <h3>Locations</h3>
-    <!--	Start First Row-->
-    <div class="tableBody">
-	    <div class="tableRowHeader">
-        	<div class="tableCell value tableCell-width-5">Default Billing</div>
-        	<div class="tableCell value tableCell-width-5">Default Shipping</div>
-		    <div class="tableCell value tableCell-width-20">Name</div>
-		    <div class="tableCell value tableCell-width-20">Address</div>
-		    <div class="tableCell value tableCell-width-20">City</div>
-		    <div class="tableCell value tableCell-width-20">Province/Region</div>
-	    </div>
-	    	    
-    <?php	foreach ($locations as $location) {
-			if ($can_manage) $disabled = '';
-			else $disabled = 'disabled';
-		?>
-	    <div class="tableRow">
-	        <div class="tableCell">
-        	    <input type="radio" name="default_billing_location_id" <?php if ($organization->default_billing_location_id == $location->id) echo "checked='checked'"; ?> <?=$disabled?> value="<?=$location->id?>" onclick="submitDefaultLocation('setDefaultBilling',<?=$location->id?>)">
-	        </div>
-	        <div class="tableCell">	    	
-        	    <input type="radio" name="default_shipping_location_id" <?php if ($organization->default_shipping_location_id == $location->id) echo "checked='checked'"; ?> <?=$disabled?> value="<?=$location->id?>" onclick="submitDefaultLocation('setDefaultShipping',<?=$location->id?>)">
-	        </div>
-		    <div class="tableCell">
-			    <a href="/_register/location?organization_id=<?=$organization->id?>&id=<?=$location->id?>"><?=$location->name?></a>
-		    </div>
-		    <div class="tableCell">
-			    <?=$location->address_1?>
-		    </div>
-		    <div class="tableCell">
-			    <?=$location->city?>
-		    </div>
-		    <div class="tableCell">
-			    <?=$location->province()->name?><br/>
-			    <?=$location->province()->country()->name?>
-		    </div>
-	    </div>
-    <?php	} ?>
-    </div>
-    <div><input type="button" name="method" value="Add Location" class="button" onclick="addLocation()"/></div>
+    <h2>Locations</h2>
+    <table class="responsive-table">
+      <colgroup>
+        <col class="col-w-15">
+        <col class="col-w-15">
+        <col>
+        <col>
+        <col>
+        <col>
+      </colgroup>
+      <thead>
+        <tr>
+          <th scope="col">Default Billing</th>
+          <th scope="col">Default Shipping</th>
+          <th scope="col">Name</th>
+          <th scope="col">Address</th>
+          <th scope="col">City</th>
+          <th scope="col">Province/Region</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php	foreach ($locations as $location) {
+          if ($can_manage) $disabled = '';
+          else $disabled = 'disabled';
+        ?>
+        <tr>
+          <td data-label="Default Billing"><input type="radio" name="default_billing_location_id" <?php if ($organization->default_billing_location_id == $location->id) echo "checked='checked'"; ?> <?=$disabled?> value="<?=$location->id?>" onclick="submitDefaultLocation('setDefaultBilling',<?=$location->id?>)"></td>
+          <td data-label="Default Shipping"><input type="radio" name="default_shipping_location_id" <?php if ($organization->default_shipping_location_id == $location->id) echo "checked='checked'"; ?> <?=$disabled?> value="<?=$location->id?>" onclick="submitDefaultLocation('setDefaultShipping',<?=$location->id?>)"></td>
+          <td data-label="Name"><a href="/_register/location?organization_id=<?=$organization->id?>&id=<?=$location->id?>"><?=$location->name?></a></td>
+          <td data-label="Address"><?=$location->address_1?></td>
+          <td data-label="City"><?=$location->city?></td>
+          <td data-label="Province/Region"><?=$location->province()->name?><br><?=$location->province()->country()->name?></td>
+        </tr>
+        <?php	} ?>
+      </tbody>
+    </table>
+    <button type="button" name="method" value="Add Location" onclick="addLocation()">Add Location</button>
     <!--End first row-->
 </form>
 </div>
