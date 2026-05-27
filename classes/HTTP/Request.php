@@ -494,9 +494,11 @@
 				}
 			}
 
-			if (preg_match('/^https?\:\/\/(\w[\w\-\.]*)(\/.*)/',$uri)) {
+			if (preg_match('/^https?\:\/\/(\w[\w\-\.]*)(\/.*)/',$uri,$matches)) {
 				$uri = $matches[2];
 			}
+
+			if (empty($url)) $url = "";
 
 			if ($url == "") {
 				$uri = "/";
