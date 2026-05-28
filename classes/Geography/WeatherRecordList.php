@@ -48,6 +48,15 @@
 				$database->AddParam($timestamp_before);
 			}
 
+			if (!empty($parameters['timestamp'])) {
+				$timestamp = get_mysql_date($parameters['timestamp']);
+				$get_objects_query .= "
+				AND date_record <= ?
+				AND date_record > DATE_SUB(?, INTERVAL 1 HOUR)";
+				$database->AddParam($timestamp);
+				$database->AddParam($timestamp);
+			}
+
 			// Add Sorting
 			$get_objects_query .= "
 				ORDER BY `date_record` DESC
