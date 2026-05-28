@@ -692,7 +692,7 @@
 				$parameters['country_id'] = $country->id;
 			}
 			else {
-				$this->incompleteRequest("country_name or country_abbreviation required");
+				$this->incompleteRequest("country_name, country_abbreviation, or country_code required");
 			}
 
 			// Locate Province
@@ -703,6 +703,11 @@
 			}
 			elseif (!empty($_REQUEST['province_abbreviation'])) {
 				if (! $province->getByAbbreviation($country->id, trim((string) $_REQUEST['province_abbreviation']))) $this->error("Province abbreviation '".$_REQUEST['province_abbreviation']."' not found");
+				$parameters['province_id'] = $province->id;
+			}
+			elseif (!empty($_REQUEST['province_code'])) {
+				if (! $province->getByAbbreviation($country->id, trim((string) $_REQUEST['province_code']))) $this->error("Province code '".$_REQUEST['province_code']."' not found");
+				if (! $province->id) $this->error("Province code '".$_REQUEST['province_code']."' not found");
 				$parameters['province_id'] = $province->id;
 			}
 
