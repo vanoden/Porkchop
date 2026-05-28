@@ -979,26 +979,26 @@
 			}
 
 			// Optional weather parameters
-			if (isset($_REQUEST['conditions'])) $parameters['conditions'] = trim((string) $_REQUEST['conditions']);
-			if (isset($_REQUEST['temperature_celsius'])) $parameters['temperature_celsius'] = (float) $_REQUEST['temperature_celsius'];
-			if (isset($_REQUEST['temperature_fahrenheit'])) $parameters['temperature_fahrenheit'] = (float) $_REQUEST['temperature_fahrenheit'];
-			if (isset($_REQUEST['humidity'])) $parameters['humidity'] = (float) $_REQUEST['humidity'];
-			if (isset($_REQUEST['pressure'])) $parameters['pressure'] = (float) $_REQUEST['pressure'];
-			if (isset($_REQUEST['wind_speed_kph'])) $parameters['wind_speed_kph'] = (float) $_REQUEST['wind_speed_kph'];
-			if (isset($_REQUEST['wind_speed_mph'])) $parameters['wind_speed_mph'] = (float) $_REQUEST['wind_speed_mph'];
-			if (isset($_REQUEST['wind_speed_mps'])) $parameters['wind_speed_mps'] = (float) $_REQUEST['wind_speed_mps'];
-			if (isset($_REQUEST['wind_gust_kph'])) $parameters['wind_gust_kph'] = (float) $_REQUEST['wind_gust_kph'];
-			if (isset($_REQUEST['wind_gust_mph'])) $parameters['wind_gust_mph'] = (float) $_REQUEST['wind_gust_mph'];
-			if (isset($_REQUEST['wind_gust_mps'])) $parameters['wind_gust_mps'] = (float) $_REQUEST['wind_gust_mps'];
-			if (isset($_REQUEST['wind_direction'])) $parameters['wind_direction'] = (float) $_REQUEST['wind_direction'];
-			if (isset($_REQUEST['precipitation_mm'])) $parameters['precipitation_mm'] = (float) $_REQUEST['precipitation_mm'];
-			if (isset($_REQUEST['precipitation_in'])) $parameters['precipitation_in'] = (float) $_REQUEST['precipitation_in'];
-			if (isset($_REQUEST['visibility_km'])) $parameters['visibility_km'] = (float) $_REQUEST['visibility_km'];
-			if (isset($_REQUEST['visibility_miles'])) $parameters['visibility_miles'] = (float) $_REQUEST['visibility_miles'];
+			if (!empty($_REQUEST['conditions'])) $parameters['conditions'] = trim((string) $_REQUEST['conditions']);
+			if (!empty($_REQUEST['temperature_celsius'])) $parameters['temperature_celsius'] = (float) $_REQUEST['temperature_celsius'];
+			elseif (!empty($_REQUEST['temperature_fahrenheit'])) $parameters['temperature_fahrenheit'] = (float) $_REQUEST['temperature_fahrenheit'];
+			if (!empty($_REQUEST['humidity'])) $parameters['humidity'] = (float) $_REQUEST['humidity'];
+			if (!empty($_REQUEST['pressure'])) $parameters['pressure'] = (float) $_REQUEST['pressure'];
+			if (!empty($_REQUEST['wind_speed_kph'])) $parameters['wind_speed_kph'] = (float) $_REQUEST['wind_speed_kph'];
+			elseif (!empty($_REQUEST['wind_speed_mph'])) $parameters['wind_speed_mph'] = (float) $_REQUEST['wind_speed_mph'];
+			elseif (!empty($_REQUEST['wind_speed_mps'])) $parameters['wind_speed_mps'] = (float) $_REQUEST['wind_speed_mps'];
+			if (!empty($_REQUEST['wind_gust_kph'])) $parameters['wind_gust_kph'] = (float) $_REQUEST['wind_gust_kph'];
+			elseif (!empty($_REQUEST['wind_gust_mph'])) $parameters['wind_gust_mph'] = (float) $_REQUEST['wind_gust_mph'];
+			elseif (!empty($_REQUEST['wind_gust_mps'])) $parameters['wind_gust_mps'] = (float) $_REQUEST['wind_gust_mps'];
+			if (!empty($_REQUEST['wind_direction'])) $parameters['wind_direction'] = (float) $_REQUEST['wind_direction'];
+			if (!empty($_REQUEST['precipitation_mm'])) $parameters['precipitation_mm'] = (float) $_REQUEST['precipitation_mm'];
+			elseif (!empty($_REQUEST['precipitation_in'])) $parameters['precipitation_in'] = (float) $_REQUEST['precipitation_in'];
+			if (!empty($_REQUEST['visibility_km'])) $parameters['visibility_km'] = (float) $_REQUEST['visibility_km'];
+			elseif (!empty($_REQUEST['visibility_miles'])) $parameters['visibility_miles'] = (float) $_REQUEST['visibility_miles'];
 
 			// Add the Weather Record
 			$weatherRecord = new \Geography\WeatherRecord();
-			if (! $weatherRecord->add($parameters)) {
+			if (! $weatherRecord->set($parameters)) {
 				$this->error("Error adding weather record: " . $weatherRecord->error());
 				return;
 			}
@@ -1006,6 +1006,7 @@
 			// Assemble and Return Response
 			$response = new \APIResponse();
 			$response->success(true);
+			$response->AddElement('parameters', $parameters);
 			$response->AddElement('weather_record', $weatherRecord);
 			$response->print();
 		}
