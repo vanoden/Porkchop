@@ -2146,28 +2146,28 @@
 					'parameters'	=> array(
 						'zip_code' => array(
 							'description'	=> 'Zip code for which to set weather record',
-							'required' => true,
+							'requirement_group' => 1,
 						),
 						'country_abbreviation' => array(
 							'description' => 'Country Abbreviation (to validate that zip code belongs to specified country)',
-							'requirement_group' => 0,
+							'requirement_group' => 2,
 							'validation_method'	=> 'Geography::Country::validCode()',
 							'hidden' => true,
 						),
 						'country_code' => array(
 							'description' => 'Country Code (to validate that zip code belongs to specified country)',
-							'required' => true,
+							'requirement_group' => 1,
 							'validation_method'	=> 'Geography::Country::validCode()',
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation (to validate that zip code belongs to specified province/state)',
-							'requirement_group' => 0,
+							'requirement_group' => 2,
 							'validation_method'	=> 'Geography::Province::validCode()',
 							'hidden' => true,
 						),
 						'province_code' => array(
 							'description' => 'Province/State Code (to validate that zip code belongs to specified province/state)',
-							'required' => true,
+							'requirement_group' => 1,
 							'validation_method'	=> 'Geography::Province::validCode()',
 						),
 						'timestamp' => array(
@@ -2250,26 +2250,26 @@
 					'parameters' => array(
 						'zip_code' => array(
 							'description' => 'Zip code for which to get weather record',
-							'required' => true,
+							'requirement_group' => 1,
 						),
 						'country_abbreviation' => array(
 							'description' => 'Country Abbreviation (to validate that zip code belongs to specified country)',
-							'requirement_group' => 0,
+							'requirement_group' => 2,
 							'hidden' => true,
 						),
 						'country_code' => array(
 							'description' => 'Country Code (to validate that zip code belongs to specified country)',
-							'required' => true,
+							'requirement_group' => 1,
 							'hidden' => false,
 						),
 						'province_abbreviation' => array(
 							'description' => 'Province/State Abbreviation (to validate that zip code belongs to specified province/state)',
-							'requirement_group' => 0,
+							'requirement_group' => 2,
 							'hidden' => true,
 						),
 						'province_code' => array(
 							'description' => 'Province/State Code (to validate that zip code belongs to specified province/state)',
-							'required' => true,
+							'requirement_group' => 1,
 							'hidden' => false,
 						),
 						'timestamp' => array(

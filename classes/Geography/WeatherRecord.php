@@ -95,7 +95,8 @@
 			}
 
 			list($id) = $result->FetchRow();
-			return new WeatherRecord($id);
+			$this->id = $id;
+			return true;
 		}
 
 		/** @method public set(parameters)
