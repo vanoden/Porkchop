@@ -133,11 +133,9 @@
 			}
 
 			// Check for existing record
-			$existingRecord = $this->get($zipCode->id, $date_record);
-			if ($existingRecord) {
-				app_log("Existing weather record found for zip code ID {$zipCode->id} and date {$date_record}, updating record ID {$existingRecord->id}");
-				$this->id = $existingRecord->id;
-				return $this->update();
+			if ($this->get($zipCode->id, $date_record)) {
+				app_log("Existing weather record found for zip code ID {$zipCode->id} and date {$date_record}, updating record ID {$this->id}");
+				return $this->update($parameters);
 			}
 			else {
 				app_log("No existing weather record found for zip code ID {$zipCode->id} and date {$date_record}, adding new record");
@@ -271,8 +269,8 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			list($id) = $database->Insert_ID();
-			$this->id = $id;
+			$this->id = $database->Insert_ID();
+			app_log("Weather record added with ID {$this->id}");
 
 			return $this->update($parameters);
 		}
