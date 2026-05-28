@@ -1050,6 +1050,7 @@
 			if (! isset($_REQUEST['zip_code'])) $this->incompleteRequest("zip_code required");
 			$zipCode = new \Geography\ZipCode();
 			if (! $zipCode->get($province->id, trim((string) $_REQUEST['zip_code']))) $this->notFound("Zip code not found");
+			$parameters['zip_code_id'] = $zipCode->id;
 
 			if (!empty($_REQUEST['timestamp'])) $parameters['timestamp'] = (int) $_REQUEST['timestamp'];
 			elseif (!empty($_REQUEST['date_time'])) {
