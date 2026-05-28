@@ -159,7 +159,7 @@
 			// Prepare Query
 			$add_record_query = "
 				INSERT INTO `" . $this->_tableName . "`
-				(zip_code_id, date_record";
+				(zip_code_id, date_record)";
 
 			// Validate Required Parameters
 			if (! isset($parameters['zip_code_id']) || ! is_int($parameters['zip_code_id']) || $parameters['zip_code_id'] <= 0) {
@@ -183,86 +183,7 @@
 				$database->AddParam(get_mysql_date(time()));
 			}
 
-			if (!empty($_REQUEST['conditions'])) {
-				$add_record_query .= ", conditions";
-				$database->AddParam(trim($_REQUEST['conditions']));
-			}
-
-			if (!empty($_REQUEST['temperature_celsius'])) {
-				$add_record_query .= ", temperature";
-				$database->AddParam((float) $_REQUEST['temperature_celsius']);
-			}
-			else if (!empty($_REQUEST['temperature_fahrenheit'])) {
-				$add_record_query .= ", temperature";
-				$database->AddParam(((float) $_REQUEST['temperature_fahrenheit'] - 32) * 5/9);
-			}
-
-			if (!empty($_REQUEST['humidity'])) {
-				$add_record_query .= ", humidity";
-				$database->AddParam((float) $_REQUEST['humidity']);
-			}
-
-			if (!empty($_REQUEST['pressure'])) {
-				$add_record_query .= ", pressure";
-				$database->AddParam((float) $_REQUEST['pressure']);
-			}
-
-			if (!empty($_REQUEST['wind_speed_mps'])) {
-				$add_record_query .= ", wind_speed";
-				$database->AddParam((float) $_REQUEST['wind_speed_mps'] * 3.6);
-			}
-			else if (!empty($_REQUEST['wind_speed_kph'])) {
-				$add_record_query .= ", wind_speed";
-				$database->AddParam((float) $_REQUEST['wind_speed_kph']);
-			}
-			else if (!empty($_REQUEST['wind_speed_mph'])) {
-				$add_record_query .= ", wind_speed";
-				$database->AddParam((float) $_REQUEST['wind_speed_mph'] * 1.60934);
-			}
-
-			if (!empty($_REQUEST['wind_gust_mps'])) {
-				$add_record_query .= ", wind_gust";
-				$database->AddParam((float) $_REQUEST['wind_gust_mps'] * 3.6);
-			}
-			else if (!empty($_REQUEST['wind_gust_kph'])) {
-				$add_record_query .= ", wind_gust";
-				$database->AddParam((float) $_REQUEST['wind_gust_kph']);
-			}
-			else if (!empty($_REQUEST['wind_gust_mph'])) {
-				$add_record_query .= ", wind_gust";
-				$database->AddParam((float) $_REQUEST['wind_gust_mph'] * 1.60934);
-			}
-
-			if (!empty($_REQUEST['wind_direction'])) {
-				$add_record_query .= ", wind_direction";
-				$database->AddParam((float) $_REQUEST['wind_direction']);
-			}
-
-			if (!empty($_REQUEST['visibility_km'])) {
-				$add_record_query .= ", visibility";
-				$database->AddParam((float) $_REQUEST['visibility_km'] * 1000);
-			}
-			else if (!empty($_REQUEST['visibility_miles'])) {
-				$add_record_query .= ", visibility";
-				$database->AddParam((float) $_REQUEST['visibility_miles'] * 1609.34);
-			}
-			else if (!empty($_REQUEST['visibility_meters'])) {
-				$add_record_query .= ", visibility";
-				$database->AddParam((float) $_REQUEST['visibility_meters']);
-			}
-
-			if (!isset($_REQUEST['precipitation_mm'])) {
-				$add_record_query .= ", precipitation";
-				$database->AddParam((float) $_REQUEST['precipitation_mm']);
-			}
-			else if (!isset($_REQUEST['precipitation_inches'])) {
-				$add_record_query .= ", precipitation";
-				$database->AddParam((float) $_REQUEST['precipitation_inches'] * 25.4);
-			}
-
-			$add_record_query .= ") VALUES (";
-			$paramCount = count($database->Parameters());
-			$add_record_query .= rtrim(str_repeat("?, ", $paramCount), ", ") . ")";
+			$add_record_query .= " VALUES (?,?)";
 
 			// Execute Query
 			if (! $database->Execute($add_record_query)) {
