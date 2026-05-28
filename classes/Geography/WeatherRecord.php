@@ -95,6 +95,8 @@
 			}
 
 			list($id) = $result->FetchRow();
+			if (! $id) return false;
+
 			$this->id = $id;
 			return true;
 		}
