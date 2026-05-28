@@ -686,6 +686,11 @@
 				if (! $country->getByAbbreviation($_REQUEST['country_abbreviation'])) $this->error("Country abbreviation '".$_REQUEST['country_abbreviation']."' not found");
 				$parameters['country_id'] = $country->id;
 			}
+			elseif (!empty($_REQUEST['country_code'])) {
+				$country = new \Geography\Country();
+				if (! $country->getByAbbreviation($_REQUEST['country_code'])) $this->error("Country code '".$_REQUEST['country_code']."' not found");
+				$parameters['country_id'] = $country->id;
+			}
 			else {
 				$this->incompleteRequest("country_name or country_abbreviation required");
 			}
