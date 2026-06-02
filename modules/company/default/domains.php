@@ -1,7 +1,7 @@
 <!-- Page Header -->
 <?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
-<table class="responsive-table">
+<table class="responsive-table responsive-table--banded">
   <thead>
     <tr>
       <th class="col-w-30" scope="col">Name</th>
