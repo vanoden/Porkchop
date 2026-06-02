@@ -36,3 +36,5 @@ docker-compose-lamp
 *.code-workspace
 FPDF_Fonts/
 html.backup/
+.vscode-server-ccaravello/
+.vscode-server-ccaravello/
