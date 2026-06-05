@@ -20,13 +20,21 @@ class Client Extends \BaseClass {
 	 * @return bool Returns true on success, throws an exception on failure
 	*/
 	public function send($channel, $message) {
+		if (empty($this->token)) {
+			app_log("Slack send skipped: bot_token missing in config",'error');
+			$this->_error = 'bot_token missing in config';
+			return false;
+		}
+		$text = self::formatMessage($message);
+
 		// Send a message to a Slack channel
 		$service = 'https://slack.com';
 		$uri = '/api/chat.postMessage';
 		$url = $service.$uri;
 		$data = [
 			'channel' => $channel,
-			'text' => $message
+			'text' => $text,
+			'mrkdwn' => true,
 		];
 
 		// Create HTTP Request
@@ -53,15 +61,14 @@ class Client Extends \BaseClass {
 			// Check for Valid Response
 			elseif (preg_match('/application\/json/',$response->header("content-type"))) {
 				$object = json_decode($response->content());
-				// Check for Success Element
-				if (isset($object->success) && $object->success == 1) {
+				if (isset($object->ok) && $object->ok === true) {
+					app_log("Slack message sent to $channel",'debug');
 					return true;
 				}
-				else {
-					$error_msg = isset($object->error) ? $object->error : 'Unknown error';
-					$this->error("Error sending message: ".$error_msg);
-					return false;
-				}
+				$error_msg = isset($object->error) ? $object->error : 'Unknown error';
+				$this->error("Error sending message: ".$error_msg);
+				app_log("Slack send failed for $channel: ".$error_msg,'error');
+				return false;
 			}
 			// Not a Valid Slack Response
 			else {
@@ -134,5 +141,16 @@ class Client Extends \BaseClass {
 	*/
 	public function validSender($string) {
 		return true;
+	}
+
+	/** Normalize spacing so messages are easy to scan in a busy channel. */
+	private static function formatMessage($message) {
+		$text = trim((string) $message);
+		if ($text === '') {
+			return '';
+		}
+		$text = preg_replace("/[ \t]+\n/", "\n", $text);
+		$text = preg_replace("/\n{3,}/", "\n\n", $text);
+		return "\n".$text."\n";
 	}
 }
