@@ -378,7 +378,7 @@ class BaseModel extends \BaseClass {
 		} else {
 			$cls = get_called_class();
 			$parts = explode("\\", $cls);
-			$this->warn($parts[1] . " '." . $code . "' not found");
+			$this->warn($parts[1] . " '" . $code . "' not found");
 			return false;
 		}
 	}

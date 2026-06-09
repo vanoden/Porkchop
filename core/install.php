@@ -215,6 +215,13 @@
 		exit;
 	}
 
+	include(BASE."/config/upgrade.php");
+	if (file_exists(BASE."/config/upgrade_local.php")) {
+		include(BASE."/config/upgrade_local.php");
+	}
+	$site->install_log("Loading modules and registering privileges");
+	$site->loadModules($modules);
+
 	###################################################
 	### Check Install Status...no over-installs		###
 	###################################################
@@ -365,16 +372,6 @@
 	}
 
 	# Bootstrap Administrator role with privileges at level 7 so InitSite/API and Portal admin work
-	
-	// DEBUG HERE
-	$privilege = new \Register\Privilege();
-	$privilege->add(array("name" => "manage customers"));
-	$privilege->add(array("name" => "manage privileges"));
-	$privilege->add(array("name" => "see register api"));
-	$privilege->add(array("name" => "see admin tools"));
-	$privilege->add(array("name" => "manage organization comments"));
-	$privilege->add(array("name" => "manage customer locations"));
-
 	if ($role->id) {
 		$site->install_log("Granting Administrator role privileges (e.g. manage customers at level ADMINISTRATOR)");
 		$role->addPrivilege("manage customers", \Register\PrivilegeLevel::ADMINISTRATOR);
@@ -383,10 +380,9 @@
 		$role->addPrivilege("see admin tools", \Register\PrivilegeLevel::ADMINISTRATOR);
 		$role->addPrivilege("manage organization comments", \Register\PrivilegeLevel::ADMINISTRATOR);
 		$role->addPrivilege("manage customer locations", \Register\PrivilegeLevel::ADMINISTRATOR);
-		$role->addPrivilege("manage customers", \Register\PrivilegeLevel::ADMINISTRATOR);
-		$role->addPrivilege("manage privileges", \Register\PrivilegeLevel::ADMINISTRATOR);
 		$role->addPrivilege("edit site navigation", \Register\PrivilegeLevel::ADMINISTRATOR);
 		$role->addPrivilege("configure site", \Register\PrivilegeLevel::ADMINISTRATOR);
+		$role->addPrivilege("manage navigation menus", \Register\PrivilegeLevel::ADMINISTRATOR);
 	}
 
 	# Get Existing Roles
