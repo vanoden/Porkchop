@@ -56,7 +56,12 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			list($id) = $rs->FetchRow();
+			$row = $rs->FetchRow();
+			if (!$row) {
+				$this->id = null;
+				return false;
+			}
+			list($id) = $row;
 			$this->id = $id;
 			return $this->details();
 		}
