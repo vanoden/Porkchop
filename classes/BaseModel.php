@@ -378,7 +378,7 @@ class BaseModel extends \BaseClass {
 		} else {
 			$cls = get_called_class();
 			$parts = explode("\\", $cls);
-			$this->warn($parts[1] . " '." . $code . "' not found");
+			$this->warn($parts[1] . " '" . $code . "' not found");
 			return false;
 		}
 	}
@@ -399,13 +399,43 @@ class BaseModel extends \BaseClass {
 					$property = new \ReflectionProperty($this, $key);
 					$property_type = $property->getType();
 
-					// Set the value based on type
-					if (!is_null($property_type) && $property_type->allowsNull() && is_null($value)) $this->$key = null;
-					elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
-					elseif (gettype($this->$key) == "float") $this->$key = floatval($value);
-					elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
-					elseif (gettype($this->$key) == "string") $this->$key = strval($value);
-					else $this->$key = $value;
+					// Set the value based on type (uninitialized properties report gettype NULL)
+					if (!is_null($property_type) && $property_type->allowsNull() && is_null($value)) {
+						$this->$key = null;
+					}
+					elseif (!is_null($property_type)) {
+						$typeName = $property_type->getName();
+						if ($typeName === 'int' || $typeName === 'integer') {
+							$this->$key = (int) $value;
+						}
+						elseif ($typeName === 'float') {
+							$this->$key = (float) $value;
+						}
+						elseif ($typeName === 'bool' || $typeName === 'boolean') {
+							$this->$key = (bool) $value;
+						}
+						elseif ($typeName === 'string') {
+							$this->$key = (string) $value;
+						}
+						else {
+							$this->$key = $value;
+						}
+					}
+					elseif (gettype($this->$key) == "integer") {
+						$this->$key = intval($value);
+					}
+					elseif (gettype($this->$key) == "float") {
+						$this->$key = floatval($value);
+					}
+					elseif (gettype($this->$key) == "boolean") {
+						$this->$key = boolval($value);
+					}
+					elseif (gettype($this->$key) == "string") {
+						$this->$key = strval($value);
+					}
+					else {
+						$this->$key = $value;
+					}
 				}
 			}
 			// Let them know the values came from cache

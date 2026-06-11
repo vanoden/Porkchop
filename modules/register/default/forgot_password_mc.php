@@ -31,14 +31,14 @@
 				# Get User Info From Database
 				$contact = new \Register\Contact();
 				if (!empty($_REQUEST['email_address'])) {
-					$contact->getContact('email',$_REQUEST['email_address']);
+					$contact->getSingleContact('email', $_REQUEST['email_address']);
 					if ($contact->error()) {
 						app_log("Error finding contact: ".$contact->error(),'error',__FILE__,__LINE__);
 						$page->addError("Error finding contact info, please try again later");
 						return null;
 					}
 
-					if ($contact->person->id) {
+					if ($contact->id && $contact->person && $contact->person->id) {
 						$customer = new \Register\Customer($contact->person->id);
 						if ($customer->error()) {
 							app_log("Forgot Password Error: ".$customer->error(),'error',__FILE__,__LINE__);

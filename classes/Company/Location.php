@@ -60,7 +60,9 @@
 			}
 			list($id) = $rs->FetchRow();
 
-			if (empty($id)) $id = 0;
+			if (empty($id)) {
+				return false;
+			}
 			$this->id = $id;
 			return $this->details();
 		}

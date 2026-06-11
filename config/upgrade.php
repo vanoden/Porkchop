@@ -27,6 +27,7 @@
 			"privileges"	=> array(
 				'send admin in-site message',
 				'edit site pages',
+				'edit site navigation',
 				'configure site',
 				'see site api',
 				'manage terms of use'

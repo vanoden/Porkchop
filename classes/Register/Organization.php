@@ -74,7 +74,9 @@
 				'class_method' => 'add'
 			));
 
-			$this->auditRecord('ORGANIZATION_CREATED','Organization has been added');
+			if (!empty($GLOBALS['_SESSION_']->customer->id)) {
+				$this->auditRecord('ORGANIZATION_CREATED','Organization has been added');
+			}
 			return $this->update($parameters);
 		}
 

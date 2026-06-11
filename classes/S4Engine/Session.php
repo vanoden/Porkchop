@@ -574,4 +574,24 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 				'timezone'		=> $this->timezone
 			);
 		}
+
+		/** @method formatLocaltime(timestamp)
+		 * Format a timestamp for display in the session timezone using locale conventions
+		 * @param int $timestamp Unix timestamp, defaults to current time
+		 * @return string Formatted date/time string
+		 */
+		public function formatLocaltime($timestamp = 0) {
+			if ($timestamp == 0) $timestamp = time();
+			$datetime = new \DateTime('@'.$timestamp, new \DateTimeZone('UTC'));
+			$datetime->setTimezone(new \DateTimeZone($this->timezone));
+			if (class_exists('\IntlDateFormatter', false)) {
+				$formatted = \IntlDateFormatter::formatObject(
+					$datetime,
+					[\IntlDateFormatter::SHORT, \IntlDateFormatter::MEDIUM],
+					\Locale::getDefault()
+				);
+				if ($formatted !== false) return $formatted;
+			}
+			return $datetime->format('Y-m-d H:i:s');
+		}
 	}
