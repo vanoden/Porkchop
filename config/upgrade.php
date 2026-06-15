@@ -80,7 +80,7 @@
 				"see register api"
 			),
 			"templates"		=> array(
-				"accounts"						=> $templates['support'],
+				"accounts"						=> $templates['portal'],
 				"account"						=> $templates['portal'],
 				"admin_account"					=> $templates['admin'],
 				"organizations_report"			=> $templates['admin'],
@@ -105,13 +105,16 @@
 				"admin_account_register_audit"	=> $templates['admin'],
 				"admin_account_privileges"		=> $templates['admin'],
 				"admin_organization_plans"		=> $templates['admin'],
+				"login"							=> $templates['portal'],
+				"new_customer"					=> $templates['portal'],
+				"forgot_password"				=> $templates['portal'],
 				"pending_customers"				=> $templates['admin'],
 				"privileges"					=> $templates['admin'],
 				"roles"							=> $templates['admin'],
 				"role"							=> $templates['admin'],
-				"ent_accounts"					=> $templates['support'],
-				"organization"					=> $templates['support'],
-				"organizations"					=> $templates['support'],
+				"ent_accounts"					=> $templates['portal'],
+				"organization"					=> $templates['portal'],
+				"organizations"					=> $templates['portal'],
 			),
 		),
 		"Contact"		=> array(
