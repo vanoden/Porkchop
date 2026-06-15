@@ -3,15 +3,15 @@
 
 <section>
 	<h1 class="pageSect_full">Log In to Your Account</h1>
-	<ul class="connectBorder infoText">
-		<li>This site is for authorized use by employees and customers of <r7 object="company" property="name"/>. No other use is permitted.</li>
+	<ul class="pageMessage">
+		<li class="pageMessage--info">This site is for authorized use by employees and customers of <r7 object="company" property="name"/>. No other use is permitted.</li>
 	</ul>
 </section>
 
 <?php if ($page->errorCount() > 0) { ?>
 	<section id="form-message">
-		<ul class="connectBorder errorText">
-			<li><?=$page->errorString()?></li>
+		<ul class="pageMessage">
+			<li class="pageMessage--error"><?=$page->errorString()?></li>
 		</ul>
 	</section>
 <?php	} ?>
