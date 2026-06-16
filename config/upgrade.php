@@ -4,11 +4,9 @@
 	);
 
 	// Commonly used template files
-	$templates = array(
-		"default"	=> "default.html",
-		"support"	=> "support.html",
-		"admin"		=> "admin.html",
-		"portal"	=> "index_pork.html"
+	$templates = array();
+	for ($GLOBALS['_config']->html_templates as $template_name => $template_file) {
+		$templates[$template_name] = $template_file;
 	);
 
 	// Configuration for each standard Porkchop module
