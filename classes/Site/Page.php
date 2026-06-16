@@ -1636,7 +1636,7 @@
 			if ($this->errorCount() > 0) {
 				$buffer .= "
 		  <section id=\"form-message\">
-			<ul class=\"connectBorder pageMessage errorText\">
+			<ul class=\"pageMessage\">
 			  <li class=\"pageMessage--error\">".$this->errorString()."</li>
 			</ul>
 		  </section>
@@ -1645,7 +1645,7 @@
 			elseif (!empty($this->success)) {
 				$buffer .= "
 		  <section id=\"form-message\">
-			<ul class=\"connectBorder pageMessage progressText\">
+			<ul class=\"pageMessage\">
 			  <li class=\"pageMessage--progress\">".$this->success."</li>
 			</ul>
 		  </section>
@@ -1654,7 +1654,7 @@
 			if ($this->warningCount() > 0) {
 				$buffer .= "
 		  <section id=\"form-message\">
-			<ul class=\"connectBorder pageMessage warningText\">
+			<ul class=\"pageMessage\">
 			  <li class=\"pageMessage--warning\">".$this->warningString()."</li>
 			</ul>
 		  </section>
@@ -1663,7 +1663,7 @@
 			if (!empty($this->instructions)) {
 				$buffer .= "
 		  <section id=\"form-message\">
-			<ul class=\"connectBorder pageMessage infoText\">
+			<ul class=\"pageMessage\">
 			  <li class=\"pageMessage--info\">".$this->instructions."</li>
 			</ul>
 		  </section>
@@ -1672,7 +1672,7 @@
 			elseif (!empty($this->getMetadata("instructions"))) {
 				$buffer .= "
 		  <section id=\"form-message\">
-			<ul class=\"connectBorder pageMessage infoText\">
+			<ul class=\"pageMessage\">
 			  <li class=\"pageMessage--info\">".$this->getMetadata("instructions")."</li>
 			</ul>
 		  </section>
