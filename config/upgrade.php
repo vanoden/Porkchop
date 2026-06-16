@@ -5,9 +5,9 @@
 
 	// Commonly used template files
 	$templates = array();
-	for ($GLOBALS['_config']->html_templates as $template_name => $template_file) {
+	foreach ($GLOBALS['_config']->site->templates as $template_name => $template_file) {
 		$templates[$template_name] = $template_file;
-	);
+	};
 
 	// Configuration for each standard Porkchop module
 	$modules = array(
