@@ -24,8 +24,8 @@
 	}
 </script>
 
-<section id="org_form" class="body">
-<div class="organization-page-wrapper" style="display: flex; flex-direction: column; width: 100%;">
+<section id="org_form">
+<div>
 <!-- Page Header -->
 <?=$page->showSubHeading()?>
 <!-- End Page Header -->
@@ -36,10 +36,10 @@
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" id="removeTagId" name="removeTagId" value=""/>
 
-    <div class="form_instruction">Make changes and click 'Apply' to complete.</div>
+    <div>Make changes and click 'Apply' to complete.</div>
 
     <!--	Start First Row-->
-    <table class="responsive-table min-tablet marginTop_20">
+    <table class="table--banded">
       <thead>
         <tr>
           <th scope="col">Code</th>
@@ -60,7 +60,7 @@
       </tbody>
     </table>
 
-    <table class="responsive-table">
+    <table class="table--banded">
       <thead>
         <tr>
           <th scope="col">Require Two-Factor Authentication for All Users</th>
@@ -90,7 +90,7 @@
 
           <td data-label="Website URL">
             <?php	if ($can_manage) { ?>
-            <input type="text" id="website_url" name="website_url" style="width: 450px; max-width: 450px;" placeholder="http://" value="<?=$organization->website_url?>"/>
+            <input type="text" id="website_url" name="website_url" placeholder="http://" value="<?=$organization->website_url?>"/>
             <?php	} else { ?>
             <span class="value"><?=$organization->website_url?></span>
             <?php	} ?>
@@ -101,13 +101,13 @@
       
     <button type="submit" name="method" value="Apply">Submit</button>
 
-    <div class="user_accounts_container">
+    <div>
       <h3>Current Users</h3>
       <label for="showAllUsers">
         <input type="checkbox" id="showAllUsers" name="showAllUsers" value="showAllUsers" onclick="showHidden()" <?= (isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? 'checked' : '' ?>>SHOW ALL (Expired/Hidden/Deleted)
       </label>
         
-      <table class="responsive-table responsive-table--banded">
+      <table class="table--banded">
         <thead>
           <tr>
             <th scope="col">Username</th>
@@ -141,7 +141,7 @@
         if ($can_manage) $sub_url = 'org_account';
         else $sub_url = 'account';
       ?>
-      <table class="responsive-table min-tablet">
+      <table class="table--banded">
         <colgroup>
           <col class="col-w-20">
           <col class="col-w-10">
@@ -168,7 +168,7 @@
     </div>
 
     <h2>Locations</h2>
-    <table class="responsive-table">
+    <table class="table--banded">
       <colgroup>
         <col class="col-w-15">
         <col class="col-w-15">
