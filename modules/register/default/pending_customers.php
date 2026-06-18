@@ -190,65 +190,68 @@
 <?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
-<div id="pending-customers-container">
+<div id="pending-customers-container" class="monitor-admin-list register-pending-customers">
 
 <div class="form_instruction">
 	Manage pending customer registrations. Review and approve or deny customer requests.
 	<?=isset($page->isSearchResults) ? "Found " . count($queuedCustomersList) . " customers matching your search criteria." : "";?>
 </div>
 
-<!-- ============================================== -->
-<!-- FILTER FORM                                    -->
-<!-- ============================================== -->
-<div id="search_container">
-  <form class="filter-bar" method="GET" action="/_register/pending_customers">
-    <input type="text" name="search" id="search" placeholder="search" value="<?= htmlspecialchars($_REQUEST['search'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
-    <input type="text" id="dateStart" name="dateStart" placeholder="From Date" value="<?= htmlspecialchars($_REQUEST['dateStart'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
-    <input type="text" id="dateEnd" name="dateEnd" placeholder="To Date" value="<?= htmlspecialchars($_REQUEST['dateEnd'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+<form class="filter-bar" method="GET" action="/_register/pending_customers">
+	<div class="filter-bar__controls">
+		<div class="form-field filter-bar__search">
+			<label for="search">Search</label>
+			<input type="text" name="search" id="search" placeholder="search" value="<?= htmlspecialchars($_REQUEST['search'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+		</div>
+		<div class="form-field">
+			<label for="dateStart">From</label>
+			<input type="text" id="dateStart" name="dateStart" placeholder="From Date" value="<?= htmlspecialchars($_REQUEST['dateStart'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+		</div>
+		<div class="form-field">
+			<label for="dateEnd">To</label>
+			<input type="text" id="dateEnd" name="dateEnd" placeholder="To Date" value="<?= htmlspecialchars($_REQUEST['dateEnd'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+		</div>
+		<div class="form-field form-field--checks pending-customers-filter-checks">
+			<span class="form-field__group-label">Status</span>
+			<div class="form-field__check-options">
+			<label class="check-field">
+				<input type="checkbox" name="VERIFYING" value="VERIFYING" <?= isset($_REQUEST['VERIFYING']) ? 'checked' : '' ?>>
+				Verifying
+			</label>
+			<label class="check-field">
+				<input type="checkbox" name="PENDING" value="PENDING" <?= isset($_REQUEST['PENDING']) || (empty($_REQUEST['VERIFYING']) && empty($_REQUEST['PENDING']) && empty($_REQUEST['APPROVED']) && empty($_REQUEST['DENIED'])) ? 'checked' : '' ?>>
+				Pending
+			</label>
+			<label class="check-field">
+				<input type="checkbox" name="APPROVED" value="APPROVED" <?= isset($_REQUEST['APPROVED']) ? 'checked' : '' ?>>
+				Approved
+			</label>
+			<label class="check-field">
+				<input type="checkbox" name="DENIED" value="DENIED" <?= isset($_REQUEST['DENIED']) ? 'checked' : '' ?>>
+				Denied
+			</label>
+			</div>
+		</div>
+	</div>
+	<div class="button-group filter-bar__actions">
+		<button type="submit" name="btn_search" value="Search">Search</button>
+		<button type="button" class="btn-secondary" onclick="window.location.href='/_register/pending_customers'">Clear</button>
+	</div>
+</form>
 
-    <label class="check-field">
-      <input type="checkbox" name="VERIFYING" value="VERIFYING" <?= isset($_REQUEST['VERIFYING']) ? 'checked' : '' ?>>
-      Verifying
-    </label>
-
-    <label class="check-field">
-      <input type="checkbox" name="PENDING" value="PENDING" <?= isset($_REQUEST['PENDING']) || (empty($_REQUEST['VERIFYING']) && empty($_REQUEST['PENDING']) && empty($_REQUEST['APPROVED']) && empty($_REQUEST['DENIED'])) ? 'checked' : '' ?>>
-      Pending
-    </label>
-
-    <label class="check-field">
-      <input type="checkbox" name="APPROVED" value="APPROVED" <?= isset($_REQUEST['APPROVED']) ? 'checked' : '' ?>>
-      Approved
-    </label>
-
-    <label class="check-field">
-      <input type="checkbox" name="DENIED" value="DENIED" <?= isset($_REQUEST['DENIED']) ? 'checked' : '' ?>>
-      Denied
-    </label>
-
-    <div class="button-group">
-      <button type="submit" name="btn_search" value="Search">Search</button>
-      <button type="button" onclick="window.location.href='/_register/pending_customers'">Clear</button>
-    </div>
-  </form>
-</div>
-
-<!-- ============================================== -->
-<!-- PENDING CUSTOMERS LIST -->
-<!-- ============================================== -->
-<h3>Pending Customers</h3>
-<section class="table-group">
-  <table class="table--banded">
+<h2>Pending Customers [<?=count($queuedCustomersList)?>]</h2>
+<section class="table-group register-pending-customers-table-wrap">
+  <table class="responsive-table responsive-table--banded pending-customers-table">
     <thead>
       <tr>
-        <th scope="col" class="col-w-15">Organization</th>
-        <th scope="col" class="col-w-15">Customer Info</th>
-        <th scope="col" class="col-w-10">Status</th>
-        <th scope="col" class="col-w-10">Date</th>
-        <th scope="col" class="col-w-15">Address</th>
-        <th scope="col" class="col-w-15">Contact</th>
-        <th scope="col" class="col-w-10">Product</th>
-        <th scope="col" class="col-w-10">Admin Notes</th>
+        <th scope="col" class="pending-customers-col-org">Organization</th>
+        <th scope="col" class="pending-customers-col-customer">Customer Info</th>
+        <th scope="col" class="pending-customers-col-status">Status</th>
+        <th scope="col" class="pending-customers-col-date">Date</th>
+        <th scope="col" class="pending-customers-col-address">Address</th>
+        <th scope="col" class="pending-customers-col-contact">Contact</th>
+        <th scope="col" class="pending-customers-col-product">Product</th>
+        <th scope="col" class="pending-customers-col-notes">Admin Notes</th>
       </tr>
     </thead>
     <tbody>
@@ -260,7 +263,7 @@
           $email = isset($registerCustomer->contacts(array('type' => 'email'))[0]) ? $registerCustomer->contacts(array('type' => 'email'))[0] : "";
       ?>
       <tr>
-        <td data-label="Organization">
+        <td data-label="Organization" class="pending-customers-col-org">
 			<div class="value"><?= htmlspecialchars($queuedCustomer->name) ?></div>
 			<?php if ($queuedCustomer->is_reseller) { ?>
 			<span class="label reseller-label">[Reseller]</span>
@@ -275,7 +278,7 @@
 				<div class="marginTop_10">
 					<input list="organization_list_<?=$queuedCustomer->id?>" class="organization value input width-100per" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?= htmlspecialchars($queuedCustomer->name) ?>" placeholder="Match Organization"/>
 					<datalist id="organization_list_<?=$queuedCustomer->id?>"></datalist>
-					<div class="button-group marginTop_5">
+					<div class="button-group pending-customers-org-actions marginTop_5">
 						<div class="button-item">
 							<input type="image" class="width-30px" src="/img/icons/icon_cust_add-existing.svg" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignExistingCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" title="Assign customer to existing organization" disabled="disabled"/> 
 							<div class="button-label">Assign</div>
@@ -326,11 +329,13 @@
 			</form>
         </td>
     
-	  <td data-label="Customer Info">
-		  <div class="value"><?= htmlspecialchars($registerCustomer->first_name . ' ' . $registerCustomer->last_name) ?></div>
-		  <div class="value marginTop_5 login-info">Login: <?= htmlspecialchars($registerCustomer->code) ?></div>
+	  <td data-label="Customer Info" class="pending-customers-col-customer">
+		  <div class="pending-customers-cell-stack">
+			  <div class="value"><?= htmlspecialchars($registerCustomer->first_name . ' ' . $registerCustomer->last_name) ?></div>
+			  <div class="value pending-customers-meta">Login: <?= htmlspecialchars($registerCustomer->code) ?></div>
+		  </div>
 	  </td>
-	  <td data-label="Status">
+	  <td data-label="Status" class="pending-customers-col-status">
 		  <div id="customer_status_form_<?=$queuedCustomer->id?>" class="hidden customer_status_form">
 		    <form method="POST" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
 		      <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
@@ -349,7 +354,7 @@
 		  </div>
 		  <div id="customer_status_form_links_<?=$queuedCustomer->id?>" class="customer_status_form_links">
 			  <span class="register-pending-customers-status-<?=strtolower($queuedCustomer->status)?>"><?=$queuedCustomer->status?></span><br/>
-			  <a class="small-text cursor-pointer" onclick="editStatus(<?=$queuedCustomer->id?>)"><img src="/img/icons/edit_dk.svg" alt="Edit Status" class="edit-icon"> Edit Status</a>
+			  <a class="pending-customers-edit-link" href="#" onclick="editStatus(<?=$queuedCustomer->id?>); return false;"><img src="/img/icons/edit_dk.svg" alt="Edit Status" class="edit-icon"> Edit Status</a>
 			  <?php if ($queuedCustomer->status == 'VERIFYING') { ?>
 			  <div class="marginTop_5">
 				  <button type="button" class="button secondary" onclick="resend(<?=$queuedCustomer->register_user_id?>, this)">Resend Email</button>
@@ -357,32 +362,40 @@
 			  <?php } ?>
 		  </div>
 	  </td>
-	  <td data-label="Date">
-		  <div class="value"><?=date("M j, Y", strtotime($queuedCustomer->date_created))?></div>
-		  <div class="value time-info"><?=date("g:i a", strtotime($queuedCustomer->date_created))?></div>
+	  <td data-label="Date" class="pending-customers-col-date">
+		  <div class="pending-customers-cell-stack pending-customers-date">
+			  <div class="value"><?=date('M j, Y', strtotime($queuedCustomer->date_created))?></div>
+			  <div class="value pending-customers-meta"><?=date('g:i a', strtotime($queuedCustomer->date_created))?></div>
+		  </div>
 	  </td>
-	  <td data-label="Address">
-		  <div class="value"><?= htmlspecialchars($queuedCustomer->address) ?></div>
-		  <div class="value"><?= htmlspecialchars($queuedCustomer->city . ', ' . $queuedCustomer->state . ' ' . $queuedCustomer->zip) ?></div>
+	  <td data-label="Address" class="pending-customers-col-address">
+		  <div class="pending-customers-cell-stack">
+			  <div class="value"><?= htmlspecialchars($queuedCustomer->address) ?></div>
+			  <div class="value"><?= htmlspecialchars($queuedCustomer->city . ', ' . $queuedCustomer->state . ' ' . $queuedCustomer->zip) ?></div>
+		  </div>
 	  </td>
-	  <td data-label="Contact">
-		  <?php if (isset($phone->value)) { ?>
-		  <div class="value"><strong>Phone:</strong> <?= htmlspecialchars($phone->value) ?></div>
-		  <?php } ?>
-		  <?php if (isset($email->value)) { ?>
-		  <div class="value"><strong>Email:</strong> <?= htmlspecialchars($email->value) ?></div>
-		  <?php } ?>
+	  <td data-label="Contact" class="pending-customers-col-contact">
+		  <div class="pending-customers-cell-stack">
+<?php if (isset($phone->value)) { ?>
+			  <div class="value"><strong>Phone:</strong> <?= htmlspecialchars($phone->value) ?></div>
+<?php } ?>
+<?php if (isset($email->value)) { ?>
+			  <div class="value pending-customers-email"><strong>Email:</strong> <?= htmlspecialchars($email->value) ?></div>
+<?php } ?>
+		  </div>
 	  </td>
-	  <td data-label="Product">
-		  <?php if ($queuedCustomer->product_id) { ?>
-		  <div class="value"><?= htmlspecialchars($productItem->name) ?></div>
-		  <div class="value product-code">[<?= htmlspecialchars($productItem->code) ?>]</div>
-		  <div class="value marginTop_5 serial-info">Serial: <?= htmlspecialchars($queuedCustomer->serial_number) ?></div>
-		  <?php } else { ?>
-		  <div class="value no-product">No product</div>
-		  <?php } ?>
+	  <td data-label="Product" class="pending-customers-col-product">
+		  <div class="pending-customers-cell-stack">
+<?php if ($queuedCustomer->product_id) { ?>
+			  <div class="value"><?= htmlspecialchars($productItem->name) ?></div>
+			  <div class="value pending-customers-meta">[<?= htmlspecialchars($productItem->code) ?>]</div>
+			  <div class="value pending-customers-meta">Serial: <?= htmlspecialchars($queuedCustomer->serial_number) ?></div>
+<?php } else { ?>
+			  <div class="value no-product">No product</div>
+<?php } ?>
+		  </div>
 	  </td>
-	  <td data-label="Admin Notes">
+	  <td data-label="Admin Notes" class="pending-customers-col-notes">
 		  <div id="customer_notes_form_<?=$queuedCustomer->id?>" class="hidden customer_notes_form">
         <form method="POST" action="/_register/pending_customers">
           <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
@@ -413,10 +426,9 @@
           <?php if (isset($_REQUEST['DENIED'])) { ?>
           <input type="hidden" name="DENIED" value="DENIED">
           <?php } ?>
-          <br/><br/><br/>
           <div class="button-spacing">
             <button type="submit" class="button save-button">Save</button>
-            <button type="button" class="button secondary small-button" onclick="cancelEditNote(<?=$queuedCustomer->id?>)">Cancel</button>
+            <button type="button" class="button btn-secondary small-button" onclick="cancelEditNote(<?=$queuedCustomer->id?>)">Cancel</button>
           </div>
         </form>
 		  </div>
@@ -427,9 +439,9 @@
 		    <div class="value no-notes">No notes</div>
 		    <?php } ?>
 		    <?php if ($queuedCustomer->notes) { ?>
-		    <a class="small-text cursor-pointer" onclick="editNote(<?=$queuedCustomer->id?>)"><img src="/img/icons/edit_on.svg" alt="Edit Note" class="edit-icon"> Edit Note</a>
+		    <a class="pending-customers-edit-link" href="#" onclick="editNote(<?=$queuedCustomer->id?>); return false;"><img src="/img/icons/edit_on.svg" alt="Edit Note" class="edit-icon"> Edit Note</a>
 		    <?php } else { ?>
-		    <a class="small-text cursor-pointer" onclick="editNote(<?=$queuedCustomer->id?>)"><img src="/img/icons/icon_tools_add.svg" alt="Add Note" class="edit-icon"> Add Note</a>
+		    <a class="pending-customers-edit-link" href="#" onclick="editNote(<?=$queuedCustomer->id?>); return false;"><img src="/img/icons/icon_tools_add.svg" alt="Add Note" class="edit-icon"> Add Note</a>
 		    <?php } ?>
 		  </div>
 	  </td>

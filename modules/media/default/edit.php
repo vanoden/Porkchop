@@ -27,8 +27,10 @@
 		<span class="label">Description</span>
 		<textarea class="value input textarea-height-75 textarea-width-300" name="description" id="description"><?=strip_tags($item->description)?></textarea>
 	</div>
-	<div class="editSubmit">
-		<input type="submit" class="button" value="Submit" name="submit" id="submit"/>
+	<div class="form-actions filter-bar">
+		<div class="button-group filter-bar__actions">
+			<button type="submit" class="button" name="submit" id="submit" value="Submit">Submit</button>
+		</div>
 	</div>
 </div>
 </form>

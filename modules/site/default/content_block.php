@@ -91,8 +91,10 @@
 				<div><input type="submit" name="addSearchTag" value="Add Search Tag" class="button" /></div>
 		</div>
 
-		<div class="editSubmit button-bar floating">
-			<input type="submit" class="button" value="Update" name="updateSubmit" id="updateSubmit" />
+		<div class="form-actions filter-bar">
+			<div class="button-group filter-bar__actions">
+				<button type="submit" class="button" name="updateSubmit" id="updateSubmit" value="Update">Update</button>
+			</div>
 		</div>
 	</div>
 </form>

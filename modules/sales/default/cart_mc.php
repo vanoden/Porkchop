@@ -3,17 +3,19 @@
 	$page = $site->page();
 	$page->requirePrivilege('see sales quotes');
 
-	// CSRF Protection
-	if($_SERVER['REQUEST_METHOD'] == 'POST' && ! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])){
-		echo "Invalid Request";
-		die();
+	$can_proceed = true;
+	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+		$csrfToken = $_REQUEST['csrfToken'] ?? '';
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($csrfToken)) {
+			$page->addError("Invalid Request. Please reload the page and try again.");
+			$can_proceed = false;
+		}
 	}
 
 	/****************************************/
 	/* Validate Form Data					*/
 	/****************************************/
 	// Get the order from Post or Get Vars
-	$can_proceed = true;
 	
 	$request = new \HTTP\Request();
 	$order_id = $_REQUEST['order_id'] ?? null;
@@ -98,7 +100,7 @@
 		$form['shipping_vendor_id'] = $shipping_vendor->id;
 	}
 	elseif ($order->id > 0) {
-		$shipping_vendor = $order->shipping_vendor();
+		$shipping_vendor = new \Shipping\Vendor($order->shipping_vendor_id ?? 0);
 	}
 	else {
 		$shipping_vendor = new \Shipping\Vendor();
@@ -107,7 +109,7 @@
 	/********************************************/
 	/* Create a New Order						*/
 	/********************************************/
-	if ($order->id < 1 && $customer->id > 0 && $shipping_location->id > 0 && $billing_location->id > 0) {
+	if ($can_proceed && $order->id < 1 && $customer->id > 0 && $shipping_location->id > 0 && $billing_location->id > 0 && $shipping_vendor->id > 0) {
 		// We Have What We Need to Create an Order
 		// New Order Parameters
 		$parameters['salesperson_id'] = $GLOBALS['_SESSION_']->customer->id;
@@ -125,7 +127,7 @@
 	/********************************************/
 	/* Update Existing Order					*/
 	/********************************************/
-	elseif ($order->id > 0) {
+	elseif ($can_proceed && $order->id > 0) {
 		// Update the order
 		$order->update($parameters);
 		if ($order->error()) $page->addError("Error updating order: ".$order->error());
@@ -149,7 +151,7 @@
 					if ($request->validInteger($quantity) && $quantity != $item->quantity) {
 						if ($quantity <= 0) {
 							$order->dropItem($item_id);
-							$page->appendSuccess("Dropped item ".$item_id);
+							$page->appendSuccess("Dropped item ".$item->product()->code);
 							continue;
 						}
 						else $item_params['quantity'] = $quantity;
@@ -233,7 +235,18 @@
 		// remove item from order
 		$remove_item = $_REQUEST['remove_item'] ?? null;
 		if ($request->validInteger($remove_item)) {
-			$order->appendSuccess("Removing item ".$remove_item);
+			$item = $order->getItem($remove_item);
+			$itemName = $remove_item;
+			if ($item->id) {
+				$product = $item->product();
+				if ($product->id && $product->code) {
+					$itemName = $product->code;
+				}
+				elseif ($item->description) {
+					$itemName = strip_tags($item->description);
+				}
+			}
+			$page->appendSuccess("Removing item ".$itemName);
 			$order->dropItem($remove_item);
 		}
 	}
@@ -241,21 +254,24 @@
 	/********************************************/
 	/* Update Order Status Per Footer Buttons	*/
 	/********************************************/
-	$btn_submit = $_REQUEST['btn_submit'] ?? null;
-	if ($request->validText($btn_submit)) {
-		if ($page->errorCount() > 0) {
-			$page->addError("Not updating order status");
-			$can_proceed = false;
+	$btn_submit = trim((string)($_REQUEST['btn_submit'] ?? ''));
+	if ($btn_submit !== '' && $request->validText($btn_submit)) {
+		if (! $can_proceed) {
+			// CSRF or earlier validation already blocked this request.
 		}
-		
-		if ($can_proceed) {
+		elseif (preg_match('/Create/', $btn_submit) && $order->id < 1) {
+			$page->addError("Complete organization, customer, billing, shipping, and vendor before creating an order.");
+		}
+		elseif ($page->errorCount() > 0) {
+			$page->addError("Not updating order status");
+		}
+		elseif ($order->id > 0) {
 			if (preg_match('/Save/',$btn_submit)) {
-				header("Location: /_sales/orders");
+				$page->appendSuccess("Order saved for later.");
 			}
 			elseif (preg_match('/Quote/',$btn_submit)) {
 				if ($order->quote()) {
-					header("Location: /_sales/orders");
-					exit;
+					$page->appendSuccess("Quote created. Order status is now Quote.");
 				}
 				else {
 					$page->addError($order->error());
@@ -263,8 +279,7 @@
 			}
 			elseif (preg_match('/Approve/',$btn_submit)) {
 				if ($order->approve()) {
-					header("Location: /_sales/orders");
-					exit;
+					$page->appendSuccess("Order approved and sent for fulfillment.");
 				}
 				else {
 					$page->addError($order->error());
@@ -272,13 +287,14 @@
 			}
 			elseif (preg_match('/Cancel/',$btn_submit)) {
 				if ($order->cancel()) {
-					header("Location: /_sales/orders");
-					exit;
+					$page->appendSuccess("Order cancelled.");
 				}
 				else {
 					$page->addError($order->error());
 				}
 			}
+
+			$order = new \Sales\SalesOrder($order->id);
 		}
 	}
 
@@ -319,11 +335,11 @@
 
 	// Prefill Form Fields from Database Info
 	if ($order->id > 0) {
-		$form["organization_id"] = $organization->id;
-		$form["customer_id"] = $customer->id;
-		$form["shipping_location_id"] = $shipping_location->id;
-		$form["billing_location_id"] = $billing_location->id;
-		$form["shipping_vendor_id"] = $shipping_vendor->id;
+		$form["organization_id"] = $organization->id ?? 0;
+		$form["customer_id"] = $customer->id ?? 0;
+		$form["shipping_location_id"] = $shipping_location->id ?? 0;
+		$form["billing_location_id"] = $billing_location->id ?? 0;
+		$form["shipping_vendor_id"] = $shipping_vendor->id ?? 0;
 	}
 
 	// Populate Instructions

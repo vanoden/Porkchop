@@ -360,17 +360,22 @@ class BaseListClass extends \BaseClass {
 		$modelName = $this->_modelName;
 		$model = new $modelName();
 
-		if (empty($model->_tableName() || empty($model->_tableFKColumn() || empty($model->_tableNumberColumn())))) {
+		$tableName = $model->_tableName();
+		$numberColumn = $model->_tableNumberColumn();
+		$fkColumn = $model->_tableFKColumn();
+
+		if (empty($tableName) || empty($numberColumn)) {
 			$this->error("Class not configured for Line Numbers");
+			return null;
 		}
 
 		$get_number_query = "
-				SELECT	max(`$model->_tableNumberColumn`)
-				FROM	`$model->_tableName`
+				SELECT	max(`$numberColumn`)
+				FROM	`$tableName`
 			";
-		if (isset($parent_id)) {
+		if (isset($parent_id) && !empty($fkColumn)) {
 			$get_number_query .= "
-				WHERE	`$model->_tableFKColumn` = ?
+				WHERE	`$fkColumn` = ?
 				";
 			$database->AddParam($parent_id);
 		}

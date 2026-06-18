@@ -141,6 +141,31 @@
 			$response->addElement('message',$content);
 			$response->print();
 		}
+
+		/** @method addMessageSearchTag()
+		 * Add a knowledge-center search tag to a content message block.
+		 */
+		public function addMessageSearchTag() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+			if (!$GLOBALS['_SESSION_']->customer->can('edit content messages')) $this->deny();
+
+			$message = new \Content\Message();
+			$target = $_REQUEST['target'] ?? $_REQUEST['code'] ?? '';
+			if ($target === '') $this->incompleteRequest("target is required");
+			if (!$message->get($target)) $this->error($message->error() ?: "Message not found");
+
+			$value = trim($_REQUEST['value'] ?? $_REQUEST['tag'] ?? '');
+			$category = trim($_REQUEST['category'] ?? '');
+			if (!$message->validTagValue($value)) $this->error("Invalid tag value");
+			if ($category === '' || !$message->validTagCategory($category)) $this->error("Tag category is required");
+			if (!$message->addTag($value, $category)) {
+				$this->error($message->error() ?: "Failed to add content message search tag");
+			}
+
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->print();
+		}
 		
 		###################################################
 		### Update Specified Message					###

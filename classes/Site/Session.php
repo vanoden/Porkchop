@@ -1079,6 +1079,21 @@ use Register\Customer;
 				return false;
 			}
 			if (empty($this->csrfToken)) {
+				$cache = $this->cache();
+				if ($cache && ! $cache->error()) {
+					$cachedToken = $cache->getElement('csrfToken');
+					if (! empty($cachedToken)) {
+						$this->csrfToken = $cachedToken;
+					}
+					else {
+						$cachedObject = $cache->get();
+						if (is_object($cachedObject) && ! empty($cachedObject->csrfToken)) {
+							$this->csrfToken = $cachedObject->csrfToken;
+						}
+					}
+				}
+			}
+			if (empty($this->csrfToken)) {
 				app_log("No csrfToken exists for session",'debug');
 				return false;
 			}

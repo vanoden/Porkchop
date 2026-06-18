@@ -21,10 +21,14 @@
                     <img src="/api/media/downloadMediaImage?code=<?= $image->code ?>&height=100&width=100" class="media-image-select" alt="<?= htmlspecialchars($image->name) ?>" />
                 </a>
             <?php   }
-        } else { ?>
+        } elseif (!empty($listError)) { ?>
             <div class="no-images">
-                <p>No images found in the repository.</p>
-                <p>Please upload some images first.</p>
+                <p><?= htmlspecialchars($listError) ?></p>
+            </div>
+        <?php } else { ?>
+            <div class="no-images">
+                <p>No images found in this folder.</p>
+                <p>Upload images first, then try again.</p>
             </div>
         <?php } ?>
     </div>

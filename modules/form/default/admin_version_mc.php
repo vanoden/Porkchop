@@ -6,6 +6,7 @@
 	 * controls to save, publish, or unpublish the version.
 	 */
 	$page = new \Site\Page();
+	$page->requirePrivilege('manage forms');
 	$porkchop = new \Porkchop();
 	$can_proceed = true;
 
@@ -224,6 +225,145 @@
 
 		if (!empty($_REQUEST['instructions']) && !$form->validText($_REQUEST['instructions'])) {
 			$page->addError("Invalid instructions format");
+		}
+
+		// New question rows: if any field is started, all required fields must be complete.
+		$newQuestionChoiceTypes = array('select', 'radio', 'checkbox');
+		$typesNew = $_POST['type_new'] ?? array();
+		$textsNew = $_POST['text_new'] ?? array();
+		$promptsNew = $_POST['prompt_new'] ?? array();
+		$groupsNew = $_POST['group_id_new'] ?? array();
+		$sortOrdersNew = $_POST['sort_order_new'] ?? array();
+		$requiredNew = $_POST['required_new'] ?? array();
+		$optionNewTextNew = $_POST['option_new_text_new'] ?? array();
+		$optionNewValueNew = $_POST['option_new_value_new'] ?? array();
+		if (! is_array($typesNew)) {
+			$typesNew = array();
+		}
+		if (! is_array($textsNew)) {
+			$textsNew = array();
+		}
+		if (! is_array($promptsNew)) {
+			$promptsNew = array();
+		}
+		if (! is_array($groupsNew)) {
+			$groupsNew = array();
+		}
+		if (! is_array($sortOrdersNew)) {
+			$sortOrdersNew = array();
+		}
+		if (! is_array($requiredNew)) {
+			$requiredNew = array();
+		}
+		if (! is_array($optionNewTextNew)) {
+			$optionNewTextNew = array();
+		}
+		if (! is_array($optionNewValueNew)) {
+			$optionNewValueNew = array();
+		}
+		$newRowIndices = array_unique(array_merge(
+			array_keys($typesNew),
+			array_keys($textsNew),
+			array_keys($promptsNew),
+			array_keys($groupsNew),
+			array_keys($sortOrdersNew),
+			array_keys($requiredNew),
+			array_keys($optionNewTextNew),
+			array_keys($optionNewValueNew)
+		));
+		sort($newRowIndices, SORT_NUMERIC);
+		foreach ($newRowIndices as $rowIndex) {
+			$rowIndex = (int)$rowIndex;
+			$question_text = trim((string)($textsNew[$rowIndex] ?? ''));
+			$question_prompt = trim((string)($promptsNew[$rowIndex] ?? ''));
+			$hasGroup = isset($groupsNew[$rowIndex])
+				&& (string)$groupsNew[$rowIndex] !== ''
+				&& (string)$groupsNew[$rowIndex] !== '0';
+			$hasRequired = ! empty($requiredNew[$rowIndex]);
+			$optTexts = $optionNewTextNew[$rowIndex] ?? array();
+			$optVals = $optionNewValueNew[$rowIndex] ?? array();
+			if (! is_array($optTexts)) {
+				$optTexts = array($optTexts);
+			}
+			if (! is_array($optVals)) {
+				$optVals = array($optVals);
+			}
+			$hasChoiceData = false;
+			$nChoicePairs = max(count($optTexts), count($optVals));
+			for ($ci = 0; $ci < $nChoicePairs; $ci++) {
+				$choiceText = trim((string)($optTexts[$ci] ?? ''));
+				$choiceVal = trim((string)($optVals[$ci] ?? ''));
+				if ($choiceText !== '' || $choiceVal !== '') {
+					$hasChoiceData = true;
+					break;
+				}
+			}
+			$rowStarted = (
+				$question_text !== ''
+				|| $question_prompt !== ''
+				|| $hasGroup
+				|| $hasRequired
+				|| $hasChoiceData
+			);
+			if (! $rowStarted) {
+				continue;
+			}
+			$rowLabel = $question_text !== ''
+				? "'" . $question_text . "'"
+				: ('#' . ($rowIndex + 1));
+			$question = new \Form\Question();
+			if ($question_text === '') {
+				$page->addError("Question name is required for new question " . $rowLabel . ".");
+			} elseif (! $question->validText($question_text)) {
+				$page->addError("Invalid question name format for new question " . $rowLabel . ".");
+			}
+			if ($question_prompt === '') {
+				$page->addError("Question prompt is required for new question " . $rowLabel . ".");
+			} elseif (! $question->validText($question_prompt)) {
+				$page->addError("Invalid question prompt format for new question " . $rowLabel . ".");
+			}
+			$question_type = (string)($typesNew[$rowIndex] ?? 'text');
+			if (! $question->validType($question_type)) {
+				$page->addError("Invalid question type for new question " . $rowLabel . ".");
+			}
+			$sortRaw = $sortOrdersNew[$rowIndex] ?? '';
+			if ($sortRaw === '' || $sortRaw === null) {
+				$page->addError("View order is required for new question " . $rowLabel . ".");
+			} elseif (! $question->validInteger((string)$sortRaw)) {
+				$page->addError("Invalid view order for new question " . $rowLabel . ".");
+			}
+			if (in_array($question_type, $newQuestionChoiceTypes, true)) {
+				$completeChoices = 0;
+				for ($ci = 0; $ci < $nChoicePairs; $ci++) {
+					$choiceText = trim((string)($optTexts[$ci] ?? ''));
+					$choiceVal = trim((string)($optVals[$ci] ?? ''));
+					if ($choiceText === '' && $choiceVal === '') {
+						continue;
+					}
+					if ($choiceText === '' || $choiceVal === '') {
+						$page->addError("Each choice needs both label and value for new question " . $rowLabel . ".");
+						break;
+					}
+					if (! $form->validText($choiceText) || ! $form->validText($choiceVal)) {
+						$page->addError("Invalid choice text for new question " . $rowLabel . ".");
+						break;
+					}
+					$completeChoices++;
+				}
+				if ($completeChoices < 1) {
+					$page->addError(
+						"At least one choice is required for new "
+						. $question_type
+						. " question "
+						. $rowLabel
+						. "."
+					);
+				}
+			}
+		}
+
+		if ($page->errorCount()) {
+			$can_proceed = false;
 		}
 
 		if ($versionCode === '') {
@@ -580,46 +720,104 @@
 				}
 			}
 
-			// Add new question if provided
-			if ($can_proceed && ! empty($_REQUEST['text_new'])) {
-				$question = new \Form\Question();
-
-				if (! $question->validType($_REQUEST['type_new'] ?? '')) {
-					$page->addError("Invalid question type: " . $_REQUEST['type_new']);
-				} elseif (empty($_REQUEST['text_new'])) {
-					$page->addError("Question text is required.");
-				} else {
-					if (empty($_REQUEST['prompt_new'])) {
-						$page->addError("Question prompt is required");
-					} elseif (! $question->validText($_REQUEST['prompt_new'] ?? '')) {
-						$page->addError("Invalid question prompt format");
+			// Add new questions (multiple rows; empty rows are skipped)
+			if ($can_proceed && $version->exists()) {
+				$choiceTypes = array('select', 'radio', 'checkbox');
+				foreach ($newRowIndices as $rowIndex) {
+					$rowIndex = (int)$rowIndex;
+					$question_text = trim((string)($textsNew[$rowIndex] ?? ''));
+					if ($question_text === '') {
+						continue;
 					}
-
-					$reqNew = ! empty($_REQUEST['required_new']) ? 1 : 0;
+					$question = new \Form\Question();
+					$question_type = (string)($typesNew[$rowIndex] ?? 'text');
+					if (! $question->validType($question_type)) {
+						$page->addError("Invalid question type: " . $question_type);
+						$can_proceed = false;
+						continue;
+					}
+					$question_prompt = trim((string)($promptsNew[$rowIndex] ?? ''));
+					if ($question_prompt === '') {
+						$page->addError("Question prompt is required for new question '" . $question_text . "'.");
+						$can_proceed = false;
+						continue;
+					}
+					if (! $question->validText($question_text)) {
+						$page->addError("Invalid question name format for '" . $question_text . "'.");
+						$can_proceed = false;
+						continue;
+					}
+					if (! $question->validText($question_prompt)) {
+						$page->addError("Invalid question prompt format for '" . $question_text . "'.");
+						$can_proceed = false;
+						continue;
+					}
+					$reqNew = ! empty($requiredNew[$rowIndex]) ? 1 : 0;
 					if (! $question->validInteger((string)$reqNew)) {
 						$page->addError("Invalid question required format");
 						$can_proceed = false;
+						continue;
 					}
-					if (! $page->errorCount() && $can_proceed) {
-						// Route through Form::addQuestion so a missing group_id resolves
-						// to the version's first group (or auto-creates a "General" group).
-						// A bare $question->add() leaves group_id NULL, and Version::questions()
-						// filters those out via INNER JOIN, making the new question invisible.
-						$parameters = array(
-							'version_id' => (int)$version->id,
-							'type' => $_REQUEST['type_new'] ?? '',
-							'text' => trim(noXSS($_REQUEST['text_new'] ?? '')),
-							'prompt' => $_REQUEST['prompt_new'] ?? '',
-							'required' => $reqNew,
-							'sort_order' => (int)($_REQUEST['sort_order_new'] ?? 50),
-							'group_id' => (! empty($_REQUEST['group_id_new']) ? (int)$_REQUEST['group_id_new'] : null),
-						);
-
-						$newQuestion = $form->addQuestion($parameters);
-						if (! $newQuestion) {
-							$page->addError("Error adding question: " . ($form->error() ?: 'unknown error'));
-						} else {
-							$page->appendSuccess("Question added.");
+					if (! $can_proceed) {
+						continue;
+					}
+					$parameters = array(
+						'version_id' => (int)$version->id,
+						'type' => $question_type,
+						'text' => trim(noXSS($question_text)),
+						'prompt' => $question_prompt,
+						'required' => $reqNew,
+						'sort_order' => (int)($sortOrdersNew[$rowIndex] ?? 50),
+						'group_id' => (! empty($groupsNew[$rowIndex]) ? (int)$groupsNew[$rowIndex] : null),
+					);
+					$newQuestion = $form->addQuestion($parameters);
+					if (! $newQuestion) {
+						$page->addError("Error adding question: " . ($form->error() ?: 'unknown error'));
+						$can_proceed = false;
+						continue;
+					}
+					$page->appendSuccess("Question added.");
+					if (in_array($question_type, $choiceTypes, true)) {
+						$texts = $optionNewTextNew[$rowIndex] ?? array();
+						$vals = $optionNewValueNew[$rowIndex] ?? array();
+						if (! is_array($texts)) {
+							$texts = array($texts);
+						}
+						if (! is_array($vals)) {
+							$vals = array($vals);
+						}
+						$maxSort = 0;
+						foreach ($newQuestion->options() as $o) {
+							$maxSort = max($maxSort, (int)$o->sort_order);
+						}
+						$nPairs = max(count($texts), count($vals));
+						for ($oi = 0; $oi < $nPairs; $oi++) {
+							$nText = trim((string)($texts[$oi] ?? ''));
+							$nVal = trim((string)($vals[$oi] ?? ''));
+							if ($nText === '' && $nVal === '') {
+								continue;
+							}
+							if ($nText === '' || $nVal === '') {
+								$page->addError("New choice needs both label and value for question '" . $question_text . "'.");
+								$can_proceed = false;
+								break;
+							}
+							if (! $form->validText($nText) || ! $form->validText($nVal)) {
+								$page->addError("Invalid new choice text for question '" . $question_text . "'.");
+								$can_proceed = false;
+								break;
+							}
+							$maxSort += 10;
+							if (! $newQuestion->addOption(array(
+								'text' => $nText,
+								'value' => $nVal,
+								'sort_order' => $maxSort,
+							))) {
+								$page->addError("Error adding choice: " . $newQuestion->error());
+								$can_proceed = false;
+								break;
+							}
+							$page->appendSuccess("Choice added.");
 						}
 					}
 				}
@@ -645,6 +843,84 @@ if ($can_proceed && isset($version) && $version->exists()) {
 
 	// Refresh lock state so the view reflects any publish that just happened.
 	$isLocked = isset($version) && $version->exists() && ! empty($version->date_activated);
+
+	// View helpers and display variables (admin_version.php)
+	$hasErrors = $page->errorCount() > 0;
+	$h = function ($s) {
+		return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+	};
+	$postScalar = function ($name, $fallback = '') use ($hasErrors) {
+		if ($hasErrors && isset($_POST[$name]) && is_scalar($_POST[$name])) {
+			return (string)$_POST[$name];
+		}
+		return (string)$fallback;
+	};
+	$postArrScalar = function ($name, $key, $fallback = '') use ($hasErrors) {
+		if ($hasErrors && isset($_POST[$name]) && is_array($_POST[$name]) && array_key_exists($key, $_POST[$name]) && is_scalar($_POST[$name][$key])) {
+			return (string)$_POST[$name][$key];
+		}
+		return (string)$fallback;
+	};
+	$postCheckbox = function ($name, $fallback = false) use ($hasErrors) {
+		if ($hasErrors) {
+			return ! empty($_POST[$name]);
+		}
+		return (bool)$fallback;
+	};
+	$postArrCheckbox = function ($name, $key, $fallback = false) use ($hasErrors) {
+		if ($hasErrors) {
+			return ! empty($_POST[$name][$key]);
+		}
+		return (bool)$fallback;
+	};
+	$postArrList = function ($name, $key) use ($hasErrors) {
+		if ($hasErrors && isset($_POST[$name][$key]) && is_array($_POST[$name][$key])) {
+			return array_map('strval', $_POST[$name][$key]);
+		}
+		return array();
+	};
+	$postIndexedList = function ($name) use ($hasErrors) {
+		if ($hasErrors && isset($_POST[$name]) && is_array($_POST[$name])) {
+			return $_POST[$name];
+		}
+		return array();
+	};
+
+	$liveFormPath = '';
+	$liveFormUrl = '';
+	$liveFormVersion = null;
+	if (isset($form) && $form->exists() && ! empty($form->active_version_id)) {
+		$liveFormVersion = $form->activeVersion();
+		if ($liveFormVersion && $liveFormVersion->exists()) {
+			$liveFormPath = '/_form/form/' . rawurlencode((string)$form->code);
+			$site = new \Site();
+			$liveFormUrl = $site->url() . $liveFormPath;
+		}
+	}
+
+	$isViewingLiveVersion = false;
+	$versionWasPublished = false;
+	$previewPath = '';
+	$publishedDate = '';
+	$activatedBy = '';
+	$createDraftUrl = '';
+	$groupsById = array();
+	if (! isset($inheritedKeys) || ! is_array($inheritedKeys)) {
+		$inheritedKeys = array();
+	}
+
+	if (isset($version) && $version->exists() && isset($form) && $form->exists()) {
+		$isViewingLiveVersion = $version->active();
+		$versionWasPublished = ! empty($isLocked) || ! empty($version->date_activated);
+		$previewPath = '/_form/admin_version_preview/' . (int)$version->id;
+		$publishedDate = trim((string)($version->date_activated ?? ''));
+		$activatedBy = trim((string)$version->activatedByDisplayName());
+		$createDraftUrl = '/_form/admin_version/' . rawurlencode((string)$form->code);
+	}
+
+	foreach ($groups as $group) {
+		$groupsById[(int)$group->id] = $group;
+	}
 
 	$page->setAdminMenuSection("Site");
 	if (isset($version) && $version->exists()) {

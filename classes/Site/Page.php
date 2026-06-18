@@ -1398,6 +1398,7 @@
 					$fe_file = MODULES . '/' . $module . '/default/' . $view . '.php';
 			}
 			app_log ( "Loading view " . $view . " of module " . $module, 'debug', __FILE__, __LINE__ );
+			$page = $this;
 			if (isset($be_file) && file_exists($be_file)) {
 				// Load Backend File
 				try {
@@ -1437,6 +1438,12 @@
 				} catch (\Exception $e) {
 					app_log("Error in frontend file $fe_file: " . $e->getMessage(), 'error');
 					// Don't return here, just log the error and continue
+				}
+			}
+			if (isset($page) && $page !== $this && $page instanceof \Site\Page) {
+				$adminMenuSection = $page->getAdminMenuSection();
+				if ($adminMenuSection) {
+					$this->setAdminMenuSection($adminMenuSection);
 				}
 			}
 			$buffer .= ob_get_clean ();

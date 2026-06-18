@@ -702,6 +702,35 @@
             $response->print();
 		}
 
+		/** @method addItemTag()
+		 * Add a tag to a product (product_tag category by default).
+		 */
+		public function addItemTag() {
+			$this->requireAuth();
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+			if (!$GLOBALS['_SESSION_']->customer->can('manage products')) $this->deny();
+
+			$item = new \Product\Item();
+			if (!empty($_REQUEST['code'])) {
+				$item->get($_REQUEST['code']);
+			}
+			elseif (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
+				$item = new \Product\Item((int) $_REQUEST['id']);
+			}
+			if ($item->error()) $this->app_error("Error finding product: ".$item->error(), __FILE__, __LINE__);
+			if (!$item->id) $this->notFound("Product not found");
+
+			$value = $_REQUEST['value'] ?? $_REQUEST['tag'] ?? '';
+			$category = $_REQUEST['category'] ?? 'product_tag';
+			if (!$item->validTagValue($value)) $this->error("Invalid tag value");
+			if (!$item->validTagCategory($category)) $this->error("Invalid tag category");
+			if (!$item->addTag($value, $category)) $this->error($item->error() ?: "Failed to add product tag");
+
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->print();
+		}
+
 		/** @method getItemMetadata()
 		 * Get Metadata Value for a Product with associated key
 		 */
@@ -942,6 +971,28 @@
 							'required' => true,
 							'description' => 'Metadata Value',
 							'validation_method' => 'Product::Item::validMetadataValue()'
+						),
+					)
+				),
+				'addItemTag' => array(
+					'description'		=> 'Add a tag to a product',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required' => 'manage products',
+					'return_element'	=> 'success',
+					'parameters'		=> array(
+						'code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'value' => array(
+							'required' => true,
+							'description' => 'Tag value',
+						),
+						'category' => array(
+							'required' => false,
+							'description' => 'Tag category (default product_tag)',
 						),
 					)
 				),

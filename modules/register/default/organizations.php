@@ -94,7 +94,9 @@
 </form>
 
 <form action="<?=PATH?>/_register/admin_organization" method="get">
-	<div class="button-bar"><span class="register-organizations-button-center">
-    <button type="submit" name="button_submit" value="Add Organization">Add Organization</button>
-  </span></div>
+	<div class="form-actions filter-bar">
+		<div class="button-group filter-bar__actions">
+			<button type="submit" name="button_submit" value="Add Organization">Add Organization</button>
+		</div>
+	</div>
 </form>

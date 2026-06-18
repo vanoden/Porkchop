@@ -632,6 +632,25 @@ END;
 		else return false;
 	}
 
+	/**
+	 * Resolve which admin left-nav section should be open/current for this page.
+	 */
+	private function resolveAdminMenuSection($currentURL = '') {
+		if ($this->_page && $this->_page->getAdminMenuSection()) {
+			return $this->_page->getAdminMenuSection();
+		}
+
+		$path = parse_url((string)$currentURL, PHP_URL_PATH);
+		if (! $path) {
+			$path = (string)$currentURL;
+		}
+		if (preg_match('#^/_register/admin_account(?:_|/|$)#', $path)) {
+			return 'Customer';
+		}
+
+		return null;
+	}
+
 	/** @public method findItemsToExpand($currentURL)
 	 * Find navigation items that should be expanded based on current URL
 	 * 
@@ -642,15 +661,13 @@ END;
 		$expandedItems = array();
 		$items = $this->cascade();
 
-		// Check for manual override first
-		if ($this->_page && $this->_page->getAdminMenuSection()) {
-			$sectionName = $this->_page->getAdminMenuSection();
+		$sectionName = $this->resolveAdminMenuSection($currentURL);
+		if ($sectionName) {
 			app_log("Admin menu section override: " . $sectionName, 'debug');
 			foreach ($items as $item) {
 				if (strtolower($item->title) === strtolower($sectionName)) {
 					app_log("Found matching menu item: " . $item->title . " (ID: " . $item->id . ")", 'debug');
 					$expandedItems[] = $item->id;
-					// Also add parent chain if this item has parents
 					$expandedItems = array_merge($expandedItems, $item->getParentChain());
 					return array_unique($expandedItems);
 				}
@@ -723,6 +740,16 @@ END;
 	public function findCurrentPageItems($currentURL) {
 		$currentItems = array();
 		$items = $this->cascade();
+
+		$sectionName = $this->resolveAdminMenuSection($currentURL);
+		if ($sectionName) {
+			foreach ($items as $item) {
+				if (strtolower($item->title) === strtolower($sectionName)) {
+					$currentItems[] = $item->id;
+					return array_unique($currentItems);
+				}
+			}
+		}
 		
 		// Find all matches and their specificity (target length)
 		$matches = array();

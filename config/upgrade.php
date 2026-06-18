@@ -166,5 +166,16 @@
 		}
 	}
 
+	// Cross-module schema dependencies must upgrade before dependents.
+	$schema_first = array('Product', 'Monitor');
+	$ordered = array();
+	foreach ($schema_first as $name) {
+		if (isset($modules[$name])) {
+			$ordered[$name] = $modules[$name];
+			unset($modules[$name]);
+		}
+	}
+	if ($ordered) $modules = $ordered + $modules;
+
 	// Common shipping vendors
 	$shipping_vendors = array('Aramex','Australia Post','Bombino','Blue Dart','Canada Post','DB Schenker','Delhivery','DHL','DPD','DTDC','FedEx','Hermes','Nippon','OnTrac Logistics','Parcelforce','PostNL','Purolator','Royal Mail','Spee-dee Delivery','Startrack','TNT','UPS','USPS','Yodel','ZTO Express');

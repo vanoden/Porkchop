@@ -181,7 +181,7 @@
 				return false;
 			}
 
-			if (isset($parameters['path'])) $this->_setMetadata('path',$parameters['path']);
+			if (isset($parameters['path'])) $this->setMetadata('path',$parameters['path']);
 			app_log("Repo ".$this->id." updated, getting details");
 
 			// Audit the update event

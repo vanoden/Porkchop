@@ -1,35 +1,39 @@
 <?= $page->showAdminPageInfo(); ?>
 
-<form method="post">
+<form method="post" class="monitor-admin-list form-admin-edit">
 <input type="hidden" name="id" value="<?=$form->id?>" />
 <input type="hidden" name="csrf_token" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>" />
-<div class="section-grid grid-col-3">
-  <div class="form-field">
-  <label for="code">Code</label>
-  <input type="text" name="code" value="<?=$form->code?>" />
-  </div>
-  <div class="form-field">
-  <label for="title">Title</label>
-  <input type="text" name="title" value="<?=$form->title?>" />
-  </div>
-  <div class="form-field">
-  <label for="description">Description</label>
-  <input type="text" name="description" value="<?=strip_tags($form->description)?>" />
-  </div>
-  <div class="form-field">
-  <label for="action">Action</label>
-  <input type="text" name="action" value="<?=$form->action?>" />
-  </div>
-  <div class="form-field">
-  <label for="method">Method</label>
-  <select name="method">
-    <option value="post"<?php if ($form->method == "post") print " selected";?>>POST</option>
-    <option value="get"<?php if ($form->method == "get") print " selected";?>>GET</option>
-  </select>
-  </div>
-</div>
 
-<button type="submit" name="submit" value="Save">Save</button>
+<div class="filter-bar">
+	<div class="filter-bar__controls">
+		<div class="form-field">
+			<label for="code">Code</label>
+			<input type="text" id="code" name="code" value="<?=htmlspecialchars($form->code, ENT_QUOTES, 'UTF-8')?>" />
+		</div>
+		<div class="form-field">
+			<label for="title">Title</label>
+			<input type="text" id="title" name="title" value="<?=htmlspecialchars($form->title, ENT_QUOTES, 'UTF-8')?>" />
+		</div>
+		<div class="form-field filter-bar__search">
+			<label for="description">Description</label>
+			<input type="text" id="description" name="description" value="<?=htmlspecialchars(strip_tags($form->description), ENT_QUOTES, 'UTF-8')?>" />
+		</div>
+		<div class="form-field filter-bar__search">
+			<label for="action">Action</label>
+			<input type="text" id="action" name="action" value="<?=htmlspecialchars($form->action, ENT_QUOTES, 'UTF-8')?>" />
+		</div>
+		<div class="form-field form-field--narrow">
+			<label for="method">Method</label>
+			<select id="method" name="method">
+				<option value="post"<?php if ($form->method == 'post') print ' selected'; ?>>POST</option>
+				<option value="get"<?php if ($form->method == 'get') print ' selected'; ?>>GET</option>
+			</select>
+		</div>
+	</div>
+	<div class="button-group filter-bar__actions">
+		<button type="submit" name="submit" value="Save">Save</button>
+	</div>
+</div>
 
 <?php	if ($form->exists()) { ?>
 <p class="section">

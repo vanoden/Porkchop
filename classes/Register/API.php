@@ -1134,7 +1134,93 @@
 			# Send Response
 			$response->print();
 		}
-		
+
+		/** @method addOrganizationTag()
+		 * Add a search tag to an organization (category organization_tag by default).
+		 */
+		function addOrganizationTag() {
+			$this->requireAuth();
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+			if (!$GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
+
+			$organization = new \Register\Organization();
+			$org_code = $_REQUEST['organization_code'] ?? $_REQUEST['code'] ?? '';
+			$organization->get($org_code);
+			if ($organization->error()) $this->app_error("Error finding organization: ".$organization->error(), __FILE__, __LINE__);
+			if (!$organization->id) $this->notFound("Organization not found");
+
+			$value = $_REQUEST['value'] ?? $_REQUEST['tag'] ?? '';
+			$category = $_REQUEST['category'] ?? 'organization_tag';
+			if (!$organization->validTagValue($value)) $this->error("Invalid tag value");
+			if (!$organization->validTagCategory($category)) $this->error("Invalid tag category");
+			if (!$organization->addTag($value, $category)) $this->error($organization->error() ?: "Failed to add organization tag");
+
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->print();
+		}
+
+		/** @method addCustomerTag()
+		 * Add a search tag to a customer account (category + value required).
+		 */
+		function addCustomerTag() {
+			$this->requireAuth();
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+			if (!$GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
+
+			$customer = new \Register\Customer();
+			$login = $_REQUEST['login'] ?? $_REQUEST['code'] ?? '';
+			$customer->get($login);
+			if ($customer->error()) $this->app_error("Error finding customer: ".$customer->error(), __FILE__, __LINE__);
+			if (!$customer->id) $this->notFound("Customer not found");
+
+			$value = $_REQUEST['value'] ?? $_REQUEST['tag'] ?? '';
+			$category = $_REQUEST['category'] ?? '';
+			if (!$customer->validTagValue($value)) $this->error("Invalid tag value");
+			if (!$category || !$customer->validTagCategory($category)) $this->error("Tag category is required");
+			if (!$customer->addTag($value, $category)) $this->error($customer->error() ?: "Failed to add customer tag");
+
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->print();
+		}
+
+		/** @method addCustomerContact()
+		 * Add a contact method to a customer account (type + value required).
+		 */
+		function addCustomerContact() {
+			$this->requireAuth();
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+			if (!$GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
+
+			$customer = new \Register\Customer();
+			$login = $_REQUEST['login'] ?? $_REQUEST['code'] ?? '';
+			$customer->get($login);
+			if ($customer->error()) $this->app_error("Error finding customer: ".$customer->error(), __FILE__, __LINE__);
+			if (!$customer->id) $this->notFound("Customer not found");
+
+			$type = $_REQUEST['type'] ?? '';
+			$value = trim($_REQUEST['value'] ?? '');
+			$contact = new \Register\Contact();
+			if (!$contact->validType($type)) $this->error("Valid contact type required");
+			if (!$contact->validValue($type, $value)) $this->error("Valid contact value required");
+
+			$params = array(
+				'type' => $type,
+				'value' => $value,
+				'description' => $_REQUEST['description'] ?? '',
+				'notes' => $_REQUEST['notes'] ?? '',
+				'notify' => !empty($_REQUEST['notify']) ? 1 : 0,
+				'public' => !empty($_REQUEST['public']) ? 1 : 0,
+			);
+			$customer->addContact($params);
+			if ($customer->error()) $this->error($customer->error());
+
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->print();
+		}
+
 		/** @method addOrganizationOwnedProduct()
 		 * Add organization owned product
 		 * @param organization_id The ID of the organization
@@ -2569,6 +2655,104 @@
 							'description'	=> 'Expiration date (YYYY-MM-DD)',
 							'prompt'		=> 'Expiration date (YYYY-MM-DD)',
 							'validation_method' => 'Porkchop::validDate()',
+							'required'		=> false
+						)
+					)
+				),
+				'addOrganizationTag' => array(
+					'description'	=> 'Add a tag to an organization',
+					'path'			=> '/api/register/addOrganizationTag',
+					'authentication_required'	=> true,
+					'token_required' => true,
+					'privilege_required' => 'manage customers',
+					'return_element'	=> 'success',
+					'parameters'	=> array(
+						'organization_code' => array(
+							'description'	=> 'Organization Code',
+							'prompt'		=> 'Organization Code',
+							'validation_method'	=> 'Register::Organization::validCode()',
+							'required'		=> true
+						),
+						'value' => array(
+							'description'	=> 'Tag value',
+							'prompt'		=> 'Tag value',
+							'required'		=> true
+						),
+						'category' => array(
+							'description'	=> 'Tag category (default organization_tag)',
+							'prompt'		=> 'Tag category',
+							'required'		=> false
+						)
+					)
+				),
+				'addCustomerTag' => array(
+					'description'	=> 'Add a search tag to a customer account',
+					'path'			=> '/api/register/addCustomerTag',
+					'authentication_required'	=> true,
+					'token_required' => true,
+					'privilege_required' => 'manage customers',
+					'return_element'	=> 'success',
+					'parameters'	=> array(
+						'login' => array(
+							'description'	=> 'Customer login code',
+							'prompt'		=> 'Customer login',
+							'validation_method'	=> 'Register::Customer::validCode()',
+							'required'		=> true
+						),
+						'value' => array(
+							'description'	=> 'Tag value',
+							'prompt'		=> 'Tag value',
+							'required'		=> true
+						),
+						'category' => array(
+							'description'	=> 'Tag category',
+							'prompt'		=> 'Tag category',
+							'required'		=> true
+						)
+					)
+				),
+				'addCustomerContact' => array(
+					'description'	=> 'Add a contact method to a customer account',
+					'path'			=> '/api/register/addCustomerContact',
+					'authentication_required'	=> true,
+					'token_required' => true,
+					'privilege_required' => 'manage customers',
+					'return_element'	=> 'success',
+					'parameters'	=> array(
+						'login' => array(
+							'description'	=> 'Customer login code',
+							'prompt'		=> 'Customer login',
+							'validation_method'	=> 'Register::Customer::validCode()',
+							'required'		=> true
+						),
+						'type' => array(
+							'description'	=> 'Contact type (phone, email, sms, facebook, insite)',
+							'prompt'		=> 'Contact type',
+							'required'		=> true
+						),
+						'value' => array(
+							'description'	=> 'Contact value (phone number, email address, etc.)',
+							'prompt'		=> 'Contact value',
+							'required'		=> true
+						),
+						'description' => array(
+							'description'	=> 'Contact description (e.g. Work, Mobile)',
+							'prompt'		=> 'Description',
+							'required'		=> false
+						),
+						'notes' => array(
+							'description'	=> 'Optional notes',
+							'prompt'		=> 'Notes',
+							'required'		=> false
+						),
+						'notify' => array(
+							'description'	=> 'Use for notifications (required for backup codes email)',
+							'prompt'		=> 'Notify',
+							'required'		=> false
+						),
+						'public' => array(
+							'description'	=> 'Visible to other users',
+							'prompt'		=> 'Public',
 							'required'		=> false
 						)
 					)

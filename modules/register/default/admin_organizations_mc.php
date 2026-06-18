@@ -51,10 +51,10 @@
 	$organizations = $organizationlist->find($find_parameters,$controls);
 	if ($organizationlist->error()) $page->addError("Error finding organizations: ".$organizationlist->error());
 
-    // get tags for organization
-    $registerTagList = new \Register\TagList();
-    $organizationTags = $registerTagList->getDistinct();
-	if ($registerTagList->error()) $page->addError($registerTagList->error());
+    // get tags for organization filter dropdown
+    $organizationTags = $organizationlist->getDistinctTags();
+	if ($organizationlist->error()) $page->addError($organizationlist->error());
+	if (!is_array($organizationTags)) $organizationTags = array();
 
 	$page->title("Organizations");
 	$page->setAdminMenuSection("Customer");  // Keep Customer section open

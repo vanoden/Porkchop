@@ -24,27 +24,8 @@
 use Product\productVisibilityRealm;
 
  $activeTab = 'details'; ?>
-<?php
-    $__defImg = $item->getDefaultStorageImage();
-    if ($__defImg && $__defImg->id) {
-        $__thumb = "/api/media/downloadMediaImage?height=50&width=50&code=".$__defImg->code;
-        $__title = htmlspecialchars($item->getMetadata('name') ?: $item->name ?: $item->code);
-        echo '<div class="product-container">'
-            . '<img src="'. $__thumb .'" alt="Default" class="product-thumb" />'
-            . '<div class="product-title">'. $__title .'</div>'
-            . '</div>';
-    }
-?>
-<div class="tabs">
-    <a href="/_product/admin_product/<?= $item->code ?>" class="tab <?= $activeTab==='details'?'active':'' ?>">Details</a>
-    <a href="/_product/admin_product_prices/<?= $item->code ?>" class="tab <?= $activeTab==='prices'?'active':'' ?>">Prices</a>
-    <a href="/_product/admin_product_vendors/<?= $item->code ?>" class="tab <?= $activeTab==='vendors'?'active':'' ?>">Vendors</a>
-    <a href="/_product/admin_images/<?= $item->code ?>" class="tab <?= $activeTab==='images'?'active':'' ?>">Images</a>
-    <a href="/_product/admin_product_tags/<?= $item->code ?>" class="tab <?= $activeTab==='tags'?'active':'' ?>">Tags</a>
-    <a href="/_product/admin_product_parts/<?= $item->code ?>" class="tab <?= $activeTab==='parts'?'active':'' ?>">Parts</a>
-    <a href="/_product/admin_product_metadata/<?= $item->code ?>" class="tab <?= $activeTab==='metadata'?'active':'' ?>">Metadata</a>
-    <a href="/_product/audit_log/<?= $item->code ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
-</div>
+<?php require __DIR__ . '/admin_product_identity.php'; ?>
+<?php require __DIR__ . '/admin_product_tabs.php'; ?>
 
 <form id="productEdit" name="productEdit" method="post" action="/_product/admin_product<?= $item->code ? '/' . $item->code : '' ?>">
 
@@ -120,7 +101,9 @@ use Product\productVisibilityRealm;
 	</tr>
 	</table>
 		
-<div class="editSubmit button-bar floating">
-	<input type="submit" class="button" value="Update" name="updateSubmit" id="updateSubmit" />
+<div class="form-actions filter-bar">
+	<div class="button-group filter-bar__actions">
+		<button type="submit" class="button" name="updateSubmit" id="updateSubmit" value="Update">Update</button>
+	</div>
 </div>
 </form>

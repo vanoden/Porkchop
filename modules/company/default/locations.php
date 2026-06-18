@@ -19,8 +19,8 @@
 </div>
 
 <!-- entire page button bar -->
-<div id="submit-button-container" class="tableBody min-tablet">
-  <div class="tableRow button-bar">
-    <a href="/_company/location" class="input button" id="btn_submit">Add a location</a>
+<div class="form-actions filter-bar">
+  <div class="button-group filter-bar__actions">
+    <a href="/_company/location" class="button" id="btn_submit">Add a location</a>
   </div>
 </div>

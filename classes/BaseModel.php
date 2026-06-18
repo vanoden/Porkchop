@@ -22,6 +22,9 @@ class BaseModel extends \BaseClass {
 	// Name for Software Incrementing Number Field
 	protected $_tableNumberColumn;
 
+	// Name for Foreign Key Column when numbering is scoped to a parent record
+	protected $_tableFKColumn;
+
 	// Name for Unique Object Name Column
 	protected $_tableNameColumn = 'name';
 
@@ -143,6 +146,14 @@ class BaseModel extends \BaseClass {
 	 */
 	public function _tableName() {
 		return $this->_tableName;
+	}
+
+	public function _tableNumberColumn() {
+		return $this->_tableNumberColumn ?? '';
+	}
+
+	public function _tableFKColumn() {
+		return $this->_tableFKColumn ?? '';
 	}
 
 	/** @method _tableIDColumn()
