@@ -5,7 +5,21 @@
 	<div class="organization-page-wrapper" style="display: flex; flex-direction: column; width: 100%;">
 	
 	<!-- Success/Error Messages Section -->
-	<?=$page->showSubHeading()?>
+	<div id="pageSubHeading">
+		<div id="pageTitle">
+			<div class="register-account-page-heading">
+<?php if (!empty($customerThumbnailUrl)) { ?>
+				<img src="<?= htmlspecialchars($customerThumbnailUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" class="register-admin-account__thumbnail" width="48" height="48">
+<?php } ?>
+				<h1 id="page_title"><?= htmlspecialchars($page->title()) ?></h1>
+<?php if ($GLOBALS['_SESSION_']->customer->can('edit site pages')) { ?>
+				<a id="icon_settings" href="/_site/page?module=<?= $page->module() ?>&view=<?= $page->view() ?>&index=<?= $page->index ?>"></a>
+<?php } ?>
+			</div>
+			<?= $page->showBreadcrumbs() ?>
+		</div>
+		<?= $page->showMessages() ?>
+	</div>
 	<?php 
 	if ($canView) {
 		?>
@@ -292,82 +306,49 @@
 					<?php } ?>
 				</section>
 			<?php } ?>
-			<!-- Current Default Image Section -->
-			<section class="form-group current-default-image">
-				<?php
-				$defaultImageId = $customer->getMetadata('default_image');
-				$hasImages = false;
-				if ($defaultImageId) {
-					$defaultImage = new \Storage\File($defaultImageId);
-					if ($defaultImage->id) {
-						$hasImages = true;
-						?>
-						<h2>Current Default Image</h2>
-						<div class="default-image">
-							<div class="image-preview">
-								<img src="/_storage/downloadfile?file_id=<?= $defaultImageId ?>" alt="Default Image"
-									class="register-account-image" />
-								<p class="image-name"><?= htmlspecialchars($defaultImage->name) ?></p>
-							</div>
-						</div>
-						<?php
-					}
-				}
-				?>
-			</section>
 
-			<!-- Image Selection Section -->
 			<section class="form-group image-selection-section">
 				<h2>Click to select new customer image</h2>
-				<div class="images-grid"
-					style="max-width: 100% !important; display: flex !important; flex-wrap: wrap !important; margin: -10px !important; width: 100% !important;">
-					<?php
-					if (empty($customerImages)) {
-						if (!$hasImages) {
-							?>
-							<p class="no-images">No images found for this customer.</p>
-							<?php
-						}
-					} else {
-						foreach ($customerImages as $image) {
-							$hasImages = true;
-							?>
-							<div class="image-item <?= ($defaultImageId == $image->id) ? 'default' : '' ?>" id="ItemImageDiv_<?= $image->id ?>" onclick="highlightImage('<?= $image->id ?>'); updateDefaultImage('<?= $image->id ?>');" style="flex: 0 0 calc(25% - 20px) !important; margin: 10px !important; box-sizing: border-box !important; display: flex !important; flex-direction: column !important; width: calc(25% - 20px) !important; float: none !important; clear: none !important;">
-								<div class="image-preview">
-									<img src="/_storage/downloadfile?file_id=<?= $image->id ?>" alt="<?= htmlspecialchars($image->name) ?>" />
-								</div>
-								<p class="image-name"><?= htmlspecialchars($image->name) ?></p>
-								<?php if ($defaultImageId == $image->id): ?>
-									<span class="default-badge">Default</span>
-								<?php endif; ?>
-							</div>
-							<?php
-						}
-					}
-					?>
+				<?php $defaultImageId = $customer->getMetadata('default_image'); ?>
+				<div class="register-admin-account-images__gallery">
+<?php if (empty($customerImages)) { ?>
+					<p class="register-admin-account-images__empty">No images found for this customer.</p>
+<?php } else {
+					foreach ($customerImages as $image) {
+						$isDefault = ($defaultImageId == $image->id);
+?>
+					<div class="register-admin-account-images__item<?= $isDefault ? ' register-admin-account-images__item--default' : '' ?>" id="ItemImageDiv_<?= (int)$image->id ?>">
+						<div class="register-admin-account-images__thumb">
+							<img src="/_storage/downloadfile?file_id=<?= (int)$image->id ?>" alt="<?= htmlspecialchars($image->name, ENT_QUOTES, 'UTF-8') ?>" />
+						</div>
+						<p class="register-admin-account-images__caption" title="<?= htmlspecialchars($image->name, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($image->name) ?></p>
+						<?php if ($isDefault) { ?>
+						<span class="register-admin-account-images__badge">Default</span>
+						<?php } elseif (!$readOnly) { ?>
+						<button type="button" class="button btn-secondary register-admin-account-images__set-default" onclick="updateDefaultImage('<?= (int)$image->id ?>');">Set Default</button>
+						<?php } ?>
+					</div>
+<?php }
+				} ?>
 				</div>
 			</section>
 		</form>
 
 		<!-- Image Upload Section -->
-		<?php if ($repository->id) { ?>
+		<?php if (!$readOnly && !empty($repository) && !empty($repository->id)) { ?>
 			<section class="form-group image-upload">
-				<form name="repoUpload" action="/_register/account/<?= $customer->code ?>" method="post"
-					enctype="multipart/form-data" class="upload-form">
+				<form name="repoUpload" action="/_register/account/<?= rawurlencode($customer->code) ?>" method="post" enctype="multipart/form-data" class="register-admin-account-images__upload-form">
 					<h2>Upload Image for this customer</h2>
-					<div class="upload-controls">
-						<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
-						<input type="hidden" name="repository_id" value="<?= $repository->id ?>" />
-						<input type="file" name="uploadFile" class="file-input" />
-						<input type="submit" name="btn_submit" class="button upload-button" value="Upload" />
-					</div>
+					<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
+					<input type="hidden" name="repository_id" value="<?= (int)$repository->id ?>" />
+					<input type="file" name="uploadFile" accept="image/*" />
+					<input type="submit" name="btn_submit" class="button" value="Upload" />
 				</form>
 			</section>
-		<?php } else { ?>
+		<?php } elseif (!$readOnly) { ?>
 			<section class="form-group image-upload">
 				<h2>Upload Image for this customer</h2>
-				<p class="error-message">Repository not found. (please create an S3, Local, Google or Dropbox repository to
-					upload images for this customer)</p>
+				<p class="error-message">Repository not found. (please create an S3, Local, Google or Dropbox repository to upload images for this customer)</p>
 			</section>
 		<?php } ?>
 

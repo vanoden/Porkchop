@@ -53,6 +53,7 @@
 	/** @section Image Management
 	 */
 	$repositoryFactory = new \Storage\RepositoryFactory();
+	$repository = null;
 	$site_config = new \Site\Configuration();
 	$site_config->get('website_images');
 	if (!empty($site_config->value)) {
@@ -85,12 +86,20 @@
 		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 			$page->addError("Invalid Token");
 		} else {
-			$page->requirePrivilege('upload storage files');
-        		$imageUploaded = $customer->uploadImage($_FILES['uploadFile'], $repository->id, 'spectros_user_image', 'Register\Customer');
-			if ($imageUploaded) {
-				$page->success = "File uploaded";
+			if (!$my_account) {
+				$page->requirePrivilege('upload storage files');
+			}
+			if (empty($repository) || empty($repository->id)) {
+				$page->addError("Repository not configured for image uploads");
+			} elseif (!isset($_FILES['uploadFile']) || empty($_FILES['uploadFile']['tmp_name']) || !is_uploaded_file($_FILES['uploadFile']['tmp_name'])) {
+				$page->addError("No file was selected or file upload failed");
 			} else {
-				$page->addError("Error uploading file: " . $customer->error());
+				$imageUploaded = $customer->uploadImage($_FILES['uploadFile'], $repository->id, 'spectros_user_image', 'Register\Customer');
+				if ($imageUploaded) {
+					$page->success = "File uploaded";
+				} else {
+					$page->addError("Error uploading file: " . $customer->error());
+				}
 			}
 		}
 	}
@@ -417,6 +426,19 @@ $queuedCustomer = new \Register\Queue();
 $queuedCustomer->getByQueuedLogin($customer->id);
 
 if (! isset($target)) $target = '';
+
+$customerThumbnailUrl = null;
+$customerDisplayName = trim((string)$customer->full_name());
+if ($customerDisplayName === '') {
+	$customerDisplayName = (string)$customer->code;
+}
+$profileImageId = $customer->getMetadata('default_image');
+if ($profileImageId) {
+	$thumbFile = new \Storage\File($profileImageId);
+	if ($thumbFile->id) {
+		$customerThumbnailUrl = '/_storage/downloadfile?file_id=' . (int)$profileImageId;
+	}
+}
 
 if ($GLOBALS['_SESSION_']->customer_id == $customer->id) {
 	$page->title('My Account');
