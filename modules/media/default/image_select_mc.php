@@ -14,10 +14,20 @@
 	elseif (!empty($_REQUEST['repository_code'])) {
 		$repository = $repositoryFactory->createWithCode($_REQUEST['repository_code']);
 	}
+	else {
+		$configuration = new \Site\Configuration();
+		$configuration->get('website_images');
+		if (!empty($configuration->value)) {
+			$repository = $repositoryFactory->createWithCode($configuration->value);
+		}
+	}
 
 	$path = !empty($_REQUEST['path']) ? (string)$_REQUEST['path'] : '/';
 	if (!preg_match('/^\//', $path)) {
 		$path = '/' . $path;
+	}
+	if ($path === '/' && empty($_REQUEST['path']) && !empty($repository) && !empty($repository->id)) {
+		$path = '/spectros_product_image';
 	}
 
 	// Legacy path aliases (uploads use spectros_* paths)

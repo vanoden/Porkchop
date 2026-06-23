@@ -166,19 +166,28 @@ if (!empty($_REQUEST['updateMetadata']) || !empty($_REQUEST['deleteMetadata'])) 
     }
 }
 
-// Get data for dropdowns
+// Get data for dropdowns (product managers may not hold per-file storage privileges)
+$configMediaParams = array('skip_readable_check' => true);
+
 $documentlist = new \Media\DocumentList();
-$manuals = $documentlist->find();
+$manuals = $documentlist->find($configMediaParams);
+if ($documentlist->error() || !is_array($manuals)) {
+	$manuals = array();
+}
+
 $imagelist = new \Media\ImageList();
-$tables = $imagelist->find();
-if (defined('MODULES') && is_dir(MODULES . '/Monitor')) {
+$tables = $imagelist->find($configMediaParams);
+if ($imagelist->error() || !is_array($tables)) {
+	$tables = array();
+}
+
+$dashboards = array();
+if (class_exists('\Monitor\DashboardList')) {
 	$dashboardlist = new \Monitor\DashboardList();
 	$dashboards = $dashboardlist->find();
 	if ($dashboardlist->error() || !is_array($dashboards)) {
 		$dashboards = array();
 	}
-} else {
-	$dashboards = array();
 }
 
 $page->setAdminMenuSection("Products");  // Keep Products section open

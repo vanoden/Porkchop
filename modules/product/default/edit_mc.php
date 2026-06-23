@@ -37,6 +37,8 @@ if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
 
 if (! $new_item && ! $item->id) $page->addError("Item not found");
 
+$pendingImageCode = trim($_REQUEST['new_image_code'] ?? '');
+
 // Handle Actions
 if (isset($_REQUEST['updateSubmit'])) {
 	// CSRF Token Check
@@ -112,15 +114,25 @@ if (isset($_REQUEST['updateSubmit'])) {
 				}
 			}
 
-			$image = new \Media\Image();
-			if ($_REQUEST['new_image_code']) {
-				$image->get($_REQUEST['new_image_code']);
-				$item->addImage($image->id);
+			if ($pendingImageCode) {
+				$image = new \Media\Image();
+				$image->get($pendingImageCode);
+				if (!$image->id) {
+					$page->addError("Image not found");
+				} elseif ($item->addImage($image->id)) {
+					$page->appendSuccess("Image added");
+					$pendingImageCode = '';
+				} else {
+					$page->addError("Error adding image: " . $item->error());
+				}
 			}
 
 			if ($_REQUEST['deleteImage']) {
+				$image = new \Media\Image();
 				$image->get($_REQUEST['deleteImage']);
-				$item->dropImage($image->id);
+				if ($image->id) {
+					$item->dropImage($image->id);
+				}
 			}
 		}
 
@@ -289,27 +301,61 @@ if (isset($_REQUEST['code']) && empty($item->id)) {
 	if ($item->error()) $page->addError("Error loading item ID '" . $_REQUEST['id'] . "': " . $item->error());
 }
 
-// Get Manuals
+// Configuration dropdowns (product managers may not hold per-file storage privileges)
+$configMediaParams = array('skip_readable_check' => true);
+
 $documentlist = new \Media\DocumentList();
-$manuals = $documentlist->find();
+$manuals = $documentlist->find($configMediaParams);
 if ($documentlist->error() || !is_array($manuals)) {
 	$manuals = array();
 }
 
 $imagelist = new \Media\ImageList();
-$tables = $imagelist->find();
+$tables = $imagelist->find($configMediaParams);
 if ($imagelist->error() || !is_array($tables)) {
 	$tables = array();
 }
 
-if (defined('MODULES') && is_dir(MODULES . '/Monitor')) {
+// Image repository (website_images site configuration)
+$repository = null;
+$site_config = new \Site\Configuration();
+$site_config->get('website_images');
+$repositoryFactory = new \Storage\RepositoryFactory();
+if (!empty($site_config->value)) {
+	$repository = $repositoryFactory->createWithCode($site_config->value);
+}
+
+$selectedManualId = $item->manual_id ?: $item->getMetadata('manual_id');
+if ($selectedManualId && !in_array((int)$selectedManualId, array_map(fn($m) => (int)$m->id, $manuals), true)) {
+	$selectedManual = new \Media\Document((int)$selectedManualId);
+	if ($selectedManual->id) {
+		array_unshift($manuals, $selectedManual);
+	}
+}
+
+$selectedSpecTableId = $item->spec_table_image ?: $item->getMetadata('spec_table_image');
+if ($selectedSpecTableId && !in_array((int)$selectedSpecTableId, array_map(fn($t) => (int)$t->id, $tables), true)) {
+	$selectedSpecTable = new \Media\Image((int)$selectedSpecTableId);
+	if ($selectedSpecTable->id) {
+		array_unshift($tables, $selectedSpecTable);
+	}
+}
+
+$dashboards = array();
+if (class_exists('\Monitor\DashboardList')) {
 	$dashboardlist = new \Monitor\DashboardList();
 	$dashboards = $dashboardlist->find();
 	if ($dashboardlist->error() || !is_array($dashboards)) {
 		$dashboards = array();
 	}
-} else {
-	$dashboards = array();
+}
+
+$selectedDashboardId = $item->getMetadata('default_dashboard_id');
+if ($selectedDashboardId && !in_array((int)$selectedDashboardId, array_map(fn($d) => (int)$d->id, $dashboards), true)) {
+	$selectedDashboard = new \Monitor\Dashboard((int)$selectedDashboardId);
+	if ($selectedDashboard->id) {
+		array_unshift($dashboards, $selectedDashboard);
+	}
 }
 
 $prices = $item->prices();
@@ -326,6 +372,15 @@ if ($priceAudit->error() || !is_array($auditedPrices)) {
 $images = $item->images();
 if (!is_array($images)) {
 	$images = array();
+}
+
+if ($pendingImageCode) {
+	foreach ($images as $image) {
+		if ($image->code === $pendingImageCode) {
+			$pendingImageCode = '';
+			break;
+		}
+	}
 }
 
 $page->setAdminMenuSection("Products");  // Keep Products section open
