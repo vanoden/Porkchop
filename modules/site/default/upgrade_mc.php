@@ -98,6 +98,7 @@
 				"admin_product"			=> $admin_template,
 				"admin_credits"			=> $admin_template,
 				"cal_report"			=> $admin_template,
+				"cal_verify_require_report"	=> $admin_template,
 				"transfer_ownership"	=> $admin_template,
 			),
 		),
