@@ -72,13 +72,18 @@
 			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 			if (!empty($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('see admin tools')) $GLOBALS['_SESSION_']->customer->admin = 1;
  
-			$siteMessageDeliveryList = new \Site\SiteMessageDeliveryList();
-			if (! empty($GLOBALS['_SESSION_']->customer)) {
-				$siteMessageDeliveryList->find(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'acknowledged' => false));
-				$siteMessagesUnread = $siteMessageDeliveryList->count();
-			}
-			else {
-				$siteMessagesUnread = 0;
+			$siteMessagesUnread = 0;
+			if (!empty($GLOBALS['_SESSION_']->customer->id)) {
+				$siteMessagesList = new \Site\SiteMessagesList();
+				$siteMessagesList->find(array(
+					'recipient_id' => $GLOBALS['_SESSION_']->customer->id,
+					'acknowledged' => 'unread',
+				));
+				if ($siteMessagesList->error()) {
+					$this->error($siteMessagesList->error());
+				} else {
+					$siteMessagesUnread = $siteMessagesList->count();
+				}
 			}
 
 			if (empty($GLOBALS['_SESSION_']) || empty($GLOBALS['_SESSION_']->customer)) {

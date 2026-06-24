@@ -455,6 +455,20 @@ class Menu Extends \BaseModel {
 		return $html;
 	}
 
+	private function unreadMessageCountForCustomer() {
+		$customer = $GLOBALS['_SESSION_']->customer ?? null;
+		if (!$customer || !$customer->id) return 0;
+
+		$siteMessagesList = new \Site\SiteMessagesList();
+		$siteMessagesList->find(array(
+			'recipient_id' => $customer->id,
+			'acknowledged' => 'unread',
+		));
+		if ($siteMessagesList->error()) return 0;
+
+		return $siteMessagesList->count();
+	}
+
 	/** @method public asHTMLV2($parameters = array())
 	 * Render navigation menu as HTML - Version 2
 	 * When $_config->site->nav_v2_enhanced is true: enhanced toggle markup, "Firstname (Logout)" when logged in, My Account before Login/Logout.
@@ -506,6 +520,10 @@ END;
 						if ($matches[2] == 'loginusername') {
 							if ($GLOBALS['_SESSION_']->customer->id) {
 								$item->title = $GLOBALS['_SESSION_']->customer->first_name;
+								$unreadCount = $this->unreadMessageCountForCustomer();
+								if ($unreadCount > 0) {
+									$item->title .= ' (' . (int) $unreadCount . ')';
+								}
 								$item->target = '/_register/account';
 							}
 							else {

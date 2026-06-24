@@ -31,21 +31,26 @@
 			$workingClass = new $this->_modelName;
 
 			// Build Query
+			$deliveryJoin = "LEFT JOIN site_message_deliveries smd ON smd.message_id = sm.id";
+			if (!empty($parameters['recipient_id']) && is_numeric($parameters['recipient_id'])) {
+				$deliveryJoin .= " AND smd.user_id = ?";
+			}
+
 			$find_objects_query = "
 				SELECT	sm.id
 				FROM	site_messages sm
-				LEFT JOIN site_message_deliveries smd
-				ON smd.message_id = sm.id
+				$deliveryJoin
 				WHERE	sm.id = sm.id 
 			";
 
 			// Add Parameters
-			if (!empty($parameters['user_created']) && is_numeric($parameters['user_created'])) {
-				$user = new \Register\Person($parameters['user_created']);
+			if (!empty($parameters['recipient_id']) && is_numeric($parameters['recipient_id'])) {
+				$user = new \Register\Person($parameters['recipient_id']);
 				if ($user->exists()) {
+					$database->AddParam($parameters['recipient_id']);
 					$find_objects_query .= "
-					AND		sm.user_created = ?";
-					$database->AddParam($parameters['user_created']);
+					AND		sm.recipient_id = ?";
+					$database->AddParam($parameters['recipient_id']);
 				}
 				else {
 					$this->error("User not found");
@@ -53,12 +58,12 @@
 				}
 			}
 
-			if (!empty($parameters['recipient_id']) && is_numeric($parameters['recipient_id'])) {
-				$user = new \Register\Person($parameters['recipient_id']);
+			if (!empty($parameters['user_created']) && is_numeric($parameters['user_created'])) {
+				$user = new \Register\Person($parameters['user_created']);
 				if ($user->exists()) {
 					$find_objects_query .= "
-					AND		sm.recipient_id = ?";
-					$database->AddParam($parameters['recipient_id']);
+					AND		sm.user_created = ?";
+					$database->AddParam($parameters['user_created']);
 				}
 				else {
 					$this->error("User not found");
@@ -74,6 +79,9 @@
 				$find_objects_query .= "
 				AND smd.date_acknowledged is NULL";
 			}
+
+			$find_objects_query .= "
+				ORDER BY sm.date_created DESC";
 
 			// Execute Query
 			$rs = $database->Execute($find_objects_query);
