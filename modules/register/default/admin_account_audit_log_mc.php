@@ -54,13 +54,12 @@ if ($customer_id) {
 
 $auditRecords = [];
 $totalRecords = 0;
-$current_page = 1;
-$total_pages = 1;
-$prev_offset = 0;
-$next_offset = 0;
-$last_offset = 0;
 $show_start = 0;
 $show_end = 0;
+$pagination = new \Site\Page\Pagination();
+$pagination->baseURI = PATH.'/_register/admin_account_audit_log';
+$pagination->startElemName('start');
+$pagination->sizeElemName('page_size');
 
 if (!empty($customer->id)) {
 	$totalRecords = $auditClient->countEvents($customer->id, $current_class);
@@ -69,11 +68,9 @@ if (!empty($customer->id)) {
 	}
 
 	if ($totalRecords > 0) {
-		$total_pages = intval(ceil($totalRecords / $page_size));
-		$max_start_offset = max(0, ($total_pages - 1) * $page_size);
+		$max_start_offset = max(0, (intval(ceil($totalRecords / $page_size)) - 1) * $page_size);
 		if ($start_offset > $max_start_offset) $start_offset = $max_start_offset;
 	} else {
-		$total_pages = 1;
 		$start_offset = 0;
 	}
 
@@ -95,12 +92,13 @@ if (!empty($customer->id)) {
 		$page->addError($auditList->error());
 	}
 
-	$current_page = $page_size > 0 ? intval(floor($start_offset / $page_size)) + 1 : 1;
-	$last_offset = max(0, ($total_pages - 1) * $page_size);
-	$prev_offset = $start_offset > 0 ? max(0, $start_offset - $page_size) : 0;
-	$next_offset = min($last_offset, $start_offset + $page_size);
 	$show_start = $totalRecords > 0 ? $start_offset + 1 : 0;
 	$show_end = min($totalRecords, $start_offset + count($auditRecords));
+
+	$pagination->startId($start_offset);
+	$pagination->size($page_size);
+	$pagination->count($totalRecords);
+	$pagination->forwardParameters(array('customer_id', 'class_name'));
 }
 if ($totalRecords == 0) {
 	$show_end = 0;

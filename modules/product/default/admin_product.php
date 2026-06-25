@@ -1,17 +1,8 @@
 <script language="Javascript">
-    function removeSearchTagById(id) {
-        document.getElementById('removeSearchTagId').value = id;
+    function removeTagById(id) {
+        document.getElementById('removeTagId').value = id;
         document.getElementById('productEdit').submit();
     }
-</script>
-
-<!-- Autocomplete CSS and JS -->
-<link href="/css/autocomplete.css" type="text/css" rel="stylesheet">
-<script language="JavaScript" src="/js/autocomplete.js"></script>
-<script language="JavaScript">
-    // define existing categories and tags for autocomplete
-    var existingCategories = <?= isset($uniqueTagsData['categoriesJson']) ? $uniqueTagsData['categoriesJson'] : '[]' ?>;
-    var existingTags = <?= isset($uniqueTagsData['tagsJson']) ? $uniqueTagsData['tagsJson'] : '[]' ?>;
 </script>
 
 <!-- Page Header -->

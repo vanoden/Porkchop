@@ -46,13 +46,12 @@ if ($customer_id) {
 
 $authFailureRecords = [];
 $totalRecords = 0;
-$current_page = 1;
-$total_pages = 1;
-$prev_offset = 0;
-$next_offset = 0;
-$last_offset = 0;
 $show_start = 0;
 $show_end = 0;
+$pagination = new \Site\Page\Pagination();
+$pagination->baseURI = PATH.'/_register/admin_account_register_audit';
+$pagination->startElemName('start');
+$pagination->sizeElemName('page_size');
 
 if (!empty($customer->id) && !empty($customer->code)) {
 	// Query register_auth_failures based on user's login
@@ -75,11 +74,9 @@ if (!empty($customer->id) && !empty($customer->code)) {
 	}
 	
 	if ($totalRecords > 0) {
-		$total_pages = intval(ceil($totalRecords / $page_size));
-		$max_start_offset = max(0, ($total_pages - 1) * $page_size);
+		$max_start_offset = max(0, (intval(ceil($totalRecords / $page_size)) - 1) * $page_size);
 		if ($start_offset > $max_start_offset) $start_offset = $max_start_offset;
 	} else {
-		$total_pages = 1;
 		$start_offset = 0;
 	}
 	
@@ -93,12 +90,13 @@ if (!empty($customer->id) && !empty($customer->code)) {
 		$page->addError($authFailureList->error());
 	}
 	
-	$current_page = $page_size > 0 ? intval(floor($start_offset / $page_size)) + 1 : 1;
-	$last_offset = max(0, ($total_pages - 1) * $page_size);
-	$prev_offset = $start_offset > 0 ? max(0, $start_offset - $page_size) : 0;
-	$next_offset = min($last_offset, $start_offset + $page_size);
 	$show_start = $totalRecords > 0 ? $start_offset + 1 : 0;
 	$show_end = min($totalRecords, $start_offset + count($authFailureRecords));
+
+	$pagination->startId($start_offset);
+	$pagination->size($page_size);
+	$pagination->count($totalRecords);
+	$pagination->forwardParameters(array('customer_id'));
 }
 if ($totalRecords == 0) {
 	$show_end = 0;

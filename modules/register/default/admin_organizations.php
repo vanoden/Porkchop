@@ -82,7 +82,5 @@
 		</tbody>
 	</table>
 
-	<div class="pagination pagination-bar" id="pagination">
-		<?=$pagination->renderPages()?>
-	</div>
+	<?=$pagination->renderBar()?>
 </form>

@@ -10,10 +10,6 @@ require __DIR__ . '/admin_account_tabs.php';
 <div class="form_instruction">View audit log entries recorded for this account.</div>
 
 <script>
-  function goToAuditPage(offset) {
-    document.getElementById('start').value = offset;
-    document.getElementById('auditLogForm').submit();
-  }
   function changeAuditPageSize(size) {
     document.getElementById('page_size').value = size;
     document.getElementById('start').value = 0;
@@ -86,15 +82,7 @@ require __DIR__ . '/admin_account_tabs.php';
     <?php } ?>
   </div>
 
-  <div class="pager_bar">
-    <div class="pager_controls">
-      <a href="javascript:void(0)" class="pager pagerFirst" onclick="goToAuditPage(0)">&lt;&lt;</a>
-      <a href="javascript:void(0)" class="pager pagerPrevious" onclick="goToAuditPage(<?= $prev_offset ?>)">&lt;</a>
-      <span>Page <?= $current_page ?> of <?= $total_pages ?></span>
-      <a href="javascript:void(0)" class="pager pagerNext" onclick="goToAuditPage(<?= $next_offset ?>)">&gt;</a>
-      <a href="javascript:void(0)" class="pager pagerLast" onclick="goToAuditPage(<?= $last_offset ?>)">&gt;&gt;</a>
-    </div>
-  </div>
+  <?=$pagination->renderBar()?>
   <div class="audit-bottom-range">
     <span>Showing <?= $show_start ?: 0 ?> - <?= $show_end ?: 0 ?> of <?= $totalRecords ?> entries</span>
   </div>

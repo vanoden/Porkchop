@@ -117,6 +117,7 @@
 				"request_new"	=> $admin_template,
 				"requests"		=> $admin_template,
 				"request_items"	=> $admin_template,
+				"search"		=> $admin_template,
 				"stale_tickets"	=> $admin_template,
 				"admin_actions"	=> $admin_template,
 				"admin_rmas"	=> $admin_template,

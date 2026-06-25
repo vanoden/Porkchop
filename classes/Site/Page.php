@@ -969,11 +969,11 @@
 					error_log("FOUND errorblock");
 					if ($this->errorCount() > 0) {
 						$buffer = '<section id="form-message">
-						<ul class="connectBorder pageMessage errorText">
-							<li class="pageMessage--error">';
-						$buffer .= $this->errorString();
-						$buffer .= '</li>
-						</ul>
+						<ul class="connectBorder pageMessage errorText">';
+						foreach ($this->errors() as $error) {
+							$buffer .= $this->formatPageMessageItem($error, 'error');
+						}
+						$buffer .= '</ul>
 						</section>';
 					}
 					elseif ($this->success) {
@@ -1638,13 +1638,26 @@
 			return $section;
 		}
 
+		private function formatPageMessageItem(string $message, string $modifier): string {
+			if (preg_match('/SQL\sError/', $message) || preg_match('/ query\:/', $message)) {
+				$called_from = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1] ?? [];
+				app_log($message, 'error', $called_from['file'] ?? __FILE__, $called_from['line'] ?? __LINE__);
+				$message = "Internal site error";
+			}
+			return '<li class="pageMessage--'.$modifier.'"><span class="pageMessage__content">'
+				.htmlspecialchars($message, ENT_QUOTES, 'UTF-8').'</span></li>';
+		}
+
 		public function showMessages() {
 			$buffer = "";
 			if ($this->errorCount() > 0) {
 				$buffer .= "
 		  <section id=\"form-message\">
-			<ul class=\"pageMessage\">
-			  <li class=\"pageMessage--error\">".$this->errorString()."</li>
+			<ul class=\"pageMessage\">";
+				foreach ($this->errors() as $error) {
+					$buffer .= "\n\t\t\t  ".$this->formatPageMessageItem($error, 'error');
+				}
+				$buffer .= "
 			</ul>
 		  </section>
 			  ";
@@ -1653,7 +1666,7 @@
 				$buffer .= "
 		  <section id=\"form-message\">
 			<ul class=\"pageMessage\">
-			  <li class=\"pageMessage--progress\">".$this->success."</li>
+			  <li class=\"pageMessage--progress\"><span class=\"pageMessage__content\">".$this->success."</span></li>
 			</ul>
 		  </section>
 			  ";
@@ -1661,8 +1674,11 @@
 			if ($this->warningCount() > 0) {
 				$buffer .= "
 		  <section id=\"form-message\">
-			<ul class=\"pageMessage\">
-			  <li class=\"pageMessage--warning\">".$this->warningString()."</li>
+			<ul class=\"pageMessage\">";
+				foreach ($this->warnings() as $warning) {
+					$buffer .= "\n\t\t\t  ".$this->formatPageMessageItem($warning, 'warning');
+				}
+				$buffer .= "
 			</ul>
 		  </section>
 			  ";

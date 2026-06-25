@@ -65,8 +65,6 @@
     <?php } ?>
   </div>
   <!--    Standard Page Navigation Bar -->
-  <div class="pagination" id="pagination">
-    <?=$pagination->renderPages(); ?>
-	</div>
+<?=$pagination->renderBar()?>
   <?php	} ?>
 </form>

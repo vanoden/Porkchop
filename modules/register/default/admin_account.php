@@ -1,12 +1,3 @@
-<!-- Autocomplete CSS and JS -->
-<link href="/css/autocomplete.css" type="text/css" rel="stylesheet">
-<script language="JavaScript" src="/js/autocomplete.js"></script>
-<script language="JavaScript">
-  // define existing categories and tags for autocomplete
-  var existingCategories = <?= $uniqueTagsData['categoriesJson'] ?>;
-  var existingTags = <?= $uniqueTagsData['tagsJson'] ?>;
-</script>
-
 <!-- Page Header -->
 <?= $page->showAdminPageInfo() ?>
 <!-- End Page Header -->

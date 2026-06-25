@@ -120,8 +120,6 @@ function salesOrdersSortHref(string $field, array $controls): string {
 	</table>
 
 <?php if (isset($pagination) && is_object($pagination)) { ?>
-	<div class="pagination pagination-bar" id="pagination">
-		<?=$pagination->renderPages()?>
-	</div>
+	<?=$pagination->renderBar()?>
 <?php } ?>
 </form>

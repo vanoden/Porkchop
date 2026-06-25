@@ -39,11 +39,6 @@
 		document.getElementById('productEdit').submit();
 	}
 
-	function removeSearchTagById(id) {
-		document.getElementById('removeSearchTagId').value = id;
-		document.getElementById('productEdit').submit();
-	}
-
 	function submitProductUpdate() {
 		var form = document.getElementById('productEdit');
 		if (form && form.requestSubmit) {
@@ -54,12 +49,7 @@
 	}
 </script>
 
-<link href="/css/autocomplete.css" type="text/css" rel="stylesheet">
-<script language="JavaScript" src="/js/autocomplete.js"></script>
 <script language="JavaScript">
-	var existingCategories = <?= $uniqueTagsData['categoriesJson'] ?>;
-	var existingTags = <?= $uniqueTagsData['tagsJson'] ?>;
-
 	document.addEventListener('DOMContentLoaded', function() {
 		var pendingCode = document.getElementById('new_image_code').value;
 		if (pendingCode) showPendingImage(pendingCode);
@@ -357,52 +347,15 @@
 		</div>
 	</section>
 
-	<h3 class="text-inline">Product Search Tags</h3>
-	<h4 class="text-inline">(customer support knowledge center)</h4>
-	<section>
-		<div class="tableBody min-tablet">
-			<div class="tableRowHeader">
-				<div class="tableCell width-33per">&nbsp;</div>
-				<div class="tableCell width-33per">Category</div>
-				<div class="tableCell width-33per">Search Tag</div>
-			</div>
-			<?php if (!empty($productSearchTags)) {
-				foreach ($productSearchTags as $row) {
-					$searchTag = is_object($row) && isset($row->searchTag) ? $row->searchTag : $row;
-					$xrefId = is_object($row) && isset($row->xrefId) ? $row->xrefId : (isset($searchTag->id) ? $searchTag->id : 0);
-			?>
-			<div class="tableRow">
-				<div class="tableCell">
-					<input type="button" onclick="removeSearchTagById('<?= (int)$xrefId ?>')" name="removeSearchTag" value="Remove" class="button" />
-				</div>
-				<div class="tableCell"><?= htmlspecialchars($searchTag->category ?: 'product_tag') ?></div>
-				<div class="tableCell"><?= htmlspecialchars($searchTag->value) ?></div>
-			</div>
-			<?php }
-			} else { ?>
-			<div class="tableRow">
-				<div class="tableCell">No search tags assigned to this product.</div>
-			</div>
-			<?php } ?>
-			<div class="tableRow">
-				<div class="tableCell">
-					<label for="newSearchTagCategory">Category:</label>
-					<input type="text" class="autocomplete value input" name="newSearchTagCategory" id="newSearchTagCategory" value="" placeholder="e.g., gas" />
-					<ul id="categoryAutocomplete" class="autocomplete-list"></ul>
-				</div>
-				<div class="tableCell">
-					<label for="newSearchTag">New Search Tag:</label>
-					<input type="text" class="autocomplete value input" name="newSearchTag" id="newSearchTag" value="" placeholder="e.g., sulfuryl fluoride" />
-					<ul id="tagAutocomplete" class="autocomplete-list"></ul>
-				</div>
-			</div>
-			<div class="tableRow">
-				<div class="tableCell">
-					<input type="submit" name="addSearchTag" value="Add Search Tag" class="button" />
-				</div>
-			</div>
-		</div>
-	</section>
+<?php
+	$searchTagsTitle = 'Product Search Tags';
+	$searchTagRows = $productSearchTags ?? [];
+	$searchTagsFormId = 'productEdit';
+	$searchTagsCategoryPlaceholder = 'e.g., gas';
+	$searchTagsValuePlaceholder = 'e.g., sulfuryl fluoride';
+	$searchTagsSubmitInForm = true;
+	require dirname(__DIR__, 2) . '/site/default/search_tags_editor.php';
+?>
 
 	<h3>Price Audit History</h3>
 	<section>

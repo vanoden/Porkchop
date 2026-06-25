@@ -76,6 +76,4 @@
     </div>
   </div>
 </form>
-<div class="pagination" id="pagination">
-	<?=$pagination->renderPages(); ?>
-</div>
+<?=$pagination->renderBar()?>

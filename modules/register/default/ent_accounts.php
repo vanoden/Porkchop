@@ -74,9 +74,7 @@
 </div>
 
 <!--    Standard Page Navigation Bar -->
-<div class="pagination" id="pagination">
-    <?=$pagination->renderPages(); ?>
-</div>
+<?=$pagination->renderBar()?>
 
 <?php
   if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {

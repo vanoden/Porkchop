@@ -6,21 +6,6 @@
         plugins: 'code',
         toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | outdent indent | code'
 	});
-
-  	// remove a search tag by id
-	function removeSearchTagById(id) {
-		document.getElementById('removeSearchTagId').value = id;
-		document.getElementById('contentBlockEdit').submit();
-	}
-</script>
-
-<!-- Autocomplete CSS and JS -->
-<link href="/css/autocomplete.css" type="text/css" rel="stylesheet">
-<script language="JavaScript" src="/js/autocomplete.js"></script>
-<script language="JavaScript">
-	// define existing categories and tags for autocomplete
-	var existingCategories = <?= $uniqueTagsData['categoriesJson'] ?>;
-	var existingTags = <?= $uniqueTagsData['tagsJson'] ?>;
 </script>
 
 <!-- Page Header -->
@@ -47,49 +32,15 @@
 			<textarea class="value input width-250px" name="content" id="content"><?= htmlspecialchars($message->content) ?></textarea>
 		</div>
 
-		<br/><br/>
-		<h3 class="text-inline">Content Message Search Tags</h3>
-		<h4 class="text-inline">(customer support knowledge center)</h4>
-		<div class="tableBody min-tablet">
-			<div class="tableRowHeader">
-				<div class="tableCell tableCell-width-33">&nbsp;</div>
-				<div class="tableCell tableCell-width-33">Category</div>
-				<div class="tableCell tableCell-width-33">Search Tag</div>
-			</div>
-			<?php
-			foreach ($registerCustomerSearchTags as $row) {
-				$searchTag = $row->searchTag;
-				$xrefId = $row->xrefId;
-			?>
-				<div class="tableRow">
-					<div class="tableCell">
-						<input type="button" onclick="removeSearchTagById('<?= (int)$xrefId ?>')" name="removeSearchTag" value="Remove" class="button" />
-					</div>
-					<div class="tableCell">
-						<?= htmlspecialchars($searchTag->category) ?>
-					</div>
-					<div class="tableCell">
-						<?= htmlspecialchars($searchTag->value) ?>
-					</div>
-				</div>
-			<?php
-			}
-			?>
-			<br/>
-			<div class="tableRow">
-					<div class="tableCell">
-						<label>Category:</label>
-						<input type="text" class="autocomplete" name="newSearchTagCategory" id="newSearchTagCategory" value="" placeholder="content" />
-						<ul id="categoryAutocomplete" class="autocomplete-list"></ul>
-					</div>
-					<div class="tableCell">
-						<label>New Search Tag:</label>
-						<input type="text" class="autocomplete" name="newSearchTag" id="newSearchTag" value="" placeholder="about us" />
-						<ul id="tagAutocomplete" class="autocomplete-list"></ul>
-					</div>
-				</div>
-				<div><input type="submit" name="addSearchTag" value="Add Search Tag" class="button" /></div>
-		</div>
+<?php
+		$searchTagsTitle = 'Content Message Search Tags';
+		$searchTagRows = $registerCustomerSearchTags ?? [];
+		$searchTagsFormId = 'contentBlockEdit';
+		$searchTagsCategoryPlaceholder = 'content';
+		$searchTagsValuePlaceholder = 'about us';
+		$searchTagsSubmitInForm = true;
+		require __DIR__ . '/search_tags_editor.php';
+?>
 
 		<div class="form-actions filter-bar">
 			<div class="button-group filter-bar__actions">

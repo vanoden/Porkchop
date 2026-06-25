@@ -88,9 +88,7 @@
 </div><!-- end table -->
 
 <!--    Standard Page Navigation Bar -->
-<div class="pagination" id="pagination">
-	<?=$pagination->renderPages(); ?>
-</div>
+<?=$pagination->renderBar()?>
 </form>
 
 <form action="<?=PATH?>/_register/admin_organization" method="get">

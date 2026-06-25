@@ -59,7 +59,5 @@ foreach ($products as $product) {
 </div>
 
 <!-- Start pagination -->
-<div class="pagination" id="pagination">
-    <?=$pagination->renderPages()?>
-</div>
+<?=$pagination->renderBar()?>
 <!-- End pagination -->

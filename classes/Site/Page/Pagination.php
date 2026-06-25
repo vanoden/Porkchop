@@ -10,8 +10,8 @@
 		public $baseURI;								// Base URI for lings
 		public $divElemClass;							// CSS class for the div element
 		public $linkElemClass = [];						// CSS class for the link element
-		public $elemName = "pagerBar";					// Name of the pagination element
-		public $elemId = "pagerBar";					// ID of the pagination element
+		public $elemName = "pagination";				// Name of the pagination element
+		public $elemId = "pagination";					// ID of the pagination element
 		public $startElemName = "pagination_start_id";	// Name of the start id element
 		public $sizeElemName = "pagination_size";		// Name of the size element
 		private $_forwardParameters = array();			// Array of form parameters to forward
@@ -40,8 +40,8 @@
 			$this->count = $count;
 			if (!empty($size)) $this->size = $size;
 
-			$this->divElemClass = array('pager_bar');
-			$this->linkElemClass = array('pager');
+			$this->divElemClass = array('pagination', 'pagination-bar');
+			$this->linkElemClass = array();
 		}
 
 		/**
@@ -116,8 +116,17 @@
 		private function paramString() {
 			$string = '&'.$this->sizeElemName."=".$this->size;
 			foreach ($this->_forwardParameters as $parameter) {
-				if (empty($parameter[key($parameter)])) continue;
-				$string .= "&" . key($parameter) . "=" . $parameter[key($parameter)];
+				$name = key($parameter);
+				$value = $parameter[$name];
+				if (is_array($value)) {
+					foreach ($value as $item) {
+						if ($item === '' || $item === null) continue;
+						$string .= "&" . urlencode($name) . "[]=" . urlencode((string) $item);
+					}
+					continue;
+				}
+				if ($value === '' || $value === null) continue;
+				$string .= "&" . urlencode($name) . "=" . urlencode((string) $value);
 			}
 			return $string;
 		}
@@ -192,10 +201,34 @@
 		}
 
 		/**
-		 * Standard Pagination Bar Rendering (no boxes)
-		 * @return string 
+		 * Standard Pagination Bar Rendering (numbered page links in footer bar)
+		 * @return string
 		 */
 		public function render() {
+			return $this->renderBar();
+		}
+
+		/**
+		 * Render pagination page links wrapped in the standard footer bar.
+		 * @param string|null $id Optional element id override
+		 * @return string
+		 */
+		public function renderBar($id = null) {
+			$pages = $this->renderPages();
+			if (empty($pages)) return '';
+
+			$elemId = $id ?? $this->elemId;
+			$classes = htmlspecialchars(join(' ', $this->divElemClass), ENT_QUOTES, 'UTF-8');
+			$elemId = htmlspecialchars($elemId, ENT_QUOTES, 'UTF-8');
+
+			return '<div class="'.$classes.'" id="'.$elemId.'">'."\n".$pages.'</div>'."\n";
+		}
+
+		/**
+		 * Legacy range-style pagination (deprecated; use renderBar/renderPages)
+		 * @return string
+		 */
+		public function renderRange() {
 			$string = "";
 			if ($this->startId > 0) $string .= '<a id="paginationFirst" href="'.$this->firstPageLink().'" class="'.join("",$this->linkElemClass).'">&lt;&lt; First</a>';
 			if ($this->startId >= $this->size) $string .= '<a id="paginationPrevious" href="'.$this->prevPageLink().'" class="'.join(" ",$this->linkElemClass)."\">&lt; Previous</a>";
