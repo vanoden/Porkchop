@@ -4,51 +4,65 @@
     var csrfToken = '<?=$GLOBALS['_SESSION_']->getCSRFToken()?>';
 
     // check if the organization already exists for button states
-    function checkExisting(id, orgName) {
-		var id = parseInt(id.split("_")[1]);
-
-		// Wildcard search
-		orgName = orgName+'*';
-		var OrgList = Object.create(OrganizationList);
-		var organizations = OrgList.find({name: orgName});
-
-		console.log("OrgID: " + id);
+    function checkExisting(elementId, orgName) {
+		var id = parseInt(elementId.split("_")[1], 10);
 		var orgListElem = document.getElementById("organization_list_" + id);
-		console.log("OrgList: " + orgListElem);
+		var assignBtn = document.getElementById("organization_" + id + "_assign_button");
+		var newBtn = document.getElementById("organization_" + id + "_new_button");
+		if (!orgListElem || !assignBtn || !newBtn) {
+			return;
+		}
 
+		var trimmed = (orgName || '').trim();
 		while (orgListElem.firstChild) {
 			orgListElem.removeChild(orgListElem.firstChild);
 		}
 
-		if (organizations.length > 0) {
-			var found = false;
-			for (var i = 0; i < organizations.length; i++) {
-				var org = organizations[i];
-				if (typeof(org.name) !== 'undefined') {
-					console.log("Adding: " + org.name);
-					found = true;
-					var option = document.createElement("option");
-					option.value = org.name;
-					orgListElem.appendChild(option);
-				}
-				else {
-					console.log("No name for org: " + org.id);
-				}
+		if (!trimmed) {
+			assignBtn.disabled = true;
+			newBtn.disabled = true;
+			return;
+		}
+
+		var OrgList = Object.create(OrganizationList);
+		var organizations = OrgList.find({name: trimmed + '*'}) || [];
+		if (!Array.isArray(organizations)) {
+			organizations = [];
+		}
+
+		var exactMatch = false;
+		for (var i = 0; i < organizations.length; i++) {
+			var org = organizations[i];
+			if (!org || typeof org.name === 'undefined') {
+				continue;
 			}
-			if (found) {
-				document.getElementById("organization_"+id + "_assign_button").disabled = false;
-				document.getElementById("organization_"+id + "_new_button").disabled = true;
-			}
-			else {
-				document.getElementById("organization_"+id + "_assign_button").disabled = true;
-				document.getElementById("organization_"+id + "_new_button").disabled = false;
+			var option = document.createElement("option");
+			option.value = org.name;
+			orgListElem.appendChild(option);
+			if (org.name.toLowerCase() === trimmed.toLowerCase()) {
+				exactMatch = true;
 			}
 		}
-		else {
-			document.getElementById("organization_"+id + "_assign_button").disabled = true;
-			document.getElementById("organization_"+id + "_new_button").disabled = false;
-		}        
+
+		assignBtn.disabled = !exactMatch;
+		newBtn.disabled = exactMatch;
+		assignBtn.title = exactMatch
+			? 'Assign customer to the selected existing organization'
+			: 'Type or pick an organization name that exactly matches an existing organization';
 	};
+
+	function bindOrganizationLookup(element) {
+		if (!element || element.dataset.lookupBound === '1') {
+			return;
+		}
+		element.dataset.lookupBound = '1';
+		element.addEventListener('input', function() {
+			checkExisting(element.id, element.value);
+		});
+		element.addEventListener('change', function() {
+			checkExisting(element.id, element.value);
+		});
+	}
 
 	document.addEventListener("DOMContentLoaded", function() {
 		// Reset page to hide all forms initially
@@ -58,27 +72,29 @@
 		var elements = document.getElementsByClassName("organization");
 		for (let i = 0; i < elements.length; i++) {
 			var element = elements[i];
-			var id = element.id;
-			var orgName = element.value;
-			checkExisting(id, orgName+"*");
-		}
-	});
-
-	document.addEventListener("keyup", function(event) {
-		if (event.target.classList.contains("organization")) {
-			var id = event.target.id;
-			var orgName = event.target.value;
-			checkExisting(id, orgName);
+			bindOrganizationLookup(element);
+			checkExisting(element.id, element.value);
 		}
 	});
 </script>
 
 <script>
+   // toggle inline edit panels (use classList — .hidden uses display:none !important)
+   function showPendingPanel(elementId) {
+	   var el = document.getElementById(elementId);
+	   if (el) el.classList.remove('hidden');
+   }
+
+   function hidePendingPanel(elementId) {
+	   var el = document.getElementById(elementId);
+	   if (el) el.classList.add('hidden');
+   }
+
    // reset the page forms to only allow the one in question
    function resetPage() {
 	   var statusForms = document.getElementsByClassName("customer_status_form");
 	   for (var i = 0; i < statusForms.length; i++) {
-		   statusForms[i].style.display = "none";
+		   statusForms[i].classList.add('hidden');
 	   }
 	   
 	   var statusLinks = document.getElementsByClassName("customer_status_form_links");
@@ -88,7 +104,7 @@
 	   
 	   var notesForms = document.getElementsByClassName("customer_notes_form");
 	   for (var i = 0; i < notesForms.length; i++) {
-		   notesForms[i].style.display = "none";
+		   notesForms[i].classList.add('hidden');
 	   }
 	   
 	   var notesLinks = document.getElementsByClassName("customer_notes_edit_links");
@@ -100,44 +116,48 @@
    // edit status for pending customer
    function editStatus(queueId) {
 	   resetPage();
-	   document.getElementById("customer_status_form_" + queueId).style.display = "block";
+	   showPendingPanel("customer_status_form_" + queueId);
 	   document.getElementById("customer_status_form_links_" + queueId).style.display = "none";       
    }
    
    // cancel edit status for pending customer
    function cancelEditStatus(queueId) {
 	   resetPage();
-	   document.getElementById("customer_status_form_" + queueId).style.display = "none";
-	   document.getElementById("customer_status_form_links_" + queueId).style.display = "block";       
    }
    
    // edit notes for pending customer
    function editNote(queueId) {
 	   resetPage();
-	   document.getElementById("customer_notes_form_" + queueId).style.display = "block";
+	   showPendingPanel("customer_notes_form_" + queueId);
 	   document.getElementById("customer_notes_edit_links_" + queueId).style.display = "none";       
    }
    
    // cancel edit notes for pending customer
    function cancelEditNote(queueId) {
 	   resetPage();
-	   document.getElementById("customer_notes_form_" + queueId).style.display = "none";
-	   document.getElementById("customer_notes_edit_links_" + queueId).style.display = "block";       
    }
    
-   function assignExistingCustomer(queueId) {
-	   document.getElementById("customer_add_" + queueId).value = 'assignCustomer';
+   function submitCustomerAction(queueId, action) {
+	   document.getElementById("customer_add_" + queueId).value = action;
 	   document.getElementById("customer_add_form_" + queueId).submit();
    }
-   
-   function addNewCustomer(queueId) {
-	   document.getElementById("customer_add_" + queueId).value = 'addCustomer';
-	   document.getElementById("customer_add_form_" + queueId).submit();
+
+   function assignExistingCustomer(queueId, event) {
+	   if (event) event.preventDefault();
+	   submitCustomerAction(queueId, 'assignCustomer');
    }
    
-   function denyCustomer(queueId) {
-	   document.getElementById("customer_add_" + queueId).value = 'denyCustomer';
-	   document.getElementById("customer_add_form_" + queueId).submit();
+   function addNewCustomer(queueId, event) {
+	   if (event) event.preventDefault();
+	   submitCustomerAction(queueId, 'assignCustomer');
+   }
+   
+   function denyCustomer(queueId, event) {
+	   if (event) event.preventDefault();
+	   if (!confirm('Deny this customer registration?')) {
+		   return false;
+	   }
+	   submitCustomerAction(queueId, 'denyCustomer');
    }
    
    function resend(customerId, buttonElement) {
@@ -269,28 +289,41 @@
 			<span class="label reseller-label">[Reseller]</span>
 			<?php } ?>
 			
-			<form method="POST" id="customer_add_form_<?=$queuedCustomer->id?>" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
+			<form method="POST" id="customer_add_form_<?=$queuedCustomer->id?>" action="/_register/pending_customers">
 				<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+<?php if (!empty($_REQUEST['search'])) { ?>
+				<input type="hidden" name="search" value="<?=htmlspecialchars($_REQUEST['search'], ENT_QUOTES, 'UTF-8')?>">
+<?php } ?>
+<?php if (!empty($_REQUEST['dateStart'])) { ?>
+				<input type="hidden" name="dateStart" value="<?=htmlspecialchars($_REQUEST['dateStart'], ENT_QUOTES, 'UTF-8')?>">
+<?php } ?>
+<?php if (!empty($_REQUEST['dateEnd'])) { ?>
+				<input type="hidden" name="dateEnd" value="<?=htmlspecialchars($_REQUEST['dateEnd'], ENT_QUOTES, 'UTF-8')?>">
+<?php } ?>
+<?php if (isset($_REQUEST['VERIFYING'])) { ?>
+				<input type="hidden" name="VERIFYING" value="VERIFYING">
+<?php } ?>
+<?php if (isset($_REQUEST['PENDING'])) { ?>
+				<input type="hidden" name="PENDING" value="PENDING">
+<?php } ?>
+<?php if (isset($_REQUEST['APPROVED'])) { ?>
+				<input type="hidden" name="APPROVED" value="APPROVED">
+<?php } ?>
+<?php if (isset($_REQUEST['DENIED'])) { ?>
+				<input type="hidden" name="DENIED" value="DENIED">
+<?php } ?>
 				<?php
 				switch ($queuedCustomer->status) {
 				case 'PENDING':
 				?>
-				<div class="marginTop_10">
-					<input list="organization_list_<?=$queuedCustomer->id?>" class="organization value input width-100per" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?= htmlspecialchars($queuedCustomer->name) ?>" placeholder="Match Organization"/>
+				<div class="marginTop_10 pending-customers-org-editor">
+					<label class="pending-customers-org-label" for="organization_<?=$queuedCustomer->id?>">Org. Name (to match existing organization)</label>
+					<input list="organization_list_<?=$queuedCustomer->id?>" class="organization value input width-100per" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?= htmlspecialchars($queuedCustomer->name) ?>" placeholder="Match organization" autocomplete="off" />
 					<datalist id="organization_list_<?=$queuedCustomer->id?>"></datalist>
-					<div class="button-group pending-customers-org-actions marginTop_5">
-						<div class="button-item">
-							<input type="image" class="width-30px" src="/img/icons/icon_cust_add-existing.svg" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignExistingCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" title="Assign customer to existing organization" disabled="disabled"/> 
-							<div class="button-label">Assign</div>
-						</div>
-						<div class="button-item">
-							<input type="image" class="width-30px" src="/img/icons/icon_cust_add-new.svg" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="addNewCustomer(<?=$queuedCustomer->id?>)" alt="Add as New" title="Assign customer to new organization" disabled="disabled"/> 
-							<div class="button-label">New</div>
-						</div>
-						<div class="button-item">
-							<input type="image" class="width-30px" src="/img/icons/icon_cust_deny.svg" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)" alt="Deny" title="Deny customer creation" />
-							<div class="button-label">Deny</div>
-						</div>
+					<div class="pending-customers-org-actions">
+						<button type="button" class="button btn-secondary pending-customers-action-btn" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignExistingCustomer(<?=$queuedCustomer->id?>, event)" disabled="disabled" title="Type or pick an organization name that exactly matches an existing organization">= Assign Existing</button>
+						<button type="button" class="button pending-customers-action-btn pending-customers-action-btn--approve" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="addNewCustomer(<?=$queuedCustomer->id?>, event)" disabled="disabled" title="Approve and create a new organization">+ Approve (new org)</button>
+						<button type="button" class="button pending-customers-action-btn pending-customers-action-btn--deny" onclick="denyCustomer(<?=$queuedCustomer->id?>, event)" title="Deny this registration">- Deny</button>
 					</div>
 				</div>
 				<?php
@@ -337,7 +370,7 @@
 	  </td>
 	  <td data-label="Status" class="pending-customers-col-status">
 		  <div id="customer_status_form_<?=$queuedCustomer->id?>" class="hidden customer_status_form">
-		    <form method="POST" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
+		    <form method="POST" action="/_register/pending_customers">
 		      <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 			    <select name="status" class="value input status-select">
 				    <?php foreach ($possibleStatii as $possibleStatus) { ?>
@@ -346,9 +379,30 @@
 			    </select>
 			    <input type="hidden" name="action" value="updateStatus"/>
 			    <input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/>
+<?php if (!empty($_REQUEST['search'])) { ?>
+			    <input type="hidden" name="search" value="<?=htmlspecialchars($_REQUEST['search'], ENT_QUOTES, 'UTF-8')?>">
+<?php } ?>
+<?php if (!empty($_REQUEST['dateStart'])) { ?>
+			    <input type="hidden" name="dateStart" value="<?=htmlspecialchars($_REQUEST['dateStart'], ENT_QUOTES, 'UTF-8')?>">
+<?php } ?>
+<?php if (!empty($_REQUEST['dateEnd'])) { ?>
+			    <input type="hidden" name="dateEnd" value="<?=htmlspecialchars($_REQUEST['dateEnd'], ENT_QUOTES, 'UTF-8')?>">
+<?php } ?>
+<?php if (isset($_REQUEST['VERIFYING'])) { ?>
+			    <input type="hidden" name="VERIFYING" value="VERIFYING">
+<?php } ?>
+<?php if (isset($_REQUEST['PENDING'])) { ?>
+			    <input type="hidden" name="PENDING" value="PENDING">
+<?php } ?>
+<?php if (isset($_REQUEST['APPROVED'])) { ?>
+			    <input type="hidden" name="APPROVED" value="APPROVED">
+<?php } ?>
+<?php if (isset($_REQUEST['DENIED'])) { ?>
+			    <input type="hidden" name="DENIED" value="DENIED">
+<?php } ?>
 			    <div class="button-group-spacing">
 			      <button type="submit" class="button small-button">Save</button>
-			      <button type="button" class="button secondary small-button" onclick="cancelEditStatus(<?=$queuedCustomer->id?>)">Cancel</button>
+			      <button type="button" class="button btn-secondary small-button" onclick="cancelEditStatus(<?=$queuedCustomer->id?>)">Cancel</button>
 			    </div>
 			  </form>
 		  </div>

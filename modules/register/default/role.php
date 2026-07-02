@@ -1,106 +1,71 @@
 <script>
-  // Toggle all checkboxes for a specific privilege level
-  function setAllPrivilegeLevel(value) {
-    var checkboxElements = document.querySelectorAll('input[name^="privilege_level"][name$="][' + value + ']');
+  (function () {
+    var PRIVILEGE_LEVELS = [1, 2, 3, 5, 7];
 
-    var button = event.target;
-
-    // Check if all are checked
-    var allChecked = Array.from(checkboxElements).every(function (el) {
-      return el.checked;
-    });
-
-    // If all are checked, uncheck all. Otherwise, check all.
-    checkboxElements.forEach(function (el) {
-      el.checked = !allChecked;
-    });
-
-    // Update button text and styling based on the NEW state
-    if (allChecked) {
-      // Was all checked, now all unchecked - show "Set All"
-      button.textContent = 'Set All';
-      button.classList.remove('unset-all');
-    } else {
-      // Was not all checked, now all checked - show "Unset All"
-      button.textContent = 'Unset All';
-      button.classList.add('unset-all');
+    function getColumnCheckboxes(level) {
+      return document.querySelectorAll(
+        'input[type="checkbox"][name^="privilege_level["][name$="[' + level + ']"]'
+      );
     }
-  }
 
-  // Convenience functions for each privilege level
-  function setAllCustomer() { setAllPrivilegeLevel(0); }
-  function setAllSubOrg() { setAllPrivilegeLevel(2); }
-  function setAllOrgManager() { setAllPrivilegeLevel(3); }
-  function setAllDistributor() { setAllPrivilegeLevel(5); }
-  function setAllAdministrator() { setAllPrivilegeLevel(7); }
-
-  // Set all privilege levels to none
-  function setAllNone() {
-    var checkboxElements = document.querySelectorAll('input[name^="privilege_level"]');
-    checkboxElements.forEach(function (el) {
-      el.checked = false;
-    });
-
-    // Reset all toggle buttons to "Set All"
-    var toggleButtons = document.querySelectorAll('button[onclick^="setAll"]:not([onclick="setAllNone()"])');
-    toggleButtons.forEach(function (button) {
-      button.textContent = 'Set All';
-      button.classList.remove('unset-all');
-    });
-  }
-
-  // Handle checkbox changes - prevent Administrator from auto-checking lower levels
-  function handlePrivilegeLevelChange(privilegeId, changedCheckbox) {
-    var checkboxValue = parseInt(changedCheckbox.value);
-    var privilegeRow = changedCheckbox.closest('.tableRow');
-    
-    // If Administrator (7) is being checked, don't auto-check lower levels
-    if (checkboxValue === 7 && changedCheckbox.checked) {
-      // Administrator is being checked - ensure lower levels stay as they are
-      // Don't automatically check them
-      return;
+    function getHeaderCheckbox(level) {
+      return document.querySelector('.role-privilege-column-toggle[data-level="' + level + '"]');
     }
-    
-    // If Administrator (7) is being unchecked, don't auto-uncheck lower levels
-    if (checkboxValue === 7 && !changedCheckbox.checked) {
-      // Administrator is being unchecked - lower levels stay independent
-      return;
-    }
-    
-    // For other levels, they're independent - no special handling needed
-    // With addition-based arithmetic, each level is independent
-  }
-  
-  // Prevent any automatic cascade behavior when page loads
-  document.addEventListener('DOMContentLoaded', function() {
-    // Ensure checkboxes are independent - no automatic checking/unchecking
-    var allCheckboxes = document.querySelectorAll('input[name^="privilege_level"]');
-    
-    allCheckboxes.forEach(function(checkbox) {
-      // Store the initial state to prevent unwanted changes
-      checkbox.setAttribute('data-initial-state', checkbox.checked);
-      
-      // Add click handler to prevent cascade
-      checkbox.addEventListener('click', function(e) {
-        // Allow the checkbox to toggle normally
-        // But don't let it affect other checkboxes
-      }, true); // Use capture phase to run before other handlers
-    });
-    
-    // Debug: Log form submission
-    var form = document.querySelector('form[action="/_register/role"]');
-    if (form) {
-      form.addEventListener('submit', function(e) {
-        console.log('Form submitting...');
-        var privilegeCheckboxes = document.querySelectorAll('input[name^="privilege_level"]');
-        privilegeCheckboxes.forEach(function(cb) {
-          if (cb.checked) {
-            console.log('Checked: ' + cb.name + ' = ' + cb.value);
-          }
-        });
+
+    function isColumnFullyChecked(level) {
+      var boxes = getColumnCheckboxes(level);
+      if (!boxes.length) {
+        return false;
+      }
+      return Array.from(boxes).every(function (el) {
+        return el.checked;
       });
     }
-  });
+
+    function syncHeaderCheckbox(level) {
+      var header = getHeaderCheckbox(level);
+      if (header) {
+        header.checked = isColumnFullyChecked(level);
+      }
+    }
+
+    function syncAllHeaderCheckboxes() {
+      PRIVILEGE_LEVELS.forEach(syncHeaderCheckbox);
+    }
+
+    function setColumnChecked(level, checked) {
+      getColumnCheckboxes(level).forEach(function (el) {
+        el.checked = checked;
+      });
+      syncHeaderCheckbox(level);
+    }
+
+    window.setAllNone = function () {
+      document.querySelectorAll('input[type="checkbox"][name^="privilege_level["]').forEach(function (el) {
+        el.checked = false;
+      });
+      syncAllHeaderCheckboxes();
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+      PRIVILEGE_LEVELS.forEach(function (level) {
+        var header = getHeaderCheckbox(level);
+        if (header) {
+          header.addEventListener('change', function () {
+            setColumnChecked(level, header.checked);
+          });
+        }
+
+        getColumnCheckboxes(level).forEach(function (checkbox) {
+          checkbox.addEventListener('change', function () {
+            syncHeaderCheckbox(level);
+          });
+        });
+      });
+
+      syncAllHeaderCheckboxes();
+    });
+  })();
 </script>
 
 <!-- Page Header -->
@@ -176,31 +141,31 @@
           <th scope="col">
             <label class="form-check-stack form-font--compact">
               <span>Customer</span>
-              <input type="checkbox" onclick="setAllCustomer()">
+              <input type="checkbox" class="role-privilege-column-toggle" data-level="<?= \Register\PrivilegeLevel::CUSTOMER ?>">
             </label>
           </th>
           <th scope="col">
             <label class="form-check-stack form-font--compact">
               <span>Sub-Org Mgr</span>
-              <input type="checkbox" onclick="setAllSubOrg()">
+              <input type="checkbox" class="role-privilege-column-toggle" data-level="<?= \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER ?>">
             </label>
           </th>
           <th scope="col">
             <label class="form-check-stack form-font--compact">
               <span>Org Mgr</span>
-              <input type="checkbox" onclick="setAllOrgManager()">
+              <input type="checkbox" class="role-privilege-column-toggle" data-level="<?= \Register\PrivilegeLevel::ORGANIZATION_MANAGER ?>">
             </label>
           </th>
           <th scope="col">
             <label class="form-check-stack form-font--compact">
               <span>Distributor</span>
-              <input type="checkbox" onclick="setAllDistributor()">
+              <input type="checkbox" class="role-privilege-column-toggle" data-level="<?= \Register\PrivilegeLevel::DISTRIBUTOR ?>">
             </label>
           </th>
           <th scope="col">
             <label class="form-check-stack form-font--compact">
               <span>Administrator</span>
-              <input type="checkbox" onclick="setAllAdministrator()">
+              <input type="checkbox" class="role-privilege-column-toggle" data-level="<?= \Register\PrivilegeLevel::ADMINISTRATOR ?>">
             </label>
           </th>
         </tr>
@@ -225,31 +190,31 @@
 
           <td data-label="Customer" class="text-align--center">
             <label class="checkbox-label-container">
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::CUSTOMER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::CUSTOMER)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::CUSTOMER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::CUSTOMER)) echo 'checked'; ?>>
             </label>
           </td>
 
           <td data-label="Sub-Org Mgr" class="text-align--center">
             <label>
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER)) echo 'checked'; ?>>
             </label>
           </td>
 
           <td data-label="Org Mgr" class="text-align--center">
             <label class="checkbox-label-container">
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::ORGANIZATION_MANAGER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::ORGANIZATION_MANAGER)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::ORGANIZATION_MANAGER ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::ORGANIZATION_MANAGER)) echo 'checked'; ?>>
             </label>
           </td>
 
           <td data-label="Distributor" class="text-align--center">
             <label class="checkbox-label-container">
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::DISTRIBUTOR ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::DISTRIBUTOR)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::DISTRIBUTOR ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::DISTRIBUTOR)) echo 'checked'; ?>>
             </label>
           </td>
 
           <td data-label="Administrator" class="text-align--center">
             <label class="checkbox-label-container">
-              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::ADMINISTRATOR ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::ADMINISTRATOR)) echo 'checked'; ?> onchange="handlePrivilegeLevelChange(<?= $privilege->id ?>, this)">
+              <input type="checkbox" name="privilege_level[<?= $privilege->id ?>][<?= \Register\PrivilegeLevel::ADMINISTRATOR ?>]" value="1" <?php if ($role->has_privilege($privilege->id, \Register\PrivilegeLevel::ADMINISTRATOR)) echo 'checked'; ?>>
             </label>
           </td>
         </tr>
