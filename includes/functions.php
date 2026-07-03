@@ -194,6 +194,20 @@
         return $date;
     }
 
+	/** @function get_mysql_day(date)
+	 * Extract the Year, Month, and Day from a MySQL date.
+	 * Return YYYY-MM-DD
+	 * @param string $date
+	 * @return string|null
+	 */
+	function get_mysql_day($date): ?string {
+		$date = get_mysql_date($date);
+		if (preg_match('/^\d\d\d\d\-(\d\d)\-(\d\d)/',$date,$matches)) {
+			return sprintf('%04d-%02d-%02d',(int)$matches[1], (int)$matches[2], (int)$matches[3]);
+		}
+		return null;
+	}
+
 	/** @function shortDate(date)
 	 * Convert MySQL date into short date format for display
 	 * @param string $date
