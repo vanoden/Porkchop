@@ -34,7 +34,7 @@ class BaseClass {
 		'search' => '/^[\*\w\-\_\.\s]*$/',
 		'address_line' => '/^[\w? :.-|\'\)]+$/',
 		'city_name' => '/^[\w? :.-|\'\)]+$/',
-		'code' => '/^\w[\w\-\.\_\s]*$/',
+		'code' => '/^\w[\w\-\.\_\s\:]*$/',
 		// Allow apostrophes and grave accent (common in transliterations, e.g. "ad Dali`").
 		'name' => "/\w[\w\-\.\_\s\,\!\?\(\)\'\x{2019}\x{0060}]*$/u",
 		'hostname' => '/^[\w\-\.]+$/',
