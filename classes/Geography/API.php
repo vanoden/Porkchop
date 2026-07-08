@@ -265,7 +265,7 @@
 		###################################################
 		public function findProvinces() {
 			$provinceList = new \Geography\ProvinceList();
-			
+
 			$parameters = array();
 			if (!empty($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
 			if (!empty($_REQUEST['country_name'])) {
@@ -278,16 +278,21 @@
 				if (! $country->getByAbbreviation($_REQUEST['country_abbreviation'])) $this->error("Country abbreviation '".$_REQUEST['country_abbreviation']."' not found");
 				$parameters['country_id'] = $country->id;
 			}
+			elseif (!empty($_REQUEST['country_code'])) {
+				$country = new \Geography\Country();
+				if (! $country->get($_REQUEST['country_code'])) $this->error("Country code '".$_REQUEST['country_code']."' not found");
+				$parameters['country_id'] = $country->id;
+			}
 			elseif (!empty($_REQUEST['country_id'])) {
 				$country = new \Geography\Country($_REQUEST['country_id']);
 				if (! $country->id) $this->error("Country id '".$_REQUEST['country_id']."' not found");
 				$parameters['country_id'] = $country->id;
 			}
 			if (!empty($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
-			
+
 			$provinces = $provinceList->find($parameters);
 			if ($provinceList->error()) $this->error("Error finding provinces: ".$provinceList->error());
-	
+
 			$response = new \APIResponse();
 			$response->success(true);
 			$response->AddElement('province',$provinces);
