@@ -28,7 +28,7 @@ require __DIR__ . '/admin_account_tabs.php';
   $searchTagsCategoryPlaceholder = 'Location';
   $searchTagsValuePlaceholder = 'New York';
   $searchTagsSubmitInForm = true;
-  require dirname(__DIR__, 2) . '/site/default/search_tags_editor.php';
+  require BASE . '/modules/site/default/search_tags_editor.php';
 ?>
 
   <div class="form-actions filter-bar">

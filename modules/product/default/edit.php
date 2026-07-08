@@ -354,7 +354,7 @@
 	$searchTagsCategoryPlaceholder = 'e.g., gas';
 	$searchTagsValuePlaceholder = 'e.g., sulfuryl fluoride';
 	$searchTagsSubmitInForm = true;
-	require dirname(__DIR__, 2) . '/site/default/search_tags_editor.php';
+	require BASE . '/modules/site/default/search_tags_editor.php';
 ?>
 
 	<h3>Price Audit History</h3>
