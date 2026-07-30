@@ -17,6 +17,6 @@
 	$searchTagsDefaultCategory = 'product_tag';
 	$searchTagsCategoryPlaceholder = 'gas';
 	$searchTagsValuePlaceholder = 'sulfuryl fluoride';
-	require dirname(__DIR__, 2) . '/site/default/search_tags_editor.php';
+	require BASE . '/modules/site/default/search_tags_editor.php';
 ?>
 </form>

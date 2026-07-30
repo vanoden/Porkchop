@@ -189,7 +189,16 @@
 			$execCounter->increment();
 
 			if ($this->_connection->ErrorMsg()) {
-				error_log($this->_connection->ErrorMsg());
+				$driverError = '';
+				if (!empty($this->_connection->_connectionID) && is_object($this->_connection->_connectionID)) {
+					$driverError = trim((string)($this->_connection->_connectionID->error ?? ''));
+				}
+				$errorLog = $this->_connection->ErrorMsg();
+				if ($driverError !== '' && strpos($errorLog, $driverError) === false) {
+					$errorLog .= ' [' . $driverError . ']';
+				}
+				error_log($errorLog);
+				app_log($errorLog, 'error');
 				$sql_error_counter = new \Site\Counter("database.sql_errors");
 				$sql_error_counter->increment();
 				return null;

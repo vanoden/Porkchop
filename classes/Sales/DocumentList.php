@@ -4,8 +4,13 @@
 	abstract class DocumentList Extends \BaseListClass {
 		protected $document_type = 'SALES_ORDER'; // Default order type
 
+		/** @var string[] Columns allowed for ORDER BY on sales_documents */
+		protected $_sortableColumns = ['id', 'code', 'status', 'customer_id', 'salesperson_id', 'organization_id'];
+
 		public function __construct() {
-			$this->_tableDefaultSortBy = 'date_event';
+			// date_event lives on sales_document_events, not sales_documents
+			$this->_tableDefaultSortBy = 'id';
+			$this->_tableDefaultSortOrder = 'DESC';
 		}
 
 		public function findAdvanced($parameters, $advanced, $controls): array {
@@ -33,7 +38,7 @@
 				$order = new $this->_modelName($parameters['id']);
 				if ($order->exists()) {
 					$find_objects_query .= "
-						AND		id = ?
+						AND		`id` = ?
 					";
 					$database->AddParam($parameters['id']);
 				}
@@ -42,12 +47,12 @@
 					return [];
 				}
 			}
-			
+
 			if (!empty($parameters['customer_id']) && is_numeric($parameters['customer_id'])) {
 				$customer = new \Register\Customer($parameters['customer_id']);
 				if ($customer->exists()) {
 					$find_objects_query .= "
-						AND		customer_id = ?
+						AND		`customer_id` = ?
 					";
 					$database->AddParam($parameters['customer_id']);
 				}
@@ -56,7 +61,7 @@
 					return [];
 				}
 			}
-			
+
 			if (!empty($parameters['status'])) {
 				if (is_array($parameters['status'])) {
 					if (count($parameters['status']) > 0) {
@@ -72,20 +77,20 @@
 						}
 						$placeholders = implode(',', array_fill(0, count($statii), '?'));
 						$find_objects_query .= "
-							AND status in ({$placeholders})";
+							AND `status` IN ({$placeholders})";
 						foreach ($statii as $s) {
 							$database->AddParam($s);
 						}
 					}
 					else {
 						$find_objects_query .= "
-							AND id != id";
+							AND `id` != `id`";
 					}
 				}
 				elseif (!empty($parameters['status'])) {
 					if ($workingClass->validStatus($parameters['status'])) {
 						$find_objects_query .= "
-							AND status = ?";
+							AND `status` = ?";
 						$database->AddParam($parameters['status']);
 					}
 					else {
@@ -95,13 +100,13 @@
 				}
 			}
 
-            // apply the order and sort direction with sane defaults
-            $sort  = $controls['sort'] ?? ($this->_tableDefaultSortBy ?? $workingClass->_tableIDColumn());
-            $order = strtoupper($controls['order'] ?? ($this->_tableDefaultSortOrder ?? 'ASC'));
-            $order = in_array($order, ['ASC','DESC']) ? $order : 'ASC';
-            if ($workingClass->hasField($sort)) {
-                $find_objects_query .= " ORDER BY `{$sort}` {$order}";
-            }
+			// Apply sort with allowlist (hasField is unreliable before details() loads _fields)
+			$sort = $controls['sort'] ?? ($this->_tableDefaultSortBy ?? $workingClass->_tableIDColumn());
+			$order = strtoupper($controls['order'] ?? ($this->_tableDefaultSortOrder ?? 'ASC'));
+			$order = in_array($order, ['ASC', 'DESC'], true) ? $order : 'ASC';
+			if (in_array($sort, $this->_sortableColumns, true)) {
+				$find_objects_query .= " ORDER BY `{$sort}` {$order}";
+			}
 
 			// Limit Clause
 			$find_objects_query .= $this->limitClause($controls);
@@ -113,16 +118,17 @@
 				return [];
 			}
 
-            // Build Results
-            $objects = array();
-            while (list($id) = $rs->FetchRow()) {
+			// Build Results
+			$objects = array();
+			while (list($id) = $rs->FetchRow()) {
 				$orderObj = new $this->_modelName($id);
-                if ($orderObj->error()) {
-                    $this->error($orderObj->error());
-                    return [];
-                }
-                array_push($objects,$orderObj);
-            }
+				if ($orderObj->error()) {
+					$this->error($orderObj->error());
+					return [];
+				}
+				array_push($objects, $orderObj);
+				$this->incrementCount();
+			}
 
 			return $objects;
 		}
