@@ -292,6 +292,21 @@
 		return $dt->format('F') . ' ' . $day . $suffix . ', ' . $dt->format('g:i A');
 	}
 
+	/** @function get_timestamp(date, time_zone)
+	 * Convert a local date and time to Unix Timestamp
+	 * @param string $date
+	 * @param string $time_zone
+	 * @return int|null
+	*/
+	function get_timestamp($date, $time_zone): ?int {
+		try {
+			$dt = new \DateTime($date, new \DateTimeZone($time_zone));
+			return $dt->getTimestamp();
+		} catch (\Exception $e) {
+			return null;
+		}
+	}
+
 	function cache_set($key,$value,$expires=0) {
 		$cache = new \Cache\Item($GLOBALS['_CACHE_'],$key);
 		return $cache->set($value);
