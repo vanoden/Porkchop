@@ -549,11 +549,37 @@ class BaseModel extends \BaseClass {
 						app_log("Setting key " . $key . " of unspecified type to " . strval($value),'trace');
 						$this->$key = strval($value);
 					} elseif ($property_type->allowsNull() && is_null($value)) $this->$key = null;
+					elseif ($property_type->getName() == "DateTime" && is_string($value)) {
+						try {
+							$this->$key = new \DateTime($value);
+						} catch (\Exception $e) {
+							app_log("Error creating DateTime object for property $key with value '$value': " . $e->getMessage(), 'error');
+							$this->$key = null;
+						}
+					}
 					elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
 					elseif (gettype($this->$key) == "?integer") $this->$key = intval($value);
 					elseif (gettype($this->$key) == "float") $this->$key = floatval($value);
 					elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
 					elseif (gettype($this->$key) == "string") $this->$key = strval($value);
+					elseif (gettype($this->$key) == "DateTime") {
+						try {
+							$this->$key = new \DateTime($value);
+						} catch (\Exception $e) {
+							app_log("Error creating DateTime object for property $key with value '$value': " . $e->getMessage(), 'error');
+							$this->$key = null;
+						}
+					}
+					elseif (gettype($this->$key) == "object") {
+						if (get_class($this->$key) == "DateTime") {
+							try {
+								$this->$key = new \DateTime($value);
+							} catch (\Exception $e) {
+								app_log("Error creating DateTime object for property $key with value '$value': " . $e->getMessage(), 'error');
+								$this->$key = null;
+							}
+						}
+					}
 					else $this->$key = $value;
 				} else {
 					app_log("Property $key not found in " . get_class($this) . " object", 'warning');
@@ -572,6 +598,7 @@ class BaseModel extends \BaseClass {
 				elseif (gettype($this->$key) == "boolean") $this->$key = false;
 				elseif (gettype($this->$key) == "string") $this->$key = '';
 				elseif (gettype($this->$key) == "array") $this->$key = array();
+				elseif (gettype($this->$key) == "DateTime") $this->$key = new \DateTime();
 				else $this->$key = null;
 			}
 			$this->exists(false);
@@ -2410,5 +2437,28 @@ class BaseModel extends \BaseClass {
 	 */
 	public function validMetadataValue($value) {
 		return $this->safeString($value);
+	}
+
+	/** @method toArray()
+	 * Convert the object to an associative array
+	 * @return array Associative array representation of the object
+	 */
+	public function toArray(): array {
+		$array = [];
+		foreach (get_object_vars($this) as $key => $value) {
+			if (preg_match('/^_/', $key)) {
+				continue; // Skip private/protected properties
+			}
+			if (is_object($value)) {
+				if (method_exists($value, 'toArray')) {
+					$array[$key] = $value->toArray();
+				} else {
+					$array[$key] = (array)$value;
+				}
+			} else {
+				$array[$key] = $value;
+			}
+		}
+		return $array;
 	}
 }
