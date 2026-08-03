@@ -106,12 +106,19 @@
 					$audit_messages[] = "Organization changed from ".$oldOrgName." to ".$parameters['organization_id'];
 				}
 				if (!empty($parameters['status']) && $this->status != $parameters['status']) $audit_messages[] = "Status changed from ".$this->status." to ".$parameters['status'];
+				$previous_status = $this->status;
 				if (!empty($parameters['first_name']) && $this->first_name != $parameters['first_name'] || !empty($parameters['last_name']) && $this->last_name != $parameters['last_name'])  $audit_messages[] = "Customer Name changed from " . $this->first_name . " " . $this->last_name . " to " . $parameters['first_name'] . " " . $parameters['last_name'];
 				if (isset($parameters['profile_visibility']) && $this->profile != $parameters['profile_visibility']) $audit_messages[] = "Profile visibility changed from ".$this->profile." to ".$parameters['profile_visibility'];
 			}
 
 			parent::update($parameters);
 			if ($this->error()) return false;
+
+			// Unblocking must clear failed-login counter or the account re-locks / captcha-traps on next attempt
+			if (!empty($parameters['status']) && in_array($parameters['status'], array('NEW', 'ACTIVE'), true)
+				&& isset($previous_status) && $previous_status === 'BLOCKED') {
+				$this->resetAuthFailures();
+			}
 
 			// roles
 			if (isset($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('manage customers')) {

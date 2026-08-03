@@ -221,19 +221,19 @@
 			if (! $GLOBALS['_SESSION_']->customer->can('manage forms')) $this->deny();
 
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'form.questions.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'form.questions.xsl';
 
 			$response = new \APIResponse();
 
 			# Initiate Form Object
-			if ($_REQUEST['form_code']) {
+			if (!empty($_REQUEST['form_code'])) {
 				$form = new \Form\Form();
 				if (!$form->get($_REQUEST['form_code'])) {
 					if ($form->error()) $this->error($form->error());
 					else $this->error("Form not found");
 				}
 			}
-			elseif ($_REQUEST['form_id']) {
+			elseif (!empty($_REQUEST['form_id'])) {
 				$form = new \Form\Form($_REQUEST['form_id']);
 				if (!$form->exists()) {
 					if ($form->error()) $this->error($form->error());
@@ -305,7 +305,7 @@
 			if (! $GLOBALS['_SESSION_']->customer->can('manage forms')) error("Permission Denied");
 	
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'form.question.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'form.question.xsl';
 			$response = new \APIResponse();
 
 			# Initiate Form Object
@@ -371,7 +371,7 @@
 			if (! $GLOBALS['_SESSION_']->customer->can('manage forms')) error("Permission Denied");
 	
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'form.question.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'form.question.xsl';
 			$response = new \APIResponse();
 
 			# Initiate Form Object
@@ -403,12 +403,12 @@
 			if (! $GLOBALS['_SESSION_']->customer->can('manage forms')) $this->deny();
 
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'form.questions.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'form.questions.xsl';
 
 			$response = new \APIResponse();
 
 			# Initiate Form Object
-			if ($_REQUEST['question_id']) {
+			if (!empty($_REQUEST['question_id'])) {
 				$question = new \Form\Question($_REQUEST['question_id']);
 				if (!$question->exists()) {
 					if ($question->error()) $this->error($question->error());
@@ -440,12 +440,12 @@
 			if (! $GLOBALS['_SESSION_']->customer->can('manage forms')) $this->deny();
 
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'form.questions.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'form.questions.xsl';
 
 			$response = new \APIResponse();
 
 			# Initiate Form Object
-			if ($_REQUEST['question_id']) {
+			if (!empty($_REQUEST['question_id'])) {
 				$question = new \Form\Question($_REQUEST['question_id']);
 				if (!$question->exists()) {
 					if ($question->error()) $this->error($question->error());
@@ -459,8 +459,8 @@
 			$parameters = array(
 				'question_id'				=> $question->id
 			);
-			$parameters['text'] = trim($_REQUEST['text']);
-			$parameters['value'] = trim($_REQUEST['value']);
+			$parameters['text'] = trim($_REQUEST['text'] ?? '');
+			$parameters['value'] = trim($_REQUEST['value'] ?? '');
 			if (isset($_REQUEST['sort_order'])) $parameters['sort_order'] = trim($_REQUEST['sort_order']);
 
 			// Add Option to Question
@@ -485,7 +485,7 @@
 			if (! $GLOBALS['_SESSION_']->customer->can('manage forms')) error("Permission Denied");
 	
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'form.question.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'form.question.xsl';
 			$response = new \APIResponse();
 
 			# Initiate Option Object
@@ -523,7 +523,7 @@
 			if (! $GLOBALS['_SESSION_']->customer->can('manage forms')) error("Permission Denied");
 	
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'form.question.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'form.question.xsl';
 			$response = new \APIResponse();
 
 			# Initiate Form Object

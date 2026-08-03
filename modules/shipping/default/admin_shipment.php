@@ -25,6 +25,9 @@
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="package_id" />
     <input type="hidden" name="action_type" />
+    <?php if (!empty($receive_only)) { ?>
+    <input type="hidden" name="receive_only" value="1" />
+    <?php } ?>
     
     <div class="table">
         <div class="tableRowHeader">
@@ -91,7 +94,7 @@
                         <span class="hint">No UPS status recorded</span>
                     <?php } ?>
                 </div>
-    <?php   if ($package->status == 'READY') { ?>
+    <?php   if ($package->status == 'READY' && empty($receive_only)) { ?>
                 <div class="tableCell">N/A</div>
     <?php   } elseif ($package->status == 'RECEIVED') { ?>
 		        <div class="tableCell"><?=$package->condition?></div>
@@ -131,7 +134,7 @@
 		        <div class="tableCell"><?=$item->serial_number?></div>
 		        <div class="tableCell"><?=strip_tags($item->description)?></div>
                 <div class="tableCell">
-        <?php   if ($package->status == "READY") { ?>
+        <?php   if ($package->status == "READY" && empty($receive_only)) { ?>
                 N/A
         <?php   } elseif ($package->status == "RECEIVED") { ?>
                 <?=$item->condition?>
@@ -146,7 +149,7 @@
 	        </div>
         <?php	} ?>
         </div>
-        <?php   if ($package->status == "READY") { ?>
+        <?php   if ($package->status == "READY" && empty($receive_only)) { ?>
         <input type="button" name="btn_ship_package" class="button" value="Ship Package <?=$package->number?>" onclick="shipPackage(<?=$package->id?>)" />
         <?php   } elseif ($package->status != "RECEIVED") { ?>
         <input type="button" name="btn_receive_package" class="button" value="Receive Package <?=$package->number?>" onclick="receivePackage(<?=$package->id?>)" />

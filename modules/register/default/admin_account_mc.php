@@ -133,6 +133,7 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 			if ($customer_id) {
 				app_log("Updating customer " . $customer_id, 'debug', __FILE__, __LINE__);
 				$customer = new \Register\Customer($customer_id);
+				$was_blocked = ($customer->status === 'BLOCKED');
 				$customer->update($parameters);
 
 				// set the job title and description
@@ -143,6 +144,16 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 					app_log("Error updating customer: " . $customer->error(), 'error', __FILE__, __LINE__);
 					$page->addError("Error updating customer information.  Our admins have been notified.  Please try again later");
 					goto load;
+				}
+
+				// When unblocking, always reset failed login count (Customer::update also does this;
+				// call again here so Apply works even if status was already changed elsewhere)
+				if ($was_blocked && in_array($parameters['status'] ?? '', array('NEW', 'ACTIVE'), true)) {
+					if (!$customer->resetAuthFailures()) {
+						$page->addError("Account status updated, but failed login count could not be reset: " . $customer->error());
+					} else {
+						$page->appendSuccess("Failed login count reset.");
+					}
 				}
 				if (isset($_REQUEST['password']) && !empty($_REQUEST['password'])) {
 					if (!$customer->changePassword($_REQUEST["password"])) {
@@ -303,7 +314,10 @@ $page->title = "Customer Account Details";
 $page->addBreadcrumb("Customer");
 $page->addBreadcrumb("Organizations", "/_register/organizations");
 $organization = $customer->organization();
-if (isset($organization->id)) $page->addBreadcrumb($organization->name, "/_register/admin_organization?id=" . $organization->id);
+if (isset($organization->id)) {
+	$page->addBreadcrumb($organization->name, "/_register/admin_organization?id=" . $organization->id);
+	$page->addBreadcrumb("Users", "/_register/admin_organization_users/" . $organization->code);
+}
 if (isset($customer->id)) $page->addBreadcrumb($customer->full_name(), "/_register/admin_account?customer_id=" . $customer->id);
 
 // get customer queued status

@@ -98,5 +98,9 @@
 		    <div class="tableCell"><input type="text" class="width-100per" name="new_last_name" value="" /></div>
 	    </div>
     </div>
+    <div style="margin: 0.75em 0;">
+	    <label><input type="checkbox" name="device_account" value="1" /> Device Account</label>
+	    <span class="form_instruction" style="display:inline; margin-left:0.5em;">Sets automation mode and timezone to UTC</span>
+    </div>
     <div><input type="submit" name="method" value="Add User" class="button"/></div>
 </form>

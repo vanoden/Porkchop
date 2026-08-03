@@ -24,6 +24,39 @@
 		}
 	}
 
+	// receive_only: mark shipment as shipped so receiver can skip the ship step
+	$receive_only = false;
+	if (!empty($_REQUEST['receive_only'])) {
+		$receive_only_val = strtolower(trim((string)$_REQUEST['receive_only']));
+		$receive_only = in_array($receive_only_val, array('1', 'true', 'yes', 'on'), true);
+	}
+	if ($can_proceed && $receive_only) {
+		$marked_ready = false;
+		foreach ($shipment->packages() as $package) {
+			if ($package->status == 'READY') {
+				if (!$package->ship()) {
+					$page->addError("Error marking package as shipped: " . $package->error());
+				} else {
+					$marked_ready = true;
+				}
+			}
+		}
+		if ($marked_ready || empty($shipment->date_shipped) || in_array($shipment->status, array('OPEN', 'NEW'), true)) {
+			$ship_params = array(
+				'status' => 'SHIPPED',
+				'date_shipped' => !empty($shipment->date_shipped) ? $shipment->date_shipped : date('Y-m-d H:i:s')
+			);
+			if (!empty($shipment->vendor_id)) {
+				$ship_params['vendor_id'] = $shipment->vendor_id;
+			}
+			if (!$shipment->update($ship_params)) {
+				$page->addError("Error marking shipment as shipped: " . $shipment->error());
+			} elseif ($marked_ready) {
+				$page->appendSuccess("Shipment marked as shipped so it can be received.");
+			}
+		}
+	}
+
 	// Load related objects if shipment exists
 	if ($can_proceed) {
 		$rma_id = $rma->extractRmaId($shipment->document_number);

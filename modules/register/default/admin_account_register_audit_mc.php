@@ -108,6 +108,9 @@ $page->title = "Customer Account Details - Failed Logins";
 $page->addBreadcrumb("Customer");
 $page->addBreadcrumb("Organizations", "/_register/organizations");
 $organization = $customer->organization();
-if (isset($organization->id)) $page->addBreadcrumb($organization->name, "/_register/admin_organization?id=" . $organization->id);
+if (isset($organization->id)) {
+	$page->addBreadcrumb($organization->name, "/_register/admin_organization?id=" . $organization->id);
+	$page->addBreadcrumb("Users", "/_register/admin_organization_users/" . $organization->code);
+}
 if (isset($customer->id)) $page->addBreadcrumb($customer->full_name(), "/_register/admin_account?customer_id=" . $customer->id);
 

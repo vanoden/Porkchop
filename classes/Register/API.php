@@ -454,7 +454,7 @@
 			$result = $role->add(
 				array(
 					'name'	=> $_REQUEST['name'],
-					'description'	=> $_REQUEST['description']
+					'description'	=> $_REQUEST['description'] ?? ''
 				)
 			);
 			if ($role->error()) $this->error($role->error());
@@ -2030,7 +2030,14 @@
 			if (! $person->get($_REQUEST['login'])) $this->notFound("Registration not found");
 			$key = $person->resetKey();
 			if ($person->error()) $this->error($person->error());
-			if (empty($key)) $this->error("No key found");
+			// Create a reset token if none exists (same as forgot_password)
+			if (empty($key)) {
+				$token = new \Register\PasswordToken();
+				$key = $token->add($person->id);
+				if ($token->error() || empty($key)) {
+					$this->error($token->error() ?: "Failed to create reset key");
+				}
+			}
 
 			$response = new \APIResponse();
 			$response->addElement('url',"/_register/reset_password?token=$key");

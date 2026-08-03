@@ -39,12 +39,8 @@ if (!empty($_REQUEST['start']) && preg_match('/^\d+$/', $_REQUEST['start'])) {
 }
 
 $auditClient = new \Site\AuditLog();
-$classList = $auditClient->classes();
-sort($classList);
-$current_class = null;
-if (!empty($_REQUEST['class_name']) && in_array($_REQUEST['class_name'], $classList, true)) {
-	$current_class = $_REQUEST['class_name'];
-}
+// Account audit log is scoped to this customer only — instance_id alone collides with tickets/orgs
+$current_class = 'Register\\Customer';
 
 app_log($GLOBALS['_SESSION_']->customer->code . " accessing account audit log for customer " . $customer_id, 'notice', __FILE__, __LINE__);
 
@@ -75,10 +71,10 @@ if (!empty($customer->id)) {
 	}
 
 	$auditList = new \Site\AuditLog\EventList();
-	$find_parameters = ['instance_id' => $customer->id];
-	if ($current_class) {
-		$find_parameters['class_name'] = $current_class;
-	}
+	$find_parameters = [
+		'instance_id' => $customer->id,
+		'class_name' => $current_class,
+	];
 	$auditRecords = $auditList->find(
 		$find_parameters,
 		[
@@ -98,7 +94,7 @@ if (!empty($customer->id)) {
 	$pagination->startId($start_offset);
 	$pagination->size($page_size);
 	$pagination->count($totalRecords);
-	$pagination->forwardParameters(array('customer_id', 'class_name'));
+	$pagination->forwardParameters(array('customer_id'));
 }
 if ($totalRecords == 0) {
 	$show_end = 0;
@@ -110,5 +106,8 @@ $page->title = "Customer Account Details - Audit Log";
 $page->addBreadcrumb("Customer");
 $page->addBreadcrumb("Organizations", "/_register/organizations");
 $organization = $customer->organization();
-if (isset($organization->id)) $page->addBreadcrumb($organization->name, "/_register/admin_organization?id=" . $organization->id);
+if (isset($organization->id)) {
+	$page->addBreadcrumb($organization->name, "/_register/admin_organization?id=" . $organization->id);
+	$page->addBreadcrumb("Users", "/_register/admin_organization_users/" . $organization->code);
+}
 if (isset($customer->id)) $page->addBreadcrumb($customer->full_name(), "/_register/admin_account?customer_id=" . $customer->id);

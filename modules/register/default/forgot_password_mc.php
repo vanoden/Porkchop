@@ -59,11 +59,9 @@
 							return;
 						}
 
-						# Check if account is blocked
+						# Blocked accounts may still recover — reset_password reactivates them after a successful password change
 						if ($customer->isBlocked()) {
-							app_log("Blocked account attempted password recovery: ".$customer->code,'notice',__FILE__,__LINE__);
-							$page->addError("Your account has been blocked due to multiple failed login attempts. Please contact support at ".($GLOBALS['_config']->site->support_email ?? 'service@spectrosinstruments.com')." for assistance.");
-							return;
+							app_log("Blocked account started password recovery: ".$customer->code,'notice',__FILE__,__LINE__);
 						}
 			
 						# Generate a Password Recovery Token
