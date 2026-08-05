@@ -43,14 +43,12 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 		app_log("Password form submitted", 'debug', __FILE__, __LINE__);
 		
 		// Validate password fields
-		if (isset($_REQUEST["password"]) && isset($_REQUEST["password_2"])) {
-			if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
-				$page->addError("Passwords do not match");
-				goto load;
-			}
-			
-			if (strlen($_REQUEST["password"]) < 6) {
-				$page->addError("Password must be at least 6 characters long");
+		if (isset($_REQUEST["password"]) || isset($_REQUEST["password_2"])) {
+			$passwordErrors = validatePasswordPair($_REQUEST["password"] ?? '', $_REQUEST["password_2"] ?? '', true);
+			if (!empty($passwordErrors)) {
+				foreach ($passwordErrors as $passwordError) {
+					$page->addError($passwordError);
+				}
 				goto load;
 			}
 			
@@ -60,7 +58,7 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				$customer = new \Register\Customer($customer_id);
 				
 				if (!$customer->changePassword($_REQUEST["password"])) {
-					$page->addError("Password needs more complexity");
+					$page->addError($customer->error() ?: "Password needs more complexity");
 				} else {
 					$page->appendSuccess("Password changed successfully.");
 					

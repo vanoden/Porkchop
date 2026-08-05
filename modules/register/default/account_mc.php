@@ -133,8 +133,11 @@
 			if (isset($_REQUEST["last_name"]))		$parameters['last_name']	= noXSS($_REQUEST["last_name"]);
 			if (isset($_REQUEST["timezone"]))		$parameters['timezone']		= $_REQUEST["timezone"];
 			if (isset($_REQUEST["password"]) and ($_REQUEST["password"])) {
-				if ($_REQUEST["password"] != ($_REQUEST["password_2"] ?? '')) {
-					$page->addError("Passwords do not match");
+				$passwordErrors = validatePasswordPair($_REQUEST["password"] ?? '', $_REQUEST["password_2"] ?? '', true);
+				if (!empty($passwordErrors)) {
+					foreach ($passwordErrors as $passwordError) {
+						$page->addError($passwordError);
+					}
 					goto load;
 				}
 				else

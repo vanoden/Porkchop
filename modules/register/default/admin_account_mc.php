@@ -116,9 +116,12 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 
 			if (isset($_REQUEST['organization_id'])) $parameters["organization_id"] = $_REQUEST["organization_id"];
 
-			if (isset($_REQUEST["password"]) and isset($_REQUEST["password_2"])) {
-				if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
-					$page->addError("Passwords do not match");
+			if (isset($_REQUEST["password"]) and isset($_REQUEST["password_2"]) and strlen($_REQUEST["password"])) {
+				$passwordErrors = validatePasswordPair($_REQUEST["password"] ?? '', $_REQUEST["password_2"] ?? '', true);
+				if (!empty($passwordErrors)) {
+					foreach ($passwordErrors as $passwordError) {
+						$page->addError($passwordError);
+					}
 					goto load;
 				}
 			}

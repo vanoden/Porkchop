@@ -2,7 +2,7 @@
 	$site = new \Site();
 	$page = $site->page();
 
-	if (empty($_REQUEST['g-captcha-response'])) $_REQUEST['g-captcha-response'] = '';
+	if (empty($_REQUEST['g-recaptcha-response'])) $_REQUEST['g-recaptcha-response'] = '';
 	if (empty($_REQUEST['csrfToken'])) $_REQUEST['csrfToken'] = '';
 
 	# Handle Actions

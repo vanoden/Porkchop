@@ -4,6 +4,8 @@
     class Customer extends Person {
 		public bool $elevated = false;
 		public int $unreadMessages = 0;
+		/** Ticket code created when this account was just blocked (request-scoped) */
+		public ?string $last_blocked_ticket_code = null;
 		protected string $password = '';
 		private \Register\User\Statistics|null $_statistics = null;
 
@@ -1698,10 +1700,11 @@
 
 		/** @method createBlockedAccountSupportTicket()
 		 * Create a support ticket when an account is blocked
-		 * @return bool True if ticket created successfully, false on error
+		 * @return string|false Ticket code on success, false on error / no organization
 		 */
-		public function createBlockedAccountSupportTicket(): bool {
+		public function createBlockedAccountSupportTicket() {
 			$this->clearError();
+			$this->last_blocked_ticket_code = null;
 
 			if (!$this || !$this->id) {
 				app_log("Invalid customer object for creating blocked account support ticket", 'error', __FILE__, __LINE__);
@@ -1763,26 +1766,27 @@
 
 			// Create support request with type 'SERVICE' (database enum requirement)
 			$site = new \Site();
-			if ($site->findModule('Support')) {
-				$requestClass = "Support\\Request";
-				$supportRequest = new $requestClass();
-				$supportRequest->add(array(
-					'customer_id' => $this->id,
-					'organization_id' => $organization->id,
-					'type' => 'SERVICE',
-					'status' => 'NEW',
-					'date_request' => date('Y-m-d H:i:s')
-				));
+			if (!$site->findModule('Support')) {
+				app_log("Support module not available; cannot create blocked account ticket", 'error', __FILE__, __LINE__);
+				return false;
+			}
 
-				if ($supportRequest->error()) {
-					app_log("Error creating support ticket for blocked account: " . $supportRequest->error(), 'error', __FILE__, __LINE__);
-					return false;
-				}
+			$requestClass = "Support\\Request";
+			$supportRequest = new $requestClass();
+			$supportRequest->add(array(
+				'customer_id' => $this->id,
+				'organization_id' => $organization->id,
+				'type' => 'SERVICE',
+				'status' => 'NEW',
+				'date_request' => date('Y-m-d H:i:s')
+			));
+
+			if ($supportRequest->error()) {
+				app_log("Error creating support ticket for blocked account: " . $supportRequest->error(), 'error', __FILE__, __LINE__);
+				return false;
 			}
 
 			// Add item to the support request with blocking details
-			// Type of Request: "web portal" (as description)
-			// Describe Problem: "user has been blocked (history of account audits)"
 			$description = "Type of Request: web portal\n\n";
 			$description .= "Describe Problem: User has been blocked (history of account audits)\n\n";
 			$description .= "Account Blocked - Security Alert\n\n";
@@ -1794,7 +1798,7 @@
 			$description .= "Blocked Date: " . date('Y-m-d H:i:s T') . "\n";
 			$description .= $auditHistory;
 			$description .= "\nThe account was automatically blocked after multiple failed login attempts. ";
-			$description .= "The customer will need to use the 'Forgot Password' feature to reset their password and restore account access.";
+			$description .= "The customer will need to use the 'Forgot Password' / Recover Password feature to reset their password and restore account access.";
 
 			$ticket = $supportRequest->addItem(array(
 				'line' => 1,
@@ -1810,10 +1814,20 @@
 				return false;
 			}
 
-			app_log("Support ticket " . $supportRequest->code . " created for blocked account " . $this->code, 'info', __FILE__, __LINE__);
-			$this->auditRecord('SUPPORT_TICKET_CREATED', 'Support ticket ' . $supportRequest->code . ' created for blocked account');
-			
-			return true;
+			$ticketCode = $supportRequest->code ?? '';
+			if (empty($ticketCode) && !empty($supportRequest->id)) {
+				$ticketCode = (string) $supportRequest->id;
+			}
+			if (empty($ticketCode)) {
+				app_log("Support ticket created for blocked account " . $this->code . " but no code was returned", 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			$this->last_blocked_ticket_code = $ticketCode;
+			app_log("Support ticket " . $ticketCode . " created for blocked account " . $this->code, 'info', __FILE__, __LINE__);
+			$this->auditRecord('SUPPORT_TICKET_CREATED', 'Support ticket ' . $ticketCode . ' created for blocked account');
+
+			return $ticketCode;
 		}
 
 		/** @method sendAccountBlockedNotification()
@@ -1857,6 +1871,13 @@
 
 			$result = true;
 
+			// Create support ticket for blocked account
+			$ticketCode = $this->createBlockedAccountSupportTicket();
+			if ($ticketCode === false) {
+				$ticketCode = '';
+			}
+			$ticketCodeDisplay = $ticketCode !== '' ? $ticketCode : 'Not created (no organization on file)';
+
 			// Send email to user
 			if (!empty($customerEmail)) {
 				if (!isset($GLOBALS['_config']->register->account_blocked_user_notification)) {
@@ -1878,6 +1899,7 @@
 									'BLOCKED.DATE' => date('Y-m-d'),
 									'BLOCKED.TIME' => date('H:i:s T'),
 									'FORGOT_PASSWORD.URL' => $forgotPasswordUrl,
+									'TICKET.CODE' => $ticketCodeDisplay,
 									'SUPPORT.EMAIL' => $GLOBALS['_config']->site->support_email ?? 'service@spectrosinstruments.com',
 									'SUPPORT.PHONE' => $GLOBALS['_config']->site->support_phone ?? '',
 									'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
@@ -1917,9 +1939,6 @@
 			} else {
 				app_log("No email address available for customer " . $this->id . ", skipping user notification", 'info', __FILE__, __LINE__);
 			}
-
-			// Create support ticket for blocked account
-			$this->createBlockedAccountSupportTicket();
 
 			// Send email to support with audit information
 			if (!isset($GLOBALS['_config']->register->account_blocked_notification)) {
