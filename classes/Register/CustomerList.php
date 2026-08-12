@@ -352,6 +352,7 @@
 
 			// Get privilege name if privilege_id or privilege_name is provided
 			$privilege_name = null;
+			$privilege_level = \Register\PrivilegeLevel::ADMINISTRATOR;
 			if (!empty($parameters['privilege_id']) && is_numeric($parameters['privilege_id'])) {
 				$privilege = new \Register\Privilege($parameters['privilege_id']);
 				if (!$privilege->id) {
@@ -361,6 +362,9 @@
 				$privilege_name = $privilege->name;
 			} elseif (!empty($parameters['privilege_name'])) {
 				$privilege_name = $parameters['privilege_name'];
+			}
+			if (isset($parameters['privilege_level']) && is_numeric($parameters['privilege_level'])) {
+				$privilege_level = (int) $parameters['privilege_level'];
 			}
 
 			$people = array();
@@ -375,8 +379,7 @@
 
 				// Check privilege if required
 				if (isset($privilege_name) && isset($customer)) {
-					// Check if customer has the privilege (using default administrator level)
-					if (!$customer->has_privilege($privilege_name)) continue;
+					if (!$customer->has_privilege($privilege_name, $privilege_level)) continue;
 				}
 
 				// Don't build array if count is requested

@@ -270,45 +270,59 @@
 	// Load data for display
 	$vendorList = new \Shipping\VendorList();
 	$vendors = $vendorList->find();
-	$packages = $shipment->packages();
-
-	// Set up object links
-	if (isset($shipment->document_number)) {
-		$rma_id = null;
-		if (isset($rma) && $rma !== null) {
-			$rma_id = $rma->extractRmaId($shipment->document_number);
-		}
-		if ($rma_id !== null) {
-			$object_id = $rma_id;
-			$object_link = "/_support/admin_rma?id=$object_id";
-		} elseif (preg_match('/^TCKT(\d+)$/', $shipment->document_number, $matches)) {
-			$object_id = $matches[1] * 1;
-			$object_link = "/_support/request_item?id=$object_id";
-		} elseif (preg_match('/^PO(\d+)$/', $shipment->document_number, $matches)) {
-			$object_id = $matches[1] * 1;
-			$object_link = "/_sales/purchase_order?id=$object_id";
-		}
-	}
-
-	// Set shipping vendor display
-	$shippingVendor = empty($shipment->vendor_id) ? 'Not provided' : $shipment->vendor();
-
-	// Get locations
-	$from_location = $shipment->send_location();
-	$to_location = $shipment->rec_location();
-	// Locations for ship-from dropdown (sender's org/customer locations)
+	$packages = array();
+	$object_link = '';
+	$shippingVendor = 'Not provided';
+	$from_location = new \Register\Location();
+	$to_location = new \Register\Location();
 	$send_location_list = array();
-	if ($can_proceed && $shipment->send_contact()->id) {
-		$send_location_list = $shipment->send_contact()->locations(array('include_hidden' => true)) ?: array();
+	$send_contact = null;
+	$send_org = null;
+
+	if (!isset($shipment)) {
+		$shipment = new \Shipping\Shipment();
 	}
-	$send_contact = $can_proceed ? $shipment->send_contact() : null;
-	$send_org = ($send_contact && $send_contact->organization()) ? $send_contact->organization() : null;
+
+	if ($can_proceed && $shipment->exists()) {
+		$packages = $shipment->packages();
+
+		// Set up object links
+		if (isset($shipment->document_number)) {
+			$rma_id = null;
+			if (isset($rma) && $rma !== null) {
+				$rma_id = $rma->extractRmaId($shipment->document_number);
+			}
+			if ($rma_id !== null) {
+				$object_id = $rma_id;
+				$object_link = "/_support/admin_rma?id=$object_id";
+			} elseif (preg_match('/^TCKT(\d+)$/', $shipment->document_number, $matches)) {
+				$object_id = $matches[1] * 1;
+				$object_link = "/_support/request_item?id=$object_id";
+			} elseif (preg_match('/^PO(\d+)$/', $shipment->document_number, $matches)) {
+				$object_id = $matches[1] * 1;
+				$object_link = "/_sales/purchase_order?id=$object_id";
+			}
+		}
+
+		// Set shipping vendor display
+		$shippingVendor = empty($shipment->vendor_id) ? 'Not provided' : $shipment->vendor();
+
+		// Get locations
+		$from_location = $shipment->send_location();
+		$to_location = $shipment->rec_location();
+		// Locations for ship-from dropdown (sender's org/customer locations)
+		if ($shipment->send_contact()->id) {
+			$send_location_list = $shipment->send_contact()->locations(array('include_hidden' => true)) ?: array();
+		}
+		$send_contact = $shipment->send_contact();
+		$send_org = ($send_contact && $send_contact->organization()) ? $send_contact->organization() : null;
+	}
 
 	// Set up page navigation
 	$page->title("Shipment Detail");
 	$page->setAdminMenuSection("Shipping");  // Keep Shipping section open
 	$page->addBreadCrumb("Warehouse");
 	$page->addBreadcrumb("Shipments", "/_shipping/admin_shipments");
-	if (isset($shipment->id)) {
+	if (!empty($shipment->id)) {
 		$page->addBreadcrumb($shipment->document_number);
 	}

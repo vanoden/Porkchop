@@ -819,52 +819,68 @@
 			
 			// Initialize Customer Object
 			$customer = new \Register\Customer();
-			if ($customer->get($_REQUEST['login'])) {
-				app_log("Found customer ".$customer->id);
-				if ($customer->verify_email($_REQUEST['access'])) {
-					// update the queued organization to "PENDING" because the email has been verified
-					app_log("Validation key confirmed, updating queue record");
-					$queuedCustomer = new \Register\Queue(); 
-					$queuedCustomer->getByQueuedLogin($customer->id);
-					
-					if ($queuedCustomer->status == "VERIFYING") $queuedCustomer->update(array('status'=>'PENDING'));
-					
-					// create the notify support reminder email for the new verified customer
-					app_log("Generating notification email");
-					$url = $GLOBALS['_config']->site->hostname . '/_register/pending_customers';
-					if ($GLOBALS['_config']->site->https) $url = "https://$url";
-					else $url = "http://$url";
-					
-					$template = new \Content\Template\Shell($GLOBALS['_config']->register->registration_notification->template);
-					$template->addParams(array(
-						'ORGANIZATION.NAME'		=> $queuedCustomer->organization() ? $queuedCustomer->organization()->name : 'Unknown Organization',
-						'CUSTOMER.FIRST_NAME'	=> $customer->first_name,
-						'CUSTOMER.LAST_NAME'	=> $customer->last_name,
-						'EMAIL'					=> $customer->notify_email(),
-						'CUSTOMER.LOGIN'		=> $customer->code,
-						'SITE.LINK'				=> 'http://'.$GLOBALS['_config']->site->hostname.'/_register/pending_customers',
-						'COMPANY.NAME'			=> $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
-					));
-					
-					$message = new \Email\Message($GLOBALS['_config']->register->registration_notification);
-					$message->body($template->output());
-					
-					app_log("Sending Admin Confirm new customer reminder",'debug');
-					$slackClient = new \Slack\Client();
-					$slackClient->send($GLOBALS['_config']->register->registration_notification->channel,$template->render());
-					
-					$response->success(true);
-					$response->addElement('verified', true);
-				} else {
-					app_log("Key not matched",'notice');
-					$this->error("Invalid key");
-				}
-			} else {
+			if (! $customer->get($_REQUEST['login'])) {
 				app_log("Login not matched",'notice');
 				$this->error("Invalid key");
 			}
-			
-			# Send Response
+
+			app_log("Found customer ".$customer->id);
+			$verified_now = $customer->verify_email($_REQUEST['access']);
+			$already_verified = (!$verified_now && $customer->error() === "Email Address already verified for this account");
+
+			if (! $verified_now && ! $already_verified) {
+				app_log("Key not matched: ".$customer->error(),'notice');
+				$this->error("Invalid key");
+			}
+
+			if ($already_verified) {
+				app_log("Customer ".$customer->id." email was already verified; treating as success",'notice');
+			} else {
+				app_log("Validation key confirmed for customer ".$customer->id,'notice');
+			}
+
+			// Best-effort queue + admin notification — must not fail the user-facing verification
+			try {
+				$queuedCustomer = new \Register\Queue();
+				$queuedCustomer->getByQueuedLogin($customer->id);
+				if (!empty($queuedCustomer->status) && $queuedCustomer->status == "VERIFYING") {
+					$queuedCustomer->update(array('status'=>'PENDING'));
+				}
+
+				if ($verified_now && isset($GLOBALS['_config']->register->registration_notification)) {
+					$notify = $GLOBALS['_config']->register->registration_notification;
+					if (!empty($notify->template) && file_exists($notify->template)) {
+						app_log("Generating notification email");
+						$template = new \Content\Template\Shell($notify->template);
+						$orgName = 'Unknown Organization';
+						if ($queuedCustomer && method_exists($queuedCustomer, 'organization') && $queuedCustomer->organization()) {
+							$orgName = $queuedCustomer->organization()->name;
+						}
+						$template->addParams(array(
+							'ORGANIZATION.NAME'		=> $orgName,
+							'CUSTOMER.FIRST_NAME'	=> $customer->first_name,
+							'CUSTOMER.LAST_NAME'	=> $customer->last_name,
+							'EMAIL'					=> $customer->notify_email(),
+							'CUSTOMER.LOGIN'		=> $customer->code,
+							'SITE.LINK'				=> 'http://'.$GLOBALS['_config']->site->hostname.'/_register/pending_customers',
+							'COMPANY.NAME'			=> $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
+						));
+						if (!empty($notify->channel)) {
+							app_log("Sending Admin Confirm new customer reminder",'debug');
+							$slackClient = new \Slack\Client();
+							$slackClient->send($notify->channel, $template->render());
+						}
+					} else {
+						app_log("Registration notification template missing; skipping admin notify",'notice');
+					}
+				}
+			} catch (\Throwable $e) {
+				app_log("Post-verification notification failed (verification still OK): ".$e->getMessage(),'error',__FILE__,__LINE__);
+			}
+
+			$response->success(true);
+			$response->addElement('verified', true);
+			if ($already_verified) $response->addElement('already_verified', true);
 			$response->print();
 		}
 

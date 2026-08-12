@@ -1,4 +1,7 @@
 <?=$page->showAdminPageInfo()?>
+<?php if (empty($shipment->id) || !$shipment->exists()) { ?>
+<p><a class="button" href="/_shipping/admin_shipments">Back to Shipments</a></p>
+<?php } else { ?>
 <script language="JavaScript">
     function shipPackage(packageId) {
         document.forms[0].package_id.value = packageId;
@@ -181,11 +184,11 @@
         </div>
         <div class="tableRow">
             <div class="tableCell">
-                <a class="value" href="/_register/admin_location?id=<?= $from_location->id ?>"><?= htmlspecialchars($from_location->name) ?></a><br>
+                <a class="value" href="/_register/admin_location?id=<?= $from_location->id ?>"><?= htmlspecialchars($from_location->name ?? '') ?></a><br>
                 <span class="value"><?= $from_location->HTMLBlockFormat() ?></span>
             </div>
             <div class="tableCell">
-                <a class="value" href="/_register/admin_location?id=<?= $to_location->id ?>"><?= htmlspecialchars($to_location->name) ?></a><br>
+                <a class="value" href="/_register/admin_location?id=<?= $to_location->id ?>"><?= htmlspecialchars($to_location->name ?? '') ?></a><br>
                 <span class="value"><?= $to_location->HTMLBlockFormat() ?></span>
             </div>
             <div class="tableCell">
@@ -206,3 +209,4 @@
         </div>
     </div>
 </form>
+<?php } ?>

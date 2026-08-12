@@ -90,9 +90,10 @@
             if (error) {
                 errorText = error;
             } else if (response) {
-                // Check if success is explicitly 1 or true
-                isSuccess = (response.success === 1 || response.success === true);
-                // Extract error message if present
+                // Accept common success encodings from APIResponse JSON/XML
+                var successVal = response.success;
+                isSuccess = (successVal === 1 || successVal === true || successVal === '1' || successVal === 'true'
+                    || response.verified === true || response.verified === 1 || response.verified === '1');
                 if (response.error) {
                     errorText = response.error;
                 }

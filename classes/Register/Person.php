@@ -360,6 +360,7 @@ class Person Extends \BaseModel {
         }
         if (!$unverified_key) {
             app_log("No key in system to match");
+            // Already verified — treat as success so reloads / second clicks don't false-fail
             $this->error("Email Address already verified for this account");
             return false;
         }
@@ -381,7 +382,12 @@ class Person Extends \BaseModel {
             return false;
         }
         $this->id = $id;
-        return $this->details();
+        // Verification already persisted; don't fail the caller if details() refresh has issues
+        if (!$this->details()) {
+            app_log("verify_email: details() refresh failed after clearing validation_key: ".$this->error(),'notice',__FILE__,__LINE__);
+            $this->clearError();
+        }
+        return true;
     }
 
     /** @method public addContact(parameters)
