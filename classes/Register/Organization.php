@@ -455,6 +455,58 @@
 			return count($customers);
 		}
 
+		/** @method public activeDevicesByProduct()
+		 * Count active devices this organization owns, grouped by product.
+		 * Active means the matching automation account is NEW or ACTIVE.
+		 * @return array List of objects with product_id, product_code, product_name, count
+		 */
+		public function activeDevicesByProduct(): array {
+			$this->clearError();
+			if (empty($this->id) || !is_numeric($this->id)) {
+				$this->error("Organization is not set");
+				return [];
+			}
+
+			$database = new \Database\Service();
+			$query = "
+				SELECT	p.id AS product_id,
+						p.code AS product_code,
+						p.name AS product_name,
+						COUNT(ma.asset_id) AS device_count
+				FROM	monitor_assets ma
+				INNER JOIN product_products p
+				ON		p.id = ma.product_id
+				INNER JOIN register_users u
+				ON		u.login = ma.asset_code
+				AND		u.organization_id = ma.organization_id
+				AND		u.automation = 1
+				AND		u.status IN ('NEW','ACTIVE')
+				WHERE	ma.organization_id = ?
+				GROUP BY p.id, p.code, p.name
+				ORDER BY p.code
+			";
+			$database->AddParam($this->id);
+			$rs = $database->Execute($query);
+			if (!$rs) {
+				$this->SQLError($database->ErrorMsg());
+				return [];
+			}
+
+			$rows = array();
+			while ($record = $rs->FetchNextObject(false)) {
+				$product_code = strval($record->product_code ?? '');
+				$product_name = strval($record->product_name ?? '');
+				if ($product_name === '') $product_name = $product_code;
+				$rows[] = (object) array(
+					'product_id' => (int) $record->product_id,
+					'product_code' => $product_code,
+					'product_name' => $product_name,
+					'count' => (int) $record->device_count
+				);
+			}
+			return $rows;
+		}
+
 		public function expire() {
 			$update_org_query = "
 				UPDATE	register_organizations

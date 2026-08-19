@@ -147,7 +147,12 @@
         </div>
     </div>
     <?php } ?>
-    <div><input type="submit" name="method" value="Apply" class="button"/></div>
+    <div>
+		<input type="submit" name="method" value="Apply" class="button"/>
+<?php if (!empty($organization->id)) { ?>
+		<a class="button btn-secondary" href="/_register/inventory_report?organization_id=<?=$organization->id?>">Inventory Report</a>
+<?php } ?>
+	</div>
 
     <!--End first row-->
 </form>

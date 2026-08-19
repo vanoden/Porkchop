@@ -41,6 +41,7 @@
 			"templates"		=> array(
 				"organizations"		=> $admin_template,
 				"organizations_report"	=> $admin_template,
+				"inventory_report"	=> $admin_template,
 				"organization"		=> $admin_template,
 				"accounts"			=> $admin_template,
 				"admin_account"		=> $admin_template,
@@ -202,6 +203,13 @@
 							"view_order"	=> 15,
 							"alt"			=> "Organizations Duplicate Report",
 							"description"	=> "Find and manage duplicate organizations"
+						),
+						array (
+							"title"			=> "Inventory Report",
+							"target"		=> "/_register/inventory_report",
+							"view_order"	=> 16,
+							"alt"			=> "Organization Inventory Report",
+							"description"	=> "List by product the number of active devices the selected company owns"
 						),
 						array (
 							"title"			=> "Accounts",

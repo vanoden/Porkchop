@@ -81,6 +81,7 @@
 				"accounts"						=> $templates['portal'],
 				"account"						=> $templates['portal'],
 				"admin_account"					=> $templates['admin'],
+				"inventory_report"				=> $templates['admin'],
 				"organizations_report"			=> $templates['admin'],
 				"admin_organizations"			=> $templates['admin'],
 				"admin_organization"			=> $templates['admin'],
