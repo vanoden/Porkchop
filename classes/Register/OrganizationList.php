@@ -228,12 +228,12 @@
 					$search_name = str_replace('*','%',$parameters['name']);
 					$search_name = str_replace('?','_',$search_name);
 					
-					// Special case: if search ends with * and has no other wildcards, treat same as no wildcards
-					// This makes "Inc" and "Inc*" behave the same way
+					// A trailing * means prefix matching only: "Fumigation*" becomes "Fumigation%".
+					// Do not add a leading wildcard, so matching organizations must start with the value.
 					if (preg_match('/^[^*?]+\*$/', $parameters['name'])) {
-						// Remove the trailing * and add wildcards on both sides
+						// Remove the trailing * and retain the SQL suffix wildcard.
 						$base_name = rtrim($parameters['name'], '*');
-						$search_name = '%' . $base_name . '%';
+						$search_name = $base_name . '%';
 					}
 					
 					$find_objects_query .= "
