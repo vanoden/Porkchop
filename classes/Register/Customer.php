@@ -409,10 +409,16 @@
 				$failure->add(array($ip_address,$login,'WRONGPASS',$endpoint,$user_agent));
 				$this->statistics()->recordFailedLogin();
 				if ($this->auth_failures() >= 6) {
-					app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
-					$this->block();
-					// Send notification to support staff
-					$this->sendAccountBlockedNotification();
+					// Only block + ticket once; further failed logins while already blocked
+					// must not create duplicate support tickets.
+					if ($this->isBlocked()) {
+						app_log("Customer '".$this->code."' already blocked after ".$this->auth_failures()." auth failures; skipping duplicate block ticket", 'notice', __FILE__, __LINE__);
+					} else {
+						app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
+						$this->block();
+						// Send notification to support staff
+						$this->sendAccountBlockedNotification();
+					}
 				}
 				return false;
 			}
