@@ -165,6 +165,10 @@
 				$parameters['status'] = 'NEW';
 			}
             if (isset($_REQUEST['customer_order_number'])) $parameters['customer_order_number'] = $_REQUEST['customer_order_number'];
+			if (!empty($_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
+			if (!empty($_REQUEST['local_order_number'])) $parameters['local_order_number'] = $_REQUEST['local_order_number'];
+			if (!empty($_REQUEST['date_order'])) $parameters['date_order'] = $_REQUEST['date_order'];
+			elseif (!empty($_REQUEST['date_created'])) $parameters['date_created'] = $_REQUEST['date_created'];
 			if (! $order->add($parameters)) $this->error("Error adding order: ".$order->error());
 
 			// Return the order

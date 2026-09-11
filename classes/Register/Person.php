@@ -101,6 +101,17 @@ class Person Extends \BaseModel {
         if (!isset($parameters['validation_key'])) $parameters['validation_key'] = NULL;
         if (!isset($parameters['secret_key'])) $parameters['secret_key'] = '';
 
+		$date_created = date('Y-m-d H:i:s');
+		if (!empty($parameters['date_created'])) {
+			$parsed = get_mysql_date($parameters['date_created']);
+			if ($parsed) $date_created = $parsed;
+		}
+		$date_updated = $date_created;
+		if (!empty($parameters['date_updated'])) {
+			$parsed = get_mysql_date($parameters['date_updated']);
+			if ($parsed) $date_updated = $parsed;
+		}
+
 		sanitize($parameters['login']);
 
         // Initialize Database Service
@@ -122,8 +133,8 @@ class Person Extends \BaseModel {
 				)
 				VALUES
 				(
-					sysdate(),
-					sysdate(),
+					?,
+					?,
 					?,
 					?,
 					?,
@@ -134,6 +145,8 @@ class Person Extends \BaseModel {
 		";
 
         // Bind Parameters
+        $database->AddParam($date_created);
+        $database->AddParam($date_updated);
         $database->AddParam($parameters['date_expires']);
         $database->AddParam($parameters['status']);
         $database->AddParam($parameters['login']);

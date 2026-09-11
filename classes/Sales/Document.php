@@ -152,6 +152,7 @@
 				'new_status' => $status,
 				'user_id' => $GLOBALS['_SESSION_']->customer->id,
 				'type' => 'CREATE',
+				'date_event' => $parameters['date_order'] ?? $parameters['date_event'] ?? $parameters['date_created'] ?? null,
 			]);
 			return $this->update($parameters);
 		}

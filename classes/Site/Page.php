@@ -1305,14 +1305,17 @@
 				}
 			}
 			elseif ($object == "company") {
-				$companies = new \Company\CompanyList ();
-				list ( $company ) = $companies->find ();
-
-				if ($property == "name") {
-					$buffer .= $company->name;
-				}
-				elseif ($property == "copyright") {
-					$buffer = '&copy;'.date('Y')." ".$company->name;
+				if ($property == "name" || $property == "copyright") {
+					$companies = new \Company\CompanyList ();
+					$found = $companies->find ();
+					$company = (is_array($found) && isset($found[0])) ? $found[0] : null;
+					$name = ($company && isset($company->name)) ? $company->name : '';
+					if ($property == "name") {
+						$buffer .= $name;
+					}
+					else {
+						$buffer = '&copy;'.date('Y').($name !== '' ? ' '.$name : '');
+					}
 				}
 				else {
 					$buffer = $this->loadViewFiles($buffer);

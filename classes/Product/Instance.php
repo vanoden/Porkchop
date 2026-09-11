@@ -14,7 +14,7 @@
 		 * @param int $id
 		 * @param bool $flat
 		 */
-		public function __construct($id = 0) {
+		public function __construct($id = 0, $flat = false) {
 			$this->_tableName = "monitor_assets";
 			$this->_tableIDColumn = "asset_id";
 			$this->_tableUKColumn = null;
@@ -25,7 +25,7 @@
             $this->_aliasField("asset_code","code");
 			$this->_aliasField("asset_name","name");
 			$this->_auditEvents = true;
-    		parent::__construct($id);
+    		    parent::__construct($id, $flat);
 		}
 
 		/**

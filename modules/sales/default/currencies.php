@@ -1,6 +1,7 @@
 <?=$page->showAdminPageInfo();?>
 
 <form method="post">
+<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 <div class="tableBody">
 	<div class="tableRowHeader">
 		<div class="tableCell">Name</div>

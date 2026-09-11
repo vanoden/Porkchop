@@ -734,6 +734,12 @@
 			if (!empty($organization_id)) $params['organization_id'] = $organization_id;
 			if (!empty($_REQUEST['custom_1'])) $params['custom_1'] = $_REQUEST['custom_1'];
 			if (!empty($_REQUEST['custom_2'])) $params['custom_2'] = $_REQUEST['custom_2'];
+			if (!empty($_REQUEST['status'])) $params['status'] = $_REQUEST['status'];
+			if (!empty($_REQUEST['timezone'])) $params['timezone'] = $_REQUEST['timezone'];
+			if (!empty($_REQUEST['date_created'])) {
+				$parsed = get_mysql_date($_REQUEST['date_created']);
+				if ($parsed) $params['date_created'] = $parsed;
+			}
 
 			# Add Event
 			$user->add($params);
@@ -940,12 +946,15 @@
 			$organization = new \Register\Organization();
 
 			// Add Object
-			$organization->add(
-				array(
-					"name"		=> $_REQUEST['name'],
-					"code"		=> $_REQUEST['code'],
-				)
+			$org_params = array(
+				"name"		=> $_REQUEST['name'],
+				"code"		=> $_REQUEST['code'],
 			);
+			if (!empty($_REQUEST['date_created'])) {
+				$parsed = get_mysql_date($_REQUEST['date_created']);
+				if ($parsed) $org_params['date_created'] = $parsed;
+			}
+			$organization->add($org_params);
 
 			// Error Handling
 			if ($organization->error()) $this->error($organization->error());
@@ -1901,6 +1910,10 @@
 				'automation' => true,
 				'status' => 'NEW',
 			);
+			if (!empty($_REQUEST['date_created'])) {
+				$parsed = get_mysql_date($_REQUEST['date_created']);
+				if ($parsed) $params['date_created'] = $parsed;
+			}
 
 			$customer->add($params);
 			if ($customer->error()) {
@@ -1961,6 +1974,7 @@
 				'serial_number' => $_REQUEST['serial_number'] ?? '',
 				'register_user_id' => $customer->id,
 			);
+			if (!empty($params['date_created'])) $queueParams['date_created'] = $params['date_created'];
 
 			$queue->add($queueParams);
 			if ($queue->error()) {

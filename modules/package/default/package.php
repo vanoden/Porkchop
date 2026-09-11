@@ -44,15 +44,15 @@
 				<label for="package-owner" class="package-edit-label">Owner</label>
 				<select id="package-owner" name="owner_id" class="package-edit-input">
 					<?php foreach ($admins as $owner) { ?>
-					<option value="<?= $owner->id ?>"<?php if (isset($package->owner->id) && $package->owner->id == $owner->id) print ' selected'; ?>><?= htmlspecialchars($owner->code) ?></option>
+					<option value="<?= $owner->id ?>"<?php if ($package->owner()?->id == $owner->id) print ' selected'; ?>><?= htmlspecialchars($owner->code) ?></option>
 					<?php } ?>
 				</select>
 			</div>
 
 			<div class="package-edit-field">
 				<label class="package-edit-label">Repository</label>
-				<?php if ($package->id && isset($package->repository)) { ?>
-				<span class="package-edit-value"><?= htmlspecialchars($package->repository->name) ?></span>
+				<?php if ($package->id && $package->repository()) { ?>
+				<span class="package-edit-value"><?= htmlspecialchars($package->repository()->name ?? '') ?></span>
 				<?php } else { ?>
 				<select name="repository_id" class="package-edit-input">
 					<?php foreach ($repositories as $repository) { ?>

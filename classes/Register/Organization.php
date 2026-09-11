@@ -47,16 +47,22 @@
 
 			if (empty($parameters['code'])) $parameters['code'] = uniqid();
 			$this->clearError();
+			$date_created = date('Y-m-d H:i:s');
+			if (!empty($parameters['date_created'])) {
+				$parsed = get_mysql_date($parameters['date_created']);
+				if ($parsed) $date_created = $parsed;
+			}
 			$add_object_query = "
 				INSERT
 				INTO	register_organizations
 				(		id,code,name,date_created)
 				VALUES
-				(		null,?,?,sysdate())
+				(		null,?,?,?)
 			";
 
 			$database->AddParam($parameters['code']);
 			$database->AddParam($parameters['name']);
+			$database->AddParam($date_created);
 
 			$rs = $database->Execute($add_object_query);
 			if (! $rs) {			
