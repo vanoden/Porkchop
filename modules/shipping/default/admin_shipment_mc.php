@@ -1,17 +1,60 @@
 <?php
 	$page = new \Site\Page();
-	$page->requirePrivilege('manage shipments');
+	$page->requireAuth();
 	$can_proceed = true;
+
+	$request_flag_on = function ($key) {
+		if (empty($_REQUEST[$key])) return false;
+		return in_array(strtolower(trim((string)$_REQUEST[$key])), array('1', 'true', 'yes', 'on'), true);
+	};
+	// receiver=1 (receive_only kept as alias): skip ship step and show receive form
+	$receiver = $request_flag_on('receiver') || $request_flag_on('receive_only');
+	$receive_only = $receiver;
+
+	$customer = $GLOBALS['_SESSION_']->customer;
+	$can_manage_shipments = $customer->can('manage shipments');
+	$can_receive_shipments = $customer->can('receive shipments', \Register\PrivilegeLevel::CUSTOMER);
+	if ($receiver) {
+		if (!$can_receive_shipments && !$can_manage_shipments) {
+			$page->requirePrivilege('receive shipments');
+		}
+	} else {
+		$page->requirePrivilege('manage shipments');
+	}
 
 	// Create validation objects
 	$rma = new \Support\Request\Item\RMA();
 	$ticket = new \Support\Request\Item();
 
+	// When receiving from an RMA QR/form, locate the RMA and its shipment if id is omitted
+	$rma_param = $_REQUEST['rma'] ?? $_REQUEST['rma_code'] ?? $_REQUEST['rma_id'] ?? '';
+	if ($receiver && $can_proceed && empty($_REQUEST['id']) && $rma_param !== '' && $rma_param !== null) {
+		$rma_lookup = new \Support\Request\Item\RMA();
+		if ($rma_lookup->validInteger($rma_param)) {
+			$rma_lookup = new \Support\Request\Item\RMA((int)$rma_param);
+		} elseif ($rma_lookup->safeString($rma_param)) {
+			$rma_lookup->get($rma_param);
+			if (!$rma_lookup->exists()) {
+				$extracted_id = $rma_lookup->extractRmaId((string)$rma_param);
+				if (!empty($extracted_id)) {
+					$rma_lookup = new \Support\Request\Item\RMA($extracted_id);
+				}
+			}
+		}
+		if ($rma_lookup->exists() && !empty($rma_lookup->shipment_id)) {
+			$rma = $rma_lookup;
+			$_REQUEST['id'] = $rma_lookup->shipment_id;
+		} else {
+			$page->addError("RMA not found or has no shipment");
+			$can_proceed = false;
+		}
+	}
+
 	// Validate shipment ID
-	if (empty($_REQUEST['id'])) {
+	if ($can_proceed && empty($_REQUEST['id'])) {
 		$page->addError("Shipment ID is required");
 		$can_proceed = false;
-	} elseif (!$rma->validInteger($_REQUEST['id'])) {
+	} elseif ($can_proceed && !$rma->validInteger($_REQUEST['id'])) {
 		$page->addError("Invalid shipment ID format");
 		$can_proceed = false;
 	}
@@ -24,12 +67,6 @@
 		}
 	}
 
-	// receive_only: mark shipment as shipped so receiver can skip the ship step
-	$receive_only = false;
-	if (!empty($_REQUEST['receive_only'])) {
-		$receive_only_val = strtolower(trim((string)$_REQUEST['receive_only']));
-		$receive_only = in_array($receive_only_val, array('1', 'true', 'yes', 'on'), true);
-	}
 	if ($can_proceed && $receive_only) {
 		$marked_ready = false;
 		foreach ($shipment->packages() as $package) {

@@ -28,7 +28,8 @@
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="package_id" />
     <input type="hidden" name="action_type" />
-    <?php if (!empty($receive_only)) { ?>
+    <?php if (!empty($receive_only) || !empty($receiver)) { ?>
+    <input type="hidden" name="receiver" value="1" />
     <input type="hidden" name="receive_only" value="1" />
     <?php } ?>
     
@@ -195,6 +196,9 @@
                 <form method="post" action="" style="margin-bottom:8px;">
                     <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>" />
                     <input type="hidden" name="id" value="<?= (int)$shipment->id ?>" />
+                    <?php if (!empty($receive_only) || !empty($receiver)) { ?>
+                    <input type="hidden" name="receiver" value="1" />
+                    <?php } ?>
                     <select name="send_location_id" class="value input" onchange="this.form.submit()">
                         <?php foreach ($send_location_list as $loc) { ?>
                         <option value="<?= (int)$loc->id ?>"<?= ($shipment->send_location_id == $loc->id) ? ' selected' : '' ?>><?= htmlspecialchars($loc->name) ?></option>
