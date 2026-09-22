@@ -2439,6 +2439,16 @@ class BaseModel extends \BaseClass {
 		return $this->safeString($value);
 	}
 
+	/** @method validZipCode(string)
+	 * Validate an international postal code
+	 * @param string $zip_code The postal code to validate
+	 * @return bool True if valid, false otherwise
+	 */
+	public function validZipCode(string $zip_code): bool {
+		$zip = new \Geography\ZipCode();
+		return preg_match('/^[\w\s-]{2,10}$/', $zip_code) === 1;
+	}
+
 	/** @method toArray()
 	 * Convert the object to an associative array
 	 * @return array Associative array representation of the object
