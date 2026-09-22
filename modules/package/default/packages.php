@@ -16,9 +16,9 @@
 	<td><?=$package->status?></td>
 	<td><?=$package->license?></td>
 	<td><?=$package->platform?></td>
-	<td><?=htmlspecialchars($package->owner()->full_name())?></td>
-	<td><?=$package->repository->name?></td>
-	<td><?=$package->date_created?></td>
+	<td><?= htmlspecialchars($package->owner()->full_name()) ?></td>
+	<td><?= htmlspecialchars($package->repository()?->name ?? '') ?></td>
+	<td><?= htmlspecialchars($package->date_created ?? '') ?></td>
 </tr>
 <?php	} ?>
 </table>

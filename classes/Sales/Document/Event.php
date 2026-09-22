@@ -36,9 +36,15 @@
 				INTO	sales_document_events
 				(		id,document_id,date_event,user_id,new_status,type)
 				VALUES
-				(		null,?,sysdate(),?,?,?)
+				(		null,?,?,?,?,?)
 			";
+			$date_event = date('Y-m-d H:i:s');
+			if (!empty($parameters['date_event'])) {
+				$parsed = get_mysql_date($parameters['date_event']);
+				if ($parsed) $date_event = $parsed;
+			}
 			$database->AddParam($document_id);
+			$database->AddParam($date_event);
 			$database->AddParam($parameters['user_id']);
 			$database->AddParam($parameters['new_status']);
 			$database->AddParam($parameters['type']);

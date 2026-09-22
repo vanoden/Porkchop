@@ -454,7 +454,7 @@
 			$result = $role->add(
 				array(
 					'name'	=> $_REQUEST['name'],
-					'description'	=> $_REQUEST['description']
+					'description'	=> $_REQUEST['description'] ?? ''
 				)
 			);
 			if ($role->error()) $this->error($role->error());
@@ -734,6 +734,12 @@
 			if (!empty($organization_id)) $params['organization_id'] = $organization_id;
 			if (!empty($_REQUEST['custom_1'])) $params['custom_1'] = $_REQUEST['custom_1'];
 			if (!empty($_REQUEST['custom_2'])) $params['custom_2'] = $_REQUEST['custom_2'];
+			if (!empty($_REQUEST['status'])) $params['status'] = $_REQUEST['status'];
+			if (!empty($_REQUEST['timezone'])) $params['timezone'] = $_REQUEST['timezone'];
+			if (!empty($_REQUEST['date_created'])) {
+				$parsed = get_mysql_date($_REQUEST['date_created']);
+				if ($parsed) $params['date_created'] = $parsed;
+			}
 
 			# Add Event
 			$user->add($params);
@@ -819,52 +825,68 @@
 			
 			// Initialize Customer Object
 			$customer = new \Register\Customer();
-			if ($customer->get($_REQUEST['login'])) {
-				app_log("Found customer ".$customer->id);
-				if ($customer->verify_email($_REQUEST['access'])) {
-					// update the queued organization to "PENDING" because the email has been verified
-					app_log("Validation key confirmed, updating queue record");
-					$queuedCustomer = new \Register\Queue(); 
-					$queuedCustomer->getByQueuedLogin($customer->id);
-					
-					if ($queuedCustomer->status == "VERIFYING") $queuedCustomer->update(array('status'=>'PENDING'));
-					
-					// create the notify support reminder email for the new verified customer
-					app_log("Generating notification email");
-					$url = $GLOBALS['_config']->site->hostname . '/_register/pending_customers';
-					if ($GLOBALS['_config']->site->https) $url = "https://$url";
-					else $url = "http://$url";
-					
-					$template = new \Content\Template\Shell($GLOBALS['_config']->register->registration_notification->template);
-					$template->addParams(array(
-						'ORGANIZATION.NAME'		=> $queuedCustomer->organization() ? $queuedCustomer->organization()->name : 'Unknown Organization',
-						'CUSTOMER.FIRST_NAME'	=> $customer->first_name,
-						'CUSTOMER.LAST_NAME'	=> $customer->last_name,
-						'EMAIL'					=> $customer->notify_email(),
-						'CUSTOMER.LOGIN'		=> $customer->code,
-						'SITE.LINK'				=> 'http://'.$GLOBALS['_config']->site->hostname.'/_register/pending_customers',
-						'COMPANY.NAME'			=> $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
-					));
-					
-					$message = new \Email\Message($GLOBALS['_config']->register->registration_notification);
-					$message->body($template->output());
-					
-					app_log("Sending Admin Confirm new customer reminder",'debug');
-					$slackClient = new \Slack\Client();
-					$slackClient->send($GLOBALS['_config']->register->registration_notification->channel,$template->render());
-					
-					$response->success(true);
-					$response->addElement('verified', true);
-				} else {
-					app_log("Key not matched",'notice');
-					$this->error("Invalid key");
-				}
-			} else {
+			if (! $customer->get($_REQUEST['login'])) {
 				app_log("Login not matched",'notice');
 				$this->error("Invalid key");
 			}
-			
-			# Send Response
+
+			app_log("Found customer ".$customer->id);
+			$verified_now = $customer->verify_email($_REQUEST['access']);
+			$already_verified = (!$verified_now && $customer->error() === "Email Address already verified for this account");
+
+			if (! $verified_now && ! $already_verified) {
+				app_log("Key not matched: ".$customer->error(),'notice');
+				$this->error("Invalid key");
+			}
+
+			if ($already_verified) {
+				app_log("Customer ".$customer->id." email was already verified; treating as success",'notice');
+			} else {
+				app_log("Validation key confirmed for customer ".$customer->id,'notice');
+			}
+
+			// Best-effort queue + admin notification — must not fail the user-facing verification
+			try {
+				$queuedCustomer = new \Register\Queue();
+				$queuedCustomer->getByQueuedLogin($customer->id);
+				if (!empty($queuedCustomer->status) && $queuedCustomer->status == "VERIFYING") {
+					$queuedCustomer->update(array('status'=>'PENDING'));
+				}
+
+				if ($verified_now && isset($GLOBALS['_config']->register->registration_notification)) {
+					$notify = $GLOBALS['_config']->register->registration_notification;
+					if (!empty($notify->template) && file_exists($notify->template)) {
+						app_log("Generating notification email");
+						$template = new \Content\Template\Shell($notify->template);
+						$orgName = 'Unknown Organization';
+						if ($queuedCustomer && method_exists($queuedCustomer, 'organization') && $queuedCustomer->organization()) {
+							$orgName = $queuedCustomer->organization()->name;
+						}
+						$template->addParams(array(
+							'ORGANIZATION.NAME'		=> $orgName,
+							'CUSTOMER.FIRST_NAME'	=> $customer->first_name,
+							'CUSTOMER.LAST_NAME'	=> $customer->last_name,
+							'EMAIL'					=> $customer->notify_email(),
+							'CUSTOMER.LOGIN'		=> $customer->code,
+							'SITE.LINK'				=> 'http://'.$GLOBALS['_config']->site->hostname.'/_register/pending_customers',
+							'COMPANY.NAME'			=> $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
+						));
+						if (!empty($notify->channel)) {
+							app_log("Sending Admin Confirm new customer reminder",'debug');
+							$slackClient = new \Slack\Client();
+							$slackClient->send($notify->channel, $template->render());
+						}
+					} else {
+						app_log("Registration notification template missing; skipping admin notify",'notice');
+					}
+				}
+			} catch (\Throwable $e) {
+				app_log("Post-verification notification failed (verification still OK): ".$e->getMessage(),'error',__FILE__,__LINE__);
+			}
+
+			$response->success(true);
+			$response->addElement('verified', true);
+			if ($already_verified) $response->addElement('already_verified', true);
 			$response->print();
 		}
 
@@ -924,12 +946,15 @@
 			$organization = new \Register\Organization();
 
 			// Add Object
-			$organization->add(
-				array(
-					"name"		=> $_REQUEST['name'],
-					"code"		=> $_REQUEST['code'],
-				)
+			$org_params = array(
+				"name"		=> $_REQUEST['name'],
+				"code"		=> $_REQUEST['code'],
 			);
+			if (!empty($_REQUEST['date_created'])) {
+				$parsed = get_mysql_date($_REQUEST['date_created']);
+				if ($parsed) $org_params['date_created'] = $parsed;
+			}
+			$organization->add($org_params);
 
 			// Error Handling
 			if ($organization->error()) $this->error($organization->error());
@@ -1907,6 +1932,10 @@
 				'automation' => true,
 				'status' => 'NEW',
 			);
+			if (!empty($_REQUEST['date_created'])) {
+				$parsed = get_mysql_date($_REQUEST['date_created']);
+				if ($parsed) $params['date_created'] = $parsed;
+			}
 
 			$customer->add($params);
 			if ($customer->error()) {
@@ -1967,6 +1996,7 @@
 				'serial_number' => $_REQUEST['serial_number'] ?? '',
 				'register_user_id' => $customer->id,
 			);
+			if (!empty($params['date_created'])) $queueParams['date_created'] = $params['date_created'];
 
 			$queue->add($queueParams);
 			if ($queue->error()) {
@@ -2052,7 +2082,14 @@
 			if (! $person->get($_REQUEST['login'])) $this->notFound("Registration not found");
 			$key = $person->resetKey();
 			if ($person->error()) $this->error($person->error());
-			if (empty($key)) $this->error("No key found");
+			// Create a reset token if none exists (same as forgot_password)
+			if (empty($key)) {
+				$token = new \Register\PasswordToken();
+				$key = $token->add($person->id);
+				if ($token->error() || empty($key)) {
+					$this->error($token->error() ?: "Failed to create reset key");
+				}
+			}
 
 			$response = new \APIResponse();
 			$response->addElement('url',"/_register/reset_password?token=$key");

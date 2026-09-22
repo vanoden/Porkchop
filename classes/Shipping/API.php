@@ -125,6 +125,10 @@
 			else $this->incompleteRequest("Document number required");
 
 			if (!empty($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
+			if (!empty($_REQUEST['date_entered'])) {
+				$parsed = get_mysql_date($_REQUEST['date_entered']);
+				if ($parsed) $parameters['date_entered'] = $parsed;
+			}
 
 			$shipment = new \Shipping\Shipment();
 			$shipment->add($parameters);

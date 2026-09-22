@@ -44,15 +44,18 @@
                 }
                 else {
                     $customer = new \Register\Customer();
-                    $customer->add(
-                        array(
-                            "code"			=> $_REQUEST['new_login'],
-                            "first_name"	=> noXSS(trim($_REQUEST['new_first_name'])),
-                            "last_name"		=> noXSS(trim($_REQUEST['new_last_name'])),
-                            "organization_id"	=> $organization->id,
-                            "password"			=> uniqid()
-                        )
+                    $add_params = array(
+                        "code"			=> $_REQUEST['new_login'],
+                        "first_name"	=> noXSS(trim($_REQUEST['new_first_name'])),
+                        "last_name"		=> noXSS(trim($_REQUEST['new_last_name'])),
+                        "organization_id"	=> $organization->id,
+                        "password"			=> uniqid()
                     );
+                    if (!empty($_REQUEST['device_account'])) {
+                        $add_params['automation'] = true;
+                        $add_params['timezone'] = 'UTC';
+                    }
+                    $customer->add($add_params);
                     if ($customer->error()) {
                         $page->addError("Error adding customer to organization: ".$customer->error());
                     }

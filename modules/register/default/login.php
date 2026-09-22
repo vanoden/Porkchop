@@ -30,11 +30,11 @@
 			<li class="form-field">
 				<label for="password">Password</label>
 				<input type="password" id="password" name="password"/>
-			</li class="form-field">
-			<?php	if ($CAPTCHA_GO) { ?>
-				<li class="g-recaptcha" data-sitekey="<?=$captcha_public_key?>"></li>
-			<?php	}	?>
+			</li>
 		</ul>
+		<?php	if ($CAPTCHA_GO) { ?>
+			<div class="g-recaptcha" data-sitekey="<?=$captcha_public_key?>"></div>
+		<?php	}	?>
 
 		<section class="section-flex cluster">
 			<button type="button" onclick="document.loginForm.submit();">Sign In</button>

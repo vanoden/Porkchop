@@ -90,9 +90,10 @@
             if (error) {
                 errorText = error;
             } else if (response) {
-                // Check if success is explicitly 1 or true
-                isSuccess = (response.success === 1 || response.success === true);
-                // Extract error message if present
+                // Accept common success encodings from APIResponse JSON/XML
+                var successVal = response.success;
+                isSuccess = (successVal === 1 || successVal === true || successVal === '1' || successVal === 'true'
+                    || response.verified === true || response.verified === 1 || response.verified === '1');
                 if (response.error) {
                     errorText = response.error;
                 }
@@ -267,18 +268,18 @@
         <input type="email" id="email" name="email_address" value="<?=!empty($_REQUEST['email_address']) ? $_REQUEST['email_address'] : "" ?>" placeholder="me@business.com" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" maxlength="50" required/>
       </li>
       <li>
-        <label for="username">Username:</span>
+        <label for="login">Username:</label>
         <input type="text" id="login" class="<?=isset($loginTaken) ? 'register-new-customer-login-error' : 'register-new-customer-login-normal'?>" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onmouseout="checkUserName()" maxlength="50" required/>
         <div id="login-message"></div>
       </li>
       <li>
-        <label for="password">Create Password:</span>
+        <label for="password">Create Password:</label>
         <input id="password" type="password" name="password" required/>
         <div id="password-message"></div>
       </li>
       <li>
         <label for="password2">Confirm Password:</label>
-        <input type="password" name="password_2" required/>
+        <input type="password" id="password2" name="password_2" required/>
       </li>
     </ul>
 

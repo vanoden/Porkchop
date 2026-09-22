@@ -361,12 +361,17 @@
 		public function add($parameters = []) {		
 			app_log("Register::Queue::add()",'trace',__FILE__,__LINE__);
 			$this->clearError();
+			$date_created = date('Y-m-d H:i:s');
+			if (!empty($parameters['date_created'])) {
+				$parsed = get_mysql_date($parameters['date_created']);
+				if ($parsed) $date_created = $parsed;
+			}
 			$add_object_query = "
 				INSERT
 				INTO	register_queue
 					(name, code, date_created, is_reseller, assigned_reseller_id, address, city, state, zip, product_id, serial_number, register_user_id)
 				VALUES
-					(?, ?, sysdate(), ?, ?, ?, ?, ?, ?, ?, ?, ?)
+					(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 					";
 
 			// zero out empty values for int DB fields
@@ -380,6 +385,7 @@
 				array(
 					$parameters['name'],
 					$parameters['code'],
+					$date_created,
 					$parameters['is_reseller'],
 					$parameters['assigned_reseller_id'],
 					$parameters['address'],

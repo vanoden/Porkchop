@@ -75,14 +75,11 @@
 			$customer = new \Register\Customer($customer_id);
 
 			// check for errors
-			if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
-				$page->addError("Passwords do not match");
-				app_log("Passwords do not match",'info');
-			}
-			// Check Password Complexity
-			elseif ($customer->password_strength($_REQUEST["password"]) < $GLOBALS['_config']->register->minimum_password_strength) {
-				$page->addError("Password needs more complexity.");
-				app_log("Complexity requirements ".$customer->password_strength($_REQUEST['password'])." < ".$GLOBALS['_config']->register->minimum_password_strength);
+			$passwordErrors = validatePasswordPair($_REQUEST["password"] ?? '', $_REQUEST["password_2"] ?? '', true);
+			if (!empty($passwordErrors)) {
+				foreach ($passwordErrors as $passwordError) {
+					$page->addError($passwordError);
+				}
 			}
 			// If no errors and customer found, go ahead and update
 			elseif ($page->errorCount() < 1 && $customer->id) {

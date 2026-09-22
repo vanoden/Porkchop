@@ -455,7 +455,7 @@
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'navigation.item.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'navigation.item.xsl';
 
 			$parameters = array();
 
@@ -472,11 +472,11 @@
 			}
 
 			$parameters['menu_id'] = $menu->id;	
-			$parameters['title'] = $_REQUEST['title'];
-			$parameters['target'] = $_REQUEST['target'];
-			$parameters['alt'] = $_REQUEST['alt'];
-			$parameters['description'] = $_REQUEST['description'];
-			$parameters['view_order'] = $_REQUEST['view_order'];
+			$parameters['title'] = $_REQUEST['title'] ?? '';
+			$parameters['target'] = $_REQUEST['target'] ?? '';
+			$parameters['alt'] = $_REQUEST['alt'] ?? '';
+			$parameters['description'] = $_REQUEST['description'] ?? '';
+			$parameters['view_order'] = $_REQUEST['view_order'] ?? null;
 			$parameters['parent_id'] = isset($parent_item) ? $parent_item->id : null;
 
 			$response = new \APIResponse();

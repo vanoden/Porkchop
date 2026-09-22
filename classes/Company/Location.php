@@ -58,7 +58,8 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			list($id) = $rs->FetchRow();
+			$row = $rs->FetchRow();
+			$id = (is_array($row) && isset($row[0])) ? $row[0] : null;
 
 			if (empty($id)) {
 				return false;
@@ -94,7 +95,8 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			list($id) = $rs->FetchRow();
+			$row = $rs->FetchRow();
+			$id = (is_array($row) && isset($row[0])) ? $row[0] : null;
 
 			if (empty($id)) {
 				$this->error("Location not found for code ".$code);

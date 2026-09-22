@@ -37,6 +37,49 @@
 		return false;
 	}
 
+	/**
+	 * Validate a password / confirm-password pair.
+	 * Returns every failing rule (empty, mismatch, complexity) rather than short-circuiting.
+	 *
+	 * @param string|null $password
+	 * @param string|null $password2
+	 * @param bool $required When false, an empty pair is allowed (optional password change).
+	 * @return string[] List of error messages; empty if valid
+	 */
+	function validatePasswordPair($password, $password2, $required = true): array {
+		$errors = array();
+		$password = is_string($password) ? $password : '';
+		$password2 = is_string($password2) ? $password2 : '';
+
+		if ($password === '' && $password2 === '') {
+			if ($required) {
+				$errors[] = "Password is required";
+			}
+			return $errors;
+		}
+
+		if ($password === '') {
+			$errors[] = "Password is required";
+		}
+
+		if ($password !== $password2) {
+			$errors[] = "Passwords do not match";
+		}
+
+		$minStrength = 8;
+		if (isset($GLOBALS['_config']->register->minimum_password_strength)) {
+			$minStrength = (int) $GLOBALS['_config']->register->minimum_password_strength;
+		}
+		$customer = new \Register\Customer();
+		$strength = $customer->password_strength($password);
+		if ($strength < $minStrength) {
+			$errors[] = "Password needs more complexity (score ".$strength." of ".$minStrength." required). Use a longer password with a mix of upper and lower case letters, numbers, and symbols (@\$_-.!&).";
+			app_log("Password complexity ".$strength." < ".$minStrength, 'info');
+		}
+
+		return $errors;
+	}
+
 	function valid_email($email) {
 		if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+\.[a-z]{2,}$/",strtolower($email))) return true;
 		else {

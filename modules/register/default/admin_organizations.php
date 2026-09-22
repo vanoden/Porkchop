@@ -71,7 +71,7 @@
 				<td data-label="Name"><?=htmlspecialchars($organization->name)?></td>
 				<td data-label="Status"><?=htmlspecialchars($organization->status)?></td>
 				<td data-label="Members"><?=htmlspecialchars((string)$organization->activeHumans())?></td>
-				<td data-label="Devices"><?=htmlspecialchars((string)$organization->activeDevices())?></td>
+				<td data-label="Devices"><a href="<?=PATH."/_register/inventory_report?organization_id=".$organization->id?>"><?=htmlspecialchars((string)$organization->activeDevices())?></a></td>
 			</tr>
 <?php	}
 	} else { ?>

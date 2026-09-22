@@ -272,6 +272,11 @@ class BaseModel extends \BaseClass {
 	public function add($parameters = []) {
 		$database = new \Database\Service();
 
+		if (! is_array($parameters)) {
+			$this->error("Parameters must be an array");
+			return false;
+		}
+
 		if (empty($this->_tableName)) {
 			$trace = debug_backtrace()[1];
 			$this->error("No table name defined for class");

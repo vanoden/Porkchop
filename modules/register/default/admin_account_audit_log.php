@@ -7,15 +7,11 @@ $activeTab = 'audit';
 require __DIR__ . '/admin_account_tabs.php';
 ?>
 
-<div class="form_instruction">View audit log entries recorded for this account.</div>
+<div class="form_instruction">View Register\Customer audit log entries for this account.</div>
 
 <script>
   function changeAuditPageSize(size) {
     document.getElementById('page_size').value = size;
-    document.getElementById('start').value = 0;
-    document.getElementById('auditLogForm').submit();
-  }
-  function changeAuditClass(value) {
     document.getElementById('start').value = 0;
     document.getElementById('auditLogForm').submit();
   }
@@ -27,16 +23,6 @@ require __DIR__ . '/admin_account_tabs.php';
   <input type="hidden" id="page_size" name="page_size" value="<?= $page_size ?>" />
 
   <div class="audit-top-controls">
-    <div class="audit-class-filter">
-      <label>Class:
-        <select name="class_name" onchange="changeAuditClass(this.value);">
-          <option value="">All</option>
-          <?php foreach ($classList as $class_name) { ?>
-            <option value="<?= $class_name ?>" <?= isset($current_class) && $current_class === $class_name ? 'selected' : '' ?>><?= $class_name ?></option>
-          <?php } ?>
-        </select>
-      </label>
-    </div>
     <div class="audit-page-size">
       <label>Records per page:
         <select name="page_size_select" onchange="changeAuditPageSize(this.value);">

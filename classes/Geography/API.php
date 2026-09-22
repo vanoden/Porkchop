@@ -115,9 +115,9 @@
 			$countryList = new \Geography\CountryList();
 
 			$parameters = array();
-			if ($_REQUEST['name']) $parameters['name'] = trim((string) $_REQUEST['name']);
-			if ($_REQUEST['abbreviation']) $parameters['abbreviation'] = trim((string) $_REQUEST['abbreviation']);
-			if ($_REQUEST['code']) $parameters['code'] = trim((string) $_REQUEST['code']);
+			if (!empty($_REQUEST['name'])) $parameters['name'] = trim((string) $_REQUEST['name']);
+			if (!empty($_REQUEST['abbreviation'])) $parameters['abbreviation'] = trim((string) $_REQUEST['abbreviation']);
+			if (!empty($_REQUEST['code'])) $parameters['code'] = trim((string) $_REQUEST['code']);
 
 			$controls['wildcards'] = array('name'); // NOT IMPLEMENTED YET - wildcards always allowed for now, but this will allow us to turn off wildcards for certain fields in the future if needed
 			
@@ -134,7 +134,7 @@
 		### Add a Province or State						###
 		###################################################
 		public function addProvince() {
-			if ($_REQUEST['country_id']) {
+			if (!empty($_REQUEST['country_id'])) {
 				$country = new \Geography\Country($_REQUEST['country_id']);
 				if (! $country->id) $this->error("Country not found");				
 			}

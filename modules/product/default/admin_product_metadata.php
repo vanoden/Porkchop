@@ -5,129 +5,67 @@
 <?php require __DIR__ . '/admin_product_identity.php'; ?>
 <?php require __DIR__ . '/admin_product_tabs.php'; ?>
 
-<form id="metadataForm" name="metadataForm" method="post" action="/_product/admin_product_metadata/<?= $item->code ?>">
-    <input type="hidden" name="id" id="id" value="<?= $item->id ?>" />
-    <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
+<form id="metadataForm" name="metadataForm" method="post" action="/_product/admin_product_metadata/<?= htmlspecialchars($item->code) ?>">
+	<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
 
-    <h3>Product Metadata</h3>
-    <p>Configure additional metadata fields for this product.</p>
+	<h3>Product Metadata</h3>
+	<p>Manage arbitrary key/value metadata for this product. Spectros-specific fields (default dashboard, manuals, etc.) are edited under <a href="/_spectros/admin_product_metadata/<?= htmlspecialchars($item->code) ?>">Spectros Product Metadata</a>.</p>
 
-    <div class="metadata-section">
-        <h4>Basic Information</h4>
-        <div class="input-horiz">
-            <span class="label">Name</span>
-            <input type="text" class="value input width-300px" name="name" id="name" value="<?= htmlspecialchars($item->getMetadata('name')) ?>" />
-        </div>
-        <div class="input-horiz">
-            <span class="label">Short Description</span>
-            <input type="text" class="value input width-500px" name="short_description" id="short_description" value="<?= htmlspecialchars($item->getMetadata('short_description')) ?>" />
-        </div>
-        <div class="input-horiz">
-            <span class="label">Description</span>
-            <textarea class="value input width-500px textarea-height-100" name="description" id="description"><?= htmlspecialchars($item->getMetadata('description')) ?></textarea>
-        </div>
-    </div>
+	<div class="metadata-section">
+		<h4>Existing Metadata</h4>
+		<?php if (empty($metadataKeys)) { ?>
+			<p>No metadata keys defined yet.</p>
+		<?php } else {
+			foreach ($metadataKeys as $key) {
+				$label = ucwords(str_replace("_", " ", $key));
+		?>
+			<div class="input-horiz" id="item<?= htmlspecialchars($key) ?>">
+				<span class="label"><?= htmlspecialchars($label) ?></span>
+				<input type="text" class="value input width-300px" name="<?= htmlspecialchars($key) ?>" id="<?= htmlspecialchars($key) ?>" value="<?= htmlspecialchars($item->getMetadata($key)) ?>" />
+				<button type="button" class="button delete-metadata-btn" data-key="<?= htmlspecialchars($key) ?>" title="Delete this metadata field">&times;</button>
+			</div>
+		<?php }
+		} ?>
+	</div>
 
-    <div class="metadata-section">
-        <h4>Product Configuration</h4>
-        <div class="input-horiz">
-            <span class="label">Default Dashboard</span>
-            <select class="value input width-300px" name="default_dashboard_id" id="default_dashboard_id">
-                <option value="">Select Dashboard</option>
-                <?php $default_dashboard_id = $item->getMetadata('default_dashboard_id');
-                foreach ($dashboards as $dashboard) { ?>
-                    <option value="<?= $dashboard->id ?>" <?php if ($default_dashboard_id == $dashboard->id) { print " selected"; } ?>><?= htmlspecialchars($dashboard->name) ?></option>
-                <?php } ?>
-            </select>
-        </div>
-        <div class="input-horiz">
-            <span class="label">Manual</span>
-            <select class="value input width-300px" name="manual_id" id="manual_id">
-                <option value="">Select Manual</option>
-                <?php foreach ($manuals as $manual) { ?>
-                    <option value="<?= $manual->id ?>" <?php if ($item->manual_id == $manual->id) { print " selected"; } ?>><?= htmlspecialchars($manual->name) ?></option>
-                <?php } ?>
-            </select>
-        </div>
-        <div class="input-horiz">
-            <span class="label">Spec Table</span>
-            <select class="value input width-300px" name="spec_table_image" id="spec_table_image">
-                <option value="">Select Spec Table</option>
-                <?php foreach ($tables as $table) { ?>
-                    <option value="<?= $table->id ?>" <?php if ($item->spec_table_image == $table->id) { print " selected"; } ?>><?= htmlspecialchars($table->name) ?></option>
-                <?php } ?>
-            </select>
-        </div>
-    </div>
+	<div class="metadata-section new-metadata-section">
+		<h4>Add New Metadata</h4>
+		<p>Add a new key/value pair to this product's metadata.</p>
+		<div class="input-horiz">
+			<span class="label">Key</span>
+			<input type="text" class="value input width-300px" name="new_metadata_key" id="new_metadata_key" placeholder="e.g., technical_specs, features, etc." />
+		</div>
+		<div class="input-horiz">
+			<span class="label">Value</span>
+			<input type="text" class="value input width-500px" name="new_metadata_value" id="new_metadata_value" placeholder="Enter the value for this metadata key" />
+		</div>
+	</div>
 
-    <div class="metadata-section">
-        <h4>Additional Metadata</h4>
-        <?php foreach ($metadataKeys as $key) {
-            if (in_array($key, ['default_dashboard_id', 'manual_id', 'spec_table_image', 'name', 'description', 'short_description'])) continue;
-            $label = $key;
-            $label = ucwords(str_replace("_", " ", $label));
-        ?>
-            <div class="input-horiz" id="item<?= $key ?>">
-                <span class="label"><?= $label ?></span>
-                <input type="text" class="value input width-300px" name="<?= $key ?>" id="<?= $key ?>" value="<?= htmlspecialchars($item->getMetadata($key)) ?>" />
-                <button type="button" class="button delete-metadata-btn" data-key="<?= htmlspecialchars($key) ?>" title="Delete this metadata field">×</button>
-            </div>
-        <?php } ?>
-    </div>
-
-    <div class="metadata-section new-metadata-section">
-        <h4>Add New Metadata</h4>
-        <p>Add a new key/value pair to this product's metadata.</p>
-        <div class="input-horiz">
-            <span class="label">Key</span>
-            <input type="text" class="value input width-300px" name="new_metadata_key" id="new_metadata_key" placeholder="e.g., technical_specs, features, etc." />
-        </div>
-        <div class="input-horiz">
-            <span class="label">Value</span>
-            <input type="text" class="value input width-500px" name="new_metadata_value" id="new_metadata_value" placeholder="Enter the value for this metadata key" />
-        </div>
-    </div>
-
-    <div class="form-actions filter-bar">
-        <div class="button-group filter-bar__actions">
-            <button type="submit" class="button" name="updateMetadata" id="updateMetadata" value="Update Metadata">Update Metadata</button>
-        </div>
-    </div>
+	<div class="form-actions filter-bar">
+		<div class="button-group filter-bar__actions">
+			<button type="submit" class="button" name="updateMetadata" id="updateMetadata" value="Update Metadata">Update Metadata</button>
+		</div>
+	</div>
 </form>
 
-<!-- Hidden form for deleting metadata -->
-<form id="deleteMetadataForm" method="post" action="/_product/admin_product_metadata/<?= $item->code ?>" style="display: none;">
-    <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
-    <input type="hidden" name="deleteMetadata" value="1">
-    <input type="hidden" name="delete_metadata_key" id="delete_metadata_key" value="">
+<form id="deleteMetadataForm" method="post" action="/_product/admin_product_metadata/<?= htmlspecialchars($item->code) ?>" style="display: none;">
+	<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
+	<input type="hidden" name="deleteMetadata" value="1">
+	<input type="hidden" name="delete_metadata_key" id="delete_metadata_key" value="">
 </form>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Clear new metadata fields after successful submission
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('success') === 'true') {
-        const newKeyInput = document.getElementById('new_metadata_key');
-        const newValueInput = document.getElementById('new_metadata_value');
-        if (newKeyInput) newKeyInput.value = '';
-        if (newValueInput) newValueInput.value = '';
-    }
-    
-    // Handle delete metadata button clicks
-    const deleteButtons = document.querySelectorAll('.delete-metadata-btn');
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const key = this.getAttribute('data-key');
-            const label = this.closest('.input-horiz').querySelector('.label').textContent;
-            
-            if (confirm('Are you sure you want to delete the metadata field "' + label + '" (' + key + ')? This action cannot be undone.')) {
-                // Set the key to delete and submit the form
-                document.getElementById('delete_metadata_key').value = key;
-                document.getElementById('deleteMetadataForm').submit();
-            }
-        });
-    });
+	document.querySelectorAll('.delete-metadata-btn').forEach(function(button) {
+		button.addEventListener('click', function(e) {
+			e.preventDefault();
+			var key = this.getAttribute('data-key');
+			var label = this.closest('.input-horiz').querySelector('.label').textContent;
+			if (confirm('Delete metadata field "' + label + '" (' + key + ')? This cannot be undone.')) {
+				document.getElementById('delete_metadata_key').value = key;
+				document.getElementById('deleteMetadataForm').submit();
+			}
+		});
+	});
 });
 </script>

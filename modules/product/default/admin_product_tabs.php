@@ -13,6 +13,6 @@ $productCode = htmlspecialchars((string)$item->code, ENT_QUOTES, 'UTF-8');
 	<a href="/_product/admin_product_tags/<?= $productCode ?>" class="tab <?= $activeTab === 'tags' ? 'active' : '' ?>">Tags</a>
 	<a href="/_product/admin_product_parts/<?= $productCode ?>" class="tab <?= $activeTab === 'parts' ? 'active' : '' ?>">Parts</a>
 	<a href="/_spectros/admin_asset_sensors/<?= $productCode ?>" class="tab <?= $activeTab === 'sensors' ? 'active' : '' ?>">Sensors</a>
-	<a href="/_product/admin_product_metadata/<?= $productCode ?>" class="tab <?= $activeTab === 'metadata' ? 'active' : '' ?>">Metadata</a>
+	<a href="/_spectros/admin_product_metadata/<?= $productCode ?>" class="tab <?= $activeTab === 'metadata' ? 'active' : '' ?>">Metadata</a>
 	<a href="/_product/audit_log/<?= $productCode ?>" class="tab <?= $activeTab === 'audit' ? 'active' : '' ?>">Audit Log</a>
 </div>

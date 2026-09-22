@@ -1,6 +1,7 @@
 <?php
 	$default_Template = "default.html";
 	$admin_template = "admin.html";
+	$portal_template = "portal.html";
 
 	$modules = array(
 		"Company"		=> array(
@@ -40,6 +41,7 @@
 			"templates"		=> array(
 				"organizations"		=> $admin_template,
 				"organizations_report"	=> $admin_template,
+				"inventory_report"	=> $admin_template,
 				"organization"		=> $admin_template,
 				"accounts"			=> $admin_template,
 				"admin_account"		=> $admin_template,
@@ -121,6 +123,11 @@
 				"admin_actions"	=> $admin_template,
 				"admin_rmas"	=> $admin_template,
 				"summary"		=> $admin_template,
+				"troubleshoot"				=> $portal_template,
+				"troubleshoot_complete"		=> $portal_template,
+				"troubleshoot_create_ticket"	=> $portal_template,
+				"troubleshoot_knowledge"	=> $portal_template,
+				"troubleshoot_products"		=> $portal_template,
 			),
 		),
 		"Shipping"		=> array(
@@ -196,6 +203,13 @@
 							"view_order"	=> 15,
 							"alt"			=> "Organizations Duplicate Report",
 							"description"	=> "Find and manage duplicate organizations"
+						),
+						array (
+							"title"			=> "Inventory Report",
+							"target"		=> "/_register/inventory_report",
+							"view_order"	=> 16,
+							"alt"			=> "Organization Inventory Report",
+							"description"	=> "List by product the number of active devices the selected company owns"
 						),
 						array (
 							"title"			=> "Accounts",

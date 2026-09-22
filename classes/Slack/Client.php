@@ -21,7 +21,7 @@ class Client Extends \BaseClass {
 	*/
 	public function send($channel, $message) {
 		if (empty($this->token)) {
-			app_log("Slack send skipped: bot_token missing in config",'error');
+			app_log("Slack send skipped: bot_token missing in config",'warn');
 			$this->_error = 'bot_token missing in config';
 			return false;
 		}

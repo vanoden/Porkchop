@@ -11,25 +11,49 @@
 	$page = new \Site\Page();
 
 	if (empty($_REQUEST['csrfToken'])) $_REQUEST['csrfToken'] = null;
-    
+
 	// Set CAPTCHA public key for template use
-	if (isset($GLOBALS['_config']->captcha->public_key)) $captcha_public_key = $GLOBALS['_config']->captcha->public_key;
-	else app_log("CAPTCHA Not Configured",'warn');
+	$captcha_public_key = '';
+	if (!empty($GLOBALS['_config']->captcha->public_key)) {
+		$captcha_public_key = $GLOBALS['_config']->captcha->public_key;
+	}
+	else {
+		app_log("CAPTCHA Not Configured",'warn');
+	}
 
 	// reCAPTCHA configurable on/off for login
 	$rc = $GLOBALS['_config']->register->requireCAPTCHA ?? null;
-	$require_captcha_login = ($rc && isset($rc->login)) ? $rc->login : true;
-	
-    // Check Risk Level from Host
-	$CAPTCHA_GO = false;
-	if ($require_captcha_login) {
-		$remote_host = new \Network\Host();
-		if ($remote_host->getByIPAddress($GLOBALS['_REQUEST_']->client_ip ?? '')) {
-			if ($remote_host->CAPTCHARequired()) {
-				$CAPTCHA_GO = true;
-			}
-		}
+	$require_captcha_login = ($rc && isset($rc->login)) ? (bool) $rc->login : true;
+
+	// Cannot demand CAPTCHA when no site key is configured (would be an unrecoverable dead end)
+	$captcha_configured = ($require_captcha_login && !empty($captcha_public_key));
+	if ($require_captcha_login && !$captcha_configured) {
+		app_log("reCAPTCHA required for login but captcha->public_key is empty; skipping CAPTCHA gate", 'error', __FILE__, __LINE__);
 	}
+
+	$CAPTCHA_GO = false;
+	$max_auth_failures_before_block = 6;
+	$captcha_after_failures = 3;
+
+	/**
+	 * Build the blocked-account message shown on the login form.
+	 * @param \Register\Customer $customer
+	 * @param string|null $ticketCode Ticket reference created on this request, if any
+	 * @return string
+	 */
+	$blockedAccountMessage = function(\Register\Customer $customer, $ticketCode = null): string {
+		$supportEmail = $GLOBALS['_config']->site->support_email ?? 'service@spectrosinstruments.com';
+		$message = "Your account has been locked after too many failed sign-in attempts. Further sign-in attempts will not succeed.";
+		if (!empty($ticketCode)) {
+			$message .= " A support ticket (".$ticketCode.") has been created and our staff have been notified.";
+		}
+		else {
+			$message .= " Our support staff have been notified.";
+		}
+		$message .= " You can restore access using Recover Password.";
+		$message .= " If you need help, contact <a href=\"mailto:".htmlspecialchars($supportEmail)."\">".htmlspecialchars($supportEmail)."</a>.";
+		return $message;
+	};
 
 	// Choose Target URL
 	$target = "";
@@ -131,7 +155,7 @@
 				}
 				else {
 					if ($customer->isBlocked()) {
-						$page->addError("Your account has been blocked");
+						$page->addError($blockedAccountMessage($customer, null));
 						$counter = new \Site\Counter("auth_failed");
 						$counter->increment();
 						$failure = new \Register\AuthFailure();
@@ -141,25 +165,28 @@
 						return;
 					}
 					elseif (!empty($GLOBALS['_config']->captcha->bypass_key) && !empty($_REQUEST['captcha_bypass_key']) && $GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key']) {
-						//Don't require catcha
+						//Don't require captcha
 					}
-					elseif ($require_captcha_login && ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3)) {
+					elseif ($captcha_configured && ($customer->status == 'EXPIRED' || $customer->auth_failures() >= $captcha_after_failures)) {
 						$CAPTCHA_GO = true;
-						if (!isset($_REQUEST['g-recaptcha-response'])) {
-							// CAPTCHA Required but not done
+						if (empty($_REQUEST['g-recaptcha-response'])) {
+							// CAPTCHA Required but not completed
 							$counter = new \Site\Counter("captcha_block");
 							$counter->increment();
 							app_log("Customer ".$customer->id. " " . $customer->status . " login ATTEMPTED",'notice',__FILE__,__LINE__);
 							app_log("login_target = $target",'debug',__FILE__,__LINE__);
-							$page->addError("CAPTCHA Required");
+							$page->addError("Please complete the CAPTCHA below to continue");
 							app_log("EXIT 2",'notice');
 							return;
 						}
 						else {
 							// CAPTCHA Required and Provided
 							$reCAPTCHA = new \GoogleAPI\ReCAPTCHA();
-							if (!$reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) 
+							if (!$reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) {
 								$page->addError("CAPTCHA Failed: ".$reCAPTCHA->error());
+								$CAPTCHA_GO = true;
+								return;
+							}
 						}
 					}
 
@@ -168,8 +195,23 @@
 						app_log("login_target = $target",'debug',__FILE__,__LINE__);
 						$counter = new \Site\Counter("auth_failed");
 						$counter->increment();
-						$page->addError("Authentication Failed");
-						if ($require_captcha_login && ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3)) $CAPTCHA_GO = true;
+
+						// authenticate() may have just blocked the account and set last_blocked_ticket_code
+						$ticketCode = !empty($customer->last_blocked_ticket_code) ? $customer->last_blocked_ticket_code : null;
+						if ($customer->isBlocked()) {
+							$page->addError($blockedAccountMessage($customer, $ticketCode));
+						}
+						else {
+							$failures = (int) $customer->auth_failures();
+							$remaining = $max_auth_failures_before_block - $failures;
+							$page->addError("Authentication Failed");
+							if ($remaining > 0) {
+								$page->addError($remaining." attempt".($remaining === 1 ? '' : 's')." remaining before your account is locked");
+							}
+							if ($captcha_configured && ($customer->status == 'EXPIRED' || $failures >= $captcha_after_failures)) {
+								$CAPTCHA_GO = true;
+							}
+						}
 					}
 					elseif ($customer->error()) {
 						app_log("Error in authentication: ".$customer->error(),'error',__FILE__,__LINE__);
@@ -237,4 +279,3 @@
 	else {
 		app_log("No authentication information sent",'debug',__FILE__,__LINE__);
 	}
-

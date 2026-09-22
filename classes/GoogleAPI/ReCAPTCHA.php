@@ -33,7 +33,6 @@
 			
 			if ($captcha_success->success == true ) {
 				app_log("ReCAPTCHA presented and SOLVED for " . $customer->status . " Customer (must be a human attempting)" , 'notice' , __FILE__ , __LINE__);
-				$customer->update(array('status' => 'ACTIVE'));
 				return true;
 			}
 			else {
