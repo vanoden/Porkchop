@@ -549,9 +549,16 @@ use Register\Customer;
 
 		/** @method customer()
 		 * Get the associated customer object
-		 * @return Customer 
+		 * @return Customer An empty Customer for anonymous sessions
 		 */
 		public function customer(): \Register\Customer {
+			// Anonymous sessions never populate $this->customer. Return an empty
+			// Customer so callers can test exists() instead of hitting a TypeError.
+			if (! $this->customer instanceof \Register\Customer) {
+				$this->customer = !empty($this->customer_id)
+					? new \Register\Customer($this->customer_id)
+					: new \Register\Customer();
+			}
 			return $this->customer;
 		}
 
@@ -1118,8 +1125,10 @@ use Register\Customer;
 		public function getCSRFToken() {
 			if (empty($this->csrfToken)) {
 				$this->csrfToken = $this->generateCSRFToken();
+				// cache() is null until the session has an id; verifyCSRFToken() already
+				// tolerates an uncached token, so skip caching instead of failing the page.
 				$cache = $this->cache();
-				$cache->setElement('csrfToken', $this->csrfToken);
+				if ($cache) $cache->setElement('csrfToken', $this->csrfToken);
 			}
 			return $this->csrfToken;
 		}
