@@ -129,6 +129,11 @@
 			// Initialize Database Service
 			$database = new \Database\Service();
 
+			// Alias US for United States
+			if (is_string($idOrNameOrAbbrev) && trim(strtolower($idOrNameOrAbbrev)) === 'us') {
+				$idOrNameOrAbbrev = 'USA';
+			}
+
 			// Check if input is numeric ID
 			if (is_numeric($idOrNameOrAbbrev) && (int) $idOrNameOrAbbrev > 0) {
 				$this->id = (int) $idOrNameOrAbbrev;
@@ -143,6 +148,42 @@
 				OR		abbreviation = ?
 				LIMIT 1";
 			$database->AddParam($s);
+			$database->AddParam($s);
+			$rs = $database->Execute($get_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			if (! ($row = $rs->FetchRow())) return false;
+			$row = (array) $row;
+			$this->id = (int) ($row['id'] ?? $row[0]);
+			return $this->details();
+		}
+
+		/** @method public getByAbbreviation(string $abbreviation)
+		 * Load country by abbreviation.
+		 * @param string $abbreviation
+		 * @return bool
+		 */
+		public function getByAbbreviation(string $abbreviation): bool {
+			// Clear Previous Errors
+			$this->clearErrors();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Alias US for United States
+			if (trim(strtolower($abbreviation)) === 'us') {
+				$abbreviation = 'USA';
+			}
+
+			$s = trim($abbreviation);
+			if ($s === '') return false;
+			$get_query = "
+				SELECT	id
+				FROM	geography_countries
+				WHERE	abbreviation = ?
+				LIMIT 1";
 			$database->AddParam($s);
 			$rs = $database->Execute($get_query);
 			if (! $rs) {

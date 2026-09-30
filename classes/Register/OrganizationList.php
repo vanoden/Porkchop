@@ -183,22 +183,43 @@
             $workingClass = new $this->_modelName();
 
 			// Build Query
+			$hasTagJoin = false;
 			$find_objects_query = "
 				SELECT	ro.id
 				FROM	register_organizations ro
 			";
 
-			// Apply Tags Filter if specified
-			if (isset($advanced['tags']) && !empty($advanced['tags'])) {
-				$tagIds = $this->getTagIds($advanced['tags']);
-				$find_objects_query .= ",
-								search_tags_xref stx
-					WHERE		stx.object_id = ro.id
-					AND			stx.tag_id IN (".implode(',',$tagIds).")";
-			}
-			else {
+			// Filter by organization search tag value
+			if (!empty($parameters['searchedTag'])) {
+				if (!$workingClass->validTagValue($parameters['searchedTag'])) {
+					$this->error("Invalid tag");
+					return [];
+				}
+				$hasTagJoin = true;
 				$find_objects_query .= "
+				INNER JOIN search_tags_xref stx ON stx.object_id = ro.id
+				INNER JOIN search_tags st ON st.id = stx.tag_id
+					AND st.class = ?
+					AND st.value = ?
+					AND st.category IN ('organization_tag', 'ORGANIZATION')";
+				$database->AddParam($workingClass->getTagClass());
+				$database->AddParam($parameters['searchedTag']);
+			}
+			// Apply Tags Filter if specified (legacy advanced path)
+			elseif (isset($advanced['tags']) && !empty($advanced['tags'])) {
+				$tagIds = $this->getTagIds($advanced['tags']);
+				$hasTagJoin = true;
+				$find_objects_query .= ",
+								search_tags_xref stx";
+			}
+
+			$find_objects_query .= "
 					WHERE		ro.id = ro.id";
+
+			if (isset($advanced['tags']) && !empty($advanced['tags']) && empty($parameters['searchedTag'])) {
+				$find_objects_query .= "
+					AND			stx.object_id = ro.id
+					AND			stx.tag_id IN (".implode(',',$tagIds).")";
 			}
 
 			if (!empty($parameters['name'])) {
@@ -207,12 +228,12 @@
 					$search_name = str_replace('*','%',$parameters['name']);
 					$search_name = str_replace('?','_',$search_name);
 					
-					// Special case: if search ends with * and has no other wildcards, treat same as no wildcards
-					// This makes "Inc" and "Inc*" behave the same way
+					// A trailing * means prefix matching only: "Fumigation*" becomes "Fumigation%".
+					// Do not add a leading wildcard, so matching organizations must start with the value.
 					if (preg_match('/^[^*?]+\*$/', $parameters['name'])) {
-						// Remove the trailing * and add wildcards on both sides
+						// Remove the trailing * and retain the SQL suffix wildcard.
 						$base_name = rtrim($parameters['name'], '*');
-						$search_name = '%' . $base_name . '%';
+						$search_name = $base_name . '%';
 					}
 					
 					$find_objects_query .= "
@@ -329,6 +350,11 @@
 				AND ro.id = ?";
 				$database->AddParam($GLOBALS['_SESSION_']->customer()->organization_id);
 			}
+
+			if ($hasTagJoin) {
+				$find_objects_query .= "
+				GROUP BY ro.id";
+			}
 				
             if (isset($controls['sort'])) {
                 if (!$workingClass->hasField($controls['sort'])) {
@@ -376,6 +402,43 @@
 			}
 			
 			return $organizations;
+		}
+
+		/** @method getDistinctTags()
+		 * Distinct organization tag values assigned via search_tags (organization_tag / ORGANIZATION).
+		 * @return array List of tag value strings, sorted alphabetically
+		 */
+		public function getDistinctTags(): array {
+			$this->clearError();
+			$this->resetCount();
+
+			$database = new \Database\Service();
+			$organization = new Organization();
+			$tagClass = $organization->getTagClass();
+
+			$get_tags_query = "
+				SELECT	DISTINCT st.value
+				FROM	search_tags st
+				INNER JOIN search_tags_xref stx ON stx.tag_id = st.id
+				INNER JOIN register_organizations ro ON ro.id = stx.object_id
+				WHERE	st.class = ?
+				AND		st.category IN ('organization_tag', 'ORGANIZATION')
+				ORDER BY st.value ASC
+			";
+			$database->AddParam($tagClass);
+
+			$rs = $database->Execute($get_tags_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return [];
+			}
+
+			$tags = [];
+			while ($row = $rs->FetchRow()) {
+				$tags[] = $row[0];
+				$this->incrementCount();
+			}
+			return $tags;
 		}
 
 		/** @method expire(threshold)

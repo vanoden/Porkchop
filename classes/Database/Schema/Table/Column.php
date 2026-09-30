@@ -26,6 +26,17 @@
 			}
 		}
 
+		/**
+		 * Load column properties from the database.
+		 *
+		 * @param string $table_name Table containing the column
+		 * @param string $column_name Column name
+		 * @return bool True if present and loaded, otherwise false
+		 */
+		public function get($table_name,$column_name) {
+			# Load Column Parameters
+		}
+
 		public function error() {
 			return $this->_error;
 		}

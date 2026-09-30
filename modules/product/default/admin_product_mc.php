@@ -195,11 +195,18 @@ if (!empty($_REQUEST['updateSubmit'])) {
 	}
 }
 
-// Get Manuals
+// Get Manuals (product managers may not hold per-file storage privileges)
+$configMediaParams = array('skip_readable_check' => true);
 $documentlist = new \Media\DocumentList();
-$manuals = $documentlist->find();
+$manuals = $documentlist->find($configMediaParams);
+if ($documentlist->error() || !is_array($manuals)) {
+	$manuals = array();
+}
 $imagelist = new \Media\ImageList();
-$tables = $imagelist->find();
+$tables = $imagelist->find($configMediaParams);
+if ($imagelist->error() || !is_array($tables)) {
+	$tables = array();
+}
 $vendors = $item->vendors();
 
 // Get unique categories and tags for autocomplete

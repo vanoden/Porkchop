@@ -11,6 +11,7 @@
 		public $timer;						// Request timer
 		public $url;						// Full request URL
 		public $query_vars;					// Query variables
+		public bool $isBot = false;			// Flag to indicate if the request is from a bot
 		private $_protocol;
 		private $_method = 'GET';
 		private $_host;
@@ -20,6 +21,8 @@
 		private $_query_string = '';
 		private $_parameters = array();
 		private $_headers = array();
+		private ?int $client_ip_long = 0;	// Int form of client IP for easier subnet matching
+		private ?int $subnet_id = null;		// Subnet ID if client IP matches a subnet in the database
 
 		/** @constructor
 		 * Initializes the HTTP request
@@ -211,9 +214,12 @@
 		 * Parses the URI, identifies module, view, index, and query variables
 		 */
 		public function deconstruct(): true {
-			app_log("REQUEST: ".$_SERVER['REQUEST_URI'],'debug',__FILE__,__LINE__);
+			app_log("REQUEST: ".$_SERVER['REQUEST_URI'],'trace',__FILE__,__LINE__);
 			# Store User Agent
 			$this->user_agent = $_SERVER['HTTP_USER_AGENT'];
+			if (preg_match('/(bot|crawl|spider|slurp|curl|wget|python|ruby|php|java|perl|sqlmap|nikto|dirbuster)/i',$this->user_agent)) {
+				$this->isBot = true;
+			}
 
 			# Strip Path from URI
 			$this->_uri = preg_replace('@^'.PATH.'@','',$_SERVER['REQUEST_URI']);
@@ -347,7 +353,7 @@
 				else $this->query_vars = '';
 			}
 
-			app_log("Request: ".$this->module."::".$this->view."::".$this->index,'debug',__FILE__,__LINE__);
+			app_log("Request: ".$this->module."::".$this->view."::".$this->index,'trace',__FILE__,__LINE__);
 
 			# Parse Remainder of Query String into Array
 			$parsed_vars = preg_split("@/@",$this->query_vars ?? '');
@@ -453,12 +459,14 @@
 
 					// Validate just in case
 					if (filter_var ($client_ip, FILTER_VALIDATE_IP)) {
+						$this->client_ip_long = ip2long($client_ip);
 						return $client_ip;
 					}
 				}
 			}
 
 			// In all other cases, REMOTE_ADDR is the ONLY IP we can trust.
+			$this->client_ip_long = ip2long($_SERVER['REMOTE_ADDR']);
 			return $_SERVER['REMOTE_ADDR'];
 		}
 
@@ -469,7 +477,37 @@
 		public function riskLevel() {
 			$risk_level = 0;
 			$uri = $this->_uri;
-			if (preg_match('/^([\/\w\-\_\.]+)\?(.*)$/',$uri,$matches)) {
+			$agent = $this->user_agent;
+			$subnet = null;
+
+			# See if we already know the subnet
+			if ($this->subnet_id) {
+				$subnet = new \Network\Subnet($this->subnet_id);
+				$risk_level = $subnet->riskLevel();
+			}
+			else {
+				# See if IP is in a known subnet
+				$subnetList = new \Network\SubnetList();
+				if ($subnetList->contains($this->client_ip)) {
+					$subnet = $subnetList->matched();
+					$risk_level = $subnet->riskLevel();
+				}
+			}
+
+			if (preg_match('/^https?\:\/\/(\w[\w\-\.]*)(\/.*)/',$uri,$matches)) {
+				$uri = $matches[2];
+			}
+
+			if (empty($url)) $url = "";
+
+			if ($url == "") {
+				$uri = "/";
+			}
+			if ($url == "/") {
+				# All Set
+				$query_string = "";
+			}
+			elseif (preg_match('/^([\/\w\-\_\.]+)\?(.*)$/',$uri,$matches)) {
 				$uri = $matches[1];
 				$query_string = $matches[2];
 			}
@@ -479,38 +517,94 @@
 			}
 			else {
 				# Unparseable URI
-				app_log("WAF RULE: unparseable URI",'trace2');
+				app_log("WAF RULE: unparseable URI: '".$uri."'",'info');
 				$risk_level += 80;
 				$uri = null;
 			}
 
+			// Check for known scanning or fuzzing tools in the User-Agent
+			if (preg_match('/(sqlmap|nmap|nikto|acunetix|nessus|fuzz|dirbuster|fimap|fierce|whatweb|wpscan|w3af|havij|paros|skipfish|libredtail)/i',$agent)) {
+				# Known Scanning or Fuzzing Tool
+				app_log("WAF RULE: known scanning tool in user agent",'info');
+				$risk_level += 150;
+			}
+
+			// Check for known acceptable bots in the User-Agent to reduce risk
+			if (preg_match('/(GPTBot|SemrushBot|AhrefsBot|MJ12bot|ZoominfoBot|DotBot|MauiBot)/i',$agent)) {
+				# Known Good Bot, Reduce Risk
+				app_log("WAF RULE: known good bot in user agent",'info');
+			}
+
+			// Fits pattern of a typical Porkchop URI, Reduce Risk
 			if ($this->module && $this->module != "content") {
-				# Proper Porkchop URI
-				app_log("WAF RULE: porkchop URI",'trace2');
-				$risk_level -= 50;
+				if (preg_match('/([\w\-\.\_]+)\.([\w\-\_]+)/',$uri,$matches)) {
+					$extension = $matches[2];
+					$basename = $matches[1].".".$matches[2];
+					// Some Excluded Extensions
+					if ($basename == "wplogin.php") {
+						# We're not WordPress
+						app_log("WAF RULE: wplogin",'info');
+						$risk_level += 100;
+					}
+					elseif (preg_match('/^vendor\/phpunit/',$uri)) {
+						# No php unit test here
+						app_log("WAF RULE: phpunit",'info');
+						$risk_level += 100;
+					}
+					elseif (preg_match('/^\./',$uri)) {
+						# Hidden files or backref
+						app_log("WAF RULE: hidden file",'info');
+						$risk_level += 100;
+					}
+					elseif (preg_match('/^(php|asp|aspx|jsp|jspx|exe|cgi|pl)$/i',$extension)) {
+						# Porkchop doesn't use engines based on extension
+						app_log("WAF RULE: extension",'info');
+						$risk_level += 100;
+					}
+				}
+				else {
+					# Proper Porkchop URI
+					app_log("WAF RULE: porkchop URI",'info');
+					$risk_level -= 50;
+				}
 			}
 			elseif (preg_match('/([\w\-\.\_]+)\.([\w\-\_]+)/',$uri,$matches)) {
 				$extension = $matches[2];
 				$basename = $matches[1].".".$matches[2];
 				if ($basename == "wplogin.php") {
 					# We're not WordPress
-					app_log("WAF RULE: wplogin",'trace2');
+					app_log("WAF RULE: wplogin",'info');
 					$risk_level += 100;
 				}
 				elseif (preg_match('/^(php|asp|aspx|jsp|jspx|exe|cgi|pl)$/i',$extension)) {
 					# Porkchop doesn't use engines based on extension
-					app_log("WAF RULE: extension",'trace2');
+					app_log("WAF RULE: extension",'info');
 					$risk_level += 100;
 				}
 				elseif (preg_match('/^vendor\/phpunit/',$uri)) {
 					# No php unit test here
-					app_log("WAF RULE: phpunit",'trace2');
+					app_log("WAF RULE: phpunit",'info');
 					$risk_level += 100;
 				}
 				elseif (preg_match('/^\./',$uri)) {
 					# Hidden files or backref
-					app_log("WAF RULE: hidden file",'trace2');
+					app_log("WAF RULE: hidden file",'info');
 					$risk_level += 100;
+				}
+				elseif (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/i',$extension)) {
+					# Static Content, Reduce Risk
+					app_log("WAF RULE: static content extension",'info');
+					$risk_level -= 20;
+				}
+				elseif (preg_match('/\.\./',$uri)) {
+					# Directory Traversal Attempt
+					app_log("WAF RULE: directory traversal",'info');
+					$risk_level += 100;
+				}
+				else {
+					# Unrecognized Extension
+					app_log("WAF RULE: unrecognized extension",'info');
+					$risk_level += 20;
 				}
 			}
 
@@ -522,39 +616,60 @@
 			foreach ($contents as $content) {
 				if (preg_match('/select.+from/i',$content)) {
 					# SQL Injection Attempt
-					app_log("WAF RULE: SQL Inject",'trace2');
+					app_log("WAF RULE: SQL Inject",'info');
 					$risk_level += 100;
 				}
 				elseif (preg_match('/insert.+into/i',$content)) {
 					# SQL Injection Attempt
-					app_log("WAF RULE: SQL Inject",'trace2');
+					app_log("WAF RULE: SQL Inject",'info');
 					$risk_level += 100;
 				}
 				elseif (preg_match('/update.+set/i',$content)) {
 					# SQL Injection Attempt
-					app_log("WAF RULE: SQL Inject",'trace2');
+					app_log("WAF RULE: SQL Inject",'info');
 					$risk_level += 100;
 				}
 				elseif (preg_match('/replace.+into/i',$content)) {
 					# SQL Injection Attempt
-					app_log("WAF RULE: SQL Inject",'trace2');
+					app_log("WAF RULE: SQL Inject",'info');
 					$risk_level += 100;
 				}
 				elseif (preg_match('/delete.+from/i',$content)) {
 					# SQL Injection Attempt
-					app_log("WAF RULE: SQL Inject",'trace2');
+					app_log("WAF RULE: SQL Inject",'info');
 					$risk_level += 100;
 				}
 				elseif (preg_match('/drop.+database/i',$content)) {
 					# SQL Injection Attempt
-					app_log("WAF RULE: SQL Inject",'trace2');
+					app_log("WAF RULE: SQL Inject",'info');
 					$risk_level += 100;
 				}
 				elseif (preg_match('/alter.+table/i',$content)) {
 					# SQL Injection Attempt
-					app_log("WAF RULE: SQL Inject",'trace2');
+					app_log("WAF RULE: SQL Inject",'info');
 					$risk_level += 100;
 				}
+			}
+
+			if ($subnet && $subnet->id()) {
+				# Add Risk from Subnet
+				app_log("WAF RULE: subnet risk level ".$subnet->riskLevel(),'info');
+				$risk_level += $subnet->riskLevel();
+				$subnet->adjustRiskLevel($risk_level);
+			}
+			else if ($risk_level > 0 && empty($subnet)) {
+				# Unmatched IP with Risky Request, Add to Subnet List
+				app_log("WAF RULE: adding subnet for unmatched IP with risk level ".$risk_level,'info');
+
+				$subnet = new \Network\Subnet();
+				$parameters = [];
+
+				$parameters['address'] = $this->client_ip;
+				$parameters['size'] = 1;
+				$parameters['address'] = $this->client_ip;
+				$parameters['managed'] = 'AUTO';
+				$parameters['risk_level'] = $risk_level;
+				$subnet->add($parameters);
 			}
 			return $risk_level;
 		}

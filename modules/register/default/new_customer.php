@@ -8,110 +8,22 @@
   // Check if we should show verification UI
   if (isset($showVerificationUI) && $showVerificationUI && $verificationLogin && $verificationAccess) {
     ?>
-    <style>
-    .verification-container {
-        grid-column: 2/-2;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        margin: 2rem 0;
-        max-width: 600px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    
-    #verification-loading {
-        text-align: center;
-        padding: 2rem;
-        width: 100%;
-    }
-    
-    .loading-spinner {
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #3498db;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 1rem;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    #verification-success {
-        width: 100%;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    #verification-success section {
-        text-align: center;
-        margin: 1rem 0;
-        width: 100%;
-        max-width: 600px;
-    }
-    
-    #verification-success ul {
-        text-align: center;
-    }
-    
-    #verification-success p,
-    #verification-success i {
-        text-align: center;
-        display: block;
-        margin: 0.5rem 0;
-    }
-    
-    .verification-error-container {
-        grid-column: 2/-2;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        margin: 2rem 0;
-        max-width: 600px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    
-    .verification-error-container h2 {
-        text-align: center;
-        margin: 1rem 0;
-    }
-    
-    .verification-error-container h5 {
-        text-align: center;
-        margin: 1rem 0;
-    }
-    
-    .verification-error-container form {
-        margin-top: 1.5rem;
-        text-align: center;
-    }
-    </style>
-    
     <div id="verification-container" class="verification-container">
         <div id="verification-loading">
             <div class="loading-spinner"></div>
             <p>Verifying your email address...</p>
-            <p style="color: #666; font-size: 0.9em; margin-top: 1rem;">Please wait while we verify your account. (This may take several minutes)</p>
-            <p style="color: #999; font-size: 0.85em; margin-top: 0.5rem; font-style: italic;">Please don't close the window.</p>
+            <p class="verification-loading-sub">Please wait while we verify your account. (This may take several minutes)</p>
+            <p class="verification-loading-hint">Please don't close the window.</p>
         </div>
         <div id="verification-success" style="display: none;">
-            <section style="text-align: center; margin: 1rem 0;">
-                <ul class="connectBorder progressText" style="text-align: center;">
+            <section class="verification-success-block">
+                <ul class="connectBorder progressText verify-success-msg">
                     <li>Your account has been verified.</li>
                 </ul>
             </section>
-            <section style="text-align: center; margin: 1rem 0; display: flex; flex-direction: column; align-items: center;">
-                <p style="text-align: center; margin: 0.5rem 0; display: block; width: 100%;">You may login to your account <a href="/_register/login">here</a></p>
-                <i style="text-align: center; display: block; margin: 0.5rem 0; width: 100%;"><strong>Note:</strong> Our account administrators will soon fully approve your account to use our platform.</i>
+            <section class="verification-success-block" style="display: flex; flex-direction: column; align-items: center;">
+                <p class="verification-login-line">You may login to your account <a href="/_register/login">here</a></p>
+                <i class="verification-note"><strong>Note:</strong> Our account administrators will soon fully approve your account to use our platform.</i>
             </section>
         </div>
         <div id="verification-error" style="display: none;">
@@ -178,9 +90,10 @@
             if (error) {
                 errorText = error;
             } else if (response) {
-                // Check if success is explicitly 1 or true
-                isSuccess = (response.success === 1 || response.success === true);
-                // Extract error message if present
+                // Accept common success encodings from APIResponse JSON/XML
+                var successVal = response.success;
+                isSuccess = (successVal === 1 || successVal === true || successVal === '1' || successVal === 'true'
+                    || response.verified === true || response.verified === 1 || response.verified === '1');
                 if (response.error) {
                     errorText = response.error;
                 }
@@ -355,18 +268,18 @@
         <input type="email" id="email" name="email_address" value="<?=!empty($_REQUEST['email_address']) ? $_REQUEST['email_address'] : "" ?>" placeholder="me@business.com" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" maxlength="50" required/>
       </li>
       <li>
-        <label for="username">Username:</span>
+        <label for="login">Username:</label>
         <input type="text" id="login" class="<?=isset($loginTaken) ? 'register-new-customer-login-error' : 'register-new-customer-login-normal'?>" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onmouseout="checkUserName()" maxlength="50" required/>
         <div id="login-message"></div>
       </li>
       <li>
-        <label for="password">Create Password:</span>
+        <label for="password">Create Password:</label>
         <input id="password" type="password" name="password" required/>
         <div id="password-message"></div>
       </li>
       <li>
         <label for="password2">Confirm Password:</label>
-        <input type="password" name="password_2" required/>
+        <input type="password" id="password2" name="password_2" required/>
       </li>
     </ul>
 

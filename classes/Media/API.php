@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'media';
-			$this->_version = '0.3.0';
-			$this->_release = '2022-03-21';
+			$this->_version = '0.3.2';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Media\Schema();
 			$this->_admin_role = 'media manager';
 			parent::__construct();
@@ -226,7 +226,6 @@
 		public function _methods() {
 			$validationClass = new \Product\Item();
 			return array(
-				'ping'			=> array(),
 				'addMediaItem'	=> array(
 					'description'		=> 'Add a new media item',
 					'authentication_required' => true,

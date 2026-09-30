@@ -29,10 +29,15 @@
     <input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 
-    <form method="get" action="/_register/admin_organization_locations/<?= htmlspecialchars($organization->code) ?>" class="inline-form" style="display:inline;">
-      <input type="hidden" name="organization_id" value="<?= (int)$organization->id ?>" />
-      <label><input type="checkbox" name="show_hidden" value="1" <?= !empty($show_hidden) ? 'checked' : '' ?> onchange="this.form.submit()" /> Show hidden addresses</label>
-    </form>
+    <p class="inline-form" style="display:inline;">
+      <label>
+        <input type="checkbox"
+               name="show_hidden"
+               value="1"
+               <?= !empty($show_hidden) ? 'checked' : '' ?>
+               onchange="window.location.href='/_register/admin_organization_locations/<?= $organization->code ?>?organization_id=<?=$organization->id?>&show_hidden='+(this.checked?1:0)" />
+        Show hidden addresses
+      </label>
     </p>
     <!--	Start First Row-->
     <div class="tableBody">

@@ -70,13 +70,13 @@
     			$get_contents_query .= " AND (`target` LIKE " . $searchString . " OR `title` LIKE " . $searchString . " OR `name` LIKE " . $searchString . " OR `content` LIKE " . $searchString . ")";
 			} else {
 			    $this->error = "Error: Search 'string' Parameter is Required.";
-			    return 0;
+			    return [];
 			}
         
 			$rs = $database->Execute($get_contents_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return 0;
+				return [];
 			}
 
 			$messages = array();
@@ -106,7 +106,7 @@
 			$rs = $GLOBALS['_database']->Execute($get_contents_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return 0;
+				return [];
 			}
 
 			while (list($id) = $rs->FetchRow()) {

@@ -500,8 +500,9 @@ use Register\Customer;
 				else
 					$this->isMobile = false;
 
-				// Generate CSRF Token if not already set
-				$this->generateCSRFToken();
+				// Ensure CSRF token exists and is stored on the session cache object
+				$this->csrfToken = $this->getCSRFToken();
+				$object->csrfToken = $this->csrfToken;
 				
 				// Initialize OTP verification status - check cache first, then set defaults
 				$cachedOTPVerified = null;
@@ -548,9 +549,16 @@ use Register\Customer;
 
 		/** @method customer()
 		 * Get the associated customer object
-		 * @return Customer 
+		 * @return Customer An empty Customer for anonymous sessions
 		 */
 		public function customer(): \Register\Customer {
+			// Anonymous sessions never populate $this->customer. Return an empty
+			// Customer so callers can test exists() instead of hitting a TypeError.
+			if (! $this->customer instanceof \Register\Customer) {
+				$this->customer = !empty($this->customer_id)
+					? new \Register\Customer($this->customer_id)
+					: new \Register\Customer();
+			}
 			return $this->customer;
 		}
 
@@ -930,16 +938,20 @@ use Register\Customer;
 		 * @return bool True if authenticated, false otherwise
 		 */
 		public function authenticated(): bool {
-			if (! $this->customer->id) return false;
+			if (empty($this->customer) || empty($this->customer->id)) {
+				app_log("User Not Authenticated - no customer object or customer ID", 'trace', __FILE__, __LINE__, 'otplogs');
+				return false;
+			}
 			$configuration = new \Site\Configuration();
 			app_log("=== AUTHENTICATED() METHOD CALL ===", 'trace', __FILE__, __LINE__, 'otplogs');
 			app_log("OTP Enabled: " . ($configuration->getValueBool("use_otp") ? 'true' : 'false'), 'trace', __FILE__, __LINE__, 'otplogs');
 			app_log("Customer ID: " . ($this->customer->id ?? 'null'), 'trace', __FILE__, __LINE__, 'otplogs');
-			app_log("Customer requires OTP: " . ($this->customer->requiresOTP() ? 'true' : 'false'), 'trace', __FILE__, __LINE__, 'otplogs');
+			app_log("Customer requires OTP: " . ($this->customer?->requiresOTP() ? 'true' : 'false'), 'trace', __FILE__, __LINE__, 'otplogs');
 			$otpStatus = $this->getOTPVerified();
 			app_log("OTP verified status: " . ($otpStatus === false ? 'false' : ($otpStatus === true ? 'true' : 'null')), 'trace', __FILE__, __LINE__, 'otplogs');
 			app_log("Current URI: " . $_SERVER['REQUEST_URI'], 'trace', __FILE__, __LINE__, 'otplogs');
-			if ($configuration->getValueBool("use_otp") && isset($this->customer->id) && $this->customer->requiresOTP() && $this->customer->id > 0 && $this->getOTPVerified() === false) {
+			
+			if ($configuration->getValueBool("use_otp") && isset($this->customer->id) && $this->customer?->requiresOTP() && $this->customer->id > 0 && $this->getOTPVerified() === false) {
 				// If OTP is required and not verified, redirect to OTP page
 				// But don't redirect if we're already on the OTP page to prevent loops
 				if (!preg_match('/\/_register\/otp/', $_SERVER['REQUEST_URI'])) {
@@ -1024,6 +1036,26 @@ use Register\Customer;
 			);
 		}
 
+		/** @method formatLocaltime(timestamp)
+		 * Format a timestamp for display in the session timezone using locale conventions
+		 * @param int $timestamp Unix timestamp, defaults to current time
+		 * @return string Formatted date/time string
+		 */
+		public function formatLocaltime($timestamp = 0) {
+			if ($timestamp == 0) $timestamp = time();
+			$datetime = new \DateTime('@'.$timestamp, new \DateTimeZone('UTC'));
+			$datetime->setTimezone(new \DateTimeZone($this->timezone));
+			if (class_exists('\IntlDateFormatter', false)) {
+				$formatted = \IntlDateFormatter::formatObject(
+					$datetime,
+					[\IntlDateFormatter::SHORT, \IntlDateFormatter::MEDIUM],
+					\Locale::getDefault()
+				);
+				if ($formatted !== false) return $formatted;
+			}
+			return $datetime->format('Y-m-d H:i:s');
+		}
+
 		/** @method oauthState(state)
 		 * Get or set the OAuth2 state for the session
 		 * @param string|null $state The state to set, or null to get the current state
@@ -1054,6 +1086,21 @@ use Register\Customer;
 				return false;
 			}
 			if (empty($this->csrfToken)) {
+				$cache = $this->cache();
+				if ($cache && ! $cache->error()) {
+					$cachedToken = $cache->getElement('csrfToken');
+					if (! empty($cachedToken)) {
+						$this->csrfToken = $cachedToken;
+					}
+					else {
+						$cachedObject = $cache->get();
+						if (is_object($cachedObject) && ! empty($cachedObject->csrfToken)) {
+							$this->csrfToken = $cachedObject->csrfToken;
+						}
+					}
+				}
+			}
+			if (empty($this->csrfToken)) {
 				app_log("No csrfToken exists for session",'debug');
 				return false;
 			}
@@ -1082,6 +1129,8 @@ use Register\Customer;
 		public function getCSRFToken() {
 			if (empty($this->csrfToken)) {
 				$this->csrfToken = $this->generateCSRFToken();
+				// cache() is null until the session has an id; verifyCSRFToken() already
+				// tolerates an uncached token, so skip caching instead of failing the page.
 				$cache = $this->cache();
 				if (empty($cache)) {
 					app_log("No cache available to store CSRF token for session " . $this->id, 'debug');

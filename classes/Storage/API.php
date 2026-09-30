@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'storage';
-			$this->_version = '0.2.0';
-			$this->_release = '2021-08-11';
+			$this->_version = '0.3.2';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Storage\Schema();
 			$this->_admin_role = 'storage manager';
 			parent::__construct();
@@ -575,10 +575,6 @@
 		public function _methods() {
 			$porkchop = new \Porkchop();
 			return array(
-				'ping'			=> array(
-					'description'	=> "Simple ping method to test connectivity",
-					'parameters'	=> array()
-				),
 				'addRepository'	=> array(
 					'description'	=> "Add a new storage repository",
 					'privilege_required'	=> 'manage storage repositories',

@@ -7,8 +7,8 @@
 		public function __construct() {
 			$this->_admin_role = 'administrator';
 			$this->_name = 'company';
-			$this->_version = '0.2.1';
-			$this->_release = '2020-06-10';
+			$this->_version = '0.3.2';
+			$this->_release = '2026-03-19';
 			$this->_schema = new Schema();
 			parent::__construct();
 		}
@@ -201,7 +201,7 @@
 				'date_created'			=> $_REQUEST["date_created"],
 				'date_expires'			=> $_REQUEST["date_expires"],
 				'registration_period'	=> $_REQUEST["registration_period"],
-				'registrar'				=> $_REQUEST["register"]
+				'registrar'				=> $_REQUEST["registrar"]
 			);
 			if (!empty($location->id)) {
 				$parameters['location_id'] = $location->id;
@@ -217,7 +217,6 @@
 
 		public function _methods() {
 			return array(
-				'ping'	=> array(),
 				'getcompany'	=> array(
 					'description'	=> 'Get details of company to which the site belongs',
 					'privilege_required'	=> 'configure site',

@@ -37,6 +37,49 @@
 		return false;
 	}
 
+	/**
+	 * Validate a password / confirm-password pair.
+	 * Returns every failing rule (empty, mismatch, complexity) rather than short-circuiting.
+	 *
+	 * @param string|null $password
+	 * @param string|null $password2
+	 * @param bool $required When false, an empty pair is allowed (optional password change).
+	 * @return string[] List of error messages; empty if valid
+	 */
+	function validatePasswordPair($password, $password2, $required = true): array {
+		$errors = array();
+		$password = is_string($password) ? $password : '';
+		$password2 = is_string($password2) ? $password2 : '';
+
+		if ($password === '' && $password2 === '') {
+			if ($required) {
+				$errors[] = "Password is required";
+			}
+			return $errors;
+		}
+
+		if ($password === '') {
+			$errors[] = "Password is required";
+		}
+
+		if ($password !== $password2) {
+			$errors[] = "Passwords do not match";
+		}
+
+		$minStrength = 8;
+		if (isset($GLOBALS['_config']->register->minimum_password_strength)) {
+			$minStrength = (int) $GLOBALS['_config']->register->minimum_password_strength;
+		}
+		$customer = new \Register\Customer();
+		$strength = $customer->password_strength($password);
+		if ($strength < $minStrength) {
+			$errors[] = "Password needs more complexity (score ".$strength." of ".$minStrength." required). Use a longer password with a mix of upper and lower case letters, numbers, and symbols (@\$_-.!&).";
+			app_log("Password complexity ".$strength." < ".$minStrength, 'info');
+		}
+
+		return $errors;
+	}
+
 	function valid_email($email) {
 		if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+\.[a-z]{2,}$/",strtolower($email))) return true;
 		else {
@@ -194,6 +237,20 @@
         return $date;
     }
 
+	/** @function get_mysql_day(date)
+	 * Extract the Year, Month, and Day from a MySQL date.
+	 * Return YYYY-MM-DD
+	 * @param string $date
+	 * @return string|null
+	 */
+	function get_mysql_day($date): ?string {
+		$date = get_mysql_date($date);
+		if (preg_match('/^\d\d\d\d\-(\d\d)\-(\d\d)/',$date,$matches)) {
+			return sprintf('%04d-%02d-%02d',(int)$matches[1], (int)$matches[2], (int)$matches[3]);
+		}
+		return null;
+	}
+
 	/** @function shortDate(date)
 	 * Convert MySQL date into short date format for display
 	 * @param string $date
@@ -251,6 +308,45 @@
 		}
 		else {
 			return $date;
+		}
+	}
+
+	/** @function displayDateTime(date)
+	 * Format a MySQL datetime for display (e.g. May 26th, 9:30AM).
+	 * @param string|null $date
+	 * @return string
+	 */
+	function displayDateTime(?string $date): string {
+		if (empty($date) || preg_match('/^0000-00-00/', trim($date))) {
+			return '--';
+		}
+		try {
+			$tzName = !empty($GLOBALS['_SESSION_']->timezone) ? $GLOBALS['_SESSION_']->timezone : date_default_timezone_get();
+			$dt = new \DateTime($date, new \DateTimeZone($tzName));
+		} catch (\Exception $e) {
+			return $date;
+		}
+		$day = (int) $dt->format('j');
+		if (in_array($day % 100, [11, 12, 13], true)) {
+			$suffix = 'th';
+		} else {
+			$suffix = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][$day % 10];
+		}
+		return $dt->format('F') . ' ' . $day . $suffix . ', ' . $dt->format('g:i A');
+	}
+
+	/** @function get_timestamp(date, time_zone)
+	 * Convert a local date and time to Unix Timestamp
+	 * @param string $date
+	 * @param string $time_zone
+	 * @return int|null
+	*/
+	function get_timestamp($date, $time_zone): ?int {
+		try {
+			$dt = new \DateTime($date, new \DateTimeZone($time_zone));
+			return $dt->getTimestamp();
+		} catch (\Exception $e) {
+			return null;
 		}
 	}
 

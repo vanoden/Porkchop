@@ -23,7 +23,7 @@
 				return new \Site\Logger\Errorlog($parameters);
 			} elseif (isset($parameters['path']) && ! empty($parameters['path'])) {
 				return new \Site\Logger\File($parameters);
-			} elseif (defined(APPLICATION_LOG)) {
+			} elseif (defined('APPLICATION_LOG')) {
 				return new \Site\Logger\File($parameters);
 			} else {
 				return new \Site\Logger\Errorlog($parameters);

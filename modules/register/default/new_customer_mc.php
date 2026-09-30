@@ -57,11 +57,11 @@
 			// Initialize Customer Object
 			$customer = new \Register\Customer();
 			$contact = new \Register\Contact();
-			if ($customer->password_strength($_REQUEST['password']) < $GLOBALS['_config']->register->minimum_password_strength) {
-				$page->addError("Password not strong enough");
-			}
-			elseif ($_REQUEST["password"] != $_REQUEST["password_2"]) {
-				$page->addError("Passwords do not match");
+			$passwordErrors = validatePasswordPair($_REQUEST['password'] ?? '', $_REQUEST['password_2'] ?? '', true);
+			if (!empty($passwordErrors)) {
+				foreach ($passwordErrors as $passwordError) {
+					$page->addError($passwordError);
+				}
 			}
 			elseif (! $customer->validLogin($_REQUEST['login'])) {
 				$page->addError("Invalid login");

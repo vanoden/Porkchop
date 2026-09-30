@@ -25,9 +25,9 @@ class ProvinceList Extends \BaseListClass {
 		// Initialize Working Class
 		$workingClass = new $this->_modelName();
 
-		// Build the query
+		// Build the query (full row: avoid N+1 Admin::details queries per province)
 		$find_objects_query = "
-				SELECT	id
+				SELECT	id, code, country_id, name, type, abbreviation, label
 				FROM	geography_provinces
 				WHERE	id = id
 			";
@@ -67,9 +67,23 @@ class ProvinceList Extends \BaseListClass {
 		}
 
 		$provinces = array ();
-		while (list($id) = $rs->FetchRow()) {
-			$province = new Province($id);
-			$province->id = $id;
+		while ($object = $rs->FetchNextObject(false)) {
+			$province = new Province(0);
+			$province->id = (int) $object->id;
+			$province->code = (string) $object->code;
+			$province->country_id = (int) $object->country_id;
+			$province->name = (string) $object->name;
+			$province->type = isset($object->type) ? (string) $object->type : null;
+			$province->abbreviation = (string) $object->abbreviation;
+			$province->label = isset($object->label) ? (string) $object->label : null;
+			$province->exists(true);
+			$province->cached(false);
+
+			$cache = $province->cache();
+			if (isset($cache)) {
+				$cache->set($object);
+			}
+
 			array_push($provinces, $province);
 			$this->incrementCount();
 		}

@@ -14,8 +14,8 @@
         public $cost;
 		
 		public function __construct($id = 0) {
-			$this->_tableName = 'sales_order_items';
-			$this->_addFields(array('id','order_id','line_number','product_id','serial_number','description','quantity','unit_price','status','cost'));
+			$this->_tableName = 'sales_document_items';
+			$this->_addFields(array('id','document_id','line_number','product_id','serial_number','description','quantity','unit_price','status','cost'));
 			$this->_addStatus(array('OPEN','VOID','FULFILLED','RETURNED'));
 			parent::__construct($id);
 		}
@@ -34,27 +34,23 @@
 				return false;
 			}
 			
-			$order = new \Sales\Document($parameters['order_id']);
+			$document_id = $parameters['document_id'] ?? $parameters['order_id'] ?? null;
+			$order = new \Sales\SalesOrder($document_id);
 			if (! $order->id) {
 				$this->error("Sales Document not found");
 				return false;
-			}			
+			}
 
-			// Get the previous line number
-			$line_number = $order->maxLineNumber();
+			$line_number = (int) $order->maxLineNumber();
 
-			// Prepare the query to add the new item
 			$add_object_query = "
-				INSERT
-				INTO	sales_order_items
-				(		id,order_id,line_number,product_id)
-				VALUES
-				(		null,?,?,?)
+				INSERT INTO `sales_document_items`
+				(		document_id, line_number, product_id)
+				VALUES (?,?,?)
 			";
 
-			// Bind Parameters
 			$database->AddParam($order->id);
-			$database->AddParam($line_number+1);
+			$database->AddParam($line_number + 1);
 			$database->AddParam($product->id);
 			$database->Execute($add_object_query);
 			if ($database->ErrorMsg()) {
@@ -90,7 +86,7 @@
 
 			// Prepare the update query
 			$update_object_query = "
-				UPDATE	sales_order_items
+				UPDATE	`sales_document_items`
 				SET		id = id";
 
 			if (isset($parameters['product_id'])) {
@@ -149,7 +145,7 @@
 		public function details(): bool {
 			$get_details_query = "
 				SELECT	*
-				FROM	sales_order_items
+				FROM	`sales_document_items`
 				WHERE	id = ?
 			";
 			$rs = $GLOBALS['_database']->Execute($get_details_query,array($this->id));
@@ -160,6 +156,7 @@
 			$object = $rs->FetchNextObject(false);
 			if ($object) {
 				$this->id = $object->id;
+				$this->order_id = $object->document_id ?? $object->order_id ?? null;
 				$this->line_number = $object->line_number;
 				$this->product_id = $object->product_id;
 				$this->serial_number = $object->serial_number;

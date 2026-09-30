@@ -5,8 +5,8 @@
 		public function __construct() {
 			$this->_admin_role = 'search manager';
 			$this->_name = 'search';
-			$this->_version = '0.1.1';
-			$this->_release = '2024-10-29';
+			$this->_version = '0.2.2';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Search\Schema();
 			parent::__construct();
 		}
@@ -166,13 +166,6 @@
 		public function _methods() {
 			$queue = new \Register\Queue();
 			return array(
-				'ping'	=> array(
-					'description' => 'Check API Availability',
-					'authentication_required' => false,
-					'parameters' => array(),
-					'return_element' => 'message',
-					'return_type' => 'string'
-				),
 				'addTag'	=> array(
 					'description'	=> 'Add a tag for searching',
 					'authentication_required'	=> true,

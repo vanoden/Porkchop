@@ -25,6 +25,9 @@
 		private static array $_authExemptViews = ['login', 'forgot_password', 'register', 'email_verify', 'resend_verify', 'invoice_login', 'thank_you'];
 		private static array $_touExemptViews = ['terms_of_use_form', 'terms_of_use_declined'];
 
+		/** @var array<string, int> Resolved page_pages.id keyed by module|view|index for current request only */
+		private static array $_getPageLookupByRoute = [];
+
 		/** @constructor */
 		public function __construct() {
 			$this->_tableName = "page_pages";
@@ -411,6 +414,12 @@
 			if (empty($index) || strlen($index) < 1) $index = null;
 			elseif ($this->validIndex($index)) $this->index = $index;
 
+			$routeKey = $module.'|'.$view.'|'.(($index !== null && strlen((string) $index) > 0) ? (string) $index : '');
+			if (isset(self::$_getPageLookupByRoute[$routeKey])) {
+				$this->id = self::$_getPageLookupByRoute[$routeKey];
+				return $this->details();
+			}
+
 			$database = new \Database\Service();
 
 			// Prepare Query
@@ -444,6 +453,7 @@
 
 			if (is_numeric($id)) {
 				$this->id = $id;
+				self::$_getPageLookupByRoute[$routeKey] = (int) $id;
 				return $this->details();
 			}
 			elseif ($module == "static") {
@@ -959,17 +969,17 @@
 					error_log("FOUND errorblock");
 					if ($this->errorCount() > 0) {
 						$buffer = '<section id="form-message">
-						<ul class="connectBorder errorText">
-							<li>';
-						$buffer .= $this->errorString();
-						$buffer .= '</li>
-						</ul>
+						<ul class="connectBorder pageMessage errorText">';
+						foreach ($this->errors() as $error) {
+							$buffer .= $this->formatPageMessageItem($error, 'error');
+						}
+						$buffer .= '</ul>
 						</section>';
 					}
 					elseif ($this->success) {
 						$buffer = '<section id="form-message">
-						<ul class="connectBorder progressText">
-							<li>';
+						<ul class="connectBorder pageMessage progressText">
+							<li class="pageMessage--progress">';
 						$buffer .= $this->success;
 						$buffer .= '</li>
 						</ul>
@@ -1295,14 +1305,17 @@
 				}
 			}
 			elseif ($object == "company") {
-				$companies = new \Company\CompanyList ();
-				list ( $company ) = $companies->find ();
-
-				if ($property == "name") {
-					$buffer .= $company->name;
-				}
-				elseif ($property == "copyright") {
-					$buffer = '&copy;'.date('Y')." ".$company->name;
+				if ($property == "name" || $property == "copyright") {
+					$companies = new \Company\CompanyList ();
+					$found = $companies->find ();
+					$company = (is_array($found) && isset($found[0])) ? $found[0] : null;
+					$name = ($company && isset($company->name)) ? $company->name : '';
+					if ($property == "name") {
+						$buffer .= $name;
+					}
+					else {
+						$buffer = '&copy;'.date('Y').($name !== '' ? ' '.$name : '');
+					}
 				}
 				else {
 					$buffer = $this->loadViewFiles($buffer);
@@ -1388,6 +1401,7 @@
 					$fe_file = MODULES . '/' . $module . '/default/' . $view . '.php';
 			}
 			app_log ( "Loading view " . $view . " of module " . $module, 'debug', __FILE__, __LINE__ );
+			$page = $this;
 			if (isset($be_file) && file_exists($be_file)) {
 				// Load Backend File
 				try {
@@ -1427,6 +1441,12 @@
 				} catch (\Exception $e) {
 					app_log("Error in frontend file $fe_file: " . $e->getMessage(), 'error');
 					// Don't return here, just log the error and continue
+				}
+			}
+			if (isset($page) && $page !== $this && $page instanceof \Site\Page) {
+				$adminMenuSection = $page->getAdminMenuSection();
+				if ($adminMenuSection) {
+					$this->setAdminMenuSection($adminMenuSection);
 				}
 			}
 			$buffer .= ob_get_clean ();
@@ -1621,13 +1641,26 @@
 			return $section;
 		}
 
+		private function formatPageMessageItem(string $message, string $modifier): string {
+			if (preg_match('/SQL\sError/', $message) || preg_match('/ query\:/', $message)) {
+				$called_from = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1] ?? [];
+				app_log($message, 'error', $called_from['file'] ?? __FILE__, $called_from['line'] ?? __LINE__);
+				$message = "Internal site error";
+			}
+			return '<li class="pageMessage--'.$modifier.'"><span class="pageMessage__content">'
+				.htmlspecialchars($message, ENT_QUOTES, 'UTF-8').'</span></li>';
+		}
+
 		public function showMessages() {
 			$buffer = "";
 			if ($this->errorCount() > 0) {
 				$buffer .= "
 		  <section id=\"form-message\">
-			<ul class=\"connectBorder errorText\">
-			  <li>".$this->errorString()."</li>
+			<ul class=\"pageMessage\">";
+				foreach ($this->errors() as $error) {
+					$buffer .= "\n\t\t\t  ".$this->formatPageMessageItem($error, 'error');
+				}
+				$buffer .= "
 			</ul>
 		  </section>
 			  ";
@@ -1635,8 +1668,8 @@
 			elseif (!empty($this->success)) {
 				$buffer .= "
 		  <section id=\"form-message\">
-			<ul class=\"connectBorder progressText\">
-			  <li>".$this->success."</li>
+			<ul class=\"pageMessage\">
+			  <li class=\"pageMessage--progress\"><span class=\"pageMessage__content\">".$this->success."</span></li>
 			</ul>
 		  </section>
 			  ";
@@ -1644,8 +1677,11 @@
 			if ($this->warningCount() > 0) {
 				$buffer .= "
 		  <section id=\"form-message\">
-			<ul class=\"connectBorder warningText\">
-			  <li>".$this->warningString()."</li>
+			<ul class=\"pageMessage\">";
+				foreach ($this->warnings() as $warning) {
+					$buffer .= "\n\t\t\t  ".$this->formatPageMessageItem($warning, 'warning');
+				}
+				$buffer .= "
 			</ul>
 		  </section>
 			  ";
@@ -1653,8 +1689,8 @@
 			if (!empty($this->instructions)) {
 				$buffer .= "
 		  <section id=\"form-message\">
-			<ul class=\"connectBorder infoText\">
-			  <li>".$this->instructions."</li>
+			<ul class=\"pageMessage\">
+			  <li class=\"pageMessage--info\">".$this->instructions."</li>
 			</ul>
 		  </section>
 		";
@@ -1662,8 +1698,8 @@
 			elseif (!empty($this->getMetadata("instructions"))) {
 				$buffer .= "
 		  <section id=\"form-message\">
-			<ul class=\"connectBorder infoText\">
-			  <li>".$this->getMetadata("instructions")."</li>
+			<ul class=\"pageMessage\">
+			  <li class=\"pageMessage--info\">".$this->getMetadata("instructions")."</li>
 			</ul>
 		  </section>
 		";

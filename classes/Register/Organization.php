@@ -1,8 +1,6 @@
 <?php
 	namespace Register;
 
-use Register\Organization\OwnedProduct;
-
 	class Organization Extends \BaseModel {
 
 		public string $name = "";
@@ -49,16 +47,22 @@ use Register\Organization\OwnedProduct;
 
 			if (empty($parameters['code'])) $parameters['code'] = uniqid();
 			$this->clearError();
+			$date_created = date('Y-m-d H:i:s');
+			if (!empty($parameters['date_created'])) {
+				$parsed = get_mysql_date($parameters['date_created']);
+				if ($parsed) $date_created = $parsed;
+			}
 			$add_object_query = "
 				INSERT
 				INTO	register_organizations
 				(		id,code,name,date_created)
 				VALUES
-				(		null,?,?,sysdate())
+				(		null,?,?,?)
 			";
 
 			$database->AddParam($parameters['code']);
 			$database->AddParam($parameters['name']);
+			$database->AddParam($date_created);
 
 			$rs = $database->Execute($add_object_query);
 			if (! $rs) {			
@@ -76,7 +80,9 @@ use Register\Organization\OwnedProduct;
 				'class_method' => 'add'
 			));
 
-			$this->auditRecord('ORGANIZATION_CREATED','Organization has been added');
+			if (!empty($GLOBALS['_SESSION_']->customer->id)) {
+				$this->auditRecord('ORGANIZATION_CREATED','Organization has been added');
+			}
 			return $this->update($parameters);
 		}
 
@@ -334,7 +340,7 @@ use Register\Organization\OwnedProduct;
 		 * Get an owned product for this organization
 		 * @param int $product_id
 		 */
-		public function product($product_id): ?OwnedProduct {
+		public function product($product_id): ?\Register\Organization\OwnedProduct {
 			$product = new \Product\Item($product_id);
 			if ($product->error()) {
 				$this->error($product->error());
@@ -385,32 +391,32 @@ use Register\Organization\OwnedProduct;
 			else return false;
 		}
 
-		/** @method addProduct(id,quantity,expiration_date = '9999-12-31')
+		/** @method addProduct(id,quantity,date_expires = '9999-12-31')
 		 * Add a product to this organization
 		 */
-		public function addProduct($product_id,$quantity,$expiration_date = '9999-12-31'): bool {
+		public function addProduct($product_id,$quantity,$date_expires = '9999-12-31'): bool {
 			$owned_product = $this->product($product_id);
 			if ($owned_product->error()) {
 				$this->error($owned_product->error());
 				return false;
 			}
-			if ($owned_product->id) {
+			if ($owned_product->product_id) {
 				// They already have this product, update quantity and expiration if needed
 				$new_quantity = $owned_product->quantity + $quantity;
-				if ($expiration_date < $owned_product->date_expires) {
-					$new_expiration_date = $expiration_date;
+				if ($date_expires < $owned_product->date_expires) {
+					$new_date_expires = $date_expires;
 				}
 				else {
-					$new_expiration_date = $owned_product->date_expires;
+					$new_date_expires = $owned_product->date_expires;
 				}
-				if (!$owned_product->update(array('quantity' => $new_quantity,'expiration_date' => $new_expiration_date))) {
+				if (!$owned_product->update(array('quantity' => $new_quantity,'date_expires' => $new_date_expires))) {
 					$this->error($owned_product->error());
 					return false;
 				}
 			}
 			else {
 				// They don't have this product, add it
-				if (!$owned_product->add(array('quantity' => $quantity,'expiration_date' => $expiration_date))) {
+				if (!$owned_product->add(array('quantity' => $quantity,'date_expires' => $date_expires))) {
 					$this->error($owned_product->error());
 					return false;
 				}
@@ -418,14 +424,14 @@ use Register\Organization\OwnedProduct;
 			return true;
 		}
 
-		public function updateProduct($product_id,$quantity,$expiration_date = '9999-12-31'): bool {
+		public function updateProduct($product_id,$quantity,$date_expires = '9999-12-31'): bool {
 			$owned_product = $this->product($product_id);
 			if ($owned_product->error()) {
 				$this->error($owned_product->error());
 				return false;
 			}
 			if ($owned_product->product_id) {
-				if (!$owned_product->update(array('quantity' => $quantity,'expiration_date' => $expiration_date))) {
+				if (!$owned_product->update(array('quantity' => $quantity,'date_expires' => $date_expires))) {
 					$this->error($owned_product->error());
 					return false;
 				}
@@ -453,6 +459,58 @@ use Register\Organization\OwnedProduct;
 			$customerlist = new CustomerList();
 			$customers = $customerlist->find(array("organization_id" => $this->id,'automation' => true, "status" => array('NEW','ACTIVE')));
 			return count($customers);
+		}
+
+		/** @method public activeDevicesByProduct()
+		 * Count active devices this organization owns, grouped by product.
+		 * Active means the matching automation account is NEW or ACTIVE.
+		 * @return array List of objects with product_id, product_code, product_name, count
+		 */
+		public function activeDevicesByProduct(): array {
+			$this->clearError();
+			if (empty($this->id) || !is_numeric($this->id)) {
+				$this->error("Organization is not set");
+				return [];
+			}
+
+			$database = new \Database\Service();
+			$query = "
+				SELECT	p.id AS product_id,
+						p.code AS product_code,
+						p.name AS product_name,
+						COUNT(ma.asset_id) AS device_count
+				FROM	monitor_assets ma
+				INNER JOIN product_products p
+				ON		p.id = ma.product_id
+				INNER JOIN register_users u
+				ON		u.login = ma.asset_code
+				AND		u.organization_id = ma.organization_id
+				AND		u.automation = 1
+				AND		u.status IN ('NEW','ACTIVE')
+				WHERE	ma.organization_id = ?
+				GROUP BY p.id, p.code, p.name
+				ORDER BY p.code
+			";
+			$database->AddParam($this->id);
+			$rs = $database->Execute($query);
+			if (!$rs) {
+				$this->SQLError($database->ErrorMsg());
+				return [];
+			}
+
+			$rows = array();
+			while ($record = $rs->FetchNextObject(false)) {
+				$product_code = strval($record->product_code ?? '');
+				$product_name = strval($record->product_name ?? '');
+				if ($product_name === '') $product_name = $product_code;
+				$rows[] = (object) array(
+					'product_id' => (int) $record->product_id,
+					'product_code' => $product_code,
+					'product_name' => $product_name,
+					'count' => (int) $record->device_count
+				);
+			}
+			return $rows;
 		}
 
 		public function expire() {
@@ -592,5 +650,238 @@ use Register\Organization\OwnedProduct;
 			list($association_found) = $rs->FetchRow();
 			if ($association_found) return true;
 			else return false;
+		}
+
+		/** @method public ownedProducts(parameters)
+		 * Get a list of products owned by this organization
+		 * @param array parameters - optional parameters for filtering products
+		 * @return array of Product\Item objects
+		 */
+		public function ownedProducts($parameters = array()) {
+			// Clear any previous errors
+			$this->clearError();
+
+			$parameters['organization_id'] = $this->id;
+			$owned_product_list = new \Register\Organization\OwnedProductList();
+			$products = $owned_product_list->find($parameters);
+			if ($owned_product_list->error()) {
+				$this->error("Error loading owned products: ".$owned_product_list->error());
+				return [];
+			}
+			return $products;
+		}
+
+		/** @method public ownedServices(parameters)
+		 * Get a list of services owned by this organization
+		 * @param array parameters - optional parameters for filtering services
+		 * @return array of Product\Item objects
+		 */
+		public function ownedServices($parameters = array()) {
+			// Clear any previous errors
+			$this->clearError();
+
+			// Return filtered list of owned products with type = service
+			return $this->ownedProducts(array_merge($parameters,array('type' => 'service')));
+		}
+
+		/**
+		 * Get all ACTIVE organizations for use as merge targets.
+		 * Optionally exclude a specific organization ID (typically the source org).
+		 *
+		 * @param int|null $exclude_id
+		 * @return array Array of simple row objects with id, name, code, status
+		 */
+		public static function activeOrganizations(?int $exclude_id = null): array {
+			$database = new \Database\Service();
+
+			$query = "
+				SELECT	id, name, code, status
+				FROM	register_organizations
+				WHERE	status = 'ACTIVE'
+			";
+			$params = array();
+			if (!empty($exclude_id)) {
+				$query .= "
+				AND		id != ?
+				";
+				$params[] = $exclude_id;
+			}
+			$query .= "
+				ORDER BY name
+			";
+
+			$rs = $database->Execute($query, $params);
+			if (! $rs) {
+				return array();
+			}
+
+			$results = array();
+			while ($row = $rs->FetchNextObject(false)) {
+				$results[] = $row;
+			}
+			return $results;
+		}
+
+		/**
+		 * Merge this organization into a target organization.
+		 * Moves all users (accounts and devices), owned products and location associations
+		 * from the current organization to the target organization.
+		 *
+		 * Also records an organization audit event on the current (source) organization
+		 * noting the merge and updates the source organization status to DELETED.
+		 *
+		 * @param int $target_organization_id ID of the organization to merge into
+		 * @return bool true on success, false on error
+		 */
+		public function mergeInto(int $target_organization_id): bool {
+			$this->clearError();
+
+			// Validate source organization
+			if (empty($this->id) || !is_numeric($this->id)) {
+				$this->error("Source organization is not set");
+				return false;
+			}
+
+			// Prevent merging into self
+			if ($target_organization_id === $this->id) {
+				$this->error("Cannot merge organization into itself");
+				return false;
+			}
+
+			// Load and validate target organization
+			$target = new \Register\Organization($target_organization_id);
+			if ($target->error()) {
+				$this->error("Error loading target organization: " . $target->error());
+				return false;
+			}
+			if (empty($target->id)) {
+				$this->error("Target organization not found");
+				return false;
+			}
+			if ($target->status !== 'ACTIVE') {
+				$this->error("Target organization must be ACTIVE");
+				return false;
+			}
+
+			$database = new \Database\Service();
+
+			// Begin transaction so that all moves succeed or fail together
+			if (! $database->BeginTrans()) {
+				$this->error("Database transactions not supported");
+				return false;
+			}
+
+			// Move all users (accounts and devices) to target organization
+			$database->resetParams();
+			$update_users_query = "
+				UPDATE	register_users
+				SET		organization_id = ?
+				WHERE	organization_id = ?
+			";
+			$database->Execute($update_users_query, array($target->id, $this->id));
+			if ($database->ErrorMsg()) {
+				$this->error("Error moving organization users: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+
+			// Move owned products to target organization, merging quantities where necessary.
+			// Use model logic per product to avoid ambiguous multi-table SQL in a single statement.
+			$database->resetParams();
+			$get_products_query = "
+				SELECT	product_id, quantity, date_expires
+				FROM	register_organization_products
+				WHERE	organization_id = ?
+			";
+			$rsProducts = $database->Execute($get_products_query, array($this->id));
+			if (! $rsProducts) {
+				$this->error("Error reading owned products for merge: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+			while ($row = $rsProducts->FetchNextObject(false)) {
+				// Use existing addProduct behavior to merge quantities/expiration into target
+				if (! $target->addProduct($row->product_id, $row->quantity, $row->date_expires)) {
+					$this->error("Error moving owned product ID ".$row->product_id.": " . $target->error());
+					$database->RollbackTrans();
+					return false;
+				}
+			}
+
+			// Remove any remaining product rows for the source organization
+			$database->resetParams();
+			$delete_products_query = "
+				DELETE FROM register_organization_products
+				WHERE organization_id = ?
+			";
+			$database->Execute($delete_products_query, array($this->id));
+			if ($database->ErrorMsg()) {
+				$this->error("Error cleaning up source organization products: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+
+			// Move location associations to target organization.
+			// Use per-location association to avoid ambiguous multi-table SQL.
+			$database->resetParams();
+			$get_locations_query = "
+				SELECT	location_id
+				FROM	register_organization_locations
+				WHERE	organization_id = ?
+			";
+			$rsLocations = $database->Execute($get_locations_query, array($this->id));
+			if (! $rsLocations) {
+				$this->error("Error reading organization locations for merge: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+			while (list($loc_id) = $rsLocations->FetchRow()) {
+				$location = new \Register\Location($loc_id);
+				if ($location->error()) {
+					$this->error("Error loading location ".$loc_id.": " . $location->error());
+					$database->RollbackTrans();
+					return false;
+				}
+				// This uses ON DUPLICATE KEY internally and will not create duplicates.
+				if (! $location->associateOrganization($target->id)) {
+					$this->error("Error associating location ".$loc_id." with target organization: " . $location->error());
+					$database->RollbackTrans();
+					return false;
+				}
+			}
+
+			// Remove location associations from the source organization
+			$database->resetParams();
+			$delete_locations_query = "
+				DELETE FROM register_organization_locations
+				WHERE organization_id = ?
+			";
+			$database->Execute($delete_locations_query, array($this->id));
+			if ($database->ErrorMsg()) {
+				$this->error("Error cleaning up source organization locations: " . $database->ErrorMsg());
+				$database->RollbackTrans();
+				return false;
+			}
+
+			// Commit all moves
+			if (! $database->CommitTrans()) {
+				$this->error("Error committing organization merge transaction");
+				return false;
+			}
+
+			// Mark the source organization as deleted to prevent future use
+			if (! $this->update(array('status' => 'DELETED'))) {
+				// update() will set a detailed error
+				return false;
+			}
+
+			// Record audit event on the source organization describing the merge
+			$merge_notes = "Organization merged into ID {$target->id} ({$target->name})";
+			if (! $this->auditRecord('ORGANIZATION_UPDATED', $merge_notes)) {
+				// auditRecord sets its own error
+				return false;
+			}
+
+			return true;
 		}
 	}

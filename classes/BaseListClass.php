@@ -6,10 +6,15 @@ class BaseListClass extends \BaseClass {
 
 	protected $_flat = false; // Configuration option for controlling whether to automatically load related objects when loading details of this object.  Can be overridden by passing 'recursive' parameter to find() and get() methods.
 	protected $_ids = false; // Configuration option for controlling whether to return only ID's instead of objects.  Can be overridden by passing 'ids' parameter to find() and get() methods.
+	protected $_countOnly = false; // Configuration option for controlling whether to only return the count of matched records instead of objects.  Can be overridden by passing 'count' parameter to find() and get() methods.
+
+	protected $_controls = []; // Array to store control settings for this list
 
 	// Default Sort Controls
 	protected $_tableDefaultSortBy;	// Default column to sort by
 	protected $_tableDefaultSortOrder;	// Default sort order (ASC/DESC)
+
+	protected $toArray = false; // Configuration option for controlling whether to convert objects to arrays when loading this list. Can be overridden by passing 'toArray' parameter to find() and get() methods.
 
 	/** @method count()
 	 * Return the number of records found matchin the last find/search query
@@ -76,7 +81,7 @@ class BaseListClass extends \BaseClass {
 		}
 		elseif ($name == "search") {
 			if (count($parameters) == 3) {
-				return $this->searchAdanced($parameters[0], $parameters[1], $parameters[2]);
+				return $this->searchAdvanced($parameters[0], $parameters[1], $parameters[2]);
 			}
 			elseif (count($parameters) == 2) {
 				return $this->searchControlled($parameters[0], $parameters[1]);
@@ -281,7 +286,7 @@ class BaseListClass extends \BaseClass {
 		// Assemble Results
 		$objects = array();
 		while (list($id) = $rs->FetchRow()) {
-			if ($this->_count) {
+			if ($this->_countOnly) {
 				// Don't do anything, we're just counting records
 			}
 			elseif ($this->_ids) {
@@ -359,17 +364,22 @@ class BaseListClass extends \BaseClass {
 		$modelName = $this->_modelName;
 		$model = new $modelName();
 
-		if (empty($model->_tableName() || empty($model->_tableFKColumn() || empty($model->_tableNumberColumn())))) {
+		$tableName = $model->_tableName();
+		$numberColumn = $model->_tableNumberColumn();
+		$fkColumn = $model->_tableFKColumn();
+
+		if (empty($tableName) || empty($numberColumn)) {
 			$this->error("Class not configured for Line Numbers");
+			return null;
 		}
 
 		$get_number_query = "
-				SELECT	max(`$model->_tableNumberColumn`)
-				FROM	`$model->_tableName`
+				SELECT	max(`$numberColumn`)
+				FROM	`$tableName`
 			";
-		if (isset($parent_id)) {
+		if (isset($parent_id) && !empty($fkColumn)) {
 			$get_number_query .= "
-				WHERE	`$model->_tableFKColumn` = ?
+				WHERE	`$fkColumn` = ?
 				";
 			$database->AddParam($parent_id);
 		}
@@ -590,5 +600,33 @@ class BaseListClass extends \BaseClass {
 		$string = preg_replace('/\*/', '%', $string);
 		$string = preg_replace('/\?/', '_', $string);
 		return $string;
+	}
+
+	/** @method setControl(key,value)
+	 * Set a single control property for this list.
+	 * @param string $key
+	 * @param mixed $value
+	 */
+	public function setControl($key, $value) {
+		$this->_controls[$key] = $value;
+	}
+
+	/** @method getControl(key)
+	 * Get a single control property for this list.
+	 * @param string $key
+	 * @return mixed
+	 */
+	public function getControl($key) {
+		return $this->_controls[$key] ?? null;
+	}
+
+	/** @method applyControls(array $controls)
+	 * Apply control settings to this list, using object settings first, then overriding with the provided controls array.
+	 * @param array $controls
+	 */
+	public function applyControls(array $controls) {
+		foreach ($controls as $key => $value) {
+			$this->_controls[$key] = $value;
+		}
 	}
 }

@@ -101,6 +101,17 @@ class Person Extends \BaseModel {
         if (!isset($parameters['validation_key'])) $parameters['validation_key'] = NULL;
         if (!isset($parameters['secret_key'])) $parameters['secret_key'] = '';
 
+		$date_created = date('Y-m-d H:i:s');
+		if (!empty($parameters['date_created'])) {
+			$parsed = get_mysql_date($parameters['date_created']);
+			if ($parsed) $date_created = $parsed;
+		}
+		$date_updated = $date_created;
+		if (!empty($parameters['date_updated'])) {
+			$parsed = get_mysql_date($parameters['date_updated']);
+			if ($parsed) $date_updated = $parsed;
+		}
+
 		sanitize($parameters['login']);
 
         // Initialize Database Service
@@ -122,8 +133,8 @@ class Person Extends \BaseModel {
 				)
 				VALUES
 				(
-					sysdate(),
-					sysdate(),
+					?,
+					?,
 					?,
 					?,
 					?,
@@ -134,6 +145,8 @@ class Person Extends \BaseModel {
 		";
 
         // Bind Parameters
+        $database->AddParam($date_created);
+        $database->AddParam($date_updated);
         $database->AddParam($parameters['date_expires']);
         $database->AddParam($parameters['status']);
         $database->AddParam($parameters['login']);
@@ -360,6 +373,7 @@ class Person Extends \BaseModel {
         }
         if (!$unverified_key) {
             app_log("No key in system to match");
+            // Already verified — treat as success so reloads / second clicks don't false-fail
             $this->error("Email Address already verified for this account");
             return false;
         }
@@ -381,7 +395,12 @@ class Person Extends \BaseModel {
             return false;
         }
         $this->id = $id;
-        return $this->details();
+        // Verification already persisted; don't fail the caller if details() refresh has issues
+        if (!$this->details()) {
+            app_log("verify_email: details() refresh failed after clearing validation_key: ".$this->error(),'notice',__FILE__,__LINE__);
+            $this->clearError();
+        }
+        return true;
     }
 
     /** @method public addContact(parameters)

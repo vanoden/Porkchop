@@ -78,8 +78,18 @@
 	###################################################
 	if (! defined('APPLICATION_LOG_HOST')) define('APPLICATION_LOG_HOST','127.0.0.1');
 	if (! defined('APPLICATION_LOG_PORT')) define('APPLICATION_LOG_PORT','514');
-	if (! defined('APPLICATION_LOG_TYPE')) define('APPLICATION_LOG_TYPE','syslog');
-	if (! defined('APPLICATION_LOG')) define('APPLICATION_LOG','');
+	if (! defined('APPLICATION_LOG_TYPE')) {
+		define(
+			'APPLICATION_LOG_TYPE',
+			(defined('LOG_ROOT') && LOG_ROOT !== '') ? 'file' : 'syslog'
+		);
+	}
+	if (! defined('APPLICATION_LOG')) {
+		define(
+			'APPLICATION_LOG',
+			(defined('LOG_ROOT') && LOG_ROOT !== '') ? LOG_ROOT.'/application' : ''
+		);
+	}
 	$logger = \Site\Logger::get_instance(array('type' => APPLICATION_LOG_TYPE,'path' => APPLICATION_LOG,'host' => APPLICATION_LOG_HOST,'port' => APPLICATION_LOG_PORT));
 	if ($logger->error()) {
 		error_log("Error initializing logger: ".$logger->error());
@@ -90,23 +100,6 @@
 	if ($logger->error()) {
 		error_log("Error initializing logger: ".$logger->error());
 		print "Logger error\n";
-		exit;
-	}
-
-
-	###################################################
-	### Parse Request								###
-	###################################################
-	$_REQUEST_ = new \HTTP\Request();
-	$_REQUEST_->deconstruct();
-
-	###################################################
-	### Traffic Management							###
-	###################################################
-	$logger->writeln("Request for ".$_REQUEST_->uri()." from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info');
-	if (preg_match('/(GPTBot|SemrushBot|AhrefsBot|MJ12bot|ZoominfoBot|DotBot|MauiBot)/i',$_REQUEST_->user_agent)) {
-		$logger->writeln("Search Engine Bot Detected: ".$_REQUEST_->user_agent,'info');
-		header("HTTP/1.1 403 Forbidden");
 		exit;
 	}
 
@@ -139,6 +132,22 @@
 	$logger->writeln("Cache Initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
+	### Parse Request								###
+	###################################################
+	$_REQUEST_ = new \HTTP\Request();
+	$_REQUEST_->deconstruct();
+
+	###################################################
+	### Traffic Management							###
+	###################################################
+	$logger->writeln("Request for ".$_REQUEST_->uri()." from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info');
+	if ($_REQUEST_->riskLevel() >= 100) {
+		$logger->writeln("Probable Malicious Request Detected: ".$_REQUEST_->user_agent,'info');
+		header("HTTP/1.1 403 Forbidden");
+		exit;
+	}
+
+	###################################################
 	### Initialize Session							###
 	###################################################
 	$_SESSION_ = new \Site\Session();
@@ -157,7 +166,12 @@
 	if ($_SESSION_->message) $page_message = $_SESSION_->message;
 
 	# Access Logging in Application Log
-	$logger->writeln("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info',__FILE__,__LINE__);
+	$logger->writeln("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' for '".$_REQUEST_->uri()."'Risk Score: ".$_REQUEST_->riskLevel(),'info',__FILE__,__LINE__);
+	if ($_REQUEST_->riskLevel() >= 100) {
+		$logger->writeln("High Risk Request Rejected: URI: ".$_REQUEST_->uri()." Agent: ".$_REQUEST_->user_agent,'warning',__FILE__,__LINE__);
+		header("HTTP/1.1 403 Forbidden");
+		exit;
+	}
 
 	# Load Page Information
 	$page = $site->page();
@@ -176,6 +190,21 @@
 
 	# Require Terms Of Use Acceptance per page configuration
 	$page->confirmTOUAcceptance();
+
+	# JSON API: dispatch directly so CMS page/template resolution cannot return HTML
+	if ($_REQUEST_->view === 'api' && !empty($_REQUEST['method'])) {
+		$siteApi = new \Site();
+		$moduleName = $siteApi->findModuleAPI($_REQUEST_->module);
+		if ($moduleName) {
+			$apiClass = '\\' . $moduleName . '\\API';
+			$api = new $apiClass();
+			$method = $_REQUEST['method'];
+			if (method_exists($api, $method)) {
+				$api->$method();
+				exit;
+			}
+		}
+	}
 
 	# Static HTML - Skip CMS Processing
 	if ($page->module() == 'static') {

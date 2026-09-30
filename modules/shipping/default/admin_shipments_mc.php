@@ -45,7 +45,8 @@
 	}
 
 	if ($can_proceed) {
-		$totalRecords = $shipmentList->count($parameters);
+		$shipmentList->find($parameters, array('count' => true));
+		$totalRecords = $shipmentList->count();
 		$shipments = $shipmentList->find($parameters, $controls);
 		if ($shipmentList->error()) {
 			$page->addError($shipmentList->error());

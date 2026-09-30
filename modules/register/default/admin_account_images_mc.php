@@ -15,6 +15,7 @@ $customer = new \Register\Customer();
 $site_config = new \Site\Configuration();
 $site_config->get('website_images');
 $repositoryFactory = new \Storage\RepositoryFactory();
+$repository = null;
 if (!empty($site_config->value)) {
 	$repository = $repositoryFactory->createWithCode($site_config->value);
 }

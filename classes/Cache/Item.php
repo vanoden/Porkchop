@@ -51,6 +51,9 @@
 				$object[$key] = $value;
 			} elseif (is_object($object)) {
 				$object->$key = $value;
+			} elseif ($object === null || $object === false) {
+				$object = new \stdClass();
+				$object->$key = $value;
 			} else {
 				$this->error("Cache item is not an array or object");
 				return false;

@@ -177,6 +177,8 @@
 				$affected_rows = $this->affected_rows();
 				if (empty($affected_rows) && $recordSet !== null) $affected_rows = $recordSet->RecordCount();
 				app_log("QUERY STATS: {$class_name}::{$function_name} executed in {$exec_elapsed_time} seconds, affected rows: {$affected_rows}",'trace');
+				if (!isset($GLOBALS['_page_query_count'])) $GLOBALS['_page_query_count'] = 0;
+				if (!isset($GLOBALS['_page_query_time'])) $GLOBALS['_page_query_time'] = 0;
 				$GLOBALS['_page_query_count'] ++;
 				$GLOBALS['_page_query_time'] += $exec_elapsed_time;
 			} catch (\mysqli_sql_exception $e) {
@@ -189,7 +191,16 @@
 			$execCounter->increment();
 
 			if ($this->_connection->ErrorMsg()) {
-				error_log($this->_connection->ErrorMsg());
+				$driverError = '';
+				if (!empty($this->_connection->_connectionID) && is_object($this->_connection->_connectionID)) {
+					$driverError = trim((string)($this->_connection->_connectionID->error ?? ''));
+				}
+				$errorLog = $this->_connection->ErrorMsg();
+				if ($driverError !== '' && strpos($errorLog, $driverError) === false) {
+					$errorLog .= ' [' . $driverError . ']';
+				}
+				error_log($errorLog);
+				app_log($errorLog, 'error');
 				$sql_error_counter = new \Site\Counter("database.sql_errors");
 				$sql_error_counter->increment();
 				return null;

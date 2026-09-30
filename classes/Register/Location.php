@@ -410,4 +410,26 @@
 			}
 			return $maxNum + 1;
 		}
+
+		/** @method public toArray()
+		 * Converts the location object to an associative array.
+		 * @return array Associative array representation of the location object.
+		 */
+		public function toArray(): array {
+			$province = $this->province();
+			$country = $this->country();
+			return [
+				'id' => $this->id,
+				'name' => $this->name,
+				'address_1' => $this->address_1,
+				'address_2' => $this->address_2,
+				'city' => $this->city,
+				'province_id' => $province->id,
+				'province_code' => $province->abbreviation,
+				'zip_code' => $this->zip_code,
+				'country_id' => $country->id,
+				'country_code' => $country->abbreviation,
+				'country_name' => $country->name
+			];
+		}
 	}

@@ -1,4 +1,7 @@
 <?=$page->showAdminPageInfo()?>
+<?php if (empty($shipment->id) || !$shipment->exists()) { ?>
+<p><a class="button" href="/_shipping/admin_shipments">Back to Shipments</a></p>
+<?php } else { ?>
 <script language="JavaScript">
     function shipPackage(packageId) {
         document.forms[0].package_id.value = packageId;
@@ -25,6 +28,10 @@
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="package_id" />
     <input type="hidden" name="action_type" />
+    <?php if (!empty($receive_only) || !empty($receiver)) { ?>
+    <input type="hidden" name="receiver" value="1" />
+    <input type="hidden" name="receive_only" value="1" />
+    <?php } ?>
     
     <div class="table">
         <div class="tableRowHeader">
@@ -69,12 +76,29 @@
 		        <div class="tableCell">Status</div>
 		        <div class="tableCell">Received</div>
 		        <div class="tableCell">Condition</div>
+		        <div class="tableCell">UPS Status</div>
 	        </div>
 	        <div class="tableRow">
-		        <div class="tableCell"><?=$package->tracking_code?></div>
-		        <div class="tableCell"><?=$package->status?></div>
+		        <div class="tableCell"><?=htmlspecialchars($package->tracking_code)?></div>
+		        <div class="tableCell"><?=htmlspecialchars($package->status)?></div>
 		        <div class="tableCell"><?=$package->date_received?> by <?=$package->user_received()->full_name()?></div>
-    <?php   if ($package->status == 'READY') { ?>
+                <div class="tableCell">
+                    <?php if (!empty($package->ups_status)) { ?>
+                        <div><strong><?=htmlspecialchars($package->ups_status)?></strong></div>
+                        <?php if (!empty($package->ups_status_datetime)) { ?>
+                            <div><?=htmlspecialchars($package->ups_status_datetime)?></div>
+                        <?php } ?>
+                        <?php if (!empty($package->ups_status_location)) { ?>
+                            <div><?=htmlspecialchars($package->ups_status_location)?></div>
+                        <?php } ?>
+                        <?php if (!empty($package->ups_last_queried_at)) { ?>
+                            <div class="hint">Last checked: <?=date('Y-m-d H:i', (int)$package->ups_last_queried_at)?></div>
+                        <?php } ?>
+                    <?php } else { ?>
+                        <span class="hint">No UPS status recorded</span>
+                    <?php } ?>
+                </div>
+    <?php   if ($package->status == 'READY' && empty($receive_only)) { ?>
                 <div class="tableCell">N/A</div>
     <?php   } elseif ($package->status == 'RECEIVED') { ?>
 		        <div class="tableCell"><?=$package->condition?></div>
@@ -88,6 +112,14 @@
     <?php   } ?>
 	        </div>
         </div>
+        <p>
+            <?php if (!empty($package->tracking_code)) { ?>
+                <input type="button"
+                       class="button"
+                       value="Query UPS Status for Package <?=$package->number?>"
+                       onclick="document.forms[0].package_id.value='<?=$package->id?>';document.forms[0].action_type.value='query_ups_status';document.forms[0].submit();" />
+            <?php } ?>
+        </p>
         <h3>Package <?=$package->number?> Items</h3>
         <div class="table">
 	        <div class="tableRowHeader">
@@ -106,7 +138,7 @@
 		        <div class="tableCell"><?=$item->serial_number?></div>
 		        <div class="tableCell"><?=strip_tags($item->description)?></div>
                 <div class="tableCell">
-        <?php   if ($package->status == "READY") { ?>
+        <?php   if ($package->status == "READY" && empty($receive_only)) { ?>
                 N/A
         <?php   } elseif ($package->status == "RECEIVED") { ?>
                 <?=$item->condition?>
@@ -121,7 +153,7 @@
 	        </div>
         <?php	} ?>
         </div>
-        <?php   if ($package->status == "READY") { ?>
+        <?php   if ($package->status == "READY" && empty($receive_only)) { ?>
         <input type="button" name="btn_ship_package" class="button" value="Ship Package <?=$package->number?>" onclick="shipPackage(<?=$package->id?>)" />
         <?php   } elseif ($package->status != "RECEIVED") { ?>
         <input type="button" name="btn_receive_package" class="button" value="Receive Package <?=$package->number?>" onclick="receivePackage(<?=$package->id?>)" />
@@ -153,17 +185,20 @@
         </div>
         <div class="tableRow">
             <div class="tableCell">
-                <a class="value" href="/_register/admin_location?id=<?= $from_location->id ?>"><?= htmlspecialchars($from_location->name) ?></a><br>
+                <a class="value" href="/_register/admin_location?id=<?= $from_location->id ?>"><?= htmlspecialchars($from_location->name ?? '') ?></a><br>
                 <span class="value"><?= $from_location->HTMLBlockFormat() ?></span>
             </div>
             <div class="tableCell">
-                <a class="value" href="/_register/admin_location?id=<?= $to_location->id ?>"><?= htmlspecialchars($to_location->name) ?></a><br>
+                <a class="value" href="/_register/admin_location?id=<?= $to_location->id ?>"><?= htmlspecialchars($to_location->name ?? '') ?></a><br>
                 <span class="value"><?= $to_location->HTMLBlockFormat() ?></span>
             </div>
             <div class="tableCell">
                 <form method="post" action="" style="margin-bottom:8px;">
                     <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>" />
                     <input type="hidden" name="id" value="<?= (int)$shipment->id ?>" />
+                    <?php if (!empty($receive_only) || !empty($receiver)) { ?>
+                    <input type="hidden" name="receiver" value="1" />
+                    <?php } ?>
                     <select name="send_location_id" class="value input" onchange="this.form.submit()">
                         <?php foreach ($send_location_list as $loc) { ?>
                         <option value="<?= (int)$loc->id ?>"<?= ($shipment->send_location_id == $loc->id) ? ' selected' : '' ?>><?= htmlspecialchars($loc->name) ?></option>
@@ -178,3 +213,4 @@
         </div>
     </div>
 </form>
+<?php } ?>

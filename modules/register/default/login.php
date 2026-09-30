@@ -3,15 +3,15 @@
 
 <section>
 	<h1 class="pageSect_full">Log In to Your Account</h1>
-	<ul class="connectBorder infoText">
-		<li>This site is for authorized use by employees and customers of <r7 object="company" property="name"/>. No other use is permitted.</li>
+	<ul class="pageMessage">
+		<li class="pageMessage--info">This site is for authorized use by employees and customers of <r7 object="company" property="name"/>. No other use is permitted.</li>
 	</ul>
 </section>
 
 <?php if ($page->errorCount() > 0) { ?>
 	<section id="form-message">
-		<ul class="connectBorder errorText">
-			<li><?=$page->errorString()?></li>
+		<ul class="pageMessage">
+			<li class="pageMessage--error"><?=$page->errorString()?></li>
 		</ul>
 	</section>
 <?php	} ?>
@@ -22,24 +22,24 @@
 		<input type="hidden" name="csrfToken" value="<?=$csrfToken?>">
 
 		<h2>Sign in</h2>
-		<ul id="register_form" class="form-grid four-col connectBorder">
-			<li>
+		<ul id="register_form" class="section-grid grid-col-4">
+			<li class="form-field">
 				<label for="login">Login</label>
 				<input type="text" id="login" name="login" autofocus/>
 			</li>
-			<li>
+			<li class="form-field">
 				<label for="password">Password</label>
 				<input type="password" id="password" name="password"/>
 			</li>
-			<?php	if ($CAPTCHA_GO) { ?>
-				<li class="g-recaptcha" data-sitekey="<?=$captcha_public_key?>"></li>
-			<?php	}	?>
 		</ul>
+		<?php	if ($CAPTCHA_GO) { ?>
+			<div class="g-recaptcha" data-sitekey="<?=$captcha_public_key?>"></div>
+		<?php	}	?>
 
-		<div class="button-group">
+		<section class="section-flex cluster">
 			<button type="button" onclick="document.loginForm.submit();">Sign In</button>
 			<a href="/_register/forgot_password" class="button btn-secondary">Recover Password</a>
 			<a href="<?=PATH?>/_register/new_customer" class="button btn-secondary">Register Now</a>
-		</div>
+    </section>
 	</form>
 </section>

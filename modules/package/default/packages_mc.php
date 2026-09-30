@@ -31,10 +31,14 @@
         }
         else $parameters['name'] = $_REQUEST['name'];
     }
-    $_REQUEST['license'] = noXSS(trim($_REQUEST['license']));
-    $_REQUEST['platform'] = noXSS(trim($_REQUEST['platform']));
-	if (isset($_REQUEST['license'])) $parameters['license'] = $_REQUEST['license'];
-	if (isset($_REQUEST['platform'])) $parameters['platform'] = $_REQUEST['platform'];
+	if (isset($_REQUEST['license'])) {
+		$_REQUEST['license'] = noXSS(trim((string)$_REQUEST['license']));
+		$parameters['license'] = $_REQUEST['license'];
+	}
+	if (isset($_REQUEST['platform'])) {
+		$_REQUEST['platform'] = noXSS(trim((string)$_REQUEST['platform']));
+		$parameters['platform'] = $_REQUEST['platform'];
+	}
 	$packages = $packagelist->find($parameters);
 	
 	$page->title("Packages");

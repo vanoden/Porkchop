@@ -53,13 +53,42 @@
 		 * @return array An associative array with 'categoriesJson' and 'tagsJson' keys, each containing a JSON-encoded string of unique values.
 		 * @throws \Exception If there's an error executing the SQL queries or encoding JSON.
 		 */
+		public function getTagsByCategory() {
+			$database = new \Database\Service();
+			$query = "SELECT DISTINCT `category`, `value` FROM `search_tags` ORDER BY `category` ASC, `value` ASC";
+			$rs = $database->Execute($query);
+			if (!$rs) {
+				$this->SQLError($database->ErrorMsg());
+				return array();
+			}
+
+			$tagsByCategory = array();
+			while ($row = $rs->FetchRow()) {
+				$category = $row['category'] ?? $row[0] ?? '';
+				$value = $row['value'] ?? $row[1] ?? '';
+				if ($category === '' || $value === '') {
+					continue;
+				}
+				if (!isset($tagsByCategory[$category])) {
+					$tagsByCategory[$category] = array();
+				}
+				if (!in_array($value, $tagsByCategory[$category], true)) {
+					$tagsByCategory[$category][] = $value;
+				}
+			}
+
+			return $tagsByCategory;
+		}
+
 		public function getUniqueCategoriesAndTagsJson() {
 			$categories = $this->getUniqueValues('category');
 			$tags = $this->getUniqueValues('value');
+			$tagsByCategory = $this->getTagsByCategory();
 
 			return array(
 				'categoriesJson' => json_encode($categories),
-				'tagsJson' => json_encode($tags)
+				'tagsJson' => json_encode($tags),
+				'tagsByCategoryJson' => json_encode($tagsByCategory)
 			);
 		}
 	}

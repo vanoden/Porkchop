@@ -132,7 +132,8 @@
 		 * @return bool True if valid
 		 */
 		public static function isValidLevel(int $level): bool {
-			return is_numeric($level) && $level >= 0 && $level <= 7; // Allow for future expansion
+			// Levels are a bit mask (see inMatrix()); combined role privileges exceed single-digit IDs.
+			return is_numeric($level) && $level >= 0 && $level <= 255;
 		}
 
 		/**

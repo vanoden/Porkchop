@@ -58,6 +58,10 @@
 			return true;
 		}
 
+		public function exists(): bool {
+			return $this->exists;
+		}
+
 		public function columns() {
 			$get_columns_query = "
 				SELECT	*
@@ -98,6 +102,21 @@
 				if ($column->name == $name) return true;
 			}
 			return false;
+		}
+
+		/** @method public column(name)
+		/* Load and return the Column object in this table with properties loaded
+		/* @param name Name of column
+		/* @return \Database\Schema\Table\Column object if found, otherwise null
+		*/
+		public function column($name) {
+			if ($this->has_column($name)) {
+				return new \Database\Schema\Table\Column($self->name,$name);
+			}
+			else {
+				$this->error("Column not found");
+				return null;
+			}
 		}
 
 		public function disable_keys() {

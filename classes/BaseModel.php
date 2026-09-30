@@ -22,6 +22,9 @@ class BaseModel extends \BaseClass {
 	// Name for Software Incrementing Number Field
 	protected $_tableNumberColumn;
 
+	// Name for Foreign Key Column when numbering is scoped to a parent record
+	protected $_tableFKColumn;
+
 	// Name for Unique Object Name Column
 	protected $_tableNameColumn = 'name';
 
@@ -145,6 +148,14 @@ class BaseModel extends \BaseClass {
 		return $this->_tableName;
 	}
 
+	public function _tableNumberColumn() {
+		return $this->_tableNumberColumn ?? '';
+	}
+
+	public function _tableFKColumn() {
+		return $this->_tableFKColumn ?? '';
+	}
+
 	/** @method _tableIDColumn()
 	 * Return the name of the primary key ID column, usually 'id'
 	 * @return string Name of Primary Key ID Column
@@ -159,6 +170,9 @@ class BaseModel extends \BaseClass {
 	 * @return array Names of fields in object
 	 */
 	public function _fields() {
+		if (! is_array($this->_fields)) {
+			$this->_fields = array();
+		}
 		if (count($this->_fields) < 1) {
 			$properties = get_object_vars($this);
 			foreach ($properties as $property => $stuff) {
@@ -257,6 +271,11 @@ class BaseModel extends \BaseClass {
 	 */
 	public function add($parameters = []) {
 		$database = new \Database\Service();
+
+		if (! is_array($parameters)) {
+			$this->error("Parameters must be an array");
+			return false;
+		}
 
 		if (empty($this->_tableName)) {
 			$trace = debug_backtrace()[1];
@@ -375,7 +394,7 @@ class BaseModel extends \BaseClass {
 		} else {
 			$cls = get_called_class();
 			$parts = explode("\\", $cls);
-			$this->warn($parts[1] . " '." . $code . "' not found");
+			$this->warn($parts[1] . " '" . $code . "' not found");
 			return false;
 		}
 	}
@@ -396,13 +415,43 @@ class BaseModel extends \BaseClass {
 					$property = new \ReflectionProperty($this, $key);
 					$property_type = $property->getType();
 
-					// Set the value based on type
-					if (!is_null($property_type) && $property_type->allowsNull() && is_null($value)) $this->$key = null;
-					elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
-					elseif (gettype($this->$key) == "float") $this->$key = floatval($value);
-					elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
-					elseif (gettype($this->$key) == "string") $this->$key = strval($value);
-					else $this->$key = $value;
+					// Set the value based on type (uninitialized properties report gettype NULL)
+					if (!is_null($property_type) && $property_type->allowsNull() && is_null($value)) {
+						$this->$key = null;
+					}
+					elseif (!is_null($property_type)) {
+						$typeName = $property_type->getName();
+						if ($typeName === 'int' || $typeName === 'integer') {
+							$this->$key = (int) $value;
+						}
+						elseif ($typeName === 'float') {
+							$this->$key = (float) $value;
+						}
+						elseif ($typeName === 'bool' || $typeName === 'boolean') {
+							$this->$key = (bool) $value;
+						}
+						elseif ($typeName === 'string') {
+							$this->$key = (string) $value;
+						}
+						else {
+							$this->$key = $value;
+						}
+					}
+					elseif (gettype($this->$key) == "integer") {
+						$this->$key = intval($value);
+					}
+					elseif (gettype($this->$key) == "float") {
+						$this->$key = floatval($value);
+					}
+					elseif (gettype($this->$key) == "boolean") {
+						$this->$key = boolval($value);
+					}
+					elseif (gettype($this->$key) == "string") {
+						$this->$key = strval($value);
+					}
+					else {
+						$this->$key = $value;
+					}
 				}
 			}
 			// Let them know the values came from cache
@@ -505,11 +554,37 @@ class BaseModel extends \BaseClass {
 						app_log("Setting key " . $key . " of unspecified type to " . strval($value),'trace');
 						$this->$key = strval($value);
 					} elseif ($property_type->allowsNull() && is_null($value)) $this->$key = null;
+					elseif ($property_type->getName() == "DateTime" && is_string($value)) {
+						try {
+							$this->$key = new \DateTime($value);
+						} catch (\Exception $e) {
+							app_log("Error creating DateTime object for property $key with value '$value': " . $e->getMessage(), 'error');
+							$this->$key = null;
+						}
+					}
 					elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
 					elseif (gettype($this->$key) == "?integer") $this->$key = intval($value);
 					elseif (gettype($this->$key) == "float") $this->$key = floatval($value);
 					elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
 					elseif (gettype($this->$key) == "string") $this->$key = strval($value);
+					elseif (gettype($this->$key) == "DateTime") {
+						try {
+							$this->$key = new \DateTime($value);
+						} catch (\Exception $e) {
+							app_log("Error creating DateTime object for property $key with value '$value': " . $e->getMessage(), 'error');
+							$this->$key = null;
+						}
+					}
+					elseif (gettype($this->$key) == "object") {
+						if (get_class($this->$key) == "DateTime") {
+							try {
+								$this->$key = new \DateTime($value);
+							} catch (\Exception $e) {
+								app_log("Error creating DateTime object for property $key with value '$value': " . $e->getMessage(), 'error');
+								$this->$key = null;
+							}
+						}
+					}
 					else $this->$key = $value;
 				} else {
 					app_log("Property $key not found in " . get_class($this) . " object", 'warning');
@@ -527,6 +602,8 @@ class BaseModel extends \BaseClass {
 				elseif (gettype($this->$key) == "float") $this->$key = 0.0;
 				elseif (gettype($this->$key) == "boolean") $this->$key = false;
 				elseif (gettype($this->$key) == "string") $this->$key = '';
+				elseif (gettype($this->$key) == "array") $this->$key = array();
+				elseif (gettype($this->$key) == "DateTime") $this->$key = new \DateTime();
 				else $this->$key = null;
 			}
 			$this->exists(false);
@@ -2365,5 +2442,38 @@ class BaseModel extends \BaseClass {
 	 */
 	public function validMetadataValue($value) {
 		return $this->safeString($value);
+	}
+
+	/** @method validZipCode(string)
+	 * Validate an international postal code
+	 * @param string $zip_code The postal code to validate
+	 * @return bool True if valid, false otherwise
+	 */
+	public function validZipCode(string $zip_code): bool {
+		$zip = new \Geography\ZipCode();
+		return preg_match('/^[\w\s-]{2,10}$/', $zip_code) === 1;
+	}
+
+	/** @method toArray()
+	 * Convert the object to an associative array
+	 * @return array Associative array representation of the object
+	 */
+	public function toArray(): array {
+		$array = [];
+		foreach (get_object_vars($this) as $key => $value) {
+			if (preg_match('/^_/', $key)) {
+				continue; // Skip private/protected properties
+			}
+			if (is_object($value)) {
+				if (method_exists($value, 'toArray')) {
+					$array[$key] = $value->toArray();
+				} else {
+					$array[$key] = (array)$value;
+				}
+			} else {
+				$array[$key] = $value;
+			}
+		}
+		return $array;
 	}
 }

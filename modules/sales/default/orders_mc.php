@@ -8,10 +8,12 @@
 	$parameters['status'] = array();
 	$recordsPerPage = 10;
 
-	$_REQUEST['pagination_start_id'] = $_REQUEST['pagination_start_id'] ?? 0;
+	$requestedPaginationStart = array_key_exists('pagination_start_id', $_GET)
+		|| array_key_exists('pagination_start_id', $_POST);
+	$paginationStart = $_REQUEST['pagination_start_id'] ?? 0;
 
 	// Validate pagination start ID
-	if (!is_numeric($_REQUEST['pagination_start_id'])) {
+	if (!is_numeric($paginationStart)) {
 		$page->addError("Invalid pagination start ID");
 		$can_proceed = false;
 	}
@@ -20,7 +22,7 @@
 	$controls['sort'] = $_REQUEST['sort_by'] ?? 'id';
 	$controls['order'] = $_REQUEST['order_by'] ?? 'desc';
 	$controls['limit'] = $recordsPerPage;
-	$controls['offset'] = $_REQUEST['pagination_start_id'];
+	$controls['offset'] = (int)$paginationStart;
 
 	// Validate sort and order parameters
 	$valid_sort_fields = ['id', 'code', 'status', 'customer_id', 'salesperson_id'];
@@ -33,7 +35,18 @@
 	}
 
 	// get orders based on current search
-	if ($can_proceed && empty($_REQUEST['btn_submit'])) {
+	$hasFilterActivity = !empty($_REQUEST['btn_submit'])
+		|| !empty($_REQUEST['btn_search'])
+		|| $requestedPaginationStart
+		|| isset($_REQUEST['sort_by'])
+		|| array_key_exists('new', $_GET) || array_key_exists('new', $_POST)
+		|| array_key_exists('quote', $_GET) || array_key_exists('quote', $_POST)
+		|| array_key_exists('cancelled', $_GET) || array_key_exists('cancelled', $_POST)
+		|| array_key_exists('approved', $_GET) || array_key_exists('approved', $_POST)
+		|| array_key_exists('accepted', $_GET) || array_key_exists('accepted', $_POST)
+		|| array_key_exists('complete', $_GET) || array_key_exists('complete', $_POST);
+
+	if ($can_proceed && !$hasFilterActivity) {
 		$_REQUEST["new"] = 1;
 		$_REQUEST["quote"] = 1;
 		$_REQUEST["accepted"] = 1;
@@ -58,7 +71,8 @@
 
 		// paginate results
 		$pagination = new \Site\Page\Pagination();
-		$pagination->forwardParameters(array('search','status_active','status_hidden','status_deleted','sort_by', 'order_by'));
+		$pagination->forwardParameters(array('new','quote','cancelled','approved','accepted','complete','sort_by','order_by'));
 		$pagination->size($recordsPerPage);
 		$pagination->count($totalRecords);
+		$page->isSearchResults = $hasFilterActivity;
 	}

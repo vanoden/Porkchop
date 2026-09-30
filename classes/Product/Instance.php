@@ -14,7 +14,7 @@
 		 * @param int $id
 		 * @param bool $flat
 		 */
-		public function __construct($id = 0) {
+		public function __construct($id = 0, $flat = false) {
 			$this->_tableName = "monitor_assets";
 			$this->_tableIDColumn = "asset_id";
 			$this->_tableUKColumn = null;
@@ -25,7 +25,7 @@
             $this->_aliasField("asset_code","code");
 			$this->_aliasField("asset_name","name");
 			$this->_auditEvents = true;
-    		parent::__construct($id);
+    		    parent::__construct($id, $flat);
 		}
 
 		/**
@@ -427,12 +427,19 @@
 			return true;
 		}
 
-		public function transfer($org_id,$reason) {
+		/**
+		 * Move this instance to another organization (organization_id update only).
+		 *
+		 * @param int $org_id Target organization ID
+		 * @param string $reason Reason for the move (logged)
+		 * @return bool True on success, false on failure (see error())
+		 */
+		public function transferToOrganization(int $org_id, string $reason): bool {
 			if ($this->update(array('organization_id' => $org_id))) {
 				app_log("Transfered ".$this->code." to $org_id",'notice');
 				return true;
 			}
-			else return false;
+			return false;
 		}
 
 		/**
@@ -489,5 +496,12 @@
 				return true;
 			else
 				return false;
+		}
+
+		/** @method public validCode(string $code): bool
+		 * See if string is a valid code (serial number)
+		 */
+		public function validCode($string): bool {
+			return parent::validCode($string);
 		}
 	}

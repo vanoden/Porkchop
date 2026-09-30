@@ -39,12 +39,8 @@ if (!empty($_REQUEST['start']) && preg_match('/^\d+$/', $_REQUEST['start'])) {
 }
 
 $auditClient = new \Site\AuditLog();
-$classList = $auditClient->classes();
-sort($classList);
-$current_class = null;
-if (!empty($_REQUEST['class_name']) && in_array($_REQUEST['class_name'], $classList, true)) {
-	$current_class = $_REQUEST['class_name'];
-}
+// Account audit log is scoped to this customer only — instance_id alone collides with tickets/orgs
+$current_class = 'Register\\Customer';
 
 app_log($GLOBALS['_SESSION_']->customer->code . " accessing account audit log for customer " . $customer_id, 'notice', __FILE__, __LINE__);
 
@@ -54,13 +50,12 @@ if ($customer_id) {
 
 $auditRecords = [];
 $totalRecords = 0;
-$current_page = 1;
-$total_pages = 1;
-$prev_offset = 0;
-$next_offset = 0;
-$last_offset = 0;
 $show_start = 0;
 $show_end = 0;
+$pagination = new \Site\Page\Pagination();
+$pagination->baseURI = PATH.'/_register/admin_account_audit_log';
+$pagination->startElemName('start');
+$pagination->sizeElemName('page_size');
 
 if (!empty($customer->id)) {
 	$totalRecords = $auditClient->countEvents($customer->id, $current_class);
@@ -69,19 +64,17 @@ if (!empty($customer->id)) {
 	}
 
 	if ($totalRecords > 0) {
-		$total_pages = intval(ceil($totalRecords / $page_size));
-		$max_start_offset = max(0, ($total_pages - 1) * $page_size);
+		$max_start_offset = max(0, (intval(ceil($totalRecords / $page_size)) - 1) * $page_size);
 		if ($start_offset > $max_start_offset) $start_offset = $max_start_offset;
 	} else {
-		$total_pages = 1;
 		$start_offset = 0;
 	}
 
 	$auditList = new \Site\AuditLog\EventList();
-	$find_parameters = ['instance_id' => $customer->id];
-	if ($current_class) {
-		$find_parameters['class_name'] = $current_class;
-	}
+	$find_parameters = [
+		'instance_id' => $customer->id,
+		'class_name' => $current_class,
+	];
 	$auditRecords = $auditList->find(
 		$find_parameters,
 		[
@@ -95,12 +88,13 @@ if (!empty($customer->id)) {
 		$page->addError($auditList->error());
 	}
 
-	$current_page = $page_size > 0 ? intval(floor($start_offset / $page_size)) + 1 : 1;
-	$last_offset = max(0, ($total_pages - 1) * $page_size);
-	$prev_offset = $start_offset > 0 ? max(0, $start_offset - $page_size) : 0;
-	$next_offset = min($last_offset, $start_offset + $page_size);
 	$show_start = $totalRecords > 0 ? $start_offset + 1 : 0;
 	$show_end = min($totalRecords, $start_offset + count($auditRecords));
+
+	$pagination->startId($start_offset);
+	$pagination->size($page_size);
+	$pagination->count($totalRecords);
+	$pagination->forwardParameters(array('customer_id'));
 }
 if ($totalRecords == 0) {
 	$show_end = 0;
@@ -112,5 +106,8 @@ $page->title = "Customer Account Details - Audit Log";
 $page->addBreadcrumb("Customer");
 $page->addBreadcrumb("Organizations", "/_register/organizations");
 $organization = $customer->organization();
-if (isset($organization->id)) $page->addBreadcrumb($organization->name, "/_register/admin_organization?id=" . $organization->id);
+if (isset($organization->id)) {
+	$page->addBreadcrumb($organization->name, "/_register/admin_organization?id=" . $organization->id);
+	$page->addBreadcrumb("Users", "/_register/admin_organization_users/" . $organization->code);
+}
 if (isset($customer->id)) $page->addBreadcrumb($customer->full_name(), "/_register/admin_account?customer_id=" . $customer->id);

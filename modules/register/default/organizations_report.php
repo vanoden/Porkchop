@@ -56,10 +56,10 @@
 		?>
 	</div><!-- end table -->
 	
-	<div class="button-bar">
-		<span class="register-organizations-button-center">
+	<div class="form-actions filter-bar">
+		<div class="button-group filter-bar__actions">
 			<a href="<?=PATH."/_register/organizations_report"?>" class="input button">Back to Report</a>
-		</span>
+		</div>
 	</div>
 
 <?php else: ?>

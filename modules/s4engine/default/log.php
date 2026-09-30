@@ -1,30 +1,9 @@
 <?=$page->showAdminPageInfo()?>
-<style>
-	table {
-		margin: 1px;
-		border: 1px solid gray;
-		border-collapse: collapse;
-		color: black;
-		background-color: white;
-	}
-	table th {
-		text-align: left;
-		white-space: nowrap;
-		padding-right: 10px;
-		padding-left: 5px;
-	}
-	table td {
-		white-space: nowrap;
-		border: 1px solid gray;
-		padding-right: 10px;
-		padding-left: 5px;
-	}
-</style>
 Showing <?=count($logRecords)?> log records
 <?php if ($log->count() == 0) { ?>
 	<p>No log records found.</p>
 <?php } else { ?>
-	<table class="table table-striped table-bordered table-hover">
+	<table class="table table-striped table-bordered table-hover s4engine-log-table">
 		<thead>
 			<tr>
 				<th>ID</th>

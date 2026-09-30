@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'package';
-			$this->_version = '0.1.1';
-			$this->_release = '2020-06-03';
+			$this->_version = '0.3.4';
+			$this->_release = '2026-03-19';
 			$this->_schema = new Schema();
 			$this->_admin_role = 'package manager';
 			parent::__construct();
@@ -295,18 +295,6 @@
 			$package = new \Package\Package();
 			$version = new \Package\Version();
 			return array(
-				'ping'	=> array(
-					'description'	=> 'Ping the Package API',
-					'authentication_required'	=> false,
-					'path'			=> '/api/package/ping',
-					'parameters'	=> array()
-				),
-				'definition'	=> array(
-					'description'	=> 'Get the definition of the Package API',
-					'authentication_required'	=> false,
-					'path'			=> '/api/package/definition',
-					'parameters'	=> array()
-				),
 				'export'	=> array(
 					'description'	=> 'Export the definition of the Package API',
 					'authentication_required'	=> false,

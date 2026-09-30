@@ -74,16 +74,18 @@
 </div>
 
 <!--    Standard Page Navigation Bar -->
-<div class="pagination" id="pagination">
-    <?=$pagination->renderPages(); ?>
-</div>
+<?=$pagination->renderBar()?>
 
 <?php
   if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 ?>
 
 <form action="<?=PATH?>/_register/register" method="get">
-    <div class="button-bar"><input type="submit" name="button_submit" value="Add Account" class="input button"/></div>
+    <div class="form-actions filter-bar">
+        <div class="button-group filter-bar__actions">
+            <button type="submit" name="button_submit" class="input button" value="Add Account">Add Account</button>
+        </div>
+    </div>
 </form>
 
 <?php	} ?>

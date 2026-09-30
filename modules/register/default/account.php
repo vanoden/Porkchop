@@ -5,7 +5,21 @@
 	<div class="organization-page-wrapper" style="display: flex; flex-direction: column; width: 100%;">
 	
 	<!-- Success/Error Messages Section -->
-	<?=$page->showSubHeading()?>
+	<div id="pageSubHeading">
+		<div id="pageTitle">
+			<div class="register-account-page-heading">
+<?php if (!empty($customerThumbnailUrl)) { ?>
+				<img src="<?= htmlspecialchars($customerThumbnailUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" class="register-admin-account__thumbnail" width="48" height="48">
+<?php } ?>
+				<h1 id="page_title"><?= htmlspecialchars($page->title()) ?></h1>
+<?php if ($GLOBALS['_SESSION_']->customer->can('edit site pages')) { ?>
+				<a id="icon_settings" href="/_site/page?module=<?= $page->module() ?>&view=<?= $page->view() ?>&index=<?= $page->index ?>"></a>
+<?php } ?>
+			</div>
+			<?= $page->showBreadcrumbs() ?>
+		</div>
+		<?= $page->showMessages() ?>
+	</div>
 	<?php 
 	if ($canView) {
 		?>
@@ -21,8 +35,8 @@
 			<!-- Profile Visibility Section -->
 			<?php if (!$readOnly) { ?>
 				<section class="form-group profile-visibility">
-					<h3>Profile Visibility</h3>
-					<div class="radio-group">
+					<h2>Profile Visibility</h2>
+					<div class="section-flex cluster">
 						<label class="radio-label">
 							<input type="radio" name="profile"
 								onchange="document.getElementById('method').value = 'Apply'; document.register.submit();"
@@ -35,7 +49,7 @@
 								</svg>
 								Profile Public
 							</span>
-						</label><br />
+						</label>
 						<label class="radio-label">
 							<input type="radio" name="profile"
 								onchange="document.getElementById('method').value = 'Apply'; document.register.submit();"
@@ -53,54 +67,54 @@
 				</section>
 
 				<section id="form-message" class="message info">
-					<ul class="connectBorder infoText">
-						<li>Make changes and click 'Apply' to complete.</li>
+					<ul class="pageMessage">
+						<li class="pageMessage--info">Make changes and click 'Apply' to complete.</li>
 					</ul>
 				</section>
 			<?php } ?>
 
 			<!-- Account Information Section -->
 			<section class="form-group account-info">
-				<h4>Account Information</h4>
-				<ul class="form-grid four-col connectBorder">
-					<li id="accountEmailQuestion" class="form-row">
-						<label for="status">Status:</label>
-						<span id="status" class="value"><?= $queuedCustomer->status ?></span>
+				<h2>Account Information</h2>
+				<div class="section-grid grid-col-4">
+					<div id="accountEmailQuestion" class="form-field">
+						<label for="status">Status</label>
+						<input type="text" id="status" value="<?= $queuedCustomer->status ?>" readonly>
 						<?php if (! $readOnly &&$queuedCustomer->status == "VERIFYING") { ?>
-							<input type="submit" name="method" value="Resend Email" class="button" />
+							<button type="submit" name="method" value="Resend Email">Resend Email</button>
 						<?php } ?>
-					</li>
-					<li id="accountLoginQuestion" class="form-row">
-						<label for="user_name">Login:</label>
-						<span class="value"><?= $customer->code ?></span>
-					</li>
-					<li id="accountFirstNameQuestion" class="form-row">
-						<label for="first_name">*First Name:</label>
+					</div>
+					<div id="accountLoginQuestion" class="form-field">
+						<label for="user_name">Login</label>
+						<input type="text" id="user_name" value="<?= $customer->code ?>" readonly>
+					</div>
+					<div id="accountFirstNameQuestion" class="form-field">
+						<label for="first_name">*First Name</label>
 					<?php if ($readOnly) { ?>
-						<span class="value"><?= $customer->first_name ?></span>
+						<input type="text" id="first_name" value="<?= $customer->first_name ?>" readonly>
 					<?php } else { ?>
-						<input type="text" name="first_name" class="long-field" value="<?= $customer->first_name ?>" />
+						<input type="text" id="first_name" name="first_name" value="<?= $customer->first_name ?>" />
 					<?php } ?>
-					</li>
-					<li id="accountLastNameQuestion" class="form-row">
-						<label for="last_name">*Last Name:</label>
+					</div>
+					<div id="accountLastNameQuestion" class="form-field">
+						<label for="last_name">*Last Name</label>
 					<?php if ($readOnly) { ?>
-						<span class="value"><?= $customer->last_name ?></span>
+						<input type="text" id="last_name" value="<?= $customer->last_name ?>" readonly>
 					<?php } else { ?>
-						<input type="text" class="value registerValue registerLastNameValue lowding-field" name="last_name"
+						<input type="text" id="last_name" class="value registerValue registerLastNameValue" name="last_name"
 							value="<?= $customer->last_name ?>" />
 					<?php } ?>
-					</li>
-					<li id="accountOrganizationQuestion" class="form-row">
-						<label for="">*Organization:</label>
-						<span class="value registerValue"><?= $customer->organization() ? $customer->organization()->name : 'No Organization' ?></span>
-					</li>
-					<li id="accountTimeZoneQuestion" class="form-row">
-						<label for="timezone">*Time Zone:</label>
+					</div>
+					<div id="accountOrganizationQuestion" class="form-field">
+						<label for="organization">*Organization</label>
+						<input type="text" id="organization" value="<?= $customer->organization() ? $customer->organization()->name : 'No Organization' ?>" readonly>
+					</div>
+					<div id="accountTimeZoneQuestion" class="form-field">
+						<label for="timezone">*Time Zone</label>
 					<?php if ($readOnly) { ?>
-						<span class="value"><?= $customer->timezone ?></span>
+						<input type="text" id="timezone" value="<?= $customer->timezone ?>" readonly>
 					<?php } else { ?>
-						<select id="timezone" name="timezone" class="value input collectionField long-field">
+						<select id="timezone" name="timezone" class="value input collectionField">
 							<?php foreach (timezone_identifiers_list() as $timezone) {
 								if (isset($customer->timezone))
 									$selected_timezone = $customer->timezone;
@@ -112,46 +126,47 @@
 									<?= $timezone ?></option>
 							<?php } ?>
 						</select>
-					</li>
 					<?php } ?>
-					<li id="accountJobTitleQuestion" class="form-row">
-						<label for="job_title">*Job Title:</label>
+					</div>
+					<div id="accountJobTitleQuestion" class="form-field">
+						<label for="job_title">*Job Title</label>
 					<?php if ($readOnly) { ?>
-						<span class="value"><?= $customer->getMetadata('job_title') ?></span>
+						<input type="text" id="job_title" value="<?= $customer->getMetadata('job_title') ?>" readonly>
 					<?php } else { ?>
-						<input type="text" name="job_title" class="long-field"
-							value="<?= $customer->getMetadata('job_title') ?>" />
+						<input type="text" id="job_title" name="job_title" value="<?= $customer->getMetadata('job_title') ?>" />
 					<?php } ?>
-					</li>
-					<li id="accountJobDescriptionQuestion" class="form-row">
-						<label for="job_description">*Job Description:</label>
+					</div>
+					<div id="accountJobDescriptionQuestion" class="form-field col-span-4">
+						<label for="job_description">*Job Description</label>
 					<?php if ($readOnly) { ?>
-						<span class="value"><?= $customer->getMetadata('job_description') ?></span>
+						<textarea id="job_description" readonly><?= $customer->getMetadata('job_description') ?></textarea>
 					<?php } else { ?>
-						<textarea name="job_description" class="long-field register-account-textarea"><?= $customer->getMetadata('job_description') ?></textarea>
+						<textarea id="job_description" name="job_description" class="register-account-textarea"><?= $customer->getMetadata('job_description') ?></textarea>
 					<?php } ?>
-					</li>
-				</ul>
+					</div>
+				</div>
 			</section>
 
 			<!-- Contact Methods Section -->
 			<section class="form-group contact-methods">
-				<h4>Methods of Contact</h4>
-				<div id="contact-main-table" class="tableBody bandedRows">
-					<div class="tableRowHeader">
-						<div class="tableCell">Types</div>
-						<div class="tableCell">Description</div>
-						<div class="tableCell">Address/Number or Email</div>
-						<div class="tableCell">Notes</div>
-						<div class="tableCell">Notify</div>
-						<div class="tableCell">Public</div>
-						<div class="tableCell">Drop</div>
-					</div>
+				<h2>Methods of Contact</h2>
+				<table id="contact-main-table" class="table--banded">
+					<thead>
+						<tr>
+							<th scope="col">Types</th>
+							<th scope="col">Description</th>
+							<th scope="col">Address/Number or Email</th>
+							<th scope="col">Notes</th>
+							<th scope="col">Notify</th>
+							<th scope="col">Public</th>
+							<th scope="col">Drop</th>
+						</tr>
+					</thead>
+					<tbody>
 					<?php if (count($contacts) > 0) {
 						foreach ($contacts as $contact) { ?>
-						<div class="tableRow">
-							<div class="tableCell">
-								<span class="display-none value">Types: </span>
+						<tr>
+							<td data-label="Types">
 								<select class="contact_type_value value input" name="type[<?= $contact->id ?>]" <?php if ($readOnly)
 									  echo 'disabled'; ?>>
 									<?php foreach (array_keys($contact_types) as $contact_type) { ?>
@@ -159,55 +174,49 @@
 											  print " selected"; ?>><?= $contact_types[$contact_type] ?></option>
 									<?php } ?>
 								</select>
-							</div>
-							<div class="tableCell">
-								<span class="display-none value">Description: </span>
+							</td>
+							<td data-label="Description">
 								<input type="text" name="description[<?= $contact->id ?>]"
 									class="value input contactDescriptionColumn"
 									value="<?= strip_tags($contact->description) ?>" <?php if ($readOnly)
 										  echo 'disabled'; ?> />
-							</div>
-							<div class="tableCell">
-								<span class="display-none value">Address/Number: </span>
+							</td>
+							<td data-label="Address/Number or Email">
 								<input type="text" name="value[<?= $contact->id ?>]" class="value input contactValueColumn"
 									value="<?= $contact->value ?>" <?php if ($readOnly)
 										  echo 'disabled'; ?> />
-							</div>
-							<div class="tableCell">
-								<span class="display-none value">Notes: </span>
+							</td>
+							<td data-label="Notes">
 								<input type="text" name="notes[<?= $contact->id ?>]" class="value input contactNotesColumn"
 									value="<?= strip_tags($contact->notes) ?>" <?php if ($readOnly)
 										  echo 'disabled'; ?> />
-							</div>
-							<div class="tableCell">
-								<span class="display-none value">Notify: </span>
+							</td>
+							<td data-label="Notify">
 								<input type="checkbox" class="contact_notify" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify)
 									  print "checked"; ?> 		<?php if ($readOnly)
 													 echo 'disabled'; ?> />
-							</div>
-							<div class="tableCell">
-								<span class="display-none value">Public: </span>
+							</td>
+							<td data-label="Public">
 								<input type="checkbox" class="contact_public" name="public[<?= $contact->id ?>]" value="1" <?php if ($contact->public)
 									  print "checked"; ?> 		<?php if ($readOnly)
 													 echo 'disabled'; ?> />
-							</div>
-							<div class="tableCell textAlignCenter">
-								<span class="display-none value"><a href="#"
-										onclick="submitDelete(<?= $contact->id ?>); return false;">Delete Contact</a></span>
-								<span class="value hiddenMobile">
-									<input type="button" name="drop_contact[<?= $contact->id ?>]" class="deleteButton" value="X"
-										onclick="submitDelete(<?= $contact->id ?>)" <?php if ($readOnly)
-											  echo 'disabled'; ?> />
-								</span>
-							</div>
-						</div>
+							</td>
+							<td data-label="Drop" class="text-align--center">
+								<button type="button" name="drop_contact[<?= $contact->id ?>]" class="deleteButton"
+									onclick="submitDelete(<?= $contact->id ?>)" <?php if ($readOnly)
+										  echo 'disabled'; ?>>X</button>
+							</td>
+						</tr>
 					<?php }}
 						else { ?>
-						No contact methods available <?php } ?>
+						<tr>
+							<td colspan="7">No contact methods available</td>
+						</tr>
+					<?php } ?>
 					<!-- New Contact Row -->
 					<?php if ($my_account) { ?>
-					<div class="tableRow new-contact">
-						<div class="tableCell">
+					<tr class="new-contact">
+						<td data-label="Types">
 							<select class="value input" name="type[0]" <?php if ($readOnly)
 								echo 'disabled'; ?>>
 								<option value="0">Select</option>
@@ -215,37 +224,31 @@
 									<option value="<?= $contact_type ?>"><?= $contact_types[$contact_type] ?></option>
 								<?php } ?>
 							</select>
-						</div>
-						<div class="tableCell"><input type="text" name="description[0]"
+						</td>
+						<td data-label="Description"><input type="text" name="description[0]"
 								class="value input contactDescriptionColumn" <?php if ($readOnly)
 									echo 'disabled'; ?> />
-						</div>
-						<div class="tableCell"><input type="text" name="value[0]" class="value input contactValueColumn"
+						</td>
+						<td data-label="Address/Number or Email"><input type="text" name="value[0]" class="value input contactValueColumn"
 								<?php if ($readOnly)
-									echo 'disabled'; ?> /></div>
-						<div class="tableCell"><input type="text" name="notes[0]" class="value input contactNotesColumn"
+									echo 'disabled'; ?> /></td>
+						<td data-label="Notes"><input type="text" name="notes[0]" class="value input contactNotesColumn"
 								<?php if ($readOnly)
-									echo 'disabled'; ?> /></div>
-						<div class="tableCell">
+									echo 'disabled'; ?> /></td>
+						<td data-label="Notify">
 							<input type="checkbox" class="contact_notify" name="notify[0]" value="1" <?php if ($readOnly)
 								echo 'disabled'; ?> />
-						</div>
-						<div class="tableCell">
+						</td>
+						<td data-label="Public">
 							<input type="checkbox" class="contact_public" name="public[0]" value="1" <?php if ($readOnly)
 								echo 'disabled'; ?> />
-						</div>
-						<div class="tableCell"></div>
-					</div>
+						</td>
+						<td data-label="Drop"></td>
+					</tr>
 					<?php } ?>
-				</div>
+					</tbody>
+				</table>
 			</section>
-
-			<?php if ($customer->profile == "public") { ?>
-				<!-- Business Card Preview Button -->
-				<div class="register-account-margin">
-					<button type="button" class="button" onclick="window.open('/_register/businesscard?customer_id=<?= $customer->id ?>', '_blank')">Preview Business Card</button>
-				</div>
-			<?php } ?>
 
 			<?php if (!$readOnly) { ?>
 				<!-- Two-Factor Authentication Section -->
@@ -253,7 +256,7 @@
 					$configurations = new \Site\Configuration(); 
 					if ($configurations->getValueBool("use_otp")) { ?>
 					<section class="form-group two-factor pageSect_full">
-						<h5>Time Based Password [Google Authenticator]</h5>
+						<h2>Time Based Password [Google Authenticator]</h2>
 						<div class="checkbox-group">
 							<input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password))
 								echo "checked"; ?> 			<?php
@@ -283,90 +286,69 @@
 					</section>
 				<?php } ?>
 
+			<?php } ?>
+
+			<?php if ($customer->profile == "public" || !$readOnly) { ?>
 				<!-- Form Actions Section -->
 				<section class="form-group form-actions">
 					<div class="button-group pageSect_full">
-						<input type="submit" name="method" value="Apply" class="button" onclick="return submitForm();" <?php if ($readOnly) echo 'disabled'; ?> />
-						<input type="button" name="method" value="Change Password" class="button btn-secondary" onclick="return passChange();" <?php if ($readOnly) echo 'disabled'; ?> />
+						<?php if ($customer->profile == "public") { ?>
+							<button type="button" class="btn-secondary" onclick="window.open('/_register/businesscard?customer_id=<?= $customer->id ?>', '_blank')">Preview Business Card</button>
+						<?php } ?>
+						<?php if (!$readOnly) { ?>
+							<button type="button" name="method" value="Change Password" class="btn-secondary" onclick="return passChange();">Change Password</button>
+						<?php } ?>
 					</div>
+					<?php if (!$readOnly) { ?>
+						<div class="button-group pageSect_full">
+							<button type="submit" name="method" value="Apply" onclick="return submitForm();">Apply Changes</button>
+						</div>
+					<?php } ?>
 				</section>
 			<?php } ?>
-			<!-- Current Default Image Section -->
-			<section class="form-group current-default-image">
-				<?php
-				$defaultImageId = $customer->getMetadata('default_image');
-				$hasImages = false;
-				if ($defaultImageId) {
-					$defaultImage = new \Storage\File($defaultImageId);
-					if ($defaultImage->id) {
-						$hasImages = true;
-						?>
-						<h3>Current Default Image</h3>
-						<div class="default-image">
-							<div class="image-preview">
-								<img src="/_storage/downloadfile?file_id=<?= $defaultImageId ?>" alt="Default Image"
-									class="register-account-image" />
-								<p class="image-name"><?= htmlspecialchars($defaultImage->name) ?></p>
-							</div>
-						</div>
-						<?php
-					}
-				}
-				?>
-			</section>
 
-			<!-- Image Selection Section -->
 			<section class="form-group image-selection-section">
-				<h3>Click to select new customer image</h3>
-				<div class="images-grid"
-					style="max-width: 100% !important; display: flex !important; flex-wrap: wrap !important; margin: -10px !important; width: 100% !important;">
-					<?php
-					if (empty($customerImages)) {
-						if (!$hasImages) {
-							?>
-							<p class="no-images">No images found for this customer.</p>
-							<?php
-						}
-					} else {
-						foreach ($customerImages as $image) {
-							$hasImages = true;
-							?>
-							<div class="image-item <?= ($defaultImageId == $image->id) ? 'default' : '' ?>" id="ItemImageDiv_<?= $image->id ?>" onclick="highlightImage('<?= $image->id ?>'); updateDefaultImage('<?= $image->id ?>');" style="flex: 0 0 calc(25% - 20px) !important; margin: 10px !important; box-sizing: border-box !important; display: flex !important; flex-direction: column !important; width: calc(25% - 20px) !important; float: none !important; clear: none !important;">
-								<div class="image-preview">
-									<img src="/_storage/downloadfile?file_id=<?= $image->id ?>" alt="<?= htmlspecialchars($image->name) ?>" />
-								</div>
-								<p class="image-name"><?= htmlspecialchars($image->name) ?></p>
-								<?php if ($defaultImageId == $image->id): ?>
-									<span class="default-badge">Default</span>
-								<?php endif; ?>
-							</div>
-							<?php
-						}
-					}
-					?>
+				<h2>Click to select new customer image</h2>
+				<?php $defaultImageId = $customer->getMetadata('default_image'); ?>
+				<div class="register-admin-account-images__gallery">
+<?php if (empty($customerImages)) { ?>
+					<p class="register-admin-account-images__empty">No images found for this customer.</p>
+<?php } else {
+					foreach ($customerImages as $image) {
+						$isDefault = ($defaultImageId == $image->id);
+?>
+					<div class="register-admin-account-images__item<?= $isDefault ? ' register-admin-account-images__item--default' : '' ?>" id="ItemImageDiv_<?= (int)$image->id ?>">
+						<div class="register-admin-account-images__thumb">
+							<img src="/_storage/downloadfile?file_id=<?= (int)$image->id ?>" alt="<?= htmlspecialchars($image->name, ENT_QUOTES, 'UTF-8') ?>" />
+						</div>
+						<p class="register-admin-account-images__caption" title="<?= htmlspecialchars($image->name, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($image->name) ?></p>
+						<?php if ($isDefault) { ?>
+						<span class="register-admin-account-images__badge">Default</span>
+						<?php } elseif (!$readOnly) { ?>
+						<button type="button" class="button btn-secondary register-admin-account-images__set-default" onclick="updateDefaultImage('<?= (int)$image->id ?>');">Set Default</button>
+						<?php } ?>
+					</div>
+<?php }
+				} ?>
 				</div>
 			</section>
 		</form>
 
 		<!-- Image Upload Section -->
-		<?php if ($repository->id) { ?>
+		<?php if (!$readOnly && !empty($repository) && !empty($repository->id)) { ?>
 			<section class="form-group image-upload">
-				<form name="repoUpload" action="/_register/account/<?= $customer->code ?>" method="post"
-					enctype="multipart/form-data" class="upload-form">
-					<h3>Upload Image for this customer</h3>
-					<div class="upload-controls">
-						<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
-						<input type="hidden" name="repository_id" value="<?= $repository->id ?>" />
-						<input type="file" name="uploadFile" class="file-input" />
-						<input type="submit" name="btn_submit" class="button upload-button" value="Upload" />
-					</div>
+				<form name="repoUpload" action="/_register/account/<?= rawurlencode($customer->code) ?>" method="post" enctype="multipart/form-data" class="register-admin-account-images__upload-form">
+					<h2>Upload Image for this customer</h2>
+					<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
+					<input type="hidden" name="repository_id" value="<?= (int)$repository->id ?>" />
+					<input type="file" name="uploadFile" accept="image/*" />
+					<input type="submit" name="btn_submit" class="button" value="Upload" />
 				</form>
 			</section>
-		<?php } else { ?>
+		<?php } elseif (!$readOnly) { ?>
 			<section class="form-group image-upload">
-				<h3>Upload Image for this customer</h3>
-				<p class="error-message">Repository not found. (please create an S3, Local, Google or Dropbox repository to
-					upload images for this customer)</p>
+				<h2>Upload Image for this customer</h2>
+				<p class="error-message">Repository not found. (please create an S3, Local, Google or Dropbox repository to upload images for this customer)</p>
 			</section>
 		<?php } ?>
 

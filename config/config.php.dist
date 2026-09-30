@@ -9,14 +9,24 @@
         define ( 'THIRD_PARTY', BASE.'/third_party/vendor' );
         define ( 'RESOURCES', BASE.'/resources' );
         define ( 'CLASS_PATH', BASE.'/classes' );
-        define ( 'API_LOG', '/var/log/apache2/log');
-        define ( 'APPLICATION_LOG', '/var/log/apache2/access.log');
+
+        /** Root directory for Porkchop logs (application, API, PHP error_log). Adjust per environment. */
+        define ( 'LOG_ROOT', '/var/log/apache2/' );
+
+        /** Directory → `classes/Site/Logger/File.php` writes `application.log` here */
+        define ( 'APPLICATION_LOG', LOG_ROOT.'/application' );
+        
+        /** Directory → per-module `<module>.log`; set to '' to disable API file logging */
+        define ( 'API_LOG', LOG_ROOT.'/api' );
+        
+        /** PHP `error_log()` destination for uncaught diagnostics (empty string = use php.ini / server default) */
+        define ( 'PHP_ERROR_LOG', LOG_ROOT.'/php/error.log' );
+
         define ( 'APPLICATION_LOG_LEVEL', 'debug');
         define ( 'APPLICATION_LOG_TYPE', 'file');
+
         define ( 'TEMPLATES', BASE.'/templates' );	
-        define ( 'REPORTS',BASE.'/reports' );	
-        define ( 'SPECTROS_LOCATION_ID', 1);
-        define ( 'SPECTROS_VENDOR_ID', 0);
+        define ( 'REPORTS',BASE.'/reports' );
         define ( 'ENVIROMENT', 'QA'); // 'DEV' / 'QA' / 'PRODUCTION'
         define ( 'QA_CAPTCHA_BYPASS', 'CHANGEME'); // Bypass key for automated testing
         define ( 'USE_OTP', true); // enable OTP options for login

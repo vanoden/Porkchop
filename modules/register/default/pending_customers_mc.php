@@ -6,6 +6,27 @@ $can_proceed = true;
 // Create objects for validation
 $queueObj = new \Register\Queue();
 
+function pendingCustomersListRedirect(array $extraParams = array()): string {
+	$params = array();
+	if (!empty($_REQUEST['search'])) {
+		$params['search'] = $_REQUEST['search'];
+	}
+	if (!empty($_REQUEST['dateStart'])) {
+		$params['dateStart'] = $_REQUEST['dateStart'];
+	}
+	if (!empty($_REQUEST['dateEnd'])) {
+		$params['dateEnd'] = $_REQUEST['dateEnd'];
+	}
+	foreach (array('VERIFYING', 'PENDING', 'APPROVED', 'DENIED') as $statusKey) {
+		if (!empty($_REQUEST[$statusKey])) {
+			$params[$statusKey] = $statusKey;
+		}
+	}
+	$params = array_merge($params, $extraParams);
+	$query = http_build_query($params);
+	return '/_register/pending_customers' . ($query !== '' ? '?' . $query : '');
+}
+
 /**
  * get color codes HEX for given queued customer status
  * @param $status
@@ -49,7 +70,8 @@ if (isset($action) && $action == 'updateNotes') {
             $notes = $_REQUEST['notes'] ?? '';
             $queuedCustomer = new Register\Queue($id);
             $queuedCustomer->update(array('notes' => noXSS(trim($notes))));
-            $page->success = 'Notes updated successfully.';
+            header('Location: ' . pendingCustomersListRedirect(array('notesUpdated' => '1')));
+            exit;
         }
     }
 }
@@ -74,7 +96,8 @@ if (isset($action) && $action == 'updateStatus') {
         $queuedCustomer = new Register\Queue($id);
         $queuedCustomer->update(array('status' => $status));
         if ($status == 'APPROVED') $queuedCustomer->syncLiveAccount();
-        $page->success = 'Status updated successfully.';
+        header('Location: ' . pendingCustomersListRedirect(array('statusUpdated' => '1')));
+        exit;
     }
 }
 
@@ -93,7 +116,8 @@ if (isset($action) && $action == 'denyCustomer') {
     } else {
         $queuedCustomer = new Register\Queue($id);
         $queuedCustomer->update(array('status' => 'DENIED'));
-        $page->success = 'Customer denied.';
+        header('Location: ' . pendingCustomersListRedirect(array('deniedUpdated' => '1')));
+        exit;
     }
 }
 
@@ -118,7 +142,11 @@ if (isset($action) && $action == 'assignCustomer') {
         } else {
             $queuedCustomer->update(array('status' => 'APPROVED'));
             $queuedCustomer->syncLiveAccount();
-            $page->success = "Registration complete for " . $customer->code;
+            header('Location: ' . pendingCustomersListRedirect(array(
+                'approvedUpdated' => '1',
+                'approvedLogin' => $customer->code,
+            )));
+            exit;
         }
     }
 }
@@ -201,6 +229,21 @@ if (empty($statusFiltered)) {
 // Show success message if email was just sent (after redirect)
 if (isset($_GET['emailSent']) && $_GET['emailSent'] == '1') {
     $page->success = "User was issued another verification email.";
+}
+if (!empty($_GET['notesUpdated'])) {
+    $page->success = 'Notes updated successfully.';
+}
+if (!empty($_GET['statusUpdated'])) {
+    $page->success = 'Status updated successfully.';
+}
+if (!empty($_GET['deniedUpdated'])) {
+    $page->success = 'Customer denied.';
+}
+if (!empty($_GET['approvedUpdated'])) {
+    $approvedLogin = $_GET['approvedLogin'] ?? '';
+    $page->success = $approvedLogin !== ''
+        ? 'Registration complete for ' . $approvedLogin . '.'
+        : 'Registration approved successfully.';
 }
 
 // get results

@@ -117,7 +117,11 @@
 	$site->install_log("Upgrading Schema");
 	foreach ($modules as $class_name => $base_class) {
 		$schemaClass = "\\$class_name\\Schema";
-		if (! class_exists($schemaClass)) continue;
+		$schemaPath = CLASS_PATH."/".$class_name."/Schema.php";
+		if (! file_exists($schemaPath)) {
+			$site->install_log("No schema for $class_name",'debug');
+			continue;
+		}
 		if (! key_exists('schema',$base_class)) {
 			$site->install_log("No schema requirement for $class_name",'warning');
 			$requiredVersion = null;

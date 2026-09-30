@@ -141,6 +141,31 @@
 			$response->addElement('message',$content);
 			$response->print();
 		}
+
+		/** @method addMessageSearchTag()
+		 * Add a knowledge-center search tag to a content message block.
+		 */
+		public function addMessageSearchTag() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+			if (!$GLOBALS['_SESSION_']->customer->can('edit content messages')) $this->deny();
+
+			$message = new \Content\Message();
+			$target = $_REQUEST['target'] ?? $_REQUEST['code'] ?? '';
+			if ($target === '') $this->incompleteRequest("target is required");
+			if (!$message->get($target)) $this->error($message->error() ?: "Message not found");
+
+			$value = trim($_REQUEST['value'] ?? $_REQUEST['tag'] ?? '');
+			$category = trim($_REQUEST['category'] ?? '');
+			if (!$message->validTagValue($value)) $this->error("Invalid tag value");
+			if ($category === '' || !$message->validTagCategory($category)) $this->error("Tag category is required");
+			if (!$message->addTag($value, $category)) {
+				$this->error($message->error() ?: "Failed to add content message search tag");
+			}
+
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->print();
+		}
 		
 		###################################################
 		### Update Specified Message					###
@@ -430,7 +455,7 @@
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'navigation.item.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'navigation.item.xsl';
 
 			$parameters = array();
 
@@ -447,11 +472,11 @@
 			}
 
 			$parameters['menu_id'] = $menu->id;	
-			$parameters['title'] = $_REQUEST['title'];
-			$parameters['target'] = $_REQUEST['target'];
-			$parameters['alt'] = $_REQUEST['alt'];
-			$parameters['description'] = $_REQUEST['description'];
-			$parameters['view_order'] = $_REQUEST['view_order'];
+			$parameters['title'] = $_REQUEST['title'] ?? '';
+			$parameters['target'] = $_REQUEST['target'] ?? '';
+			$parameters['alt'] = $_REQUEST['alt'] ?? '';
+			$parameters['description'] = $_REQUEST['description'] ?? '';
+			$parameters['view_order'] = $_REQUEST['view_order'] ?? null;
 			$parameters['parent_id'] = isset($parent_item) ? $parent_item->id : null;
 
 			$response = new \APIResponse();
@@ -599,9 +624,9 @@
 		
 		public function addSiteMessage() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+			$this->requireAuth();
 
 			$siteMessage = new \Site\SiteMessage();
-			$response = new \HTTP\Response();
 
 			if (empty($_REQUEST['user_created'])) $_REQUEST['user_created'] = $GLOBALS['_SESSION_']->customer->id;
 			if (empty($_REQUEST['date_created'])) $_REQUEST['date_created'] = get_mysql_date('now');
@@ -609,16 +634,36 @@
 			if (empty($_REQUEST['subject'])) $_REQUEST['subject'] = '';
 			if (empty($_REQUEST['parent_id'])) $_REQUEST['parent_id'] = 0;
 
-			$success = $siteMessage->add(
-				 array(
-				  'user_created' => $_REQUEST['user_created'],
-				  'date_created' => $_REQUEST['date_created'],
-				  'important' => $_REQUEST['important'],
-				  'subject' => $_REQUEST['subject'],
-				  'content' => $_REQUEST['content'],
-				  'parent_id' => $_REQUEST['parent_id']
-				 )
-			 );
+			$recipient_id = 0;
+			if (!empty($_REQUEST['recipient_id']) && is_numeric($_REQUEST['recipient_id'])) {
+				$recipient_id = (int) $_REQUEST['recipient_id'];
+			}
+			elseif (!empty($_REQUEST['recipient_login']) || !empty($_REQUEST['to'])) {
+				$recipient = new \Register\Customer();
+				$login = $_REQUEST['recipient_login'] ?? $_REQUEST['to'] ?? '';
+				$recipient->get($login);
+				if ($recipient->error()) $this->error("Error finding recipient: ".$recipient->error());
+				if (!$recipient->id) $this->notFound("Recipient not found");
+				$recipient_id = (int) $recipient->id;
+			}
+
+			if ($recipient_id && (int) $recipient_id !== (int) $GLOBALS['_SESSION_']->customer->id) {
+				if (!$GLOBALS['_SESSION_']->customer->can('send admin in-site message')) {
+					$this->deny();
+				}
+			}
+
+			$params = array(
+				'user_created' => $_REQUEST['user_created'],
+				'date_created' => $_REQUEST['date_created'],
+				'important' => $_REQUEST['important'],
+				'subject' => $_REQUEST['subject'],
+				'content' => $_REQUEST['content'],
+				'parent_id' => $_REQUEST['parent_id'],
+			);
+			if ($recipient_id) $params['recipient_id'] = $recipient_id;
+
+			$success = $siteMessage->add($params);
 			if (!$success) $this->error("Site Message could not be added: ".$siteMessage->error());
 
 			$response = new \APIResponse();
@@ -663,12 +708,27 @@
 		public function acknowledgeSiteMessageByUserId() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
+			$recipientId = (int) $GLOBALS['_SESSION_']->customer->id;
 			$siteMessages = new \Site\SiteMessagesList();
-			$siteMessagesList = $siteMessages->find(array('user_created' => $_REQUEST['user_created']));
+			$siteMessagesList = $siteMessages->find(array(
+				'recipient_id' => $recipientId,
+				'acknowledged' => 'unread',
+			));
+			if ($siteMessages->error()) $this->error($siteMessages->error());
+
 			foreach ($siteMessagesList as $siteMessage) {
-				$siteMessage->acknowledge();
-				 if ($siteMessage->error()) $this->error($siteMessage->error());
-			}        
+				$siteMessageDelivery = new \Site\SiteMessageDelivery();
+				if (!$siteMessageDelivery->getDelivery($siteMessage->id, $recipientId)) {
+					$siteMessageDelivery->add(array(
+						'message_id' => $siteMessage->id,
+						'user_id' => $recipientId,
+						'date_viewed' => date('Y-m-d H:i:s'),
+					));
+					if ($siteMessageDelivery->error()) $this->error($siteMessageDelivery->error());
+					$siteMessageDelivery->getDelivery($siteMessage->id, $recipientId);
+				}
+				if (!$siteMessageDelivery->acknowledge()) $this->error($siteMessageDelivery->error());
+			}
 
 			$response = new \APIResponse();
 			$response->print();
@@ -691,6 +751,49 @@
 
 			$response = new \APIResponse();
 			$response->addElement('message',$siteMessage);
+			$response->print();
+		}
+
+		/** @method findSiteMessages()
+		 * Find in-site messages (e.g. by recipient for InitSite idempotency).
+		 */
+		public function findSiteMessages() {
+			$this->requireAuth();
+
+			$parameters = array();
+			if (!empty($_REQUEST['recipient_id']) && is_numeric($_REQUEST['recipient_id'])) {
+				$parameters['recipient_id'] = (int) $_REQUEST['recipient_id'];
+			}
+			elseif (!empty($_REQUEST['recipient_login']) || !empty($_REQUEST['to'])) {
+				$recipient = new \Register\Customer();
+				$login = $_REQUEST['recipient_login'] ?? $_REQUEST['to'] ?? '';
+				$recipient->get($login);
+				if ($recipient->error()) $this->error("Error finding recipient: ".$recipient->error());
+				if (!$recipient->id) $this->notFound("Recipient not found");
+				$parameters['recipient_id'] = (int) $recipient->id;
+			}
+			if (!empty($_REQUEST['user_created']) && is_numeric($_REQUEST['user_created'])) {
+				$parameters['user_created'] = (int) $_REQUEST['user_created'];
+			}
+			if (isset($_REQUEST['acknowledged'])) {
+				if ($_REQUEST['acknowledged'] === 'read' || $_REQUEST['acknowledged'] === 'unread') {
+					$parameters['acknowledged'] = $_REQUEST['acknowledged'];
+				}
+				elseif (!empty($_REQUEST['acknowledged'])) {
+					$parameters['acknowledged'] = 'read';
+				}
+				else {
+					$parameters['acknowledged'] = 'unread';
+				}
+			}
+
+			$messageList = new \Site\SiteMessagesList();
+			$messages = $messageList->findAdvanced($parameters, array(), array());
+			if ($messageList->error()) $this->error($messageList->error());
+
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('message', $messages);
 			$response->print();
 		}
 
@@ -880,15 +983,15 @@
 		}
 
 		public function mySiteMessageCount() {
-			$deliveryList = new \Site\SiteMessageDeliveryList();
-			$params = array();
-			$params['user_id'] = $GLOBALS['_SESSION_']->customer->id;
-			$params['acknowledged'] = false;
-			$deliveries = $deliveryList->find($params);
-			if ($deliveryList->error()) $this->error($deliveryList->error());
+			$siteMessagesList = new \Site\SiteMessagesList();
+			$siteMessagesList->find(array(
+				'recipient_id' => $GLOBALS['_SESSION_']->customer->id,
+				'acknowledged' => 'unread',
+			));
+			if ($siteMessagesList->error()) $this->error($siteMessagesList->error());
 
 			$response = new \APIResponse();
-			$response->addElement('count',$deliveryList->count());
+			$response->addElement('count', $siteMessagesList->count());
 			$response->print();
 		}
 
@@ -1697,11 +1800,21 @@
 						'user_created'	=> array(
 							'content-type'	=> 'int',
 						),
+						'recipient_id'	=> array(
+							'content-type'	=> 'int',
+						),
+						'recipient_login'	=> array(
+							'description'	=> 'Recipient customer login',
+							'validation_method'	=> 'Register::Customer::validCode()',
+						),
 						'date_created'	=> array(
 							'validation_method'	=> 'Porkchop::validDate()',
 						),
 						'important'		=> array(
 							'content-type'	=> 'bool',
+						),
+						'subject'		=> array(
+							'description'	=> 'Message subject',
 						),
 						'content'		=> array(
 							'validation_method'	=> 'Site::Message::validContent()',
@@ -1749,15 +1862,21 @@
 				'findSiteMessages'	=> array(
 					'description'	=> 'Find site messages',
 					'authentication_required'	=> true,
+					'return_element'	=> 'message',
+					'return_type'	=> 'Site::SiteMessage',
 					'parameters'	=> [
-						'send_user_id'		=> array(
+						'recipient_id'	=> array(
 							'content-type'	=> 'int',
 						),
-						'receive_user_id'	=> array(
+						'recipient_login'	=> array(
+							'description'	=> 'Recipient customer login',
+							'validation_method'	=> 'Register::Customer::validCode()',
+						),
+						'user_created'		=> array(
 							'content-type'	=> 'int',
 						),
 						'acknowledged'		=> array(
-							'content-type'	=> 'bool',
+							'description'	=> 'read, unread, or boolean',
 						),
 					]
 				),
@@ -1906,12 +2025,9 @@
 					]
 				),
 				'acknowledgeSiteMessageByUserId'	=> array(
-					'description'	=> 'Acknowledge all site messages for a user',
+					'description'	=> 'Acknowledge all unread site messages for the current user',
 					'token_required'	=> true,
 					'authentication_required'	=> true,
-					'parameters'	=> [
-						'user_created' => array('required' => true)
-					]
 				),
 				'addTermsOfUse' => array(
 					'description'	=> 'Add a new terms of use',

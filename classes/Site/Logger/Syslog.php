@@ -13,7 +13,12 @@
 		public function connect(): true {
 			if ($this->connected) return true;
 			if (! defined('APPLICATION_LOG_NAME')) define('APPLICATION_LOG_NAME', 'Porkchop');
-			openlog(APPLICATION_LOG_NAME, LOG_PID | LOG_PERROR, LOG_LOCAL1);
+			if (defined('APPLICATION_LOG_FACILITY')) {
+				$facility = constant('APPLICATION_LOG_FACILITY');
+			} else {
+				$facility = LOG_LOCAL1;
+			}
+			openlog(APPLICATION_LOG_NAME, LOG_PID | LOG_PERROR, $facility);
 			$this->connected = true;
 			return true;
 		}
@@ -43,6 +48,7 @@
 				"critical"	=> LOG_CRIT,
 				"error"		=> LOG_ERR,
 				"warning"	=> LOG_WARNING,
+				"warn"		=> LOG_WARNING,
 				"notice"	=> LOG_NOTICE,
 				"info"		=> LOG_INFO,
 				"debug"		=> LOG_DEBUG,

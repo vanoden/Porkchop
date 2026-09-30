@@ -2,7 +2,7 @@
 	$site = new \Site();
 	$page = $site->page();
 
-	if (empty($_REQUEST['g-captcha-response'])) $_REQUEST['g-captcha-response'] = '';
+	if (empty($_REQUEST['g-recaptcha-response'])) $_REQUEST['g-recaptcha-response'] = '';
 	if (empty($_REQUEST['csrfToken'])) $_REQUEST['csrfToken'] = '';
 
 	# Handle Actions
@@ -31,14 +31,14 @@
 				# Get User Info From Database
 				$contact = new \Register\Contact();
 				if (!empty($_REQUEST['email_address'])) {
-					$contact->getContact('email',$_REQUEST['email_address']);
+					$contact->getSingleContact('email', $_REQUEST['email_address']);
 					if ($contact->error()) {
 						app_log("Error finding contact: ".$contact->error(),'error',__FILE__,__LINE__);
 						$page->addError("Error finding contact info, please try again later");
 						return null;
 					}
 
-					if ($contact->person->id) {
+					if ($contact->id && $contact->person && $contact->person->id) {
 						$customer = new \Register\Customer($contact->person->id);
 						if ($customer->error()) {
 							app_log("Forgot Password Error: ".$customer->error(),'error',__FILE__,__LINE__);
@@ -59,11 +59,9 @@
 							return;
 						}
 
-						# Check if account is blocked
+						# Blocked accounts may still recover — reset_password reactivates them after a successful password change
 						if ($customer->isBlocked()) {
-							app_log("Blocked account attempted password recovery: ".$customer->code,'notice',__FILE__,__LINE__);
-							$page->addError("Your account has been blocked due to multiple failed login attempts. Please contact support at ".($GLOBALS['_config']->site->support_email ?? 'service@spectrosinstruments.com')." for assistance.");
-							return;
+							app_log("Blocked account started password recovery: ".$customer->code,'notice',__FILE__,__LINE__);
 						}
 			
 						# Generate a Password Recovery Token

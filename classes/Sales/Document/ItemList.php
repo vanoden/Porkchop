@@ -16,19 +16,20 @@
 			// Build Query
 			$find_objects_query = "
 				SELECT	id
-				FROM	sales_order_items
+				FROM	`sales_document_items`
 				WHERE	id = id
 			";
 
 			// Add Parameters
 			$validationClass = new $this->_modelName;
-			if (!empty($parameters['order_id']) && is_numeric($parameters['order_id'])) {
-				$order = new $this->_modelName($parameters['order_id']);
+			$document_id = $parameters['document_id'] ?? $parameters['order_id'] ?? null;
+			if (!empty($document_id) && is_numeric($document_id)) {
+				$order = new \Sales\SalesOrder((int) $document_id);
 				if ($order->exists()) {
 					$find_objects_query .= "
-						AND		order_id = ?
+						AND		document_id = ?
 					";
-					$database->AddParam($parameters['order_id']);
+					$database->AddParam((int) $document_id);
 				}
 				else {
 					$this->error('Document not found');
@@ -59,7 +60,7 @@
 
 			// Document Clause
 			$find_objects_query .= "
-				ORDER BY order_id, line_number
+				ORDER BY document_id, line_number
 			";
 
 			// Limit Clause
@@ -74,14 +75,15 @@
 
 			// Build Results
 			$objects = array();
-			while (list($organization_id,$product_id) = $rs->FetchRow()) {
-				$orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
-				$object = $orgProduct;
-				if ($this->error()) {
-					$this->error("Error getting details for ".$this->_modelName.": ".$this->error());
+			while (list($id) = $rs->FetchRow()) {
+				if (!is_numeric($id) || (int)$id < 1) continue;
+				$item = new \Sales\Document\Item((int)$id);
+				if ($item->error()) {
+					$this->error("Error getting details for ".$this->_modelName.": ".$item->error());
 					return [];
 				}
-				array_push($objects,$object);
+				array_push($objects, $item);
+				$this->_count++;
 			}
 
 			return $objects;

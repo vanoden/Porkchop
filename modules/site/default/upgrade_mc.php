@@ -1,6 +1,7 @@
 <?php
 	$default_Template = "default.html";
 	$admin_template = "admin.html";
+	$portal_template = "portal.html";
 
 	$modules = array(
 		"Company"		=> array(
@@ -40,6 +41,7 @@
 			"templates"		=> array(
 				"organizations"		=> $admin_template,
 				"organizations_report"	=> $admin_template,
+				"inventory_report"	=> $admin_template,
 				"organization"		=> $admin_template,
 				"accounts"			=> $admin_template,
 				"admin_account"		=> $admin_template,
@@ -98,7 +100,7 @@
 				"admin_product"			=> $admin_template,
 				"admin_credits"			=> $admin_template,
 				"cal_report"			=> $admin_template,
-				"transfer_ownership"	=> $admin_template,
+				"cal_verify_require_report"	=> $admin_template,
 			),
 		),
 		"Engineering"	=> array(
@@ -116,9 +118,16 @@
 				"request_new"	=> $admin_template,
 				"requests"		=> $admin_template,
 				"request_items"	=> $admin_template,
+				"search"		=> $admin_template,
+				"stale_tickets"	=> $admin_template,
 				"admin_actions"	=> $admin_template,
 				"admin_rmas"	=> $admin_template,
 				"summary"		=> $admin_template,
+				"troubleshoot"				=> $portal_template,
+				"troubleshoot_complete"		=> $portal_template,
+				"troubleshoot_create_ticket"	=> $portal_template,
+				"troubleshoot_knowledge"	=> $portal_template,
+				"troubleshoot_products"		=> $portal_template,
 			),
 		),
 		"Shipping"		=> array(
@@ -194,6 +203,13 @@
 							"view_order"	=> 15,
 							"alt"			=> "Organizations Duplicate Report",
 							"description"	=> "Find and manage duplicate organizations"
+						),
+						array (
+							"title"			=> "Inventory Report",
+							"target"		=> "/_register/inventory_report",
+							"view_order"	=> 16,
+							"alt"			=> "Organization Inventory Report",
+							"description"	=> "List by product the number of active devices the selected company owns"
 						),
 						array (
 							"title"			=> "Accounts",
@@ -332,6 +348,13 @@
 							"description"	=> "RMAs"
 						),
 						array (
+							"title"	=> "Stale Tickets",
+							"target"	=> "/_support/stale_tickets",
+							"view_order"	=> 95,
+							"alt"			=> "Stale Ticket Report",
+							"description"	=> "Stale Ticket Report"
+						),
+						array (
 							"title"	=> "Summary",
 							"target"	=> "/_support/summary",
 							"view_order"	=> 100,
@@ -381,6 +404,13 @@
 							"view_order"	=> 10,
 							"alt"			=> "Page Management",
 							"description"	=> "Page Management"
+						),
+						array (
+							"title"	=> "Forms",
+							"target"	=> "/_form/admin_forms",
+							"view_order"	=> 15,
+							"alt"			=> "Form Management",
+							"description"	=> "Form Management"
 						),
 						array (
 							"title"	=> "Configurations",

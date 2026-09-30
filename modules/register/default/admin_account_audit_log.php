@@ -2,37 +2,16 @@
 <?= $page->showAdminPageInfo() ?>
 <!-- End Page Header -->
 
-<?php $activeTab = 'audit'; ?>
+<?php
+$activeTab = 'audit';
+require __DIR__ . '/admin_account_tabs.php';
+?>
 
-<div class="tabs">
-    <a href="/_register/admin_account?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='login'?'active':'' ?>">Login / Registration</a>
-    <a href="/_register/admin_account_contacts?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='contacts'?'active':'' ?>">Methods of Contact</a>
-    <a href="/_register/admin_account_password?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='password'?'active':'' ?>">Change Password</a>
-    <a href="/_register/admin_account_roles?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='roles'?'active':'' ?>">Assigned Roles</a>
-    <a href="/_register/admin_account_auth_failures?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='auth_failures'?'active':'' ?>">Recent Auth Failures</a>
-    <a href="/_register/admin_account_terms?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='terms'?'active':'' ?>">Terms of Use History</a>
-    <a href="/_register/admin_account_locations?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='locations'?'active':'' ?>">Locations</a>
-    <a href="/_register/admin_account_images?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='images'?'active':'' ?>">User Images</a>
-    <a href="/_register/admin_account_backup_codes?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='backup_codes'?'active':'' ?>">Backup Codes</a>
-    <a href="/_register/admin_account_search_tags?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='search_tags'?'active':'' ?>">Search Tags</a>
-    <a href="/_register/admin_account_audit_log?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
-    <a href="/_register/admin_account_register_audit?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='register_audit'?'active':'' ?>">Failed Logins</a>
-	<a href="/_register/admin_account_privileges?customer_id=<?= $customer_id ?>" class="tab <?= $activeTab==='privileges'?'active':'' ?>">Assigned Privileges</a>
-</div>
-
-<div class="form_instruction">View audit log entries recorded for this account.</div>
+<div class="form_instruction">View Register\Customer audit log entries for this account.</div>
 
 <script>
-  function goToAuditPage(offset) {
-    document.getElementById('start').value = offset;
-    document.getElementById('auditLogForm').submit();
-  }
   function changeAuditPageSize(size) {
     document.getElementById('page_size').value = size;
-    document.getElementById('start').value = 0;
-    document.getElementById('auditLogForm').submit();
-  }
-  function changeAuditClass(value) {
     document.getElementById('start').value = 0;
     document.getElementById('auditLogForm').submit();
   }
@@ -44,16 +23,6 @@
   <input type="hidden" id="page_size" name="page_size" value="<?= $page_size ?>" />
 
   <div class="audit-top-controls">
-    <div class="audit-class-filter">
-      <label>Class:
-        <select name="class_name" onchange="changeAuditClass(this.value);">
-          <option value="">All</option>
-          <?php foreach ($classList as $class_name) { ?>
-            <option value="<?= $class_name ?>" <?= isset($current_class) && $current_class === $class_name ? 'selected' : '' ?>><?= $class_name ?></option>
-          <?php } ?>
-        </select>
-      </label>
-    </div>
     <div class="audit-page-size">
       <label>Records per page:
         <select name="page_size_select" onchange="changeAuditPageSize(this.value);">
@@ -99,17 +68,11 @@
     <?php } ?>
   </div>
 
-  <div class="pager_bar">
-    <div class="pager_controls">
-      <a href="javascript:void(0)" class="pager pagerFirst" onclick="goToAuditPage(0)">&lt;&lt;</a>
-      <a href="javascript:void(0)" class="pager pagerPrevious" onclick="goToAuditPage(<?= $prev_offset ?>)">&lt;</a>
-      <span>Page <?= $current_page ?> of <?= $total_pages ?></span>
-      <a href="javascript:void(0)" class="pager pagerNext" onclick="goToAuditPage(<?= $next_offset ?>)">&gt;</a>
-      <a href="javascript:void(0)" class="pager pagerLast" onclick="goToAuditPage(<?= $last_offset ?>)">&gt;&gt;</a>
-    </div>
-  </div>
+  <?=$pagination->renderBar()?>
   <div class="audit-bottom-range">
     <span>Showing <?= $show_start ?: 0 ?> - <?= $show_end ?: 0 ?> of <?= $totalRecords ?> entries</span>
   </div>
 </form>
 
+	</div><!-- .register-admin-account__content -->
+</div><!-- .register-admin-account -->

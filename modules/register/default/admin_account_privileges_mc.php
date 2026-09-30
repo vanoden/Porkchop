@@ -5,6 +5,7 @@
 	$porkchop = new \Porkchop();
 	$site = $porkchop->site();
 	$page = $site->page();
+	$page->setAdminMenuSection("Customer");  // Keep Customer section open
 
 	// See if the user specificed a customer to show
 	if (!empty($_REQUEST['customer_id']) && is_numeric($_REQUEST['customer_id'])) {

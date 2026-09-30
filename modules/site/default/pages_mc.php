@@ -4,7 +4,15 @@
 	$page->requirePrivilege('edit site pages');
 
 	$pagelist = new \Site\PageList();
-	$pages = $pagelist->find();
+	$recordsPerPage = 100;
+	$pagination_start_id = $_REQUEST['pagination_start_id'] ?? 0;
+	if (!is_numeric($pagination_start_id)) $pagination_start_id = 0;
+	$pagination_start_id = (int)$pagination_start_id;
+	if ($pagination_start_id < 0) $pagination_start_id = 0;
+
+	$all_pages = $pagelist->find();
+	$totalRecords = is_array($all_pages) ? count($all_pages) : 0;
+	$pages = $pagelist->find([], ['limit' => $recordsPerPage, 'offset' => $pagination_start_id]);
 
 	if ($_REQUEST['button_submit']) {
 		foreach ($pages as $edit_page) {
@@ -40,9 +48,13 @@
 		}
 	}
 
-	$pages = $pagelist->find();
+	$pages = $pagelist->find([], ['limit' => $recordsPerPage, 'offset' => $pagination_start_id]);
 
 	$touList = new \Site\TermsOfUseList();
 	$terms_of_use = $touList->find();
+
+	$pagination = new \Site\Page\Pagination();
+	$pagination->size($recordsPerPage);
+	$pagination->count($totalRecords);
 
 	$page->title("Site Pages");

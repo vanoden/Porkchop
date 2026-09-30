@@ -1,17 +1,60 @@
 <?php
 	$page = new \Site\Page();
-	$page->requirePrivilege('manage shipments');
+	$page->requireAuth();
 	$can_proceed = true;
+
+	$request_flag_on = function ($key) {
+		if (empty($_REQUEST[$key])) return false;
+		return in_array(strtolower(trim((string)$_REQUEST[$key])), array('1', 'true', 'yes', 'on'), true);
+	};
+	// receiver=1 (receive_only kept as alias): skip ship step and show receive form
+	$receiver = $request_flag_on('receiver') || $request_flag_on('receive_only');
+	$receive_only = $receiver;
+
+	$customer = $GLOBALS['_SESSION_']->customer;
+	$can_manage_shipments = $customer->can('manage shipments');
+	$can_receive_shipments = $customer->can('receive shipments', \Register\PrivilegeLevel::CUSTOMER);
+	if ($receiver) {
+		if (!$can_receive_shipments && !$can_manage_shipments) {
+			$page->requirePrivilege('receive shipments');
+		}
+	} else {
+		$page->requirePrivilege('manage shipments');
+	}
 
 	// Create validation objects
 	$rma = new \Support\Request\Item\RMA();
 	$ticket = new \Support\Request\Item();
 
+	// When receiving from an RMA QR/form, locate the RMA and its shipment if id is omitted
+	$rma_param = $_REQUEST['rma'] ?? $_REQUEST['rma_code'] ?? $_REQUEST['rma_id'] ?? '';
+	if ($receiver && $can_proceed && empty($_REQUEST['id']) && $rma_param !== '' && $rma_param !== null) {
+		$rma_lookup = new \Support\Request\Item\RMA();
+		if ($rma_lookup->validInteger($rma_param)) {
+			$rma_lookup = new \Support\Request\Item\RMA((int)$rma_param);
+		} elseif ($rma_lookup->safeString($rma_param)) {
+			$rma_lookup->get($rma_param);
+			if (!$rma_lookup->exists()) {
+				$extracted_id = $rma_lookup->extractRmaId((string)$rma_param);
+				if (!empty($extracted_id)) {
+					$rma_lookup = new \Support\Request\Item\RMA($extracted_id);
+				}
+			}
+		}
+		if ($rma_lookup->exists() && !empty($rma_lookup->shipment_id)) {
+			$rma = $rma_lookup;
+			$_REQUEST['id'] = $rma_lookup->shipment_id;
+		} else {
+			$page->addError("RMA not found or has no shipment");
+			$can_proceed = false;
+		}
+	}
+
 	// Validate shipment ID
-	if (empty($_REQUEST['id'])) {
+	if ($can_proceed && empty($_REQUEST['id'])) {
 		$page->addError("Shipment ID is required");
 		$can_proceed = false;
-	} elseif (!$rma->validInteger($_REQUEST['id'])) {
+	} elseif ($can_proceed && !$rma->validInteger($_REQUEST['id'])) {
 		$page->addError("Invalid shipment ID format");
 		$can_proceed = false;
 	}
@@ -21,6 +64,33 @@
 		if (!$shipment->exists()) {
 			$page->addError("Shipment not found");
 			$can_proceed = false;
+		}
+	}
+
+	if ($can_proceed && $receive_only) {
+		$marked_ready = false;
+		foreach ($shipment->packages() as $package) {
+			if ($package->status == 'READY') {
+				if (!$package->ship()) {
+					$page->addError("Error marking package as shipped: " . $package->error());
+				} else {
+					$marked_ready = true;
+				}
+			}
+		}
+		if ($marked_ready || empty($shipment->date_shipped) || in_array($shipment->status, array('OPEN', 'NEW'), true)) {
+			$ship_params = array(
+				'status' => 'SHIPPED',
+				'date_shipped' => !empty($shipment->date_shipped) ? $shipment->date_shipped : date('Y-m-d H:i:s')
+			);
+			if (!empty($shipment->vendor_id)) {
+				$ship_params['vendor_id'] = $shipment->vendor_id;
+			}
+			if (!$shipment->update($ship_params)) {
+				$page->addError("Error marking shipment as shipped: " . $shipment->error());
+			} elseif ($marked_ready) {
+				$page->appendSuccess("Shipment marked as shipped so it can be received.");
+			}
 		}
 	}
 
@@ -166,6 +236,63 @@
 									$page->addError($shipment->error());
 								}
 								break;
+							
+							case 'query_ups_status':
+								// Query UPS for each package that has a tracking code
+								$packages = $shipment->packages();
+								if (empty($packages)) {
+									$page->addError("No packages found for this shipment to query UPS status.");
+									break;
+								}
+
+								foreach ($packages as $package) {
+									$tracking = trim((string)$package->tracking_code);
+									if ($tracking === '') {
+										continue;
+									}
+
+									// Use package-level last query time if available; fall back to none.
+									$lastQueriedAt = null;
+									if (!empty($package->ups_last_queried_at) && ctype_digit((string)$package->ups_last_queried_at)) {
+										$lastQueriedAt = (int)$package->ups_last_queried_at;
+									}
+
+									$result = \Shipping\UPSStatus::query($tracking, $lastQueriedAt);
+
+									if (!empty($result['rate_limited'])) {
+										$page->addError("UPS was queried too recently for tracking number " . htmlspecialchars($tracking) . ".");
+										continue;
+									}
+
+									if (empty($result['success'])) {
+										$message = !empty($result['error']) ? $result['error'] : 'Unknown error querying UPS.';
+										$page->addError("Could not query UPS for tracking number " . htmlspecialchars($tracking) . ": " . $message);
+										continue;
+									}
+
+									$update = [];
+									if (isset($result['status_text'])) {
+										$update['ups_status'] = $result['status_text'];
+									}
+									if (!empty($result['status_datetime'])) {
+										$update['ups_status_datetime'] = $result['status_datetime'];
+									}
+									if (!empty($result['location'])) {
+										$update['ups_status_location'] = $result['location'];
+									}
+									$update['ups_last_queried_at'] = time();
+
+									if (!empty($update)) {
+										if (!$package->update($update)) {
+											$page->addError("Error updating UPS status for tracking number " . htmlspecialchars($tracking) . ": " . $package->error());
+										}
+									}
+								}
+
+								if (!$page->errorCount()) {
+									$page->appendSuccess("UPS status updated for packages with tracking numbers.");
+								}
+								break;
 								
 							default:
 								$page->addError("Invalid action type");
@@ -180,45 +307,59 @@
 	// Load data for display
 	$vendorList = new \Shipping\VendorList();
 	$vendors = $vendorList->find();
-	$packages = $shipment->packages();
-
-	// Set up object links
-	if (isset($shipment->document_number)) {
-		$rma_id = null;
-		if (isset($rma) && $rma !== null) {
-			$rma_id = $rma->extractRmaId($shipment->document_number);
-		}
-		if ($rma_id !== null) {
-			$object_id = $rma_id;
-			$object_link = "/_support/admin_rma?id=$object_id";
-		} elseif (preg_match('/^TCKT(\d+)$/', $shipment->document_number, $matches)) {
-			$object_id = $matches[1] * 1;
-			$object_link = "/_support/request_item?id=$object_id";
-		} elseif (preg_match('/^PO(\d+)$/', $shipment->document_number, $matches)) {
-			$object_id = $matches[1] * 1;
-			$object_link = "/_sales/purchase_order?id=$object_id";
-		}
-	}
-
-	// Set shipping vendor display
-	$shippingVendor = empty($shipment->vendor_id) ? 'Not provided' : $shipment->vendor();
-
-	// Get locations
-	$from_location = $shipment->send_location();
-	$to_location = $shipment->rec_location();
-	// Locations for ship-from dropdown (sender's org/customer locations)
+	$packages = array();
+	$object_link = '';
+	$shippingVendor = 'Not provided';
+	$from_location = new \Register\Location();
+	$to_location = new \Register\Location();
 	$send_location_list = array();
-	if ($can_proceed && $shipment->send_contact()->id) {
-		$send_location_list = $shipment->send_contact()->locations(array('include_hidden' => true)) ?: array();
+	$send_contact = null;
+	$send_org = null;
+
+	if (!isset($shipment)) {
+		$shipment = new \Shipping\Shipment();
 	}
-	$send_contact = $can_proceed ? $shipment->send_contact() : null;
-	$send_org = ($send_contact && $send_contact->organization()) ? $send_contact->organization() : null;
+
+	if ($can_proceed && $shipment->exists()) {
+		$packages = $shipment->packages();
+
+		// Set up object links
+		if (isset($shipment->document_number)) {
+			$rma_id = null;
+			if (isset($rma) && $rma !== null) {
+				$rma_id = $rma->extractRmaId($shipment->document_number);
+			}
+			if ($rma_id !== null) {
+				$object_id = $rma_id;
+				$object_link = "/_support/admin_rma?id=$object_id";
+			} elseif (preg_match('/^TCKT(\d+)$/', $shipment->document_number, $matches)) {
+				$object_id = $matches[1] * 1;
+				$object_link = "/_support/request_item?id=$object_id";
+			} elseif (preg_match('/^PO(\d+)$/', $shipment->document_number, $matches)) {
+				$object_id = $matches[1] * 1;
+				$object_link = "/_sales/purchase_order?id=$object_id";
+			}
+		}
+
+		// Set shipping vendor display
+		$shippingVendor = empty($shipment->vendor_id) ? 'Not provided' : $shipment->vendor();
+
+		// Get locations
+		$from_location = $shipment->send_location();
+		$to_location = $shipment->rec_location();
+		// Locations for ship-from dropdown (sender's org/customer locations)
+		if ($shipment->send_contact()->id) {
+			$send_location_list = $shipment->send_contact()->locations(array('include_hidden' => true)) ?: array();
+		}
+		$send_contact = $shipment->send_contact();
+		$send_org = ($send_contact && $send_contact->organization()) ? $send_contact->organization() : null;
+	}
 
 	// Set up page navigation
 	$page->title("Shipment Detail");
 	$page->setAdminMenuSection("Shipping");  // Keep Shipping section open
 	$page->addBreadCrumb("Warehouse");
 	$page->addBreadcrumb("Shipments", "/_shipping/admin_shipments");
-	if (isset($shipment->id)) {
+	if (!empty($shipment->id)) {
 		$page->addBreadcrumb($shipment->document_number);
 	}

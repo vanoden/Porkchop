@@ -5,7 +5,6 @@
 	namespace Register\Organization;
 
 	class OwnedProduct Extends \BaseClass {
-		public int $id = 0;
 		public int $organization_id;
 		public int $product_id;
 		public int $quantity = 0;

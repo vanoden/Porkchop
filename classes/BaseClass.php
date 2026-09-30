@@ -34,9 +34,14 @@ class BaseClass {
 		'search' => '/^[\*\w\-\_\.\s]*$/',
 		'address_line' => '/^[\w? :.-|\'\)]+$/',
 		'city_name' => '/^[\w? :.-|\'\)]+$/',
-		'code' => '/^\w[\w\-\.\_\s]*$/',
-		'name' => '/\w[\w\-\.\_\s\,\!\?\(\)]*$/',
-		'hostname' => '/^[\w\-\.]+$/'
+		'code' => '/^\w[\w\-\.\_\s\:]*$/',
+		// Allow apostrophes and grave accent (common in transliterations, e.g. "ad Dali`").
+		'name' => "/\w[\w\-\.\_\s\,\!\?\(\)\'\x{2019}\x{0060}]*$/u",
+		'hostname' => '/^[\w\-\.]+$/',
+		'absolute_http' => '/^https?:\/\/[a-z0-9\.\-]+(?:\:[0-9]+)?\/[a-z0-9\.\-\/\?\=\&\%\#\+]*$/i',
+		'internal_path' => '/^_(\w[\w\_]*)\/(\w[\w\_]*)$/i',
+		'disallowed_scheme' => '/^\s*(javascript|data|vbscript)\s*:/i',
+		'disallowed_chars' => '/[\x00-\x1F\x7F<>"`\\\\]/'
 	];
 
 	/********************************************/
@@ -226,7 +231,7 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validCode($string): bool {
-		return (is_string($string) && preg_match($this->_patterns['code'], $string));
+		return (is_string($string) && strlen($string) < 64 && preg_match($this->_patterns['code'], $string));
 	}
 
 	/**
@@ -1166,5 +1171,16 @@ class BaseClass {
 		if (is_numeric($value) && ($value == 0 || $value == 1)) return true;
 		if (is_string($value) && ($value === 'true' || $value === 'false' || $value === '1' || $value === '0')) return true;
 		return false;
+	}
+
+	/**
+	 * Escape a value for safe HTML text and attribute output (XSS mitigation).
+	 * Prefer this over repeating htmlspecialchars(..., ENT_QUOTES, 'UTF-8').
+	 * Call on any BaseClass instance (e.g. from a loaded model in the controller).
+	 *
+	 * @param mixed $value Cast to string; null and missing scalars become ''.
+	 */
+	public function escHtml($value): string {
+		return htmlspecialchars((string) ($value ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 	}
 }

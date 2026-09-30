@@ -4,8 +4,32 @@
     class Customer extends Person {
 		public bool $elevated = false;
 		public int $unreadMessages = 0;
+		/** Ticket code created when this account was just blocked (request-scoped) */
+		public ?string $last_blocked_ticket_code = null;
 		protected string $password = '';
 		private \Register\User\Statistics|null $_statistics = null;
+
+		/** @var array<int, Role[]> Roles list per customer ID within this request */
+		private static $_rolesQueryCacheByUserId = array();
+
+		/** @var array<string, bool> Per-request memo for identical has_privilege() checks */
+		private static $_hasPrivilegeRequestCache = array();
+
+		/** @var array<int, bool> Memo requiresOTP() per customer per request */
+		private static $_requiresOTPRequestMemo = array();
+
+		private static function clearHasPrivilegeRequestCache(?int $customer_id = null): void {
+			if ($customer_id !== null && $customer_id > 0) {
+				$p = $customer_id.'|';
+				foreach (array_keys(self::$_hasPrivilegeRequestCache) as $k) {
+					if (strpos($k, $p) === 0) {
+						unset(self::$_hasPrivilegeRequestCache[$k]);
+					}
+				}
+			} else {
+				self::$_hasPrivilegeRequestCache = array();
+			}
+		}
 
 		/**
 		 * Constructor
@@ -84,12 +108,19 @@
 					$audit_messages[] = "Organization changed from ".$oldOrgName." to ".$parameters['organization_id'];
 				}
 				if (!empty($parameters['status']) && $this->status != $parameters['status']) $audit_messages[] = "Status changed from ".$this->status." to ".$parameters['status'];
+				$previous_status = $this->status;
 				if (!empty($parameters['first_name']) && $this->first_name != $parameters['first_name'] || !empty($parameters['last_name']) && $this->last_name != $parameters['last_name'])  $audit_messages[] = "Customer Name changed from " . $this->first_name . " " . $this->last_name . " to " . $parameters['first_name'] . " " . $parameters['last_name'];
 				if (isset($parameters['profile_visibility']) && $this->profile != $parameters['profile_visibility']) $audit_messages[] = "Profile visibility changed from ".$this->profile." to ".$parameters['profile_visibility'];
 			}
 
 			parent::update($parameters);
 			if ($this->error()) return false;
+
+			// Unblocking must clear failed-login counter or the account re-locks / captcha-traps on next attempt
+			if (!empty($parameters['status']) && in_array($parameters['status'], array('NEW', 'ACTIVE'), true)
+				&& isset($previous_status) && $previous_status === 'BLOCKED') {
+				$this->resetAuthFailures();
+			}
 
 			// roles
 			if (isset($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
@@ -219,6 +250,8 @@
 			$cache_key = "customer[" . $this->id . "]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
 			$cache->delete();
+			unset(self::$_rolesQueryCacheByUserId[$this->id]);
+			self::clearHasPrivilegeRequestCache((int) $this->id);
 
 			$this->recordAuditEvent($this->id,'Role '.$role->name.' assigned');
 			return true;
@@ -260,6 +293,8 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+			unset(self::$_rolesQueryCacheByUserId[$this->id]);
+			self::clearHasPrivilegeRequestCache((int) $this->id);
 			$this->recordAuditEvent($this->id,'Role '.$role->name.' removed');
 			return true;
 		}
@@ -374,10 +409,16 @@
 				$failure->add(array($ip_address,$login,'WRONGPASS',$endpoint,$user_agent));
 				$this->statistics()->recordFailedLogin();
 				if ($this->auth_failures() >= 6) {
-					app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
-					$this->block();
-					// Send notification to support staff
-					$this->sendAccountBlockedNotification();
+					// Only block + ticket once; further failed logins while already blocked
+					// must not create duplicate support tickets.
+					if ($this->isBlocked()) {
+						app_log("Customer '".$this->code."' already blocked after ".$this->auth_failures()." auth failures; skipping duplicate block ticket", 'notice', __FILE__, __LINE__);
+					} else {
+						app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
+						$this->block();
+						// Send notification to support staff
+						$this->sendAccountBlockedNotification();
+					}
 				}
 				return false;
 			}
@@ -630,6 +671,14 @@
 		 */
 		public function has_privilege($privilege_name, ?int $required_level = \Register\PrivilegeLevel::ADMINISTRATOR): bool {
 			$this->clearError();
+			$req = $required_level ?? \Register\PrivilegeLevel::ADMINISTRATOR;
+			if ($this->id) {
+				$cacheKey = $this->id.'|'.$privilege_name.'|'.$req;
+				if (isset(self::$_hasPrivilegeRequestCache[$cacheKey])) {
+					return self::$_hasPrivilegeRequestCache[$cacheKey];
+				}
+			}
+
 			$database = new \Database\Service();
 			$privilege = new \Register\Privilege();
 
@@ -660,9 +709,15 @@
 				//print_r("Privilege ".$privilege->name."[".$privilege->id."]:  User Level: ".var_export($level,true)." Required Level: ".var_export($required_level,true)."\n");
 				// Is the required level present in user's privilege level?
 				// Use bitwise check for privilege levels
-				if (inMatrix($level,$required_level)) {
+				if (inMatrix($level,$req)) {
+					if ($this->id) {
+						self::$_hasPrivilegeRequestCache[$cacheKey] = true;
+					}
 					return true;
 				}
+			}
+			if ($this->id) {
+				self::$_hasPrivilegeRequestCache[$cacheKey] = false;
 			}
 			return false;
 		}
@@ -828,6 +883,10 @@
 		public function roles() {
 			// Clear previous errors
 			$this->clearError();
+
+			if ($this->id && isset(self::$_rolesQueryCacheByUserId[$this->id])) {
+				return self::$_rolesQueryCacheByUserId[$this->id];
+			}
 	
 			// Initialize Database Service
 			$database = new \Database\Service();
@@ -857,6 +916,10 @@
 			while (list($id) = $rs->FetchRow()) {
 				$role = new Role($id);
 				array_push($roles,$role);
+			}
+
+			if ($this->id) {
+				self::$_rolesQueryCacheByUserId[$this->id] = $roles;
 			}
 			
 			return $roles;
@@ -1238,15 +1301,25 @@
 			
 			app_log("requiresOTP() called for customer ID: ".$this->id, 'trace', __FILE__, __LINE__);
 
+			if ($this->id && array_key_exists($this->id, self::$_requiresOTPRequestMemo)) {
+				return self::$_requiresOTPRequestMemo[$this->id];
+			}
+
 			// If use_otp false, return false immediately
 			$configuration = new \Site\Configuration();
 			if (!$configuration->getValueBool("use_otp")) {
+				if ($this->id) {
+					self::$_requiresOTPRequestMemo[$this->id] = false;
+				}
 				return false;
 			}
 		
 			// Check organization setting
 			$organization = $this->organization();
 			if ($organization && !empty($organization->time_based_password)) {
+				if ($this->id) {
+					self::$_requiresOTPRequestMemo[$this->id] = true;
+				}
 				return true;
 			}
 			
@@ -1254,15 +1327,24 @@
 			$userRoles = $this->roles();
 			foreach ($userRoles as $role) {
 				if (!empty($role->time_based_password)) {
+					if ($this->id) {
+						self::$_requiresOTPRequestMemo[$this->id] = true;
+					}
 					return true;
 				}
 			}
 
 			// Check user setting
 			if (!empty($this->time_based_password)) {
+				if ($this->id) {
+					self::$_requiresOTPRequestMemo[$this->id] = true;
+				}
 				return true;
 			}
-			
+
+			if ($this->id) {
+				self::$_requiresOTPRequestMemo[$this->id] = false;
+			}
 			return false;
 		}
 
@@ -1624,10 +1706,11 @@
 
 		/** @method createBlockedAccountSupportTicket()
 		 * Create a support ticket when an account is blocked
-		 * @return bool True if ticket created successfully, false on error
+		 * @return string|false Ticket code on success, false on error / no organization
 		 */
-		public function createBlockedAccountSupportTicket(): bool {
+		public function createBlockedAccountSupportTicket() {
 			$this->clearError();
+			$this->last_blocked_ticket_code = null;
 
 			if (!$this || !$this->id) {
 				app_log("Invalid customer object for creating blocked account support ticket", 'error', __FILE__, __LINE__);
@@ -1689,26 +1772,27 @@
 
 			// Create support request with type 'SERVICE' (database enum requirement)
 			$site = new \Site();
-			if ($site->findModule('Support')) {
-				$requestClass = "Support\\Request";
-				$supportRequest = new $requestClass();
-				$supportRequest->add(array(
-					'customer_id' => $this->id,
-					'organization_id' => $organization->id,
-					'type' => 'SERVICE',
-					'status' => 'NEW',
-					'date_request' => date('Y-m-d H:i:s')
-				));
+			if (!$site->findModule('Support')) {
+				app_log("Support module not available; cannot create blocked account ticket", 'error', __FILE__, __LINE__);
+				return false;
+			}
 
-				if ($supportRequest->error()) {
-					app_log("Error creating support ticket for blocked account: " . $supportRequest->error(), 'error', __FILE__, __LINE__);
-					return false;
-				}
+			$requestClass = "Support\\Request";
+			$supportRequest = new $requestClass();
+			$supportRequest->add(array(
+				'customer_id' => $this->id,
+				'organization_id' => $organization->id,
+				'type' => 'SERVICE',
+				'status' => 'NEW',
+				'date_request' => date('Y-m-d H:i:s')
+			));
+
+			if ($supportRequest->error()) {
+				app_log("Error creating support ticket for blocked account: " . $supportRequest->error(), 'error', __FILE__, __LINE__);
+				return false;
 			}
 
 			// Add item to the support request with blocking details
-			// Type of Request: "web portal" (as description)
-			// Describe Problem: "user has been blocked (history of account audits)"
 			$description = "Type of Request: web portal\n\n";
 			$description .= "Describe Problem: User has been blocked (history of account audits)\n\n";
 			$description .= "Account Blocked - Security Alert\n\n";
@@ -1720,7 +1804,7 @@
 			$description .= "Blocked Date: " . date('Y-m-d H:i:s T') . "\n";
 			$description .= $auditHistory;
 			$description .= "\nThe account was automatically blocked after multiple failed login attempts. ";
-			$description .= "The customer will need to use the 'Forgot Password' feature to reset their password and restore account access.";
+			$description .= "The customer will need to use the 'Forgot Password' / Recover Password feature to reset their password and restore account access.";
 
 			$ticket = $supportRequest->addItem(array(
 				'line' => 1,
@@ -1736,10 +1820,20 @@
 				return false;
 			}
 
-			app_log("Support ticket " . $supportRequest->code . " created for blocked account " . $this->code, 'info', __FILE__, __LINE__);
-			$this->auditRecord('SUPPORT_TICKET_CREATED', 'Support ticket ' . $supportRequest->code . ' created for blocked account');
-			
-			return true;
+			$ticketCode = $supportRequest->code ?? '';
+			if (empty($ticketCode) && !empty($supportRequest->id)) {
+				$ticketCode = (string) $supportRequest->id;
+			}
+			if (empty($ticketCode)) {
+				app_log("Support ticket created for blocked account " . $this->code . " but no code was returned", 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			$this->last_blocked_ticket_code = $ticketCode;
+			app_log("Support ticket " . $ticketCode . " created for blocked account " . $this->code, 'info', __FILE__, __LINE__);
+			$this->auditRecord('SUPPORT_TICKET_CREATED', 'Support ticket ' . $ticketCode . ' created for blocked account');
+
+			return $ticketCode;
 		}
 
 		/** @method sendAccountBlockedNotification()
@@ -1783,6 +1877,13 @@
 
 			$result = true;
 
+			// Create support ticket for blocked account
+			$ticketCode = $this->createBlockedAccountSupportTicket();
+			if ($ticketCode === false) {
+				$ticketCode = '';
+			}
+			$ticketCodeDisplay = $ticketCode !== '' ? $ticketCode : 'Not created (no organization on file)';
+
 			// Send email to user
 			if (!empty($customerEmail)) {
 				if (!isset($GLOBALS['_config']->register->account_blocked_user_notification)) {
@@ -1804,6 +1905,7 @@
 									'BLOCKED.DATE' => date('Y-m-d'),
 									'BLOCKED.TIME' => date('H:i:s T'),
 									'FORGOT_PASSWORD.URL' => $forgotPasswordUrl,
+									'TICKET.CODE' => $ticketCodeDisplay,
 									'SUPPORT.EMAIL' => $GLOBALS['_config']->site->support_email ?? 'service@spectrosinstruments.com',
 									'SUPPORT.PHONE' => $GLOBALS['_config']->site->support_phone ?? '',
 									'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
@@ -1843,9 +1945,6 @@
 			} else {
 				app_log("No email address available for customer " . $this->id . ", skipping user notification", 'info', __FILE__, __LINE__);
 			}
-
-			// Create support ticket for blocked account
-			$this->createBlockedAccountSupportTicket();
 
 			// Send email to support with audit information
 			if (!isset($GLOBALS['_config']->register->account_blocked_notification)) {

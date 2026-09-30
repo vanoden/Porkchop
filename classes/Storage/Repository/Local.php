@@ -36,7 +36,7 @@
 			parent::add($parameters);
 			if ($this->id) {
 				app_log("Storage repository created, adding path",'notice');
-				if ($this->_setMetadata('path',$parameters['path'])) {
+				if ($this->setMetadata('path',$parameters['path'])) {
 					app_log("Path set to ".$parameters['path'],'notice');
 					$this->path = $this->_path();
 					return true;
@@ -90,7 +90,7 @@
 					return false;
 				}
 				
-				$this->_setMetadata('path',$path);
+				$this->setMetadata('path',$path);
 			}
 			return $this->getMetadata('path');
 		}
@@ -102,7 +102,7 @@
 		 * @return string
 		 */
 		public function _endpoint($string = null) {
-			if (isset($string)) $this->_setMetadata('endpoint',$string);
+			if (isset($string)) $this->setMetadata('endpoint',$string);
 			return $this->getMetadata('endpoint');
 		}
 

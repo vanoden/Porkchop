@@ -7,8 +7,8 @@
 		public function __construct() {
 			$this->_admin_role = 'shipping manager';
 			$this->_name = 'shipping';
-			$this->_version = '0.1.2';
-			$this->_release = '2022-03-10';
+			$this->_version = '0.2.3';
+			$this->_release = '2026-03-19';
 			$this->_schema = new \Shipping\Schema();
 			parent::__construct();
 		}
@@ -91,6 +91,13 @@
 		### Add a Shipment								###
 		###################################################
 		public function addShipment() {
+			if (! $this->validCSRFToken()) {
+				$this->error("Invalid Request");
+			}
+			if (! $GLOBALS['_SESSION_']->customer->can('manage shipments')) {
+				$this->error("Permission denied");
+			}
+
 			$parameters = array();
 			$send_location = new \Register\Location($_REQUEST['send_location_id']);
 			if ($send_location->id) $parameters['send_location_id'] = $send_location->id;
@@ -108,13 +115,20 @@
 			if ($receive_customer->id) $parameters['receive_customer_id'] = $_REQUEST['receive_customer_id'];
 			else $this->invalidRequest("Receiving Customer not found");
 
-			$vendor = new \Shipping\Vendor($_REQUEST['vendor_id']);
-			if ($vendor->id) $parameters['vendor_id'] = $_REQUEST['vendor_id'];
+			$vendor = new \Shipping\Vendor($_REQUEST['vendor_id'] ?? 0);
+			if (! $vendor->id) {
+				$this->invalidRequest("Shipping vendor not found");
+			}
+			$parameters['vendor_id'] = $vendor->id;
 
 			if (isset($_REQUEST['document_number'])) $parameters['document_number'] = $_REQUEST['document_number'];
 			else $this->incompleteRequest("Document number required");
 
 			if (!empty($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
+			if (!empty($_REQUEST['date_entered'])) {
+				$parsed = get_mysql_date($_REQUEST['date_entered']);
+				if ($parsed) $parameters['date_entered'] = $parsed;
+			}
 
 			$shipment = new \Shipping\Shipment();
 			$shipment->add($parameters);
@@ -288,7 +302,7 @@
 				'addShipment' => array(
 					'description'	=> 'Add a Shipment',
 					'token_required'	=> true,
-					'privilege_required'	=> 'shipping manager',
+					'privilege_required'	=> 'manage shipments',
 					'return_element'	=> 'shipment',
 					'return_type'	=> 'object',
 					'parameters'	=> array(

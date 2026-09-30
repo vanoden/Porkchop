@@ -109,11 +109,15 @@
 				return [];
 			}
 
+			$skipReadable = !empty($parameters['skip_readable_check'])
+				&& !empty($GLOBALS['_SESSION_']->customer->id)
+				&& $GLOBALS['_SESSION_']->customer->can('manage products');
+
 			// Assemble Results
 			$files = array();
 			while(list($id) = $rs->FetchRow()) {
 				$file = new File($id);
-				if ($file->readable($GLOBALS['_SESSION_']->customer->id)) {
+				if ($skipReadable || $file->readable($GLOBALS['_SESSION_']->customer->id)) {
 					array_push($files,$file);
 					$this->incrementCount();
 				}
