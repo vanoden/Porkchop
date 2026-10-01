@@ -62,7 +62,9 @@
 		###################################################
 		public function getBlock() {
 			# Initiate Product Object
-			$block = new \Content\Block($_REQUEST['id']);
+			// Lookups by target omit id; reading it unconditionally emits a PHP
+			// warning that corrupts the JSON response.
+			$block = new \Content\Block($_REQUEST['id'] ?? 0);
 			if (! isset($_REQUEST['id'])) {
 				if (isset($_REQUEST['code']) && $_REQUEST['code']) $_REQUEST['target'] = $_REQUEST['code'];
 				if (empty($_REQUEST['target'])) $_REQUEST['target'] = '';
