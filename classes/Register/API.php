@@ -2485,7 +2485,6 @@
 					'path' => '/api/register/findCustomers',
 					'authentication_required'	=> true,
 					'token_required' => false,
-					'privilege_required' => '[CONDITIONAL]',
 					'return_element' => 'customer',
 					'return_type' => 'Register::Customer',
 					'show_controls'	=> true,
