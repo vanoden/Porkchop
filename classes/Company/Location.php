@@ -289,13 +289,13 @@
 				$database->AddParam($parameters['name']);
 			}
 
-			if (preg_match('/^\w[\w\-\.]+$/',$parameters['host'])) {
+			if (isset($parameters['host']) && preg_match('/^\w[\w\-\.]+$/', $parameters['host'])) {
 				$update_object_query .= ",
 					host = ?";
 				$database->AddParam($parameters['host']);
 			}
 
-			if (preg_match('/^\d+$/',$parameters['domain_id'])) {
+			if (isset($parameters['domain_id']) && preg_match('/^\d+$/', $parameters['domain_id'])) {
 				$update_object_query .= ",
 					domain_id = ?";
 				$database->AddParam($parameters['domain_id']);

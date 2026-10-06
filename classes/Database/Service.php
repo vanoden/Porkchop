@@ -177,6 +177,8 @@
 				$affected_rows = $this->affected_rows();
 				if (empty($affected_rows) && $recordSet !== null) $affected_rows = $recordSet->RecordCount();
 				app_log("QUERY STATS: {$class_name}::{$function_name} executed in {$exec_elapsed_time} seconds, affected rows: {$affected_rows}",'trace');
+				if (!isset($GLOBALS['_page_query_count'])) $GLOBALS['_page_query_count'] = 0;
+				if (!isset($GLOBALS['_page_query_time'])) $GLOBALS['_page_query_time'] = 0;
 				$GLOBALS['_page_query_count'] ++;
 				$GLOBALS['_page_query_time'] += $exec_elapsed_time;
 			} catch (\mysqli_sql_exception $e) {

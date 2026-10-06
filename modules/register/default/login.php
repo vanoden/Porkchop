@@ -19,7 +19,7 @@
 <section>
 	<form id="reg_form" onkeypress="return loginSubmitEnter(event)" name="loginForm" method="post" action="<?=PATH?>/_register/login">
 		<input type="hidden" name="login_target" value="<?=$target?>" />
-		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+		<input type="hidden" name="csrfToken" value="<?=$csrfToken?>">
 
 		<h2>Sign in</h2>
 		<ul id="register_form" class="section-grid grid-col-4">

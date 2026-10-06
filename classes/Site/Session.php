@@ -36,7 +36,7 @@ use Register\Customer;
 		private $elevated = false;				// Is the session elevated?
 		private $oauth2_state = null;			// OAuth2 state for the session
 		
-		/**
+		/** @method __construct(id)
 		 * Constructor
 		 * @param int $id 
 		 * @return void 
@@ -549,9 +549,16 @@ use Register\Customer;
 
 		/** @method customer()
 		 * Get the associated customer object
-		 * @return Customer 
+		 * @return Customer An empty Customer for anonymous sessions
 		 */
 		public function customer(): \Register\Customer {
+			// Anonymous sessions never populate $this->customer. Return an empty
+			// Customer so callers can test exists() instead of hitting a TypeError.
+			if (! $this->customer instanceof \Register\Customer) {
+				$this->customer = !empty($this->customer_id)
+					? new \Register\Customer($this->customer_id)
+					: new \Register\Customer();
+			}
 			return $this->customer;
 		}
 
@@ -681,7 +688,7 @@ use Register\Customer;
 			return $this->details($this->id);
 		}
 
-		/**
+		/** @method superElevate()
 		 * Grant Full, Temporary, Admin Rights for Installation
 		 * @return bool True if successfull
 		 */
@@ -689,7 +696,7 @@ use Register\Customer;
 			return $this->update(array('super_elevation_expires' => date('Y-m-d H:i:s',time() + 900)));
 		}
 
-		/**
+		/** @method superElevated()
 		 * Check if session is super elevated
 		 * @return bool True if super elevated
 		 */
@@ -1115,16 +1122,26 @@ use Register\Customer;
 			return $token;
 		}
 
+		/** @method getCSRFToken()
+		 * Get the CSRF token for the session, generating a new one if necessary
+		 * @return string The CSRF token
+		 */
 		public function getCSRFToken() {
 			if (empty($this->csrfToken)) {
 				$this->csrfToken = $this->generateCSRFToken();
+				// cache() is null until the session has an id; verifyCSRFToken() already
+				// tolerates an uncached token, so skip caching instead of failing the page.
 				$cache = $this->cache();
-				$cache->setElement('csrfToken', $this->csrfToken);
+				if (empty($cache)) {
+					app_log("No cache available to store CSRF token for session " . $this->id, 'debug');
+				} else {
+					$cache->setElement('csrfToken', $this->csrfToken);
+				}
 			}
 			return $this->csrfToken;
 		}
 
-		/**
+		/** @method setOTPVerified(verified)
 		 * Set OTP verification status in separate cache with 2-hour expiration
 		 * @param bool $verified
 		 * @return bool
@@ -1160,7 +1177,7 @@ use Register\Customer;
 			return true;
 		}
 
-		/**
+		/** @method loadOTPVerifiedFromCache()
 		 * Load OTP verification status from separate cache
 		 * @return bool|null
 		 */
@@ -1177,7 +1194,7 @@ use Register\Customer;
 			}
 		}
 
-		/**
+		/** @method getOTPVerified()
 		 * Get OTP verification status from cache
 		 * @return bool|null
 		 */
@@ -1219,7 +1236,7 @@ use Register\Customer;
 			return $this->otpVerified;
 		}
 
-		/**
+		/** @method isOTPVerified()
 		 * Check if OTP is verified (returns true if null - no OTP required)
 		 * @return bool
 		 */
@@ -1228,7 +1245,7 @@ use Register\Customer;
 			return $this->otpVerified !== false;
 		}
 
-		/**
+		/** @method clearOTPVerified()
 		 * Clear OTP verification status from cache
 		 * @return bool
 		 */
@@ -1260,10 +1277,18 @@ use Register\Customer;
 			return true;
 		}
 
+		/** @method location()
+		 * Get the location associated with the session
+		 * @return \Company\Location
+		 */
 		public function location() {
 			return new \Company\Location($this->location_id);
 		}
 
+		/** @method domain()
+		 * Get the domain associated with the session
+		 * @return \Company\Domain
+		 */
 		public function domain() {
 			return new \Company\Domain($this->domain_id);
 		}

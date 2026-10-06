@@ -1514,9 +1514,31 @@
 			else {
 				$parameters['organization_id'] = $_REQUEST['organization_id'];
 			}
+
+			$validationClass = new \BaseModel();
+			if (!empty($_REQUEST['zip_code'])) {
+				if (! $validationClass->validZipCode($_REQUEST['zip_code'])) $this->error("Invalid zip code");
+				$parameters['zip_code'] = $_REQUEST['zip_code'];
+			}
+			$country = new \Geography\Country();
+			if (!empty($_REQUEST['country_code'])) {
+				if (! $country->get($_REQUEST['country_code'])) $this->error("Invalid country code");
+				$parameters['country_code'] = $_REQUEST['country_code'];
+			}
+			if (!empty($_REQUEST['city'])) {
+				$parameters['city'] = $_REQUEST['city'];
+			}
+			elseif (!empty($_REQUEST['province_code'])) {
+				$province = new \Geography\Province();
+				if (! $province->getProvince($country->id, $_REQUEST['province_code']))
+					$this->error("Invalid province code");
+				$parameters['province_id'] = $province->id;
+			}
+
 			$parameters['recursive'] = true;
 
 			$locationList = new \Register\LocationList();
+			$locationList->setControl('toArray', true);
 			$locations = $locationList->find($parameters);
 
 			$response = new \APIResponse();
@@ -2463,7 +2485,6 @@
 					'path' => '/api/register/findCustomers',
 					'authentication_required'	=> true,
 					'token_required' => false,
-					'privilege_required' => '[CONDITIONAL]',
 					'return_element' => 'customer',
 					'return_type' => 'Register::Customer',
 					'show_controls'	=> true,
@@ -2999,6 +3020,26 @@
 						'organization_id' => array(
 							'required' => false,
 							'content-type' => 'int',
+						),
+						'country_code' => array(
+							'description'	=> 'Country code',
+							'prompt'		=> 'Country code',
+							'required' => false,
+						),
+						'province_code' => array(
+							'description'	=> 'Province code',
+							'prompt'		=> 'Province code',
+							'required' => false,
+						),
+						'city' => array(
+							'description'	=> 'City name',
+							'prompt'		=> 'City name',
+							'required' => false,
+						),
+						'zip_code' => array(
+							'description'	=> 'Zip code',
+							'prompt'		=> 'Zip code',
+							'required' => false,
 						)
 					)
 				),
