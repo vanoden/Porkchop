@@ -450,6 +450,6 @@ else {
 	$page->title($customer->full_name());
 }
 
-$page->addBreadcrumb("Registration");
+$page->addBreadcrumb("Registration", "/_register/account");
 $page->addBreadcrumb($customer->organization()->name,"/_register/organization?organization_id=" . $customer->organization_id);
 $page->addBreadcrumb($customer->code,"/_register/account/".$customer->code);

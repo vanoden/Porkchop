@@ -90,3 +90,7 @@
 	$statii = $organization->statii();
 
 	$page->title = "Organization Details";
+	$page->addBreadcrumb("Registration", "/_register/account");
+	if ($organization && !empty($organization->id)) {
+		$page->addBreadcrumb($organization->name, "/_register/organization?organization_id=".$organization->id);
+	}
