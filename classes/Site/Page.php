@@ -635,7 +635,7 @@
 				}
 			}
 			// Delete Metadata Records for Page
-			$this->purgeMetadata();
+			$this->dropAllMetadata();
 
 			// Delete Page
 			$database = new \Database\Service();
