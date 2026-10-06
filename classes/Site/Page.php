@@ -19,6 +19,10 @@
 		public string $sitemap = "";
 		public bool $isSearchResults = false;
 		private $_breadcrumbs = array();
+		private $_adminMenuSection = null;
+		private static $_requestBreadcrumbs = array();
+		private static $_requestAdminMenuSection = null;
+		private static $_adminMenuBreadcrumbTargets = null;
 		private $_errors = array();
 		private $_warnings = array();
 
@@ -1607,16 +1611,160 @@
 		public function addBreadcrumb($name,$target = '') {
 			$breadcrumb = array("name" => $name, "target" => $target);
 			array_push($this->_breadcrumbs,$breadcrumb);
+			self::$_requestBreadcrumbs[] = $breadcrumb;
+		}
+
+		public function getBreadcrumbs() {
+			if (count($this->_breadcrumbs) > 0) {
+				return $this->_breadcrumbs;
+			}
+			return self::$_requestBreadcrumbs;
 		}
 
 		public function showBreadcrumbs() {
-			if (count($this->_breadcrumbs) < 1) return "";
+			$crumbs = $this->_breadcrumbs;
+			if (count($crumbs) < 1) {
+				$crumbs = self::$_requestBreadcrumbs;
+			}
+			if (count($crumbs) < 1) return "";
+
+			$section = $this->getAdminMenuSection();
+			if (!empty($section) && !empty($crumbs)) {
+				$firstName = trim($crumbs[0]['name'] ?? '');
+				$aliases = array(
+					'Shipping' => 'Warehouse',
+					'Package' => 'Packages',
+					'Monitor' => 'Datalogger',
+					'Site Tools' => 'Site',
+					'Site Pages' => 'Pages',
+				);
+				$firstLookup = $aliases[$firstName] ?? $firstName;
+				if (strcasecmp($firstName, $section) !== 0 && strcasecmp($firstLookup, $section) !== 0) {
+					array_unshift($crumbs, array(
+						'name' => $section,
+						'target' => $this->resolveBreadcrumbTarget($section),
+					));
+				}
+			}
+
+			$currentURL = $this->currentRequestPath();
+			$lastIndex = count($crumbs) - 1;
 			$html = '';
-			foreach ($this->_breadcrumbs as $breadcrumb) {
-				if (!empty($breadcrumb['target'])) $html .= "\t\t<li><a href=\"".$breadcrumb['target']."\">".$breadcrumb['name']."</a></li>\n";
-				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
+			foreach ($crumbs as $index => $breadcrumb) {
+				$name = $breadcrumb['name'] ?? '';
+				$target = trim((string)($breadcrumb['target'] ?? ''));
+				if ($target === '') {
+					if ($index === $lastIndex && $currentURL !== '') {
+						$target = $currentURL;
+					}
+					else {
+						$target = $this->resolveBreadcrumbTarget($name);
+					}
+				}
+				if ($target !== '') {
+					$html .= "\t\t<li><a href=\"".$target."\">".$name."</a></li>\n";
+				}
+				else {
+					$html .= "\t\t<li>".$name."</li>";
+				}
 			}
 			return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
+		}
+
+		private function currentRequestPath() {
+			$uri = $_SERVER['REQUEST_URI'] ?? '';
+			$path = parse_url($uri, PHP_URL_PATH);
+			if (!empty($path) && $path !== '/') {
+				return $path;
+			}
+			return $uri !== '' ? $uri : '';
+		}
+
+		private function resolveBreadcrumbTarget($name) {
+			$name = trim((string)$name);
+			if ($name === '') {
+				return '';
+			}
+
+			$aliases = array(
+				'Shipping' => 'Warehouse',
+				'Package' => 'Packages',
+				'Monitor' => 'Datalogger',
+				'Site Tools' => 'Site',
+				'Site Pages' => 'Pages',
+			);
+			$lookup = $aliases[$name] ?? $name;
+
+			$map = $this->adminMenuBreadcrumbTargets();
+			$key = strtolower($lookup);
+			if (isset($map[$key])) {
+				return $map[$key];
+			}
+			return '';
+		}
+
+		private function adminMenuBreadcrumbTargets() {
+			if (self::$_adminMenuBreadcrumbTargets !== null) {
+				return self::$_adminMenuBreadcrumbTargets;
+			}
+
+			self::$_adminMenuBreadcrumbTargets = array();
+			$menu = new \Site\Navigation\Menu();
+			if (!$menu->get('admin')) {
+				return self::$_adminMenuBreadcrumbTargets;
+			}
+
+			foreach ($menu->cascade() as $item) {
+				$this->indexBreadcrumbMenuItem($item);
+			}
+			return self::$_adminMenuBreadcrumbTargets;
+		}
+
+		private function indexBreadcrumbMenuItem($item) {
+			$key = strtolower(trim((string)$item->title));
+			$target = trim((string)$item->target);
+			$children = !empty($item->item) ? $item->item : array();
+			$preferredLandings = array(
+				'datalogger' => '/_monitor/admin_assets',
+				'customer' => '/_register/admin_organizations',
+				'support' => '/_support/requests',
+				'site' => '/_site/pages',
+				'sales' => '/_sales/orders',
+				'warehouse' => '/_shipping/admin_shipments',
+				'company' => '/_company/configuration',
+				'storage' => '/_storage/repositories',
+				'engineering' => '/_engineering/home',
+				'fumigation' => '/_spectros/admin_commodities',
+			);
+
+			if ($target === '' && isset($preferredLandings[$key])) {
+				$target = $preferredLandings[$key];
+			}
+
+			if ($target === '' && count($children) > 0) {
+				foreach ($children as $child) {
+					if (strcasecmp($child->title, 'Home') === 0 && !empty($child->target)) {
+						$target = $child->target;
+						break;
+					}
+				}
+				if ($target === '') {
+					foreach ($children as $child) {
+						if (!empty($child->target)) {
+							$target = $child->target;
+							break;
+						}
+					}
+				}
+			}
+
+			if ($key !== '' && $target !== '' && !isset(self::$_adminMenuBreadcrumbTargets[$key])) {
+				self::$_adminMenuBreadcrumbTargets[$key] = $target;
+			}
+
+			foreach ($children as $child) {
+				$this->indexBreadcrumbMenuItem($child);
+			}
 		}
 
 		/**
@@ -1628,6 +1776,8 @@
 		 */
 		public function setAdminMenuSection($sectionName) {
 			app_log("Setting admin menu section to: " . $sectionName, 'debug');
+			$this->_adminMenuSection = $sectionName;
+			self::$_requestAdminMenuSection = $sectionName;
 			$this->setMetadata('admin_menu_section', $sectionName);
 		}
 
@@ -1637,6 +1787,12 @@
 		 * @return string|null The admin menu section to open, or null for auto-detection
 		 */
 		public function getAdminMenuSection() {
+			if ($this->_adminMenuSection !== null && $this->_adminMenuSection !== '') {
+				return $this->_adminMenuSection;
+			}
+			if (self::$_requestAdminMenuSection !== null && self::$_requestAdminMenuSection !== '') {
+				return self::$_requestAdminMenuSection;
+			}
 			$section = $this->getMetadata('admin_menu_section');
 			return $section;
 		}

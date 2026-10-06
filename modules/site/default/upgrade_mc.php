@@ -100,7 +100,9 @@
 				"admin_product"			=> $admin_template,
 				"admin_credits"			=> $admin_template,
 				"cal_report"			=> $admin_template,
+				"cal_current_report"		=> $admin_template,
 				"cal_verify_require_report"	=> $admin_template,
+				"cal_verify_required_report"	=> $admin_template,
 			),
 		),
 		"Engineering"	=> array(

@@ -640,74 +640,75 @@
 		 * @return bool True if URL matches this item
 		 */
 		public function matchesURL($currentURL) {
-			if (empty($this->target) || empty($currentURL)) {
-				return false;
-			}
-
-			// Normalize URLs for comparison
-			$target = $this->normalizeURL($this->target);
-			$current = $this->normalizeURL($currentURL);
-
-			// Exact match
-			if ($target === $current) {
-				return true;
-			}
-
-			// Pattern matching for wildcards
-			if (strpos($target, '*') !== false) {
-				$pattern = str_replace('*', '.*', preg_quote($target, '/'));
-				return preg_match('/^' . $pattern . '$/', $current);
-			}
-
-		// Check if current URL starts with target (for parent matching)
-		// Only allow this for proper path segments, not single characters
-		if (strpos($current, $target) === 0) {
-			$targetLength = strlen($target);
-			
-			// Exclude very short targets that are too broad (like "/" or "/_")
-			if ($targetLength <= 2) {
-				return false;
-			}
-			
-			// Additional safety check: don't match root targets like "/" against any URL
-			if ($target === '/' || $target === '_' || $target === '' || $target === 'company' || $target === 'sales' || $target === 'datalogger') {
-				return false;
-			}
-			
-			// Additional check: ensure the target is a proper module path (starts with _)
-			if (substr($target, 0, 1) !== '_') {
-				return false;
-			}
-			
-			// Only match if:
-			// 1. Exact match, OR
-			// 2. Target ends with '/' and current starts with target, OR  
-			// 3. Current has a '/' right after the target (proper path segment)
-			// BUT exclude cases where target is just a prefix without proper path separation
-			if ($current === $target || 
-				(substr($target, -1) === '/' && strpos($current, $target) === 0) ||
-				($targetLength < strlen($current) && $current[$targetLength] === '/')) {
-				
-				// Additional check: don't match if target is just a prefix without proper path structure
-				// e.g., don't match "/_engineering" against "/_engineering/home" 
-				// unless "/_engineering" is meant to be a parent path
-				if ($current !== $target && substr($target, -1) !== '/') {
-					// If target doesn't end with '/', make sure it's a proper path segment
-					// by checking that the next character after target is '/'
-					if ($targetLength >= strlen($current) || $current[$targetLength] !== '/') {
-						return false;
-					}
-					// Additional check: make sure the target is a complete path segment
-					// Don't match "/_engineering" against "/_engineering/home" unless we want parent matching
-					// For now, disable this type of matching to prevent false positives
-					return false;
-				}
-				
-				return true;
-			}
+			return $this->urlMatchScore($currentURL) > 0;
 		}
 
-			return false;
+		/**
+		 * Score how closely a URL belongs to this menu item.
+		 * Higher scores are more specific. Zero means no match.
+		 *
+		 * @param string $currentURL The page URL to compare
+		 * @return int Match score
+		 */
+		public function urlMatchScore($currentURL) {
+			if (empty($this->target) || empty($currentURL)) {
+				return 0;
+			}
+			if (strpos($this->target, 'javascript:') === 0) {
+				return 0;
+			}
+
+			$target = $this->normalizeURL($this->target);
+			$current = $this->normalizeURL($currentURL);
+			if ($target === '' || $current === '') {
+				return 0;
+			}
+
+			if ($target === $current) {
+				return 100000 + strlen($target);
+			}
+
+			if (strpos($this->target, '*') !== false || strpos($target, '*') !== false) {
+				$pattern = str_replace('\*', '.*', preg_quote($target, '/'));
+				if (preg_match('/^' . $pattern . '$/', $current)) {
+					return 90000 + strlen($target);
+				}
+			}
+
+			if (strlen($target) > 2 && strpos($current, $target . '/') === 0) {
+				return 80000 + strlen($target);
+			}
+
+			$targetParts = explode('/', $target);
+			$currentParts = explode('/', $current);
+			$targetModule = $targetParts[0] ?? '';
+			$currentModule = $currentParts[0] ?? '';
+			if ($targetModule === '' || $targetModule !== $currentModule) {
+				return 0;
+			}
+
+			$targetView = $targetParts[1] ?? '';
+			$currentView = $currentParts[1] ?? '';
+			if ($targetView === '' || $currentView === '') {
+				return 0;
+			}
+
+			if ($targetView === $currentView) {
+				return 70000 + strlen($targetView);
+			}
+
+			$related = $this->viewRelatedness($targetView, $currentView);
+			if ($related > 0) {
+				return 60000 + $related;
+			}
+
+			foreach ($this->viewAliases($currentView) as $alias) {
+				if ($alias === $targetView || $this->viewStem($alias) === $this->viewStem($targetView)) {
+					return 55000 + strlen($targetView);
+				}
+			}
+
+			return 0;
 		}
 
 		/**
@@ -716,17 +717,85 @@
 		 * @param string $url URL to normalize
 		 * @return string Normalized URL
 		 */
-		private function normalizeURL($url) {
-			// Remove leading slash
-			$url = ltrim($url, '/');
-			
-			// Remove query parameters for comparison
-			$url = strtok($url, '?');
-			
-			// Remove trailing slash
-			$url = rtrim($url, '/');
-			
-			return $url;
+		public function normalizeURL($url) {
+			$path = parse_url((string)$url, PHP_URL_PATH);
+			if ($path === null || $path === false || $path === '') {
+				$path = strtok((string)$url, '?');
+			}
+			$path = ltrim((string)$path, '/');
+			$path = rtrim($path, '/');
+			return $path;
+		}
+
+		/**
+		 * How closely two view names describe the same admin page family.
+		 * Matches products/product, admin_organization/organizations,
+		 * and more specific pages such as admin_organization_users.
+		 */
+		private function viewRelatedness($menuView, $currentView) {
+			$pairs = array(
+				array($menuView, $currentView),
+				array($this->stripAdminPrefix($menuView), $this->stripAdminPrefix($currentView)),
+			);
+			$best = 0;
+			foreach ($pairs as $pair) {
+				$menuName = $pair[0];
+				$pageName = $pair[1];
+				if ($menuName === '' || $pageName === '') {
+					continue;
+				}
+				if ($menuName === $pageName) {
+					$best = max($best, 1000 + strlen($menuName));
+					continue;
+				}
+				$menuStem = $this->viewStem($menuName);
+				$pageStem = $this->viewStem($pageName);
+				if ($menuStem !== '' && $menuStem === $pageStem) {
+					$best = max($best, 800 + strlen($menuStem));
+					continue;
+				}
+				if (strpos($pageName, $menuName . '_') === 0) {
+					$best = max($best, 600 + strlen($menuName));
+					continue;
+				}
+				if ($menuStem !== '' && strpos($pageName, $menuStem . '_') === 0) {
+					$best = max($best, 500 + strlen($menuStem));
+				}
+			}
+			return $best;
+		}
+
+		private function stripAdminPrefix($view) {
+			if (strpos($view, 'admin_') === 0) {
+				return substr($view, 6);
+			}
+			return $view;
+		}
+
+		private function viewAliases($view) {
+			$aliases = array(
+				'admin_details' => array('admin_assets', 'assets'),
+				'admin_asset' => array('admin_assets', 'assets'),
+				'admin_dashboard' => array('dashboards'),
+				'dashboard_new' => array('dashboards'),
+				'sensor_model' => array('sensor_models'),
+				'request_detail' => array('requests'),
+				'admin_rma' => array('admin_rmas'),
+				'admin_submission' => array('admin_forms'),
+				'admin_submissions' => array('admin_forms'),
+				'term_of_use' => array('terms_of_use'),
+			);
+			return $aliases[$view] ?? array();
+		}
+
+		private function viewStem($view) {
+			if (strlen($view) > 4 && substr($view, -3) === 'ies') {
+				return substr($view, 0, -3) . 'y';
+			}
+			if (strlen($view) > 2 && substr($view, -1) === 's' && substr($view, -2) !== 'ss') {
+				return substr($view, 0, -1);
+			}
+			return $view;
 		}
 
 		/**
