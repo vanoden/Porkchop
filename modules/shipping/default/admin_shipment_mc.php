@@ -78,14 +78,12 @@
 				}
 			}
 		}
-		if ($marked_ready || empty($shipment->date_shipped) || in_array($shipment->status, array('OPEN', 'NEW'), true)) {
+		// shipping_shipments.status is OPEN/CLOSED only. "Shipped" is date_shipped
+		// plus package status SHIPPED; writing SHIPPED here truncates the column.
+		if ($marked_ready || empty($shipment->date_shipped)) {
 			$ship_params = array(
-				'status' => 'SHIPPED',
 				'date_shipped' => !empty($shipment->date_shipped) ? $shipment->date_shipped : date('Y-m-d H:i:s')
 			);
-			if (!empty($shipment->vendor_id)) {
-				$ship_params['vendor_id'] = $shipment->vendor_id;
-			}
 			if (!$shipment->update($ship_params)) {
 				$page->addError("Error marking shipment as shipped: " . $shipment->error());
 			} elseif ($marked_ready) {
@@ -180,9 +178,10 @@
 								}
 								
 								if (!$page->errorCount()) {
-									if (!$package->update(array(
-										'status' => 'RECEIVED',
-										'condition' => $_REQUEST['package_condition'][$package->id] ?? 'GOOD'
+									$condition = $_REQUEST['package_condition'][$package->id] ?? 'OK';
+									if ($condition === 'GOOD') $condition = 'OK';
+									if (!$package->receive(array(
+										'condition' => $condition
 									))) {
 										$page->addError("Error updating package " . $package->id . ": " . $package->error());
 									} else {

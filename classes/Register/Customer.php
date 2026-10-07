@@ -414,7 +414,7 @@
 					if ($this->isBlocked()) {
 						app_log("Customer '".$this->code."' already blocked after ".$this->auth_failures()." auth failures; skipping duplicate block ticket", 'notice', __FILE__, __LINE__);
 					} else {
-						app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
+						app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".($ip_address ?: 'unknown')."'");
 						$this->block();
 						// Send notification to support staff
 						$this->sendAccountBlockedNotification();

@@ -440,9 +440,9 @@ class Menu Extends \BaseModel {
 							// Sub Nav Button - no longer append expandNav parameter
 							$subLinkClass = 'nav-menu__link nav-menu__link--sub';
 							if (in_array($subitem->id, $currentPageItems)) {
-								$subLinkClass .= ' nav-menu__link--current';
+								$subLinkClass .= ' nav-menu__link--current current-page';
 							}
-							$html .= '<a class="' . $subLinkClass . '" href="' . $subitem->target . '">' . $subitem->title . '</a>';
+							$html .= '<a class="' . $subLinkClass . '" data-nav-item-id="' . (int)$subitem->id . '" href="' . $subitem->target . '">' . $subitem->title . '</a>';
 					}
 					$html .= '</div>';
 				}
@@ -677,59 +677,203 @@ END;
 	 */
 	public function findItemsToExpand($currentURL) {
 		$expandedItems = array();
-		$items = $this->cascade();
+		$best = $this->findBestNavMatch($currentURL);
+		if (!$best) {
+			return $expandedItems;
+		}
 
-		$sectionName = $this->resolveAdminMenuSection($currentURL);
-		if ($sectionName) {
-			app_log("Admin menu section override: " . $sectionName, 'debug');
-			foreach ($items as $item) {
-				if (strtolower($item->title) === strtolower($sectionName)) {
-					app_log("Found matching menu item: " . $item->title . " (ID: " . $item->id . ")", 'debug');
-					$expandedItems[] = $item->id;
-					$expandedItems = array_merge($expandedItems, $item->getParentChain());
-					return array_unique($expandedItems);
+		if (!empty($best['parent_id'])) {
+			$expandedItems[] = $best['parent_id'];
+			$parentItem = new Item($best['parent_id']);
+			$expandedItems = array_merge($expandedItems, $parentItem->getParentChain());
+		}
+		else {
+			$item = new Item($best['id']);
+			if ($item->id && $item->hasChildren()) {
+				$expandedItems[] = $item->id;
+			}
+			if ($item->id) {
+				$expandedItems = array_merge($expandedItems, $item->getParentChain());
+			}
+		}
+
+		return array_unique($expandedItems);
+	}
+
+	/**
+	 * Normalize a URL down to its path for menu matching.
+	 */
+	private function navMatchPath($url) {
+		$url = trim((string)$url);
+		if ($url === '' || $url === '#' || strpos($url, 'javascript:') === 0) {
+			return '';
+		}
+		$path = parse_url($url, PHP_URL_PATH);
+		if ($path === null || $path === false || $path === '') {
+			$path = strtok($url, '?');
+		}
+		return $path ? $path : '';
+	}
+
+	/**
+	 * Collect current-page URLs, optionally including breadcrumb targets.
+	 *
+	 * @param string $currentURL The current page URL
+	 * @param bool $includeBreadcrumbs Whether to include breadcrumb targets
+	 * @return array Unique path candidates
+	 */
+	private function navMatchCandidateURLs($currentURL, $includeBreadcrumbs = false) {
+		$urls = array();
+		foreach (array($currentURL, $_SERVER['REQUEST_URI'] ?? '') as $url) {
+			$path = $this->navMatchPath($url);
+			if ($path !== '') {
+				$urls[] = $path;
+			}
+		}
+
+		if ($includeBreadcrumbs && $this->_page && method_exists($this->_page, 'getBreadcrumbs')) {
+			foreach ($this->_page->getBreadcrumbs() as $crumb) {
+				if (!empty($crumb['target'])) {
+					$path = $this->navMatchPath($crumb['target']);
+					if ($path !== '') {
+						$urls[] = $path;
+					}
 				}
 			}
 		}
-		
-		// Find all matches first, then select the most specific one
-		$allMatches = array();
+
+		return array_values(array_unique($urls));
+	}
+
+	/**
+	 * Walk the menu and return the highest scoring item for the given URLs.
+	 */
+	private function scoreMenuAgainstURLs($items, $candidates, $sectionName, $useBreadcrumbTitles = false) {
+		$best = null;
 		foreach ($items as $item) {
-			// Check if this item or its children match the current URL
-			if ($item->matchesURLRecursive($currentURL)) {
-				// Find the specific child that matches
-				$matchingChild = $this->findMatchingChild($item, $currentURL);
-				if ($matchingChild) {
-					$allMatches[] = array(
-						'parent_id' => $item->id,
-						'child_id' => $matchingChild->id,
-						'target' => $matchingChild->target,
-						'specificity' => strlen($matchingChild->target)
+			$this->considerNavCandidate($item, 0, $item->title, $candidates, $sectionName, $best, $useBreadcrumbTitles);
+			if (!empty($item->item)) {
+				foreach ($item->item as $child) {
+					$this->considerNavCandidate($child, $item->id, $item->title, $candidates, $sectionName, $best, $useBreadcrumbTitles);
+				}
+			}
+		}
+		return $best;
+	}
+
+	/**
+	 * Choose the closest admin menu item for the current page.
+	 * Current URL wins when it matches a menu item. Breadcrumbs are only
+	 * used when the current path has no menu match of its own.
+	 *
+	 * @param string $currentURL The current page URL
+	 * @return array|null Best match with id, parent_id, score, title, target
+	 */
+	private function findBestNavMatch($currentURL) {
+		$sectionName = $this->resolveAdminMenuSection($currentURL);
+		$items = $this->cascade();
+
+		$pageBest = $this->scoreMenuAgainstURLs(
+			$items,
+			$this->navMatchCandidateURLs($currentURL, false),
+			$sectionName,
+			false
+		);
+		if ($pageBest && $pageBest['score'] >= 55000) {
+			return $pageBest;
+		}
+
+		$crumbBest = $this->scoreMenuAgainstURLs(
+			$items,
+			$this->navMatchCandidateURLs($currentURL, true),
+			$sectionName,
+			true
+		);
+		if ($crumbBest) {
+			return $crumbBest;
+		}
+		if ($pageBest) {
+			return $pageBest;
+		}
+
+		if ($sectionName) {
+			foreach ($items as $item) {
+				if (strtolower($item->title) === strtolower($sectionName)) {
+					return array(
+						'id' => $item->id,
+						'parent_id' => 0,
+						'score' => 1,
+						'title' => $item->title,
+						'target' => $item->target,
 					);
 				}
 			}
 		}
-			
-		// If we have matches, find the most specific one
-		if (!empty($allMatches)) {
-			// Sort by specificity (longest target first)
-			usort($allMatches, function($a, $b) {
-				return $b['specificity'] - $a['specificity'];
-			});
-			
-			// Take the most specific match
-			$bestMatch = $allMatches[0];
-			
-			// Add the parent item to expanded list
-			$expandedItems[] = $bestMatch['parent_id'];
-			
-			// Add all parent items to expanded list
-			$parentItem = new Item($bestMatch['parent_id']);
-			$expandedItems = array_merge($expandedItems, $parentItem->getParentChain());
+
+		return null;
+	}
+
+	/**
+	 * Score one menu item against candidate URLs and breadcrumbs.
+	 */
+	private function considerNavCandidate($item, $parentId, $parentTitle, $candidates, $sectionName, &$best, $useBreadcrumbTitles = false) {
+		$score = 0;
+		foreach ($candidates as $url) {
+			$score = max($score, $item->urlMatchScore($url));
 		}
-			
-		// Remove duplicates and return
-		return array_unique($expandedItems);
+
+		if ($useBreadcrumbTitles && $this->_page && method_exists($this->_page, 'getBreadcrumbs')) {
+			foreach ($this->_page->getBreadcrumbs() as $crumb) {
+				if (empty($crumb['name'])) {
+					continue;
+				}
+				if (strcasecmp(trim($crumb['name']), trim($item->title)) === 0) {
+					$score = max($score, 20000 + strlen($item->title));
+				}
+			}
+		}
+
+		if ($score <= 0) {
+			return;
+		}
+
+		if ($sectionName) {
+			$inSection = (strtolower($item->title) === strtolower($sectionName));
+			if ($parentId > 0 && strtolower((string)$parentTitle) === strtolower($sectionName)) {
+				$inSection = true;
+			}
+			if ($inSection) {
+				$score += 1000;
+			}
+		}
+
+		$better = false;
+		if ($best === null) {
+			$better = true;
+		}
+		elseif ($score > $best['score']) {
+			$better = true;
+		}
+		elseif ($score === $best['score']) {
+			$bestTargetLen = strlen($best['target'] ?? '');
+			$itemTargetLen = strlen($item->target ?? '');
+			if ($itemTargetLen > $bestTargetLen) {
+				$better = true;
+			}
+			elseif ($itemTargetLen === $bestTargetLen && $parentId > 0 && empty($best['parent_id'])) {
+				$better = true;
+			}
+		}
+
+		if ($better) {
+			$best = array(
+				'id' => $item->id,
+				'parent_id' => $parentId,
+				'score' => $score,
+				'title' => $item->title,
+				'target' => $item->target,
+			);
+		}
 	}
 
 	/**
@@ -740,13 +884,17 @@ END;
 	 * @return Item|null The matching child item or null
 	 */
 	private function findMatchingChild($parentItem, $currentURL) {
+		$bestChild = null;
+		$bestScore = 0;
 		$children = $parentItem->children();
 		foreach ($children as $child) {
-			if ($child->matchesURL($currentURL)) {
-				return $child;
+			$score = $child->urlMatchScore($currentURL);
+			if ($score > $bestScore) {
+				$bestScore = $score;
+				$bestChild = $child;
 			}
 		}
-		return null;
+		return $bestChild;
 	}
 
 	/** @public method findCurrentPageItems($currentURL)
@@ -756,59 +904,15 @@ END;
 	 * @return array Array of item IDs that should be highlighted
 	 */
 	public function findCurrentPageItems($currentURL) {
-		$currentItems = array();
-		$items = $this->cascade();
+		$best = $this->findBestNavMatch($currentURL);
+		if (!$best) {
+			return array();
+		}
 
-		$sectionName = $this->resolveAdminMenuSection($currentURL);
-		if ($sectionName) {
-			foreach ($items as $item) {
-				if (strtolower($item->title) === strtolower($sectionName)) {
-					$currentItems[] = $item->id;
-					return array_unique($currentItems);
-				}
-			}
+		$currentItems = array($best['id']);
+		if (!empty($best['parent_id'])) {
+			$currentItems[] = $best['parent_id'];
 		}
-		
-		// Find all matches and their specificity (target length)
-		$matches = array();
-		foreach ($items as $item) {
-			// Check if this item exactly matches the current URL
-			if ($item->matchesURL($currentURL)) {
-				$matches[] = array('id' => $item->id, 'target' => $item->target, 'type' => 'parent');
-			}
-			
-			// Also check children for exact matches
-			foreach ($item->item as $child) {
-				if ($child->matchesURL($currentURL)) {
-					$matches[] = array('id' => $child->id, 'target' => $child->target, 'type' => 'child', 'parent_id' => $item->id);
-				}
-			}
-		}
-		
-		if (empty($matches)) {
-			return $currentItems;
-		}
-		
-		// Find the most specific match (longest target)
-		$mostSpecific = null;
-		$maxLength = 0;
-		foreach ($matches as $match) {
-			$targetLength = strlen($match['target']);
-			if ($targetLength > $maxLength) {
-				$maxLength = $targetLength;
-				$mostSpecific = $match;
-			}
-		}
-		
-		if ($mostSpecific) {
-			$currentItems[] = $mostSpecific['id'];
-			
-			// If it's a child match, also add the parent
-			if ($mostSpecific['type'] === 'child') {
-				$currentItems[] = $mostSpecific['parent_id'];
-			}
-		}
-		
 		return array_unique($currentItems);
 	}
 
@@ -864,7 +968,12 @@ END;
 	 * @return string Current URL
 	 */
 	private function getCurrentURL() {
-		// Get current URL from request
+		$uri = $_SERVER['REQUEST_URI'] ?? '';
+		$path = parse_url($uri, PHP_URL_PATH);
+		if (!empty($path) && $path !== '/') {
+			return $path;
+		}
+
 		if (isset($GLOBALS['_REQUEST_'])) {
 			$request = $GLOBALS['_REQUEST_'];
 			if ($request->module == 'content') {
@@ -872,12 +981,15 @@ END;
 			} elseif ($request->module == 'static') {
 				return '/' . $request->view;
 			} else {
-				return '/_' . $request->module . '/' . $request->view . '/' . $request->index;
+				$url = '/_' . $request->module . '/' . $request->view;
+				if (!empty($request->index)) {
+					$url .= '/' . $request->index;
+				}
+				return $url;
 			}
 		}
-		
-		// Fallback to REQUEST_URI
-		return $_SERVER['REQUEST_URI'] ?? '/';
+
+		return $uri !== '' ? $uri : '/';
 	}
 
 	/**

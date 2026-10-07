@@ -29,7 +29,7 @@
 		</div>
 		<div class="input-horiz" id="itemContent">
 			<span class="label align-top">Content</span>
-			<textarea class="value input width-250px" name="content" id="content"><?= htmlspecialchars($message->content) ?></textarea>
+			<textarea class="value input width-250px" name="content" id="content" style="display: block;"><?= htmlspecialchars($message->content) ?></textarea>
 		</div>
 
 <?php

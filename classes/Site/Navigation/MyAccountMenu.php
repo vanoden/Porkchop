@@ -26,8 +26,8 @@
 				$buffer = '
 				<div id="acct-title" class="acct-title">
 					<img id="myAccntIcon" title="My Account" src="/img/_global/icon_myaccount.svg">
-					<div id="myAccntUserDiv" class="username">Sign In&nbsp;|</div>
-					<div id="myAccntReg" class="username"><a href="/_register/new_customer">&nbsp;Register</a></div>
+					<div id="myAccntUserDiv" class="username"><a href="/_register/login">Sign In</a>&nbsp;|</div>
+					<div id="myAccntReg" class="username"><a href="/_register/new_customer">Register</a></div>
 				</div>
 				<div id="acct-menu" class="acct-menu"></div>
 				';

@@ -207,13 +207,22 @@ class Shipment extends \BaseModel {
 			foreach ($this->packages() as $package) {
 				$package->ship();
 			}
-			return $this->update(array('status' => 'SHIPPED','vendor_id' => $params['vendor_id'],'date_shipped' => date('Y-m-d H:i:s')));
+			$update = array('date_shipped' => date('Y-m-d H:i:s'));
+			if (!empty($params['vendor_id'])) $update['vendor_id'] = $params['vendor_id'];
+			return $this->update($update);
 		}
 
         public function shipped() {
             if ($this->status == 'CLOSED' || !empty($this->date_shipped)) return true;
             return false;
         }
+
+		/** Display label: rows stay OPEN until closed; date_shipped means it is in transit. */
+		public function statusLabel() {
+			if ($this->status == 'CLOSED') return 'CLOSED';
+			if ($this->shipped()) return 'SHIPPED';
+			return $this->status ?: 'OPEN';
+		}
 
         public function ok_to_close() {
             if ($this->status == 'CLOSED') return false;

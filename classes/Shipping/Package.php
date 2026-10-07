@@ -178,8 +178,11 @@
 		}
 
 		public function receive($params = array()) {
-			if (empty($params['user_received_id'])) $params['user_received_id'] = $GLOBALS['_SESSION_']->customer->id;
-			if (!get_mysql_date($params['date_received'])) $params['date_received'] = get_mysql_date('now');
+			if (empty($params['user_received_id'])) {
+				$params['user_received_id'] = $GLOBALS['_SESSION_']->customer->id ?? 0;
+			}
+			$received_at = get_mysql_date($params['date_received'] ?? 'now');
+			$params['date_received'] = $received_at ?: date('Y-m-d H:i:s');
 			$params['status'] = "RECEIVED";
 
 			return $this->update($params);

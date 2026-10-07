@@ -19,6 +19,12 @@
 		public string $sitemap = "";
 		public bool $isSearchResults = false;
 		private $_breadcrumbs = array();
+		private $_adminMenuSection = null;
+		private static $_requestBreadcrumbs = array();
+		private static $_requestAdminMenuSection = null;
+		private static $_adminMenuBreadcrumbTargets = null;
+		private static $_breadcrumbsRendered = false;
+		private static $_customerPortalMenuItems = null;
 		private $_errors = array();
 		private $_warnings = array();
 
@@ -634,7 +640,7 @@
 				}
 			}
 			// Delete Metadata Records for Page
-			$this->purgeMetadata();
+			$this->dropAllMetadata();
 
 			// Delete Page
 			$database = new \Database\Service();
@@ -967,6 +973,9 @@
 			elseif ($object == "page") {
 				if ($property == "view") {
 					$buffer = "<r7 object=\"" . $this->module() . "\" property=\"" . $this->view() . "\"/>";
+				}
+				elseif ($property == "breadcrumbs") {
+					$buffer = $this->showBreadcrumbs();
 				}
 				elseif ($property == "errorblock") {
 					error_log("FOUND errorblock");
@@ -1438,6 +1447,9 @@
 				}
 			}
 			else app_log ( "Backend file for module " . $module . " not found" );
+			if ($this->shouldApplyCustomerPortalBreadcrumbs()) {
+				echo $this->showBreadcrumbs();
+			}
 			if (isset($fe_file) && file_exists ( $fe_file )) {
 				try {
 					include ($fe_file);
@@ -1610,16 +1622,390 @@
 		public function addBreadcrumb($name,$target = '') {
 			$breadcrumb = array("name" => $name, "target" => $target);
 			array_push($this->_breadcrumbs,$breadcrumb);
+			self::$_requestBreadcrumbs[] = $breadcrumb;
+		}
+
+		public function getBreadcrumbs() {
+			if (count($this->_breadcrumbs) > 0) {
+				return $this->_breadcrumbs;
+			}
+			return self::$_requestBreadcrumbs;
 		}
 
 		public function showBreadcrumbs() {
-			if (count($this->_breadcrumbs) < 1) return "";
+			if (!empty(self::$_breadcrumbsRendered)) {
+				return "";
+			}
+
+			$crumbs = $this->_breadcrumbs;
+			if (count($crumbs) < 1) {
+				$crumbs = self::$_requestBreadcrumbs;
+			}
+
+			if ($this->shouldApplyCustomerPortalBreadcrumbs()) {
+				$crumbs = $this->applyCustomerPortalBreadcrumbs($crumbs);
+			}
+			elseif (count($crumbs) > 0) {
+				$section = $this->getAdminMenuSection();
+				if (!empty($section)) {
+					$firstName = trim($crumbs[0]['name'] ?? '');
+					$aliases = array(
+						'Shipping' => 'Warehouse',
+						'Package' => 'Packages',
+						'Monitor' => 'Datalogger',
+						'Site Tools' => 'Site',
+						'Site Pages' => 'Pages',
+					);
+					$firstLookup = $aliases[$firstName] ?? $firstName;
+					if (strcasecmp($firstName, $section) !== 0 && strcasecmp($firstLookup, $section) !== 0) {
+						array_unshift($crumbs, array(
+							'name' => $section,
+							'target' => $this->resolveBreadcrumbTarget($section),
+						));
+					}
+				}
+			}
+
+			if (count($crumbs) < 1) return "";
+			self::$_breadcrumbsRendered = true;
+
+			$currentURL = $this->currentRequestPath();
+			$lastIndex = count($crumbs) - 1;
 			$html = '';
-			foreach ($this->_breadcrumbs as $breadcrumb) {
-				if (!empty($breadcrumb['target'])) $html .= "\t\t<li><a href=\"".$breadcrumb['target']."\">".$breadcrumb['name']."</a></li>\n";
-				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
+			foreach ($crumbs as $index => $breadcrumb) {
+				$name = $breadcrumb['name'] ?? '';
+				$target = trim((string)($breadcrumb['target'] ?? ''));
+				if ($target === '') {
+					if ($index === $lastIndex && $currentURL !== '') {
+						$target = $currentURL;
+					}
+					else {
+						$target = $this->resolveBreadcrumbTarget($name);
+					}
+				}
+				if ($target !== '') {
+					$html .= "\t\t<li><a href=\"".$target."\">".$name."</a></li>\n";
+				}
+				else {
+					$html .= "\t\t<li>".$name."</li>";
+				}
 			}
 			return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
+		}
+
+		private function currentRequestPath() {
+			$uri = $_SERVER['REQUEST_URI'] ?? '';
+			$path = parse_url($uri, PHP_URL_PATH);
+			if (!empty($path) && $path !== '/') {
+				return $path;
+			}
+			return $uri !== '' ? $uri : '';
+		}
+
+		private function normalizeBreadcrumbPath($url) {
+			$path = parse_url((string)$url, PHP_URL_PATH);
+			if (empty($path)) {
+				$path = (string)$url;
+			}
+			$path = trim($path);
+			if ($path === '') {
+				return '';
+			}
+			return rtrim($path, '/') ?: '/';
+		}
+
+		private function customerPortalHomeCrumb() {
+			return array(
+				'name' => 'Monitor Portal',
+				'target' => '/_spectros/welcome',
+			);
+		}
+
+		private function isAuthStyleView() {
+			$view = strtolower((string)$this->view());
+			$authViews = array_merge(self::$_authExemptViews, array(
+				'new_customer',
+				'otp',
+				'backup_code',
+				'recover_otp',
+				'reset_otp',
+				'otp_recovery_sent',
+			));
+			return in_array($view, $authViews, true);
+		}
+
+		private function isCustomerPortalPage() {
+			$view = strtolower((string)$this->view());
+			$module = strtolower((string)$this->module());
+			$path = $this->currentRequestPath();
+			if (strpos($view, 'admin') !== false || preg_match('#/admin_#', $path)) {
+				return false;
+			}
+
+			$template = strtolower((string)$this->getMetadata('template'));
+			if (strpos($template, 'admin') !== false) {
+				return false;
+			}
+			if (preg_match('/(portal|default|support|index_pork)\.html/', $template)) {
+				return true;
+			}
+
+			if (in_array($module, array('monitor', 'support'), true)) {
+				return true;
+			}
+			if ($module === 'spectros' && in_array($view, array('welcome', 'utility_downloads', 'calibration_verification', 'calibrate'), true)) {
+				return true;
+			}
+			if ($module === 'register' && in_array($view, array('account', 'organization'), true)) {
+				return true;
+			}
+			return false;
+		}
+
+		private function shouldApplyCustomerPortalBreadcrumbs() {
+			return $this->isCustomerPortalPage() && !$this->isAuthStyleView();
+		}
+
+		private function customerPortalMenuItems() {
+			if (self::$_customerPortalMenuItems !== null) {
+				return self::$_customerPortalMenuItems;
+			}
+
+			$items = array();
+			$menu = new \Site\Navigation\Menu();
+			if ($menu->get('monitor_portal')) {
+				foreach ($menu->cascade() as $item) {
+					$title = trim((string)$item->title);
+					$target = trim((string)$item->target);
+					if ($title !== '' && $target !== '') {
+						$items[] = array('name' => $title, 'target' => $target);
+					}
+				}
+			}
+			if (count($items) < 1) {
+				$items = array(
+					array('name' => 'Monitors', 'target' => '/_monitor/assets'),
+					array('name' => 'Jobs', 'target' => '/_monitor/collections'),
+					array('name' => 'Support', 'target' => '/_support/tickets'),
+					array('name' => 'Utility Downloads', 'target' => '/_spectros/utility_downloads'),
+				);
+			}
+			self::$_customerPortalMenuItems = $items;
+			return $items;
+		}
+
+		private function matchCustomerPortalItem($path) {
+			$path = $this->normalizeBreadcrumbPath($path);
+			if ($path === '') {
+				return null;
+			}
+
+			$items = $this->customerPortalMenuItems();
+			foreach ($items as $item) {
+				if ($path === $this->normalizeBreadcrumbPath($item['target'])) {
+					return $item;
+				}
+			}
+
+			$best = null;
+			$bestLen = -1;
+			foreach ($items as $item) {
+				$target = $this->normalizeBreadcrumbPath($item['target']);
+				if ($target !== '' && $target !== '/' && strpos($path, $target.'/') === 0 && strlen($target) > $bestLen) {
+					$best = $item;
+					$bestLen = strlen($target);
+				}
+			}
+			if ($best) {
+				return $best;
+			}
+
+			$pathParts = explode('/', trim($path, '/'));
+			foreach ($items as $item) {
+				$targetParts = explode('/', trim($this->normalizeBreadcrumbPath($item['target']), '/'));
+				if (count($pathParts) < 2 || count($targetParts) < 2) {
+					continue;
+				}
+				if (strcasecmp($pathParts[0], $targetParts[0]) !== 0) {
+					continue;
+				}
+				$view = $pathParts[1];
+				$menuView = $targetParts[1];
+				if ($view === $menuView || $view.'s' === $menuView || $menuView.'s' === $view) {
+					return $item;
+				}
+			}
+
+			$related = array(
+				'/_monitor/dashboard' => '/_monitor/collections',
+				'/_monitor/dashboards' => '/_monitor/collections',
+				'/_monitor/collection_new' => '/_monitor/collections',
+				'/_support/troubleshoot' => '/_support/tickets',
+				'/_support/rma_form' => '/_support/tickets',
+				'/_support/register_product' => '/_support/tickets',
+				'/_spectros/calibration_verification' => '/_monitor/assets',
+				'/_spectros/calibrate' => '/_monitor/assets',
+			);
+			foreach ($related as $prefix => $menuTarget) {
+				if ($path === $prefix || strpos($path, $prefix.'/') === 0) {
+					foreach ($items as $item) {
+						if ($this->normalizeBreadcrumbPath($item['target']) === $menuTarget) {
+							return $item;
+						}
+					}
+				}
+			}
+
+			return null;
+		}
+
+		private function applyCustomerPortalBreadcrumbs($crumbs) {
+			$home = $this->customerPortalHomeCrumb();
+			$homePath = $this->normalizeBreadcrumbPath($home['target']);
+			$path = $this->normalizeBreadcrumbPath($this->currentRequestPath());
+			$rootNames = array('monitor portal', 'welcome', 'registration', 'home');
+
+			if (count($crumbs) > 0) {
+				$firstName = strtolower(trim($crumbs[0]['name'] ?? ''));
+				if (!in_array($firstName, $rootNames, true)) {
+					array_unshift($crumbs, $home);
+				}
+				return $crumbs;
+			}
+
+			$generated = array($home);
+			if ($path === '' || $path === '/' || $path === $homePath) {
+				return $generated;
+			}
+
+			$match = $this->matchCustomerPortalItem($path);
+			if ($match) {
+				$generated[] = $match;
+				$matchPath = $this->normalizeBreadcrumbPath($match['target']);
+				if ($path !== $matchPath) {
+					$currentName = trim((string)$this->title());
+					if ($currentName === '') {
+						$currentName = $this->name();
+					}
+					if ($currentName !== '' && strcasecmp($currentName, $match['name']) !== 0) {
+						$generated[] = array('name' => $currentName, 'target' => $path);
+					}
+				}
+				return $generated;
+			}
+
+			$currentName = trim((string)$this->title());
+			if ($currentName === '') {
+				$currentName = $this->name();
+			}
+			if ($currentName !== '' && strcasecmp($currentName, $home['name']) !== 0) {
+				$generated[] = array('name' => $currentName, 'target' => $path);
+			}
+			return $generated;
+		}
+
+		private function resolveBreadcrumbTarget($name) {
+			$name = trim((string)$name);
+			if ($name === '') {
+				return '';
+			}
+
+			if ($this->shouldApplyCustomerPortalBreadcrumbs()) {
+				$customerMap = array(
+					'monitor portal' => '/_spectros/welcome',
+					'welcome' => '/_spectros/welcome',
+					'monitors' => '/_monitor/assets',
+					'jobs' => '/_monitor/collections',
+					'support' => '/_support/tickets',
+					'utility downloads' => '/_spectros/utility_downloads',
+					'registration' => '/_register/account',
+					'my account' => '/_register/account',
+				);
+				$key = strtolower($name);
+				if (isset($customerMap[$key])) {
+					return $customerMap[$key];
+				}
+			}
+
+			$aliases = array(
+				'Shipping' => 'Warehouse',
+				'Package' => 'Packages',
+				'Monitor' => 'Datalogger',
+				'Site Tools' => 'Site',
+				'Site Pages' => 'Pages',
+			);
+			$lookup = $aliases[$name] ?? $name;
+
+			$map = $this->adminMenuBreadcrumbTargets();
+			$key = strtolower($lookup);
+			if (isset($map[$key])) {
+				return $map[$key];
+			}
+			return '';
+		}
+
+		private function adminMenuBreadcrumbTargets() {
+			if (self::$_adminMenuBreadcrumbTargets !== null) {
+				return self::$_adminMenuBreadcrumbTargets;
+			}
+
+			self::$_adminMenuBreadcrumbTargets = array();
+			$menu = new \Site\Navigation\Menu();
+			if (!$menu->get('admin')) {
+				return self::$_adminMenuBreadcrumbTargets;
+			}
+
+			foreach ($menu->cascade() as $item) {
+				$this->indexBreadcrumbMenuItem($item);
+			}
+			return self::$_adminMenuBreadcrumbTargets;
+		}
+
+		private function indexBreadcrumbMenuItem($item) {
+			$key = strtolower(trim((string)$item->title));
+			$target = trim((string)$item->target);
+			$children = !empty($item->item) ? $item->item : array();
+			$preferredLandings = array(
+				'datalogger' => '/_monitor/admin_assets',
+				'customer' => '/_register/admin_organizations',
+				'support' => '/_support/requests',
+				'site' => '/_site/pages',
+				'sales' => '/_sales/orders',
+				'warehouse' => '/_shipping/admin_shipments',
+				'company' => '/_company/configuration',
+				'storage' => '/_storage/repositories',
+				'engineering' => '/_engineering/home',
+				'fumigation' => '/_spectros/admin_commodities',
+			);
+
+			if ($target === '' && isset($preferredLandings[$key])) {
+				$target = $preferredLandings[$key];
+			}
+
+			if ($target === '' && count($children) > 0) {
+				foreach ($children as $child) {
+					if (strcasecmp($child->title, 'Home') === 0 && !empty($child->target)) {
+						$target = $child->target;
+						break;
+					}
+				}
+				if ($target === '') {
+					foreach ($children as $child) {
+						if (!empty($child->target)) {
+							$target = $child->target;
+							break;
+						}
+					}
+				}
+			}
+
+			if ($key !== '' && $target !== '' && !isset(self::$_adminMenuBreadcrumbTargets[$key])) {
+				self::$_adminMenuBreadcrumbTargets[$key] = $target;
+			}
+
+			foreach ($children as $child) {
+				$this->indexBreadcrumbMenuItem($child);
+			}
 		}
 
 		/**
@@ -1631,6 +2017,8 @@
 		 */
 		public function setAdminMenuSection($sectionName) {
 			app_log("Setting admin menu section to: " . $sectionName, 'debug');
+			$this->_adminMenuSection = $sectionName;
+			self::$_requestAdminMenuSection = $sectionName;
 			$this->setMetadata('admin_menu_section', $sectionName);
 		}
 
@@ -1640,6 +2028,12 @@
 		 * @return string|null The admin menu section to open, or null for auto-detection
 		 */
 		public function getAdminMenuSection() {
+			if ($this->_adminMenuSection !== null && $this->_adminMenuSection !== '') {
+				return $this->_adminMenuSection;
+			}
+			if (self::$_requestAdminMenuSection !== null && self::$_requestAdminMenuSection !== '') {
+				return self::$_requestAdminMenuSection;
+			}
 			$section = $this->getMetadata('admin_menu_section');
 			return $section;
 		}
