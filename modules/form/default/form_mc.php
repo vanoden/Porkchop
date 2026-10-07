@@ -66,7 +66,8 @@
 					$message = "New form submission:\n";
 					$message .= "Form: " . $subForm->title . "\n";
 					foreach ($answers as $question => $answer) {
-						$message .= "$question: $answer\n";
+						$questionLabel = $_POST['question_label'][$question] ?? '';
+						$message .= "$questionLabel: $answer\n";
 					}
 					// Send $message to Slack (implementation depends on your Slack integration)
 					$slackClient = new \Slack\Client(); // Replace with your actual Slack client initialization

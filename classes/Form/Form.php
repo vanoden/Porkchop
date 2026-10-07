@@ -403,6 +403,8 @@
 				else {
 					$question_content .= '<label for="'.$fieldId.'">'.htmlspecialchars($displayLabel, ENT_QUOTES, 'UTF-8').'</label>';
 				}
+				// Hidden input stores question label
+				$question_content .= '<input type="hidden" name="question_label['.$question->id.']" value="'.htmlspecialchars($displayLabel, ENT_QUOTES, 'UTF-8').'">';
 				if (!empty($question->help)) {
 					$question_content .= '<div class="formQuestionHelp">'.htmlspecialchars((string)$question->help, ENT_QUOTES, 'UTF-8').'</div>';
 				}
