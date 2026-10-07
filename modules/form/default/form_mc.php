@@ -59,7 +59,22 @@
 				$answers = isset($_POST['answer']) && is_array($_POST['answer']) ? $_POST['answer'] : array();
 				// Public URL always submits against the published (active) version; ignore preview_version_id if forged.
 				$result = $subForm->submitAnswers($answers, null, null);
+
 				if (! empty($result['success'])) {
+					// Send notification via Slack
+					// Compile Message from $answers
+					$message = "New form submission:\n";
+					$message .= "Form: " . $subForm->title . "\n";
+					foreach ($answers as $question => $answer) {
+						$message .= "$question: $answer\n";
+					}
+					// Send $message to Slack (implementation depends on your Slack integration)
+					$slackClient = new \Slack\Client(); // Replace with your actual Slack client initialization
+					if (! $slackClient->send('support-testing',$message)) { // Replace with your actual method to send a message
+						$page->addError('Failed to send Slack notification.');
+					}
+
+					// Submission was successful
 					$submissionOk = true;
 					$page->appendSuccess('Thank you. Your submission was saved.');
 				}
