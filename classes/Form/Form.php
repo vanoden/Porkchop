@@ -359,7 +359,9 @@
 		 * @param int|null $previewVersionId if set, emit preview_version_id hidden input
 		 */
 		private function buildFormMarkup(Version $activeVersion, array $extraHiddens, ?int $previewVersionId): string {
-			ob_start();
+			//ob_start();
+			// Variable to store the generated form content
+			$form_content = '';
 			$questions = $activeVersion->questions();
 			$groups = array();
 			$groupList = new \Form\GroupList();
@@ -371,102 +373,105 @@
 			if (is_array($loadedGroups)) {
 				$groups = $loadedGroups;
 			}
-			print '<div class="form_instructions">'.htmlspecialchars((string)$activeVersion->instructions, ENT_QUOTES, 'UTF-8').'</div>'."\n";
+
+			$form_content .= '<div class="form_instructions">'.htmlspecialchars((string)$activeVersion->instructions, ENT_QUOTES, 'UTF-8').'</div>'."\n";
 			$action = strlen((string)$this->action) ? htmlspecialchars((string)$this->action, ENT_QUOTES, 'UTF-8') : '';
-			print '<form class="porkchop-form" action="'.$action.'" method="'.htmlspecialchars((string)$this->method, ENT_QUOTES, 'UTF-8').'">';
+			$form_content .= '<form class="porkchop-form" action="'.$action.'" method="'.htmlspecialchars((string)$this->method, ENT_QUOTES, 'UTF-8').'">';
 			foreach ($extraHiddens as $hk => $hv) {
-				print '<input type="hidden" name="'.htmlspecialchars((string)$hk, ENT_QUOTES, 'UTF-8').'" value="'.htmlspecialchars((string)$hv, ENT_QUOTES, 'UTF-8').'">';
+				$form_content .= '<input type="hidden" name="'.htmlspecialchars((string)$hk, ENT_QUOTES, 'UTF-8').'" value="'.htmlspecialchars((string)$hv, ENT_QUOTES, 'UTF-8').'">';
 			}
 			if ($previewVersionId !== null) {
-				print '<input type="hidden" name="preview_version_id" value="'.(int)$previewVersionId.'">';
+				$form_content .= '<input type="hidden" name="preview_version_id" value="'.(int)$previewVersionId.'">';
 			}
-			$renderQuestion = function ($question): void {
+			$renderQuestion = function ($question): string {
+				$question_content = '';
 				if (strtolower((string)$question->type) === 'submit') {
-					return;
+					return '';
 				}
 				$qType = strtolower((string)$question->type);
 				$isChoiceField = in_array($qType, array('radio', 'checkbox'), true);
 				$fieldClass = 'formQuestion form-field'.($isChoiceField ? ' form-field--checks' : '');
-				print '<div class="'.$fieldClass.'">';
+				$question_content .= '<div class="'.$fieldClass.'">';
 				$displayLabel = trim((string)($question->prompt ?? ''));
 				if ($displayLabel === '') {
 					$displayLabel = (string)$question->text;
 				}
 				$fieldId = 'form_q_'.(int)$question->id;
 				if ($isChoiceField) {
-					print '<span class="form-field__group-label" id="'.$fieldId.'_label">'.htmlspecialchars($displayLabel, ENT_QUOTES, 'UTF-8').'</span>';
+					$question_content .= '<span class="form-field__group-label" id="'.$fieldId.'_label">'.htmlspecialchars($displayLabel, ENT_QUOTES, 'UTF-8').'</span>';
 				}
 				else {
-					print '<label for="'.$fieldId.'">'.htmlspecialchars($displayLabel, ENT_QUOTES, 'UTF-8').'</label>';
+					$question_content .= '<label for="'.$fieldId.'">'.htmlspecialchars($displayLabel, ENT_QUOTES, 'UTF-8').'</label>';
 				}
 				if (!empty($question->help)) {
-					print '<div class="formQuestionHelp">'.htmlspecialchars((string)$question->help, ENT_QUOTES, 'UTF-8').'</div>';
+					$question_content .= '<div class="formQuestionHelp">'.htmlspecialchars((string)$question->help, ENT_QUOTES, 'UTF-8').'</div>';
 				}
 				if ($question->type == 'text') {
-					print '<input type="text" id="'.$fieldId.'" name="answer['.$question->id.']"';
-					if ($question->required) print ' required';
-					print '>';
+					$question_content .= '<input type="text" id="'.$fieldId.'" name="answer['.$question->id.']"';
+					if ($question->required) $question_content .= ' required';
+					$question_content .= '>';
 				}
 				elseif ($question->type == 'textarea') {
-					print '<textarea id="'.$fieldId.'" name="answer['.$question->id.']"';
-					if ($question->required) print ' required';
-					print '></textarea>';
+					$question_content .= '<textarea id="'.$fieldId.'" name="answer['.$question->id.']"';
+					if ($question->required) $question_content .= ' required';
+					$question_content .= '></textarea>';
 				}
 				elseif ($question->type == 'select') {
 					$opts = $question->options();
 					if (count($opts) < 1) {
-						print '<p class="form_error">No choices configured for this question.</p>';
+						$question_content .= '<p class="form_error">No choices configured for this question.</p>';
 					} else {
-						print '<select id="'.$fieldId.'" name="answer['.$question->id.']"';
-						if ($question->required) print ' required';
-						print '>';
+						$question_content .= '<select id="'.$fieldId.'" name="answer['.$question->id.']"';
+						if ($question->required) $question_content .= ' required';
+						$question_content .= '>';
 						foreach ($opts as $option) {
-							print '<option value="'.htmlspecialchars((string)$option->value, ENT_QUOTES, 'UTF-8').'">'.htmlspecialchars((string)$option->text, ENT_QUOTES, 'UTF-8').'</option>';
+							$question_content .= '<option value="'.htmlspecialchars((string)$option->value, ENT_QUOTES, 'UTF-8').'">'.htmlspecialchars((string)$option->text, ENT_QUOTES, 'UTF-8').'</option>';
 						}
-						print '</select>';
+						$question_content .= '</select>';
 					}
 				}
 				elseif ($question->type == 'radio') {
 					$opts = $question->options();
 					if (count($opts) < 1) {
-						print '<p class="form_error">No choices configured for this question.</p>';
+						$question_content .= '<p class="form_error">No choices configured for this question.</p>';
 					} else {
-						print '<div class="form-field__check-options" role="radiogroup" aria-labelledby="'.$fieldId.'_label">';
+						$question_content .= '<div class="form-field__check-options" role="radiogroup" aria-labelledby="'.$fieldId.'_label">';
 						$firstRadio = true;
 						foreach ($opts as $option) {
 							$optId = $fieldId.'_'.(int)$option->id;
-							print '<label class="check-field" for="'.$optId.'"><input type="radio" id="'.$optId.'" name="answer['.$question->id.']" value="'.htmlspecialchars((string)$option->value, ENT_QUOTES, 'UTF-8').'"';
-							if ($question->required && $firstRadio) print ' required';
+							$question_content .= '<label class="check-field" for="'.$optId.'"><input type="radio" id="'.$optId.'" name="answer['.$question->id.']" value="'.htmlspecialchars((string)$option->value, ENT_QUOTES, 'UTF-8').'"';
+							if ($question->required && $firstRadio) $question_content .= ' required';
 							$firstRadio = false;
-							print '>'.htmlspecialchars((string)$option->text, ENT_QUOTES, 'UTF-8').'</label>';
+							$question_content .= '>'.htmlspecialchars((string)$option->text, ENT_QUOTES, 'UTF-8').'</label>';
 						}
-						print '</div>';
+						$question_content .= '</div>';
 					}
 				}
 				elseif ($question->type == 'checkbox') {
 					$opts = $question->options();
 					if (count($opts) < 1) {
 						/* No option rows — treat as a single boolean confirmation checkbox */
-						print '<div class="form-field__check-options">';
-						print '<label class="check-field" for="'.$fieldId.'"><input type="checkbox" id="'.$fieldId.'" name="answer['.$question->id.'][]" value="1"';
-						if ($question->required) print ' required';
-						print '> '.htmlspecialchars('Yes', ENT_QUOTES, 'UTF-8').'</label>';
-						print '</div>';
+						$question_content .= '<div class="form-field__check-options">';
+						$question_content .= '<label class="check-field" for="'.$fieldId.'"><input type="checkbox" id="'.$fieldId.'" name="answer['.$question->id.'][]" value="1"';
+						if ($question->required) $question_content .= ' required';
+						$question_content .= '> '.htmlspecialchars('Yes', ENT_QUOTES, 'UTF-8').'</label>';
+						$question_content .= '</div>';
 					}
 					else {
-						print '<div class="form-field__check-options" role="group" aria-labelledby="'.$fieldId.'_label">';
+						$question_content .= '<div class="form-field__check-options" role="group" aria-labelledby="'.$fieldId.'_label">';
 						foreach ($opts as $option) {
 							$optId = $fieldId.'_'.(int)$option->id;
-							print '<label class="check-field" for="'.$optId.'"><input type="checkbox" id="'.$optId.'" name="answer['.$question->id.'][]" value="'.htmlspecialchars((string)$option->value, ENT_QUOTES, 'UTF-8').'"';
-							print '>'.htmlspecialchars((string)$option->text, ENT_QUOTES, 'UTF-8').'</label>';
+							$question_content .= '<label class="check-field" for="'.$optId.'"><input type="checkbox" id="'.$optId.'" name="answer['.$question->id.'][]" value="'.htmlspecialchars((string)$option->value, ENT_QUOTES, 'UTF-8').'"';
+							$question_content .= '>'.htmlspecialchars((string)$option->text, ENT_QUOTES, 'UTF-8').'</label>';
 						}
-						print '</div>';
+						$question_content .= '</div>';
 					}
 				}
 				elseif ($question->type == 'hidden') {
-					print '<input type="hidden" name="answer['.$question->id.']" value="'.htmlspecialchars((string)$question->text, ENT_QUOTES, 'UTF-8').'">';
+					$question_content .= '<input type="hidden" name="answer['.$question->id.']" value="'.htmlspecialchars((string)$question->text, ENT_QUOTES, 'UTF-8').'">';
 				}
-				print '</div>';
+				$question_content .= '</div>';
+				return $question_content;
 			};
 
 			$groupsById = array();
@@ -545,34 +550,34 @@
 				if (! $hasNonSubmit) {
 					continue;
 				}
-				print '<div class="formGroup">';
+				$form_content .= '<div class="formGroup">';
 				$title = trim((string)($group->title ?? ''));
 				if ($title !== '') {
-					print '<h3 class="formGroupTitle">'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'</h3>';
+					$form_content .= '<h3 class="formGroupTitle">'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'</h3>';
 				}
 				$instructions = trim((string)($group->instructions ?? ''));
 				if ($instructions !== '') {
-					print '<div class="formGroupInstructions">'.htmlspecialchars($instructions, ENT_QUOTES, 'UTF-8').'</div>';
+					$form_content .= '<div class="formGroupInstructions">'.htmlspecialchars($instructions, ENT_QUOTES, 'UTF-8').'</div>';
 				}
 				foreach ($questionsByGroup[$gid] as $question) {
-					$renderQuestion($question);
+					$form_content .= $renderQuestion($question);
 				}
-				print '</div>';
+				$form_content .= '</div>';
 			}
 			foreach ($ungrouped as $question) {
-				$renderQuestion($question);
+				$form_content .= $renderQuestion($question);
 			}
 			$csrf = '';
 			if (isset($GLOBALS['_SESSION_']) && is_object($GLOBALS['_SESSION_']) && method_exists($GLOBALS['_SESSION_'], 'getCSRFToken')) {
 				$csrf = $GLOBALS['_SESSION_']->getCSRFToken();
 			}
-			print '<input type="hidden" name="csrfToken" value="'.htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8').'">';
-			print '<input type="hidden" name="form_code" value="'.htmlspecialchars((string)$this->code, ENT_QUOTES, 'UTF-8').'">';
+			$form_content .= '<input type="hidden" name="csrfToken" value="'.htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8').'">';
+			$form_content .= '<input type="hidden" name="form_code" value="'.htmlspecialchars((string)$this->code, ENT_QUOTES, 'UTF-8').'">';
 			$btn = trim($submitButtonLabel) !== '' ? $submitButtonLabel : 'Submit';
-			print '<div class="form-actions filter-bar"><div class="button-group filter-bar__actions formSubmit">';
-			print '<button type="submit" class="button" name="form_submit" value="1">'.htmlspecialchars($btn, ENT_QUOTES, 'UTF-8').'</button>';
-			print '</div></div>';
-			print '</form>';
-			return (string)ob_get_clean();
+			$form_content .= '<div class="form-actions filter-bar"><div class="button-group filter-bar__actions formSubmit">';
+			$form_content .= '<button type="submit" class="button" name="form_submit" value="1">'.htmlspecialchars($btn, ENT_QUOTES, 'UTF-8').'</button>';
+			$form_content .= '</div></div>';
+			$form_content .= '</form>';
+			return (string)$form_content;
 		}
 	}
