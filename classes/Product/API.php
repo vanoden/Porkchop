@@ -235,14 +235,15 @@
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
 			$this->requirePrivilege("manage products");
-			$_product = new \Product\Item();
-			if (defined($_REQUEST['parent_code'])) {
-				$parent = $_product->get($_REQUEST['parent_code']);
+			$parent = new \Product\Item();
+			if (isset($_REQUEST['parent_code'])) {
+				if (!$parent->get($_REQUEST['parent_code'])) $this->error("Parent product '".$_REQUEST['parent_code']."' not found");
 				if (! $parent->id) $this->error("Parent product '".$_REQUEST['parent_code']."' not found");
 				$_REQUEST['parent_id'] = $parent->id;
 			}
-			if ($_REQUEST['child_code']) {
-				$child = $_product->get($_REQUEST['child_code']);
+			if (isset($_REQUEST['child_code'])) {
+				$child = new \Product\Item();
+				if (!$child->get($_REQUEST['child_code'])) $this->error("Child product '".$_REQUEST['child_code']."' not found");
 				if (! $child->id) $this->error("Child product '".$_REQUEST['child_code']."' not found");
 				$_REQUEST['child_id'] = $child->id;
 			}
@@ -294,15 +295,17 @@
 		 * Find relationships between Product Items given various criteria
 		 */
 		public function findRelationships() {
-			$product = new \Product\Item();
+			$parent = new \Product\Item();
 			if ($_REQUEST['parent_code']) {
-				if ($product->get($_REQUEST['parent_code']))$_REQUEST['parent_id'] = $product->id;
+				if ($parent->get($_REQUEST['parent_code']))$_REQUEST['parent_id'] = $parent->id;
                 else $this->error("Parent product not found");
 			}
 			if ($_REQUEST['child_code']) {
-				$child = $product->get($_REQUEST['child_code']);
+				$child = new \Product\Item();
+				if (!$child->get($_REQUEST['child_code'])) $this->error("Child product not found");
 				$_REQUEST['child_id'] = $child->id;
 			}
+			$parameters = array();
 			if (preg_match('/^\d+$/',$_REQUEST['parent_id'])) $parameters['parent_id'] = $_REQUEST['parent_id'];
 			if ($_REQUEST['child_id']) $parameters['child_id'] = $_REQUEST['child_id'];
 			

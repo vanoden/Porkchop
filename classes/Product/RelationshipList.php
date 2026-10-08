@@ -40,7 +40,7 @@
 				$child = new \Product\Item($parameters['child_id']);
 				if ($child->exists()) {
 					$find_objects_query .= "
-					AND		child_id = ?
+					AND		product_id = ?
 					";
 					$database->AddParam($parameters['child_id']);
 				}
@@ -67,14 +67,18 @@
 
 			$objects = array();
 			while(list($parent_id,$child_id) = $rs->FetchRow()) {
-				$object = new $this->_modelName();
-				$object->get($parent_id,$child_id);
-				if ($object->error()) {
-					$this->error($object->error());
+				$parent = new \Product\Item($parent_id);
+				$child = new \Product\Item($child_id);
+				if ($parent->error()) {
+					$this->error($parent->error());
+					return [];
+				}
+				if ($child->error()) {
+					$this->error($child->error());
 					return [];
 				}
 				$this->incrementCount();
-				array_push($objects,$object);
+				array_push($objects,array('parent' => $parent, 'child' => $child));
 			}
 			return $objects;
 		}
