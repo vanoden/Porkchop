@@ -1551,7 +1551,12 @@
 			$file = $caller ['file'];
 			$line = $caller ['line'];
 			app_log ( $error, 'error', $file, $line );
+			log_upload_failure_help($error);
 			array_push ( $this->_errors, $error );
+			if (!isset($GLOBALS['_page_request_errors']) || !is_array($GLOBALS['_page_request_errors'])) {
+				$GLOBALS['_page_request_errors'] = array();
+			}
+			$GLOBALS['_page_request_errors'][] = $error;
 		}
 
 		// Return the serialized error string

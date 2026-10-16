@@ -193,7 +193,7 @@
 	<label for="uploadFile" class="storage-repository-label">Upload file</label>
 	<div class="storage-repository-upload-row">
 		<input type="file" name="uploadFile" id="uploadFile" class="storage-repository-file-input" />
-		<button type="submit" name="btn_submit" class="button">Upload</button>
+		<button type="submit" name="btn_submit" class="button" value="Upload">Upload</button>
 	</div>
 </form>
 <?php } ?>
