@@ -44,6 +44,7 @@ class PieChart Extends \BaseClass{
 		// Set the Background Transparent
 		imagesavealpha($image, true);
 		$background = imagecolorallocatealpha($image, 0, 0, 0, 127);
+
 		// Set the pie color
 		$color = imagecolorallocate($image, $this->_pieColor >> 16 & 0xFF, $this->_pieColor >> 8 & 0xFF, $this->_pieColor & 0xFF);
 		imagefill($image, 0, 0, $background);
