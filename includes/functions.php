@@ -721,3 +721,26 @@
 		}
 		return $dateTime->format('Y-m-d H:i:s');
 	}
+
+	/** @function log_upload_failure_help(error)
+	 * Note an upload or repository failure in the error log. Logged once per request.
+	 * @param string $error The failure already shown to the user.
+	 */
+	function log_upload_failure_help($error) {
+		static $logged = false;
+		$text = strtolower(trim(strip_tags((string) $error)));
+		if ($text === '') return;
+
+		$submittedUpload = (
+			(isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] === 'Upload')
+			|| !empty($_REQUEST['btn_submit_upload'])
+			|| (!empty($_FILES['uploadFile']['name']))
+		);
+		$isUploadFailure = (bool) preg_match('/upload|repositor|permission denied|no file|too large|not writable|writable|invalid type|invalid path|invalid repository|unable to add file|temp file|file already|file was|file chosen|partially|path doesn|path not|path required/', $text);
+		if (!$isUploadFailure && $submittedUpload && preg_match('/invalid token|invalid request/', $text)) $isUploadFailure = true;
+		if (!$isUploadFailure || $logged) return;
+		$logged = true;
+
+		$message = "Upload failed: ".$error.". Check ACTIVE repo (local path writable in the container, or S3 bucket/region/keys), config value is the repository code (website_images, engineering_attachments, engineering_attachments_s3, support_attachments_s3), privilege upload storage files, and PHP upload_max_filesize/post_max_size.";
+		app_log($message, 'error', __FILE__, __LINE__);
+	}

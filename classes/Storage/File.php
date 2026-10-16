@@ -37,6 +37,8 @@ class File extends \BaseModel {
 		$this->_tableName = 'storage_files';
 		$this->_metaTableName = 'storage_file_metadata';
 		$this->_tableMetaFKColumn = 'file_id';
+		// Attachment labels stored as storage_file_metadata.key (see Storage\FileType).
+		$this->_addTypes((new \Storage\FileType())->referenceTypes);
 		parent::__construct($id);
 	}
 
@@ -707,7 +709,8 @@ class File extends \BaseModel {
 		if (empty($_FILES)) $this->addError("No file was selected to upload");
 
 		// make sure all the required parameters are set for upload to continue
-		if (! preg_match('/^\//', $parameters['path'])) $parameters['path'] = '/' . $parameters['path'];
+		if (empty($parameters['path'])) $parameters['path'] = '/';
+		elseif (! preg_match('/^\//', $parameters['path'])) $parameters['path'] = '/' . $parameters['path'];
 
 		// Load the repository based on the parameters provided
 		$repositoryFactory = new \Storage\RepositoryFactory();
@@ -725,7 +728,11 @@ class File extends \BaseModel {
 			return false;
 		}
 
-		if ($repository->error()) {
+		if (!$repository) {
+			$this->addError("Repository not found");
+			return false;
+		}
+		elseif ($repository->error()) {
 			$this->addError("Error loading repository: " . $repository->error());
 			return false;
 		}
@@ -748,15 +755,16 @@ class File extends \BaseModel {
 
 				// Check for Conflict 
 				$filelist = new \Storage\FileList();
-				list($existing) = $filelist->find(
+				$matches = $filelist->find(
 					array(
 						'repository_id' => $repository->id,
 						'path'	=> $parameters['path'],
 						'name' => $_FILES['uploadFile']['name'],
 					)
 				);
+				$existing = (is_array($matches) && isset($matches[0])) ? $matches[0] : null;
 
-				if ($existing->id) {
+				if ($existing && $existing->id) {
 					$this->addError("File already exists with that name at path '".$parameters['path']."' in repository: " . $repository->name);
 				} else {
 
@@ -772,12 +780,11 @@ class File extends \BaseModel {
 						)
 					);
 
-					// Upload File Into Repository 
-					$destinationPath = $parameters['type'] . "/" . $parameters['ref_id']  . "/";
+					// Upload File Into Repository. Logical path is already stored on the file row.
 					try {
 						if ($this->error()) {
 							$this->addError("Error adding file: " . $this->error());
-						} else if (! $repository->addFile($this, $_FILES['uploadFile']['tmp_name'], $destinationPath)) {
+						} else if (! $repository->addFile($this, $_FILES['uploadFile']['tmp_name'])) {
 							$this->delete();
 							$this->addError('Unable to add file to repository: ' . $repository->error());
 						} else {

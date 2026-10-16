@@ -36,6 +36,10 @@ if (empty($file->id) && !$request->validInteger($repository_id)) {
 
 if ($can_proceed && $page->errorCount() < 1) {
 	$btn_submit = $_REQUEST['btn_submit'] ?? null;
+	// <button> without a value attribute submits an empty string. A posted file is still an upload.
+	if (($btn_submit === null || $btn_submit === '') && !empty($_FILES['uploadFile']['name'])) {
+		$btn_submit = 'Upload';
+	}
 	$query_var = $GLOBALS['_REQUEST_']->query_vars_array[1] ?? null;
 	
 	// File Download Requests
