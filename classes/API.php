@@ -312,8 +312,12 @@
 			$store_request = $GLOBALS['_REQUEST_'];
 			$this_post = $_POST;
 			unset($this_post['password']);
+			if (empty($this_post['method']) && !empty($_REQUEST['method'])) {
+				$this_post['method'] = $_REQUEST['method'];
+			}
 			$store_request->post = $this_post;
 			$store_request->method = $_REQUEST["method"];
+			$store_request->uri = $GLOBALS['_REQUEST_']->uri();
 
 			$this->_communication->add(array(json_encode($store_request),'[PENDING]'));
 			if ($this->_communication->error()) {

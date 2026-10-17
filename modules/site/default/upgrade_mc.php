@@ -1,7 +1,6 @@
 <?php
 	$default_Template = "default.html";
 	$admin_template = "admin.html";
-	$portal_template = "portal.html";
 
 	$modules = array(
 		"Company"		=> array(
@@ -123,12 +122,7 @@
 				"stale_tickets"	=> $admin_template,
 				"admin_actions"	=> $admin_template,
 				"admin_rmas"	=> $admin_template,
-				"summary"		=> $admin_template,
-				"troubleshoot"				=> $portal_template,
-				"troubleshoot_complete"		=> $portal_template,
-				"troubleshoot_create_ticket"	=> $portal_template,
-				"troubleshoot_knowledge"	=> $portal_template,
-				"troubleshoot_products"		=> $portal_template,
+				"summary"		=> $admin_template
 			),
 		),
 		"Shipping"		=> array(

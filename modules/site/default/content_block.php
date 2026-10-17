@@ -1,5 +1,5 @@
 <?php /* TinyMCE: If you see "invalid-origin" or read-only editors, add this site's domain (e.g. https://yoursite.com) in Tiny Cloud dashboard under Domain registration. Use HTTPS in production. */ ?>
-<script src="https://cdn.tiny.cloud/1/owxjg74mr7ujxhw9soo7iquo7iul2mclregqovcp7ophazmn/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="<?=$GLOBALS['_config']->TinyMCEURL?>" referrerpolicy="origin"></script>
 <script>
 	tinymce.init({
 		selector: '#content',

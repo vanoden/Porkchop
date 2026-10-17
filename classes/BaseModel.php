@@ -110,12 +110,24 @@ class BaseModel extends \BaseClass {
 			return $this->_getObject($parameters[0]);
 		}
 		elseif ($name == 'addMetadata') {
-			if (gettype($parameters[0]) == 'object') return $this->setMetadataObject($parameters[0], $parameters[1]);
-			else return $this->setMetadataScalar($parameters[0], $parameters[1]);
+			if (gettype($parameters[0]) == 'object') {
+				if (empty($parameters[1])) return $this->dropMetadataObject($parameters[0]);
+				else return $this->setMetadataObject($parameters[0], $parameters[1]);
+			}
+			else {
+				if (empty($parameters[1])) return $this->dropMetadataScalar($parameters[0]);
+				else return $this->setMetadataScalar($parameters[0], $parameters[1]);
+			}
 		}
 		elseif ($name == 'setMetadata') {
-			if (gettype($parameters[0]) == 'object') return $this->setMetadataObject($parameters[0], $parameters[1]);
-			else return $this->setMetadataScalar($parameters[0], $parameters[1]);
+			if (gettype($parameters[0]) == 'object') {
+				if (empty($parameters[1])) return $this->dropMetadataObject($parameters[0]);
+				else return $this->setMetadataObject($parameters[0], $parameters[1]);
+			}
+			else {
+				if (empty($parameters[1])) return $this->dropMetadataScalar($parameters[0]);
+				else return $this->setMetadataScalar($parameters[0], $parameters[1]);
+			}
 		}
 		elseif ($name == 'uploadImage') {
 			if (! empty($parameters[1]) && gettype($parameters[1]) == 'integer') {
@@ -972,7 +984,7 @@ class BaseModel extends \BaseClass {
 	 * @param string $value
 	 * @return bool True if set
 	 */
-	public function setMetadataScalar(string $key, string $value): bool {
+	public function setMetadataScalar(string $key, string $value = ''): bool {
 		$this->clearError();
 
 		if (! isset($value)) return $this->unsetMetadata($key);

@@ -46,7 +46,6 @@
 				"audit_log"		=> $templates['admin'],
 				"header"		=> $templates['admin'],
 				"headers"		=> $templates['admin'],
-				"messages"		=> $templates['portal'],
 			),
 		),
 		"Geography"		=> array(
@@ -78,8 +77,6 @@
 				"see register api"
 			),
 			"templates"		=> array(
-				"accounts"						=> $templates['portal'],
-				"account"						=> $templates['portal'],
 				"admin_account"					=> $templates['admin'],
 				"inventory_report"				=> $templates['admin'],
 				"organizations_report"			=> $templates['admin'],
@@ -104,16 +101,10 @@
 				"admin_account_register_audit"	=> $templates['admin'],
 				"admin_account_privileges"		=> $templates['admin'],
 				"admin_organization_plans"		=> $templates['admin'],
-				"login"							=> $templates['portal'],
-				"new_customer"					=> $templates['portal'],
-				"forgot_password"				=> $templates['portal'],
 				"pending_customers"				=> $templates['admin'],
 				"privileges"					=> $templates['admin'],
 				"roles"							=> $templates['admin'],
 				"role"							=> $templates['admin'],
-				"ent_accounts"					=> $templates['portal'],
-				"organization"					=> $templates['portal'],
-				"organizations"					=> $templates['portal'],
 			),
 		),
 		"Contact"		=> array(
