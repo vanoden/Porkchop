@@ -476,6 +476,13 @@ class Menu Extends \BaseModel {
 	 * @return string HTML of navigation menu
 	*/
 	public function asHTMLV2($parameters = array()) {
+		$menuCode = $parameters['code'] ?? $this->code;
+		$signedIn = !empty($GLOBALS['_SESSION_']->customer->id);
+		// Portal links require a session. Leave the nav empty until the visitor is signed in.
+		if ($menuCode === 'monitor_portal' && !$signedIn) {
+			return '';
+		}
+
 		$items = $this->items();
 		$buffer = '';
 		$enhanced = !empty($GLOBALS['_config']->site->nav_v2_enhanced);

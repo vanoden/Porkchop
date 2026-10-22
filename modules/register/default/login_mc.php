@@ -10,6 +10,7 @@
 	$page = $site->page();
 
 	if (empty($_REQUEST['csrfToken'])) $_REQUEST['csrfToken'] = null;
+	$csrfToken = $GLOBALS['_SESSION_']->getCSRFToken();
 
 	// Set CAPTCHA public key for template use
 	$captcha_public_key = '';
