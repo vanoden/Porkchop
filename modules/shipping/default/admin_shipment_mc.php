@@ -68,6 +68,40 @@
 	}
 
 	if ($can_proceed && $receive_only) {
+		// The QR link includes the shipment id, so the RMA lookup above is skipped.
+		// Resolve it from the document number before deciding what can be received.
+		if (!$rma->exists()) {
+			$linked_rma_id = $rma->extractRmaId((string)$shipment->document_number);
+			if ($linked_rma_id !== null) {
+				$rma = new \Support\Request\Item\RMA($linked_rma_id);
+			}
+		}
+		// Warehouse scans often hit an RMA whose shipment was opened with no package row.
+		// Add the returned device so the receive form has a package to accept.
+		if (empty($shipment->packages()) && $rma->exists()) {
+			$rma_item = $rma->item();
+			if (!empty($rma_item->id) && !empty($rma_item->product_id)) {
+				$package = $shipment->add_package(array(
+					'tracking_code' => '',
+					'status' => 'READY',
+					'condition' => 'OK',
+				));
+				if (!$package) {
+					$page->addError("Error adding package: " . $shipment->error());
+				} else {
+					$added_item = $package->add_item(array(
+						'product_id' => $rma_item->product_id,
+						'serial_number' => $rma_item->serial_number,
+						'condition' => 'OK',
+						'quantity' => 1,
+					));
+					if (!$added_item) {
+						$page->addError("Error adding RMA item to package: " . $package->error());
+					}
+				}
+			}
+		}
+
 		$marked_ready = false;
 		foreach ($shipment->packages() as $package) {
 			if ($package->status == 'READY') {
@@ -80,7 +114,15 @@
 		}
 		// shipping_shipments.status is OPEN/CLOSED only. "Shipped" is date_shipped
 		// plus package status SHIPPED; writing SHIPPED here truncates the column.
-		if ($marked_ready || empty($shipment->date_shipped)) {
+		// Do not stamp date_shipped when there is still nothing to receive.
+		$can_be_received = false;
+		foreach ($shipment->packages() as $package) {
+			if (in_array($package->status, array('SHIPPED', 'RECEIVED', 'LOST', 'RETURNED', 'INCOMPLETE'), true)) {
+				$can_be_received = true;
+				break;
+			}
+		}
+		if ($marked_ready || ($can_be_received && empty($shipment->date_shipped))) {
 			$ship_params = array(
 				'date_shipped' => !empty($shipment->date_shipped) ? $shipment->date_shipped : date('Y-m-d H:i:s')
 			);
@@ -105,8 +147,9 @@
 		}
 	}
 
-	// Handle ship-from (send) address change (dropdown or from add-new flow)
-	if ($can_proceed && isset($_POST['send_location_id']) && $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) {
+	// Handle ship-from (send) address change (dropdown or from add-new flow).
+	// Package actions post the shipment form and must not change this address.
+	if ($can_proceed && isset($_POST['send_location_id']) && empty($_POST['action_type']) && $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) {
 		$new_send_id = preg_match('/^\d+$/', $_POST['send_location_id']) ? (int)$_POST['send_location_id'] : 0;
 		$send_contact = $shipment->send_contact();
 		$valid = false;
@@ -114,7 +157,7 @@
 			$cust_locs = $send_contact->locations(array('include_hidden' => true));
 			foreach ($cust_locs as $l) { if ($l->id == $new_send_id) { $valid = true; break; } }
 		}
-		if ($valid && $shipment->setSendLocationId($new_send_id)) {
+		if ($valid && (int) $shipment->send_location_id !== $new_send_id && $shipment->setSendLocationId($new_send_id)) {
 			$page->appendSuccess("Ship-from address updated.");
 		} elseif (!$valid && $new_send_id > 0) {
 			$page->addError("Invalid ship-from address selection.");

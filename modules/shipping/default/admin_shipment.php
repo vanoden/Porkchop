@@ -176,6 +176,7 @@
 	    <input type="button" name="btn_close" class="button" value="Close Shipment" onclick="closeShipment()" />
     <?php  } ?>
     </div>
+</form>
     <h3>Addresses</h3>
     <div class="table">
         <div class="tableRowHeader">
@@ -212,5 +213,4 @@
             </div>
         </div>
     </div>
-</form>
 <?php } ?>
