@@ -6,6 +6,7 @@
 			    {
 		    ?>
 		    <form action="/_register/unsubscribe" method="POST">
+		        <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 		        <input type="hidden" name="unsubscribe_key" value="<?=$unsubscribe_key?>">
 		        <tr><td align="left" class="heading_2">Unsubscribe Successful</td>
 		        <tr><td align="left" class="copy_2">We will no longer send email newsletters or updates.  If you'd like to receive

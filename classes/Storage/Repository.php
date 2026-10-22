@@ -541,26 +541,26 @@
 
 			// Access for All
 			$privilege = $privileges->privilege('a');
-			if ($privilege->read) return true;
+			if ($privilege && $privilege->read) return true;
 
 			// Access for Authenticated User
 			$privilege = $privileges->privilege('t',$user_id);
-			if ($privilege->read) return true;
+			if ($privilege && $privilege->read) return true;
 
 			// Access for User
 			$privilege = $privileges->privilege('u',$user_id);
-			if ($privilege->read) return true;
+			if ($privilege && $privilege->read) return true;
 
 			// Access for Organization
 			$privilege = $privileges->privilege('o',$organization_id);
-			if ($privilege->read) return true;
+			if ($privilege && $privilege->read) return true;
 
 			// Access for Roles
 			$roles = $user->roles();
 			foreach ($roles as $role) {
 				$role_id = $role->id;
 				$privilege = $privileges->privilege('r',$role_id);
-				if ($privilege->read) return true;
+				if ($privilege && $privilege->read) return true;
 			}
 			return false;
 		}
@@ -586,26 +586,26 @@
 
 			// Access for All
 			$privilege = $privileges->privilege('a');
-			if ($privilege->write) return true;
+			if ($privilege && $privilege->write) return true;
 
 			// Access for Authenticated User
 			$privilege = $privileges->privilege('t');
-			if ($privilege->write) return true;
+			if ($privilege && $privilege->write) return true;
 
 			// Access for User
 			$privilege = $privileges->privilege('u',$user_id);
-			if ($privilege->write) return true;
+			if ($privilege && $privilege->write) return true;
 
 			// Access for Organization
 			$privilege = $privileges->privilege('o',$organization_id);
-			if ($privilege->write) return true;
+			if ($privilege && $privilege->write) return true;
 
 			// Access for Roles
 			$roles = $user->roles();
 			foreach ($roles as $role) {
 				$role_id = $role->id;
 				$privilege = $privileges->privilege('r',$role_id);
-				if ($privilege->write) return true;
+				if ($privilege && $privilege->write) return true;
 			}
 			return false;
 		}

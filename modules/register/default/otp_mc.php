@@ -94,7 +94,11 @@ if ($can_proceed) {
 
 	// Verification
 	$isVerified = false;
-	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+	if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) {
+		$page->addError("Invalid request");
+		$can_proceed = false;
+	}
+	elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		// DEBUG: Log verification process
 		app_log("=== OTP VERIFICATION PROCESS ===", 'debug', __FILE__, __LINE__, 'otplogs');
 		

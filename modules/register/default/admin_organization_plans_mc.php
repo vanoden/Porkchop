@@ -35,6 +35,10 @@
 	}
 
 	if ($_POST) {
+		if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) {
+			$page->addError("Invalid request");
+			return;
+		}
 		if (! $organization->id) {
 			$page->addError("Organization not found");
 			return;

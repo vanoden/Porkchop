@@ -1,6 +1,6 @@
 <?=$page->showAdminPageInfo()?>
 <form method="post" action="/_register/admin_organization_plans/<?=$organization->id?>">
-<input type="hidden" name="csrf_token" value="<?=$GLOBALS['_SESSION_']->csrf_token?>">
+<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 <input type="hidden" name="organization_id" value="<?=$organization->id?>">
 
 <div class="tabs">

@@ -2,11 +2,12 @@
     $site = new \Site();
     $page = $site->page();
 
-    if ($_REQUEST['id']) {
+    $location = null;
+    if (!empty($_REQUEST['id'])) {
         $location = new \Register\Location($_REQUEST['id']);
     }
 
-    if (! $location->id) {
+    if (empty($location) || empty($location->id)) {
         $page->addError("Location not found");
         return 404;
     }

@@ -9,6 +9,7 @@
     </div>
     
     <form id="otp_form" action="/_register/otp" method="post">
+        <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
         <h1>Two Factor Authentication</h1>
         
         <?php if ($showQRCode) { ?>
