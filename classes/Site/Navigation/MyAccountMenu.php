@@ -14,6 +14,24 @@
 			return !empty($item->target) && stripos((string) $item->target, '/messages') !== false;
 		}
 
+		/** Account dropdown items are limited by the customer's roles, including users who can edit menus. */
+		private function customerCanSee($item): bool {
+			$customer = (!empty($GLOBALS['_SESSION_'])) ? $GLOBALS['_SESSION_']->customer() : null;
+			$loggedIn = $customer && !empty($customer->id);
+			if (!empty($item->required_role_id) && (!$loggedIn || !$customer->has_role_id((int) $item->required_role_id))) {
+				return false;
+			}
+			$target = (string) ($item->target ?? '');
+			$title = (string) ($item->title ?? '');
+			if (strcasecmp($title, 'Administration') === 0 || strpos($target, '/admin_home') !== false) {
+				if (!$loggedIn || !$customer->has_role('administrator')) return false;
+			}
+			if (strcasecmp($title, 'Calibration Verification') === 0 || strpos($target, 'calibration_verification') !== false) {
+				if (!$loggedIn || !$customer->has_role('calibrator')) return false;
+			}
+			return true;
+		}
+
 		/** @method public asHTML($parameters = array())
 		 * Render navigation menu as HTML - MyAccount Widget Version
 		 * @param $parameters, array of parameters for rendering
@@ -64,6 +82,7 @@
 
 			if (count($items) > 0) {
 				foreach ($items as $item) {
+					if (!$this->customerCanSee($item)) continue;
 					$title = $item->title;
 					if ($this->isViewMessagesItem($item)) {
 						$title = $this->viewMessagesLabel($unreadCount);

@@ -149,6 +149,14 @@
 				else {
 					$this->install_fail("Error adding menu $code: ".$nav_menu->error());
 				}
+				$roleIdFor = function ($record) {
+					$name = $record['required_role'] ?? ($record['require_role'] ?? '');
+					if ($name === '' || $name === null) return null;
+					$role = new \Register\Role();
+					if ($role->get($name) && $role->id) return (int) $role->id;
+					$this->install_log("Role '$name' not found for menu item ".($record['title'] ?? ''));
+					return null;
+				};
 				foreach ($menu["items"] as $item) {
 					if (!is_array($item) || empty($item['title'])) continue;
 					$nav_item = new \Site\Navigation\Item();
@@ -160,6 +168,8 @@
 					if (!empty($item['target'])) {
 						$parameters['target'] = $item['target'];
 					}
+					$requiredRoleId = $roleIdFor($item);
+					if ($requiredRoleId) $parameters['required_role_id'] = $requiredRoleId;
 
 					if ($nav_item->getItem($nav_menu->id,$item["title"])) {
 						$nav_item->update($parameters);
@@ -183,7 +193,8 @@
 						if (!empty($subitem['view_order'])) $parameters['view_order'] = $subitem['view_order'];
 						if (!empty($subitem['description'])) $parameters['description'] = $subitem['description'];
 						if (!empty($subitem['alt'])) $parameters['alt'] = $subitem['alt'];
-						if (!empty($subitem['require_role'])) $parameters['require_role'] = $subitem['require_role'];
+						$requiredRoleId = $roleIdFor($subitem);
+						if ($requiredRoleId) $parameters['required_role_id'] = $requiredRoleId;
 
 						if ($subnav_item->getItem($nav_menu->id,$subitem["title"],$nav_item)) {
 							$subnav_item->update($parameters);
