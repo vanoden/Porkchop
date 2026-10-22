@@ -1,54 +1,54 @@
 <script type="text/javascript" src="/includes/register-reset-password.js"></script>
 
-<section>
-    <h1 class="pageSect_full">Password Reset</h1>
-</section>
-<?php	if ($page->success) { ?>
-<section id="form-message">
-	<ul class="connectBorder progressText">
-		<li><?=$page->success?></li>
-	</ul>
-</section>
-<?php	} else { ?>
-<?php if ($page->errorCount() > 0) { ?>
-<section id="form-message">
-	<ul class="connectBorder errorText">
-		<li><?=$page->errorString()?></li>
-	</ul>
-</section>
-<?php }	?>
 <?php if (isset($_REQUEST['status']) && $_REQUEST['status'] == "complete") { ?>
-<section id="reg_complete" class="body">
-	<p class="pageSect_full">Your password has been updated.  Please <a href="/_register/login">log back in</a>.</p>
+<section class="section-pad-sm">
+	<h1>Password updated</h1>
+	<ul class="pageMessage">
+		<li class="pageMessage--info">Your password has been updated. Please sign in with the new password.</li>
+	</ul>
+	<div class="button-group">
+		<a class="button" href="/_register/login">Back to sign in</a>
+	</div>
 </section>
 <?php return; } ?>
-<section id="reg_form" class="body">
-	<form name="loginForm" method="post" action="<?=PATH?>/_register/reset_password">
-<?php
-	if (! $GLOBALS['_SESSION_']->superElevated()) { ?>
-	<h3>Enter current password</h3>
-		<div id="register_confirm">
-			<ul class="form-grid">
-				<li>
-					<label for="currentPass">Provide Current Password</label>
-					<input type="password" id="currentPassword" name="currentPassword"/>
-				</li>
-			</ul>
-		</div>
-<?php	} ?>
-    <h3>Create a new password</h3>
-		<div id="register_form">
-			<ul class="form-grid">
-				<li>
-					<label for="dateReceived">New Password</label>
-					<input type="password" id="password" name="password" autofocus/></li>
-				<li>
-					<label for="dateReceived">Confirm Password</label>
-					<input type="password" id="password_2" name="password_2"/>
-				</li>
-			</ul>
-			<input type="submit" name="btn_submit" value="Update Password" />
+
+<section class="section-pad-sm">
+	<h1>Reset Password</h1>
+<?php if ($page->errorCount() > 0) { ?>
+	<ul class="pageMessage">
+		<li class="pageMessage--error"><?=$page->errorString()?></li>
+	</ul>
+<?php } ?>
+<?php if ($page->success) { ?>
+	<ul class="pageMessage">
+		<li class="pageMessage--info"><?=$page->success?></li>
+	</ul>
+<?php } else { ?>
+	<ul class="pageMessage">
+		<li class="pageMessage--info">Enter your current password, then choose a new one and confirm it.</li>
+	</ul>
+	<form id="reg_form" name="loginForm" method="post" action="<?=PATH?>/_register/reset_password">
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+		<h2>Change your password</h2>
+		<ul class="section-grid">
+<?php if (! $GLOBALS['_SESSION_']->superElevated()) { ?>
+			<li class="form-field">
+				<label for="currentPassword">Current password</label>
+				<input type="password" id="currentPassword" name="currentPassword" autocomplete="current-password" autofocus>
+			</li>
+<?php } ?>
+			<li class="form-field">
+				<label for="password">New password</label>
+				<input type="password" id="password" name="password" autocomplete="new-password"<?php if ($GLOBALS['_SESSION_']->superElevated()) { ?> autofocus<?php } ?>>
+			</li>
+			<li class="form-field">
+				<label for="password_2">Confirm new password</label>
+				<input type="password" id="password_2" name="password_2" autocomplete="new-password">
+			</li>
+		</ul>
+		<div class="button-group">
+			<button type="submit" name="btn_submit" value="Update Password">Update Password</button>
 		</div>
 	</form>
-</section>
 <?php } ?>
+</section>
