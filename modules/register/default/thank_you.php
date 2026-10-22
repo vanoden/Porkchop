@@ -1,26 +1,28 @@
 <?php if ($page->errorCount() > 0) { ?>
-<section id="form-message">
-	<ul class="connectBorder errorText">
-		<li><?=$page->errorString()?></li>
-	</ul>
-</section>
+<ul class="pageMessage">
+	<li class="pageMessage--error"><span class="pageMessage__content"><?=htmlspecialchars($page->errorString())?></span></li>
+</ul>
+<?php } else if ($page->success) { ?>
+<ul class="pageMessage">
+	<li class="pageMessage--progress"><span class="pageMessage__content"><?=htmlspecialchars($page->success)?></span></li>
+</ul>
+<?php } ?>
 
-<?php	} else if ($page->success) { ?>
-<section id="form-message">
-	<ul class="connectBorder progressText">
-		<li><?=$page->success?></li>
-	</ul>
-</section>
-<?php	} ?>
-
-<section class="thank-you-container">
-	<div class="thank-you-content">
-		<h2 class="pageTitle">Thank you for registering with <?=$company->name?></h2>
-		<p>You will receive an email soon to confirm your email address is valid.</p>
-		<p><strong>Important:</strong> Our emails are sent from <strong><?=$send_from?></strong>. To ensure you receive all important notifications, please:</p>
-		<ul class="email-tips-inline">
-			<li>Add <strong>no-reply@spectrosinstruments.com</strong> to your email address book or contacts</li>
-			<li>Check your spam, junk, or bulk mail folders if you don't see the email in your inbox right away</li>
-		</ul>
-	</div>
+<section class="register-thanks">
+	<h1>Thank you for registering with <?=htmlspecialchars($company->name)?></h1>
+	<p class="register-thanks__banner">You will receive an email soon to confirm your email address is valid. Messages are sent from <strong class="register-thanks__email"><?=htmlspecialchars($send_from)?></strong>.</p>
+	<ol class="register-thanks__steps">
+		<li>
+			<div>
+				<h2>Add the sender</h2>
+				<p>Add <strong class="register-thanks__email"><?=htmlspecialchars($send_from)?></strong> to your contacts.</p>
+			</div>
+		</li>
+		<li>
+			<div>
+				<h2>Check other folders</h2>
+				<p>Look in spam, junk, or bulk mail if the message is not in your inbox.</p>
+			</div>
+		</li>
+	</ol>
 </section>

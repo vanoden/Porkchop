@@ -1,34 +1,25 @@
-<section>
-	<h1 class="pageSect_full">Organization Required</h1>
-</section>
+<section class="org-required">
+	<h1>Organization Required</h1>
 
-<section id="form-message">
-	<ul class="connectBorder errorText">
-		<li><strong>Account Setup Required</strong><br>
-			Your account must be associated with an organization to access this page.
+	<p class="org-required__banner">Your account must be associated with an organization to access this page. Approval is usually still pending.</p>
+
+	<ol class="org-required__steps">
+		<li>
+			<div>
+				<h2>Verify your email</h2>
+				<p>Open your registration email and click the confirmation link.</p>
+			</div>
 		</li>
-	</ul>
-</section>
+		<li>
+			<div>
+				<h2>Wait for approval</h2>
+				<p>Staff will email you when the account is approved. The message comes from <strong class="org-required__email">no-reply@spectrosinstruments.com</strong>. Add that address to your contacts, and check spam if you don't see it.</p>
+			</div>
+		</li>
+	</ol>
 
-<section>
-	<div class="pageSect_full">
-		<h2>What's Next?</h2>
-		<p>If you're seeing this message, your account is likely pending approval by our staff. Here's what you can do:</p>
-		
-		<div class="form-grid two-col">
-			<div>
-				<h3>✓ Verify Your Email</h3>
-				<p>Make sure you've validated your email address by clicking the link in your registration email.</p>
-			</div>
-			<div>
-				<h3>⏳ Wait for Approval</h3>
-				<p>Our staff will review and approve your account shortly. You'll receive an email notification once approved from <strong>no-reply@spectrosinstruments.com</strong>. Please add this address to your email address book and check your spam folder if needed.</p>
-			</div>
-		</div>
-		
-		<div class="button-group" style="margin-top: 2rem;">
-			<a href="/_register/login" class="button">Return to Login</a>
-			<a href="/_register/contact" class="button btn-secondary">Contact Support</a>
-		</div>
+	<div class="button-group">
+		<a href="/_register/login" class="button">Return to Login</a>
+		<a href="/_register/contact" class="button btn-secondary">Contact Support</a>
 	</div>
 </section>
