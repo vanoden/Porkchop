@@ -107,7 +107,16 @@
 		        return false;
 		    }
 
-			return $this->_deliver($email);
+			$sent = $this->_deliver($email);
+			if ($sent && !($this instanceof \Email\Transport\InSite)) {
+				try {
+					\Site\SiteMessage::copyFromEmail($email);
+				}
+				catch (\Throwable $e) {
+					app_log('Site message copy failed: '.$e->getMessage(), 'error', __FILE__, __LINE__);
+				}
+			}
+			return $sent;
 		}
 
 		/** @method public result()

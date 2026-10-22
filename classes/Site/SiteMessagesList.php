@@ -80,6 +80,16 @@
 				AND smd.date_acknowledged is NULL";
 			}
 
+			$transientSubjects = \Site\SiteMessage::transientSubjects();
+			if (!empty($transientSubjects)) {
+				$placeholders = implode(', ', array_fill(0, count($transientSubjects), '?'));
+				$find_objects_query .= "
+				AND sm.subject NOT IN ($placeholders)";
+				foreach ($transientSubjects as $transientSubject) {
+					$database->AddParam($transientSubject);
+				}
+			}
+
 			$find_objects_query .= "
 				ORDER BY sm.date_created DESC";
 

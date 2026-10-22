@@ -40,7 +40,7 @@
 			}
 
 			if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) {
-				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization_id;
 				$get_objects_query .= "
 					AND     rop.organization_id = ?";
 				$database->AddParam($parameters['organization_id']);

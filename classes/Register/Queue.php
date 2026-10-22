@@ -261,7 +261,7 @@
 			$message->html(true);
 			$message->from($GLOBALS['_config']->register->account_activation_notification->from);
 			$message->subject($GLOBALS['_config']->register->account_activation_notification->subject);
-			$message->body($template->content());
+			$message->body($template->render());
 			if ($customer->notify($message)) {
 				app_log("Activation notice sent");
 			}
