@@ -12,6 +12,7 @@
 	$product_codes = array(
 		"enterprise_web"
 	);
+	$activeTab = 'plans';
 
 	// Identify the Specified Organization
 	if (!empty($_REQUEST['organization_id']) && is_numeric($_REQUEST['organization_id'])) {
@@ -37,13 +38,11 @@
 	if ($_POST) {
 		if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) {
 			$page->addError("Invalid request");
-			return;
 		}
-		if (! $organization->id) {
+		elseif (empty($organization) || empty($organization->id)) {
 			$page->addError("Organization not found");
-			return;
 		}
-		foreach ($product_codes as $product_code) {
+		else foreach ($product_codes as $product_code) {
 			$product = new \Product\Item();
 			if (! $product->get($product_code)) {
 				$page->addError("Product not found: ".$product_code);
@@ -80,5 +79,3 @@
 		$page->addBreadcrumb($organization->name,"/_register/admin_organization?organization_id=".$organization->id);
 	}
 	$page->instructions = "Select the products and services this organization has access to.";
-
-	$activeTab = 'plans';

@@ -155,6 +155,29 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
+			if ($this->version() < 2) {
+				app_log("Upgrading ".$this->module." schema to version 2",'notice',__FILE__,__LINE__);
+
+				$alter_question_types = "
+					ALTER TABLE `form_questions`
+					MODIFY `type` enum('hidden','text','textarea','select','checkbox','radio','submit','phone','email','country','state') NOT NULL DEFAULT 'text'
+				";
+				if (! $this->executeSQL($alter_question_types)) {
+					return false;
+				}
+
+				$add_require_captcha = "
+					ALTER TABLE `form_versions`
+					ADD COLUMN `require_captcha` tinyint NOT NULL DEFAULT 0
+				";
+				if (! $this->executeSQL($add_require_captcha)) {
+					return false;
+				}
+
+				$this->setVersion(2);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}

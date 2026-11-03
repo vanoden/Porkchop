@@ -72,6 +72,7 @@
 					'name' => (string)$versionList->nextDefaultVersionName((int)$form->id, (string)($form->title ?? '')),
 					'description' => ($sourceVersion && $sourceVersion->exists()) ? (string)$sourceVersion->description : '',
 					'instructions' => ($sourceVersion && $sourceVersion->exists()) ? (string)$sourceVersion->instructions : '',
+					'require_captcha' => ($sourceVersion && $sourceVersion->exists()) ? (int)$sourceVersion->require_captcha : 0,
 				);
 				if (! $version->add($newVersionParams)) {
 					$page->addError("Error creating new version: " . $version->error());
@@ -317,9 +318,7 @@
 			} elseif (! $question->validText($question_text)) {
 				$page->addError("Invalid question name format for new question " . $rowLabel . ".");
 			}
-			if ($question_prompt === '') {
-				$page->addError("Question prompt is required for new question " . $rowLabel . ".");
-			} elseif (! $question->validText($question_prompt)) {
+			if ($question_prompt !== '' && ! $question->validText($question_prompt)) {
 				$page->addError("Invalid question prompt format for new question " . $rowLabel . ".");
 			}
 			$question_type = (string)($typesNew[$rowIndex] ?? 'text');
@@ -380,6 +379,7 @@
 			'method' => $_POST['method'] ?? '',
 			'description' => $_POST['description'] ?? '',
 			'instructions' => $_POST['instructions'] ?? '',
+			'require_captcha' => ! empty($_POST['require_captcha']) ? 1 : 0,
 		);
 		if (! $page->errorCount()) {
 			if (! $version->exists()) {
@@ -529,10 +529,7 @@
 					$can_proceed = false;
 				}
 				$question_prompt = $_REQUEST['prompt'][$question_id] ?? '';
-				if ($question_prompt === '' || $question_prompt === null) {
-					$page->addError("Question prompt is required");
-					$can_proceed = false;
-				} elseif (! $question->validText($question_prompt)) {
+				if ($question_prompt !== '' && $question_prompt !== null && ! $question->validText($question_prompt)) {
 					$page->addError("Invalid question prompt format");
 					$can_proceed = false;
 				}
@@ -737,17 +734,12 @@
 						continue;
 					}
 					$question_prompt = trim((string)($promptsNew[$rowIndex] ?? ''));
-					if ($question_prompt === '') {
-						$page->addError("Question prompt is required for new question '" . $question_text . "'.");
-						$can_proceed = false;
-						continue;
-					}
 					if (! $question->validText($question_text)) {
 						$page->addError("Invalid question name format for '" . $question_text . "'.");
 						$can_proceed = false;
 						continue;
 					}
-					if (! $question->validText($question_prompt)) {
+					if ($question_prompt !== '' && ! $question->validText($question_prompt)) {
 						$page->addError("Invalid question prompt format for '" . $question_text . "'.");
 						$can_proceed = false;
 						continue;

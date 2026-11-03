@@ -107,7 +107,14 @@
 	</div>
 	<div class="formVersionMetaBlock">
 		<div class="formVersionMetaField formVersionMetaField--label">Instructions</div>
-		<div class="formVersionMetaField"><?= nl2br($h($version->instructions)) ?></div>
+		<div class="formVersionMetaField"><?php
+			$lockedInstructions = (string)$version->instructions;
+			if (strpos($lockedInstructions, '<') !== false) {
+				print $lockedInstructions;
+			} else {
+				print nl2br($h($lockedInstructions));
+			}
+		?></div>
 	</div>
   </div>
 
@@ -197,6 +204,27 @@
 </div>
 <?php } else { ?>
 
+<script src="https://cdn.tiny.cloud/1/owxjg74mr7ujxhw9soo7iquo7iul2mclregqovcp7ophazmn/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		if (!window.tinymce) return;
+		tinymce.init({
+			selector: '#instructions',
+			plugins: 'code',
+			toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | outdent indent | code',
+			menubar: false,
+			setup: function (editor) {
+				editor.on('change', function () { editor.save(); });
+			}
+		});
+		var form = document.getElementById('formVersionEdit');
+		if (!form) return;
+		form.addEventListener('submit', function () {
+			tinymce.triggerSave();
+		});
+	});
+</script>
+
 <form method="post" id="formVersionEdit" class="monitor-admin-list form-admin-edit">
 <input type="hidden" name="csrf_token" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>" />
 <input type="hidden" name="id" value="<?=$version->id?>" />
@@ -227,6 +255,15 @@
 <div class="form-field">
 <label for="instructions" style="display:block;margin:.35em 0">Instructions</label>
 <textarea id="instructions" name="instructions"><?= $h($postScalar('instructions', $version->instructions ?? '')) ?></textarea>
+<label class="formRequireCaptcha" style="display:block;margin:.75em 0">
+	<input type="checkbox" name="require_captcha" value="1"<?php
+		$captchaOn = $hasErrors
+			? ! empty($_POST['require_captcha'])
+			: ! empty($version->require_captcha);
+		if ($captchaOn) print ' checked';
+	?> />
+	Require CAPTCHA
+</label>
 </div>
 
 <h3>Groups</h3>
@@ -315,19 +352,15 @@
 ?>
 		<div class="formQuestionField formQuestionField--type">
 			<select name="type[<?=$question->id?>]" class="formQuestionType">
-				<option value="text"<?php if ($selType === "text") print " selected";?>>Text</option>
-				<option value="textarea"<?php if ($selType === "textarea") print " selected";?>>Textarea</option>
-				<option value="select"<?php if ($selType === "select") print " selected";?>>Select</option>
-				<option value="checkbox"<?php if ($selType === "checkbox") print " selected";?>>Checkbox</option>
-				<option value="radio"<?php if ($selType === "radio") print " selected";?>>Radio</option>
-				<option value="submit"<?php if ($selType === "submit") print " selected";?>>Submit</option>
-				<option value="hidden"<?php if ($selType === "hidden") print " selected";?>>Hidden</option>
+<?php foreach (\Form\Question::typeLabels() as $typeCode => $typeLabel) { ?>
+				<option value="<?= $h($typeCode) ?>"<?php if ($selType === $typeCode) print " selected";?>><?= $h($typeLabel) ?></option>
+<?php } ?>
 			</select>
 		</div>
 		<div class="formQuestionField formQuestionField--question">
 			<input type="text" name="text[<?=$question->id?>]" value="<?= $h($postArrScalar('text', (int)$question->id, strip_tags((string)$question->text))) ?>" placeholder="Field name / key" />
 		</div>
-		<div class="formQuestionField"><input type="text" name="prompt[<?=$question->id?>]" value="<?= $h($postArrScalar('prompt', (int)$question->id, $question->prompt ?? '')) ?>" placeholder="Label shown to user" /></div>
+		<div class="formQuestionField"><input type="text" name="prompt[<?=$question->id?>]" value="<?= $h($postArrScalar('prompt', (int)$question->id, $question->prompt ?? '')) ?>" placeholder="Optional label shown to user" /></div>
 		<div class="formQuestionField"><input type="checkbox" name="required[<?=$question->id?>]" value="1"<?php if ($postArrCheckbox('required', (int)$question->id, ! empty($question->required))) print " checked";?> /></div>
 		<div class="formQuestionField">
 			<select name="group_id[<?=$question->id?>]">
@@ -435,19 +468,15 @@
 		<div class="formQuestionMainRow">
 		<div class="formQuestionField formQuestionField--type">
 			<select name="type_new[<?= (int)$ni ?>]" class="formQuestionNewType">
-				<option value="text"<?php if ($selTypeNew === 'text') print ' selected'; ?>>Text</option>
-				<option value="textarea"<?php if ($selTypeNew === 'textarea') print ' selected'; ?>>Textarea</option>
-				<option value="select"<?php if ($selTypeNew === 'select') print ' selected'; ?>>Select</option>
-				<option value="checkbox"<?php if ($selTypeNew === 'checkbox') print ' selected'; ?>>Checkbox</option>
-				<option value="radio"<?php if ($selTypeNew === 'radio') print ' selected'; ?>>Radio</option>
-				<option value="hidden"<?php if ($selTypeNew === 'hidden') print ' selected'; ?>>Hidden</option>
-				<option value="submit"<?php if ($selTypeNew === 'submit') print ' selected'; ?>>Submit</option>
+<?php foreach (\Form\Question::typeLabels() as $typeCode => $typeLabel) { ?>
+				<option value="<?= $h($typeCode) ?>"<?php if ($selTypeNew === $typeCode) print ' selected'; ?>><?= $h($typeLabel) ?></option>
+<?php } ?>
 			</select>
 		</div>
 		<div class="formQuestionField formQuestionField--question">
 			<input type="text" name="text_new[<?= (int)$ni ?>]" value="<?= $h($newTexts[$ni] ?? '') ?>" placeholder="Field name / key" autocomplete="off" />
 		</div>
-		<div class="formQuestionField"><input type="text" name="prompt_new[<?= (int)$ni ?>]" value="<?= $h($newPrompts[$ni] ?? '') ?>" placeholder="Label shown to user" autocomplete="off" /></div>
+		<div class="formQuestionField"><input type="text" name="prompt_new[<?= (int)$ni ?>]" value="<?= $h($newPrompts[$ni] ?? '') ?>" placeholder="Optional label shown to user" autocomplete="off" /></div>
 		<div class="formQuestionField"><input type="checkbox" name="required_new[<?= (int)$ni ?>]" value="1"<?php
 			if ($hasErrors && ! empty($newRequired[$ni])) print ' checked';
 		?> /></div>

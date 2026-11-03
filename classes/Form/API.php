@@ -769,6 +769,7 @@
 				'name' => 'Copy '.date('Y-m-d H:i'),
 				'description' => $src->description,
 				'instructions' => $src->instructions,
+				'require_captcha' => (int)$src->require_captcha,
 			))) {
 				$this->error($nv->error() ?: "Could not create version");
 			}
@@ -926,10 +927,15 @@
 							'options'	=> array(
 								'hidden',
 								'text',
+								'phone',
+								'email',
+								'country',
+								'state',
 								'checkbox',
 								'select',
 								'textarea',
-								'radio'
+								'radio',
+								'submit'
 							)
 						)
 					)
@@ -956,10 +962,15 @@
 							'options'	=> array(
 								'hidden',
 								'text',
+								'phone',
+								'email',
+								'country',
+								'state',
 								'checkbox',
 								'select',
 								'textarea',
-								'radio'
+								'radio',
+								'submit'
 							)
 						)
 					)

@@ -10,6 +10,7 @@
 		public $name;					// Name of this version, used for display purposes
 		public $description;			// Description of this version, why was it created?
 		public $instructions;			// Instructions for this version, used for display purposes
+		public $require_captcha = 0;	// When 1, public and preview submissions must pass reCAPTCHA
 		public $user_id_activated;		// ID of user that activated this version
 		public $date_activated;			// Date this version was activated, if a newer active one exists, this one is inactive
 

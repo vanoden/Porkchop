@@ -32,6 +32,47 @@
 			<input type="hidden" id="updateImage" name="updateImage" value="" />
 			<input id="method" type="hidden" name="method" value="" />
 
+			<div class="account-settings">
+			<?php if (!$readOnly) { ?>
+			<section class="account-settings__password">
+				<h2>Password</h2>
+				<p>Change the password you use to sign in.</p>
+				<button type="button" name="method" value="Change Password" onclick="return passChange();">Change Password</button>
+				<?php
+					$configurations = new \Site\Configuration();
+					if ($configurations->getValueBool("use_otp")) { ?>
+				<div class="two-factor">
+					<h3>Time Based Password [Google Authenticator]</h3>
+					<div class="checkbox-group">
+						<input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password))
+							echo "checked"; ?> <?php
+							$roles = $customer->roles();
+							$requiresTOTP = false;
+							$rolesRequiringTOTP = [];
+							foreach ($roles as $role) {
+								if ($role && isset($role->time_based_password) && $role->time_based_password) {
+									$requiresTOTP = true;
+									$rolesRequiringTOTP[] = $role->name;
+								}
+							}
+							$organization = $customer->organization();
+							$orgRequiresTOTP = $organization && isset($organization->time_based_password) && $organization->time_based_password;
+							if ($requiresTOTP || $orgRequiresTOTP)
+								echo "disabled checked";
+							?>>
+						<label for="time_based_password">Enable Two-Factor Authentication</label>
+					</div>
+					<?php if ($requiresTOTP) { ?>
+						<div class="note"><em>TOTP is required by the following roles: <?= implode(', ', $rolesRequiringTOTP) ?></em></div>
+					<?php } elseif ($orgRequiresTOTP) { ?>
+						<div class="note"><em>TOTP is required by the organization: <?= $organization->name ?></em></div>
+					<?php } ?>
+				</div>
+				<?php } ?>
+			</section>
+			<?php } ?>
+			<div class="account-settings__profile">
+
 			<!-- Profile Visibility Section -->
 			<?php if (!$readOnly) { ?>
 				<section class="form-group profile-visibility">
@@ -146,20 +187,21 @@
 					</div>
 				</div>
 			</section>
+			</div><!-- .account-settings__profile -->
 
 			<!-- Contact Methods Section -->
 			<section class="form-group contact-methods">
 				<h2>Methods of Contact</h2>
-				<table id="contact-main-table" class="table--banded">
+				<table id="contact-main-table" class="table--banded contact-methods__table">
 					<thead>
 						<tr>
 							<th scope="col">Types</th>
 							<th scope="col">Description</th>
 							<th scope="col">Address/Number or Email</th>
 							<th scope="col">Notes</th>
-							<th scope="col">Notify</th>
-							<th scope="col">Public</th>
-							<th scope="col">Drop</th>
+							<th scope="col" class="contact-methods__check">Notify</th>
+							<th scope="col" class="contact-methods__check">Public</th>
+							<th scope="col" class="contact-methods__drop">Drop</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -191,17 +233,17 @@
 									value="<?= strip_tags($contact->notes) ?>" <?php if ($readOnly)
 										  echo 'disabled'; ?> />
 							</td>
-							<td data-label="Notify">
+							<td data-label="Notify" class="contact-methods__check">
 								<input type="checkbox" class="contact_notify" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify)
 									  print "checked"; ?> 		<?php if ($readOnly)
 													 echo 'disabled'; ?> />
 							</td>
-							<td data-label="Public">
+							<td data-label="Public" class="contact-methods__check">
 								<input type="checkbox" class="contact_public" name="public[<?= $contact->id ?>]" value="1" <?php if ($contact->public)
 									  print "checked"; ?> 		<?php if ($readOnly)
 													 echo 'disabled'; ?> />
 							</td>
-							<td data-label="Drop" class="text-align--center">
+							<td data-label="Drop" class="contact-methods__drop text-align--center">
 								<button type="button" name="drop_contact[<?= $contact->id ?>]" class="deleteButton"
 									onclick="submitDelete(<?= $contact->id ?>)" <?php if ($readOnly)
 										  echo 'disabled'; ?>>X</button>
@@ -235,75 +277,32 @@
 						<td data-label="Notes"><input type="text" name="notes[0]" class="value input contactNotesColumn"
 								<?php if ($readOnly)
 									echo 'disabled'; ?> /></td>
-						<td data-label="Notify">
+						<td data-label="Notify" class="contact-methods__check">
 							<input type="checkbox" class="contact_notify" name="notify[0]" value="1" <?php if ($readOnly)
 								echo 'disabled'; ?> />
 						</td>
-						<td data-label="Public">
+						<td data-label="Public" class="contact-methods__check">
 							<input type="checkbox" class="contact_public" name="public[0]" value="1" <?php if ($readOnly)
 								echo 'disabled'; ?> />
 						</td>
-						<td data-label="Drop"></td>
+						<td data-label="Drop" class="contact-methods__drop"></td>
 					</tr>
 					<?php } ?>
 					</tbody>
 				</table>
 			</section>
-
-			<?php if (!$readOnly) { ?>
-				<!-- Two-Factor Authentication Section -->
-				<?php
-					$configurations = new \Site\Configuration(); 
-					if ($configurations->getValueBool("use_otp")) { ?>
-					<section class="form-group two-factor pageSect_full">
-						<h2>Time Based Password [Google Authenticator]</h2>
-						<div class="checkbox-group">
-							<input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password))
-								echo "checked"; ?> 			<?php
-											   $roles = $customer->roles();
-											   $requiresTOTP = false;
-											   $rolesRequiringTOTP = [];
-											   foreach ($roles as $role) {
-												   if ($role && isset($role->time_based_password) && $role->time_based_password) {
-													   $requiresTOTP = true;
-													   $rolesRequiringTOTP[] = $role->name;
-												   }
-											   }
-											   $organization = $customer->organization();
-											   $orgRequiresTOTP = $organization && isset($organization->time_based_password) && $organization->time_based_password;
-											   if ($requiresTOTP || $orgRequiresTOTP)
-												   echo "disabled checked";
-											   ?>>
-							<label for="time_based_password">Enable Two-Factor Authentication</label>
-						</div>
-						<?php if ($requiresTOTP) { ?>
-							<div class="note pageSect_half"><em>TOTP is required by the following roles:
-									<?= implode(', ', $rolesRequiringTOTP) ?></em></div>
-						<?php } elseif ($orgRequiresTOTP) { ?>
-							<div class="note pageSect_half"><em>TOTP is required by the organization:
-									<?= $organization->name ?></em></div>
-						<?php } ?>
-					</section>
-				<?php } ?>
-
-			<?php } ?>
+			</div><!-- .account-settings -->
 
 			<?php if ($customer->profile == "public" || !$readOnly) { ?>
-				<!-- Form Actions Section -->
 				<section class="form-group form-actions">
-					<div class="button-group pageSect_full">
+					<div class="button-group">
+						<?php if (!$readOnly) { ?>
+							<button type="submit" name="method" value="Apply" onclick="return submitForm();">Apply Changes</button>
+						<?php } ?>
 						<?php if ($customer->profile == "public") { ?>
 							<button type="button" class="btn-secondary" onclick="window.open('/_register/businesscard?customer_id=<?= $customer->id ?>', '_blank')">Preview Business Card</button>
 						<?php } ?>
-						<?php if (!$readOnly) { ?>
-							<button type="button" name="method" value="Change Password" class="btn-secondary" onclick="return passChange();">Change Password</button>
-						<?php } ?>
 					</div>
-					<?php if (!$readOnly) { ?>
-						<div class="button-group pageSect_full">
-							<button type="submit" name="method" value="Apply" onclick="return submitForm();">Apply Changes</button>
-						</div>
-					<?php } ?>
 				</section>
 			<?php } ?>
 

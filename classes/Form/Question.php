@@ -32,10 +32,28 @@
 				$pc = new \Porkchop();
 				$parameters['aggregate_key'] = substr(str_replace(array('-', '_'), '', $pc->biguuid()), 0, 32);
 			}
-			if (empty($parameters['prompt']) && ! empty($parameters['text'])) {
-				$parameters['prompt'] = $parameters['text'];
+			// Prompt is optional. An omitted prompt stays blank instead of copying the field name.
+			if (! array_key_exists('prompt', $parameters) || $parameters['prompt'] === null) {
+				$parameters['prompt'] = '';
 			}
 			return parent::add($parameters);
+		}
+
+		/** @return array<string,string> type code => label shown in the form maker */
+		public static function typeLabels(): array {
+			return array(
+				'text' => 'Text',
+				'textarea' => 'Textarea',
+				'phone' => 'Phone',
+				'email' => 'Email',
+				'country' => 'Country',
+				'state' => 'State',
+				'select' => 'Select',
+				'checkbox' => 'Checkbox',
+				'radio' => 'Radio',
+				'hidden' => 'Hidden',
+				'submit' => 'Submit',
+			);
 		}
 
 		/** @method public validType(type): bool
@@ -44,7 +62,7 @@
 		 * @return bool True if the type is valid, false otherwise
 		 */
 		public function validType($type): bool {
-			if (preg_match('/^(text|textarea|select|radio|checkbox|hidden|submit)$/i', $type)) {
+			if (preg_match('/^(text|textarea|phone|email|country|state|select|radio|checkbox|hidden|submit)$/i', $type)) {
 				return true;
 			}
 			return false;

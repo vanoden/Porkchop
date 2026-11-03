@@ -246,8 +246,16 @@
 				$out['errors'][] = 'Version does not belong to this form.';
 				return $out;
 			}
+			if (! empty($version->require_captcha)) {
+				$captcha = new \GoogleAPI\ReCAPTCHA();
+				if (! $captcha->verifyToken($_REQUEST['g-recaptcha-response'] ?? '')) {
+					$out['errors'][] = $captcha->error() ?: 'Please complete the CAPTCHA.';
+					return $out;
+				}
+			}
 			$questions = $version->questions();
 			$normalized = array();
+			$countryAnswer = null;
 			foreach ($questions as $q) {
 				if ($q->type === 'hidden') {
 					$normalized[$q->id] = $answerInput[$q->id] ?? $q->text;
@@ -284,7 +292,29 @@
 				if (! empty($q->validation_pattern) && $q->type !== 'checkbox') {
 					$check = is_array($raw) ? implode(',', $raw) : $raw;
 					if (! preg_match($q->validation_pattern, $check)) {
-						$out['errors'][] = 'Invalid answer format for: '.$q->text;
+						$out['errors'][] = 'Invalid answer format for: '.$this->questionLabel($q);
+						continue;
+					}
+				}
+				if (is_string($raw) && $raw !== '') {
+					$qType = strtolower((string)$q->type);
+					if ($qType === 'email' && filter_var($raw, FILTER_VALIDATE_EMAIL) === false) {
+						$out['errors'][] = 'Enter a valid email address for: '.$this->questionLabel($q);
+						continue;
+					}
+					if ($qType === 'phone' && ! $this->validPhoneAnswer($raw)) {
+						$out['errors'][] = 'Enter a valid phone number for: '.$this->questionLabel($q);
+						continue;
+					}
+					if ($qType === 'country') {
+						if (! $this->isKnownCountry($raw)) {
+							$out['errors'][] = 'Choose a country from the list for: '.$this->questionLabel($q);
+							continue;
+						}
+						$countryAnswer = $raw;
+					}
+					if ($qType === 'state' && ! $this->isKnownProvince($raw, $countryAnswer)) {
+						$out['errors'][] = 'Choose a state from the list for: '.$this->questionLabel($q);
 						continue;
 					}
 				}
@@ -374,7 +404,27 @@
 				$groups = $loadedGroups;
 			}
 
-			$form_content .= '<div class="form_instructions">'.htmlspecialchars((string)$activeVersion->instructions, ENT_QUOTES, 'UTF-8').'</div>'."\n";
+			$instructionsHtml = (string)$activeVersion->instructions;
+			if (trim($instructionsHtml) !== '') {
+				if (strpos($instructionsHtml, '<') !== false) {
+					$form_content .= '<div class="form_instructions">'.$instructionsHtml.'</div>'."\n";
+				}
+				else {
+					$form_content .= '<div class="form_instructions">'.nl2br(htmlspecialchars($instructionsHtml, ENT_QUOTES, 'UTF-8')).'</div>'."\n";
+				}
+			}
+			$geoCountries = $this->geographyCountries();
+			$defaultCountryId = 0;
+			foreach ($geoCountries as $geoCountry) {
+				if ($geoCountry->abbreviation === 'US' || $geoCountry->name === 'United States' || $geoCountry->name === 'United States of America') {
+					$defaultCountryId = (int)$geoCountry->id;
+					break;
+				}
+			}
+			if ($defaultCountryId < 1 && ! empty($geoCountries)) {
+				$defaultCountryId = (int)$geoCountries[0]->id;
+			}
+			$defaultProvinces = $defaultCountryId > 0 ? $this->provincesForCountryId($defaultCountryId) : array();
 			$action = strlen((string)$this->action) ? htmlspecialchars((string)$this->action, ENT_QUOTES, 'UTF-8') : '';
 			$form_content .= '<form class="porkchop-form" action="'.$action.'" method="'.htmlspecialchars((string)$this->method, ENT_QUOTES, 'UTF-8').'">';
 			foreach ($extraHiddens as $hk => $hv) {
@@ -383,7 +433,7 @@
 			if ($previewVersionId !== null) {
 				$form_content .= '<input type="hidden" name="preview_version_id" value="'.(int)$previewVersionId.'">';
 			}
-			$renderQuestion = function ($question): string {
+			$renderQuestion = function ($question) use ($geoCountries, $defaultCountryId, $defaultProvinces): string {
 				$question_content = '';
 				if (strtolower((string)$question->type) === 'submit') {
 					return '';
@@ -393,18 +443,18 @@
 				$fieldClass = 'formQuestion form-field'.($isChoiceField ? ' form-field--checks' : '');
 				$question_content .= '<div class="'.$fieldClass.'">';
 				$displayLabel = trim((string)($question->prompt ?? ''));
-				if ($displayLabel === '') {
-					$displayLabel = (string)$question->text;
-				}
+				$storedLabel = $displayLabel !== '' ? $displayLabel : trim((string)$question->text);
 				$fieldId = 'form_q_'.(int)$question->id;
-				if ($isChoiceField) {
-					$question_content .= '<span class="form-field__group-label" id="'.$fieldId.'_label">'.htmlspecialchars($displayLabel, ENT_QUOTES, 'UTF-8').'</span>';
-				}
-				else {
-					$question_content .= '<label for="'.$fieldId.'">'.htmlspecialchars($displayLabel, ENT_QUOTES, 'UTF-8').'</label>';
+				if ($displayLabel !== '') {
+					if ($isChoiceField) {
+						$question_content .= '<span class="form-field__group-label" id="'.$fieldId.'_label">'.htmlspecialchars($displayLabel, ENT_QUOTES, 'UTF-8').'</span>';
+					}
+					else {
+						$question_content .= '<label for="'.$fieldId.'">'.htmlspecialchars($displayLabel, ENT_QUOTES, 'UTF-8').'</label>';
+					}
 				}
 				// Hidden input stores question label
-				$question_content .= '<input type="hidden" name="question_label['.$question->id.']" value="'.htmlspecialchars($displayLabel, ENT_QUOTES, 'UTF-8').'">';
+				$question_content .= '<input type="hidden" name="question_label['.$question->id.']" value="'.htmlspecialchars($storedLabel, ENT_QUOTES, 'UTF-8').'">';
 				if (!empty($question->help)) {
 					$question_content .= '<div class="formQuestionHelp">'.htmlspecialchars((string)$question->help, ENT_QUOTES, 'UTF-8').'</div>';
 				}
@@ -417,6 +467,39 @@
 					$question_content .= '<textarea id="'.$fieldId.'" name="answer['.$question->id.']"';
 					if ($question->required) $question_content .= ' required';
 					$question_content .= '></textarea>';
+				}
+				elseif ($question->type == 'phone' || $question->type == 'email') {
+					$inputType = $question->type == 'email' ? 'email' : 'tel';
+					$question_content .= '<input type="'.$inputType.'" id="'.$fieldId.'" name="answer['.$question->id.']"';
+					if ($question->type == 'phone') {
+						$question_content .= ' autocomplete="tel"';
+					}
+					if ($question->type == 'email') {
+						$question_content .= ' autocomplete="email"';
+					}
+					if ($question->required) $question_content .= ' required';
+					$question_content .= '>';
+				}
+				elseif ($question->type == 'country') {
+					$question_content .= '<select id="'.$fieldId.'" class="form-country" name="answer['.$question->id.']"';
+					if ($question->required) $question_content .= ' required';
+					$question_content .= '>';
+					$question_content .= '<option value="">Select a country</option>';
+					foreach ($geoCountries as $geoCountry) {
+						$selected = ((int)$geoCountry->id === $defaultCountryId) ? ' selected' : '';
+						$question_content .= '<option value="'.htmlspecialchars((string)$geoCountry->name, ENT_QUOTES, 'UTF-8').'" data-country-id="'.(int)$geoCountry->id.'"'.$selected.'>'.htmlspecialchars((string)$geoCountry->name, ENT_QUOTES, 'UTF-8').'</option>';
+					}
+					$question_content .= '</select>';
+				}
+				elseif ($question->type == 'state') {
+					$question_content .= '<select id="'.$fieldId.'" class="form-state" name="answer['.$question->id.']"';
+					if ($question->required) $question_content .= ' required';
+					$question_content .= '>';
+					$question_content .= '<option value="">Select a state</option>';
+					foreach ($defaultProvinces as $province) {
+						$question_content .= '<option value="'.htmlspecialchars((string)$province->name, ENT_QUOTES, 'UTF-8').'">'.htmlspecialchars((string)$province->name, ENT_QUOTES, 'UTF-8').'</option>';
+					}
+					$question_content .= '</select>';
 				}
 				elseif ($question->type == 'select') {
 					$opts = $question->options();
@@ -575,11 +658,89 @@
 			}
 			$form_content .= '<input type="hidden" name="csrfToken" value="'.htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8').'">';
 			$form_content .= '<input type="hidden" name="form_code" value="'.htmlspecialchars((string)$this->code, ENT_QUOTES, 'UTF-8').'">';
+			if (! empty($activeVersion->require_captcha)) {
+				$siteKey = (string)($GLOBALS['_config']->captcha->public_key ?? '');
+				if ($siteKey !== '') {
+					$form_content .= '<div class="g-recaptcha" data-sitekey="'.htmlspecialchars($siteKey, ENT_QUOTES, 'UTF-8').'"></div>';
+					$form_content .= '<script src="https://www.google.com/recaptcha/api.js" async defer></script>';
+				}
+				else {
+					$form_content .= '<p class="form_error">CAPTCHA is required but not configured.</p>';
+				}
+			}
 			$btn = trim($submitButtonLabel) !== '' ? $submitButtonLabel : 'Submit';
 			$form_content .= '<div class="form-actions filter-bar"><div class="button-group filter-bar__actions formSubmit">';
 			$form_content .= '<button type="submit" class="button" name="form_submit" value="1">'.htmlspecialchars($btn, ENT_QUOTES, 'UTF-8').'</button>';
 			$form_content .= '</div></div>';
 			$form_content .= '</form>';
+			$needsGeoScript = false;
+			foreach ($questions as $question) {
+				$qType = strtolower((string)$question->type);
+				if ($qType === 'country' || $qType === 'state') {
+					$needsGeoScript = true;
+					break;
+				}
+			}
+			if ($needsGeoScript) {
+				$form_content .= '<script src="/js/geography.js"></script>';
+				$form_content .= '<script src="/js/form.public.js"></script>';
+			}
 			return (string)$form_content;
+		}
+
+		private function questionLabel($question): string {
+			$label = trim((string)($question->prompt ?? ''));
+			if ($label === '') {
+				$label = trim((string)($question->text ?? ''));
+			}
+			if ($label === '') {
+				$label = 'question '.(int)$question->id;
+			}
+			return $label;
+		}
+
+		private function validPhoneAnswer(string $value): bool {
+			if (preg_match('/[^0-9+\-().\s]/', $value)) {
+				return false;
+			}
+			$digits = preg_replace('/\D/', '', $value);
+			$length = strlen((string)$digits);
+			return $length >= 7 && $length <= 15;
+		}
+
+		/** @return array<int,\Geography\Country> */
+		private function geographyCountries(): array {
+			$list = new \Geography\CountryList();
+			$countries = $list->find();
+			return is_array($countries) ? $countries : array();
+		}
+
+		/** @return array<int,\Geography\Province> */
+		private function provincesForCountryId(int $countryId): array {
+			if ($countryId < 1) {
+				return array();
+			}
+			$list = new \Geography\ProvinceList();
+			$provinces = $list->find(array('country_id' => $countryId));
+			return is_array($provinces) ? $provinces : array();
+		}
+
+		private function isKnownCountry(string $name): bool {
+			$country = new \Geography\Country();
+			return (bool)$country->get($name);
+		}
+
+		private function isKnownProvince(string $name, ?string $countryName): bool {
+			$list = new \Geography\ProvinceList();
+			$parameters = array('name' => $name);
+			if ($countryName !== null && $countryName !== '') {
+				$country = new \Geography\Country();
+				if (! $country->get($countryName) || empty($country->id)) {
+					return false;
+				}
+				$parameters['country_id'] = (int)$country->id;
+			}
+			$matches = $list->find($parameters);
+			return is_array($matches) && count($matches) > 0;
 		}
 	}

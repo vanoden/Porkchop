@@ -1,4 +1,7 @@
-<form method="post" action="ldap_test">
+<?php if (!empty($ldapResult)) { ?>
+<p class="pageMessage--error"><?=htmlspecialchars($ldapResult)?></p>
+<?php } ?>
+<form method="post" action="/_register/ldap_test">
 <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 <div class="label">Username</div>
 <input type="text" name="username" class="value" />
