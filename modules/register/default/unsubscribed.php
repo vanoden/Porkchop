@@ -1,17 +1,8 @@
-		<table>
-		    <?php	if ($GLOBALS['_page']->error) { ?>
-		    <tr><td align="center" class="form_error"><?=$GLOBALS['_page']->error?></td></tr>
-		    <?php	}
-			    else
-			    {
-		    ?>
-		    <form action="/_register/unsubscribe" method="POST">
-		        <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-		        <input type="hidden" name="unsubscribe_key" value="<?=$unsubscribe_key?>">
-		        <tr><td align="left" class="heading_2">Unsubscribe Successful</td>
-		        <tr><td align="left" class="copy_2">We will no longer send email newsletters or updates.  If you'd like to receive
-				        newsletters in the future, just <a href="/_register/login">login</a> to our site and change your account
-				        settings.  Thank You.</td></tr>
-		    </form>
-		    <?php	} ?>
-		<table>
+<section class="unsubscribe-confirm">
+<?php if (!empty($GLOBALS['_page']->error)) { ?>
+	<p class="unsubscribe-confirm__message unsubscribe-confirm__message--error"><?=htmlspecialchars($GLOBALS['_page']->error)?></p>
+<?php } else { ?>
+	<h1>Unsubscribe Successful</h1>
+	<p class="unsubscribe-confirm__message">We will no longer send email newsletters or updates. If you would like to receive newsletters in the future, just <a href="/_register/login">login</a> and change your account settings. Thank you.</p>
+<?php } ?>
+</section>

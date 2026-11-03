@@ -8,6 +8,9 @@
 		elseif (!isset($_POST['username']) || trim((string) $_POST['username']) === '' || !isset($_POST['password'])) {
 			$ldapResult = 'Username and password are required';
 		}
+		elseif (!function_exists('ldap_connect')) {
+			$ldapResult = 'LDAP is not available on this server';
+		}
 		else {
 			$LDAPServerAddress1 = "192.168.30.11";
 			$LDAPServerAddress2 = "192.168.30.12";
