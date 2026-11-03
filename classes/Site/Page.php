@@ -977,7 +977,7 @@
 				elseif ($property == "breadcrumbs") {
 					$buffer = $this->showBreadcrumbs();
 				}
-				elseif ($property == "errorblock") {
+				elseif ($property == "errorblock" or $property == "messageblock") {
 					error_log("FOUND errorblock");
 					if ($this->errorCount() > 0) {
 						$buffer = '<section id="form-message">
