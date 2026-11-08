@@ -695,7 +695,8 @@ class File extends \BaseModel {
 	}
 
 	public function inodeExists() {
-		if ($this->id && file_exists($this->path())) return true;
+		$path = $this->path();
+		if ($this->id && is_string($path) && $path !== '' && file_exists($path)) return true;
 		return false;
 	}
 

@@ -1,3 +1,4 @@
+<p><a href="/_email/admin_messages">Open the mail queue</a></p>
 <div class="tableBody">
 	<div class="tableRowHeader">
 		<div class="tableCell">Created</div>

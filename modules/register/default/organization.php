@@ -102,6 +102,11 @@
     <button type="submit" name="method" value="Apply">Submit</button>
 
     <div>
+      <h3>Partner Data Sharing</h3>
+      <p><a href="/_register/partner_requests">Request access</a> · <a href="/_register/partners">Manage partnerships and shares</a></p>
+    </div>
+
+    <div>
       <h3>Current Users</h3>
       <label for="showAllUsers">
         <input type="checkbox" id="showAllUsers" name="showAllUsers" value="showAllUsers" onclick="showHidden()" <?= (isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? 'checked' : '' ?>>SHOW ALL (Expired/Hidden/Deleted)

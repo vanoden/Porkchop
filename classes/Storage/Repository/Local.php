@@ -122,34 +122,35 @@
          * @param $path
          */
 		public function addFile($file, $path): bool {
-			if (!$this->validPath($this->_path())) {
+			$repoPath = $this->_path();
+			if (!is_string($repoPath) || $repoPath === '' || !$this->validPath($repoPath)) {
 				$this->error("Invalid path for repository");
 				return false;
 			}
-			if (! file_exists($path)) {
-				$this->error("File not found at '$path'");
+			if (!is_string($path) || $path === '' || !file_exists($path)) {
+				$this->error("File not found at '".$path."'");
 				return false;
 			}
-			if (! is_dir($this->_path())) {
+			if (! is_dir($repoPath)) {
 				$this->error("Repository path doesn't exist");
 				return false;
 			}
-			if (! is_writable($this->_path())) {
+			if (! is_writable($repoPath)) {
 				$this->error("Repository path not writable");
 				return false;
 			}
 			if (is_uploaded_file($path)) {
-				if (move_uploaded_file($path, $this->_path() . "/" . $file->code())) {
+				if (move_uploaded_file($path, $repoPath . "/" . $file->code())) {
 					return true;
 				}
 				else {
-					$this->error("Failed to move uploaded file from '$path' to '".$this->_path()."/".$file->code()."'");
+					$this->error("Failed to move uploaded file from '$path' to '".$repoPath."/".$file->code()."'");
 					return false;
 				}
 			}
 			else {
-				app_log("Moving file from '$path' to Repository location '".$this->_path()."/".$file->code()."'",'debug');
-				if (rename($path, $this->_path() . "/" . $file->code())) {
+				app_log("Moving file from '$path' to Repository location '".$repoPath."/".$file->code()."'",'debug');
+				if (rename($path, $repoPath . "/" . $file->code())) {
 					return true;
 				}
 				else {

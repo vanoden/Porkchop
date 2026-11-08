@@ -204,7 +204,7 @@
 </div>
 <?php } else { ?>
 
-<script src="https://cdn.tiny.cloud/1/owxjg74mr7ujxhw9soo7iquo7iul2mclregqovcp7ophazmn/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="<?= htmlspecialchars($GLOBALS['_config']->TinyMCEURL ?? '', ENT_QUOTES, 'UTF-8') ?>" referrerpolicy="origin"></script>
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
 		if (!window.tinymce) return;

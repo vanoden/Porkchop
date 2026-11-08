@@ -45,6 +45,9 @@
         $_config->site->support_email = 'service@CHANGEME';
         $_config->site->debug = true; // Enable debug mode to see detailed error information
 
+        # TinyMCE Cloud script URL (includes API key). Used by all admin/editor templates.
+        $_config->TinyMCEURL = 'https://cdn.tiny.cloud/1/CHANGEME/tinymce/5/tinymce.min.js';
+
         # Session Info
         $_config->session = new stdClass();
         $_config->session->cookie = 'session_code';

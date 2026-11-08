@@ -1759,6 +1759,108 @@
 				$database->CommitTrans();
 			}
 
+			if ($this->version() < 57) {
+				app_log("Upgrading Register schema to version 57 (partner data sharing)", 'notice', __FILE__, __LINE__);
+				if (!$database->BeginTrans()) {
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				}
+
+				$create_requests_query = "
+					CREATE TABLE IF NOT EXISTS `partner_requests` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`date_request` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						`user_id_request` int(11) NOT NULL,
+						`requesting_organization_id` int(11) NOT NULL,
+						`email` varchar(255) NOT NULL,
+						`token` varchar(64) NOT NULL,
+						`date_expires` datetime NOT NULL,
+						`target_user_id` int(11) DEFAULT NULL,
+						`target_organization_id` int(11) DEFAULT NULL,
+						`user_id_approve` int(11) DEFAULT NULL,
+						`status` enum('ACTIVE','APPROVED','DENIED','CANCELLED','EXPIRED') NOT NULL DEFAULT 'ACTIVE',
+						`date_response` datetime DEFAULT NULL,
+						PRIMARY KEY (`id`),
+						UNIQUE KEY `uk_partner_request_token` (`token`),
+						KEY `idx_partner_request_org_status` (`requesting_organization_id`,`status`),
+						KEY `idx_partner_request_email` (`email`),
+						CONSTRAINT `fk_partner_request_user` FOREIGN KEY (`user_id_request`) REFERENCES `register_users` (`id`),
+						CONSTRAINT `fk_partner_request_org` FOREIGN KEY (`requesting_organization_id`) REFERENCES `register_organizations` (`id`),
+						CONSTRAINT `fk_partner_request_target_user` FOREIGN KEY (`target_user_id`) REFERENCES `register_users` (`id`),
+						CONSTRAINT `fk_partner_request_target_org` FOREIGN KEY (`target_organization_id`) REFERENCES `register_organizations` (`id`),
+						CONSTRAINT `fk_partner_request_approve_user` FOREIGN KEY (`user_id_approve`) REFERENCES `register_users` (`id`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+				";
+				if (!$database->Execute($create_requests_query)) {
+					$this->SQLError("Error creating partner_requests in Register::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+
+				$create_entities_query = "
+					CREATE TABLE IF NOT EXISTS `partner_entities` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`organization_id` int(11) NOT NULL,
+						`partner_id` int(11) NOT NULL,
+						`request_id` int(11) DEFAULT NULL,
+						`date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						PRIMARY KEY (`id`),
+						UNIQUE KEY `uk_partner_entities_org_partner` (`organization_id`,`partner_id`),
+						KEY `idx_partner_entities_partner` (`partner_id`),
+						CONSTRAINT `fk_partner_entities_org` FOREIGN KEY (`organization_id`) REFERENCES `register_organizations` (`id`) ON DELETE CASCADE,
+						CONSTRAINT `fk_partner_entities_partner` FOREIGN KEY (`partner_id`) REFERENCES `register_organizations` (`id`) ON DELETE CASCADE,
+						CONSTRAINT `fk_partner_entities_request` FOREIGN KEY (`request_id`) REFERENCES `partner_requests` (`id`) ON DELETE SET NULL
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+				";
+				if (!$database->Execute($create_entities_query)) {
+					$this->SQLError("Error creating partner_entities in Register::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+
+				$create_implicit_query = "
+					CREATE TABLE IF NOT EXISTS `partner_implicit_shares` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`partnership_id` int(11) NOT NULL,
+						`resource_class` varchar(255) NOT NULL,
+						`filters` text NOT NULL,
+						`read_only` tinyint(1) NOT NULL DEFAULT 1,
+						PRIMARY KEY (`id`),
+						UNIQUE KEY `uk_partner_implicit_share` (`partnership_id`,`resource_class`,`filters`(191)),
+						CONSTRAINT `fk_partner_implicit_partnership` FOREIGN KEY (`partnership_id`) REFERENCES `partner_entities` (`id`) ON DELETE CASCADE
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+				";
+				if (!$database->Execute($create_implicit_query)) {
+					$this->SQLError("Error creating partner_implicit_shares in Register::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+
+				$create_explicit_query = "
+					CREATE TABLE IF NOT EXISTS `partner_explicit_shares` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`partnership_id` int(11) NOT NULL,
+						`resource_class` varchar(255) NOT NULL,
+						`resource_id` int(11) NOT NULL,
+						`read_only` tinyint(1) NOT NULL DEFAULT 1,
+						PRIMARY KEY (`id`),
+						UNIQUE KEY `uk_partner_explicit_share` (`partnership_id`,`resource_class`,`resource_id`),
+						CONSTRAINT `fk_partner_explicit_partnership` FOREIGN KEY (`partnership_id`) REFERENCES `partner_entities` (`id`) ON DELETE CASCADE
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+				";
+				if (!$database->Execute($create_explicit_query)) {
+					$this->SQLError("Error creating partner_explicit_shares in Register::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(57);
+				$database->CommitTrans();
+			}
+
 			return true;
 		}
 	}

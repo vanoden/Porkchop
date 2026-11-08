@@ -138,6 +138,12 @@
         "Email"			=> array(
 			"roles"			=> array(
 			),
+			"templates"		=> array(
+				"queue"				=> $admin_template,
+				"admin_messages"	=> $admin_template,
+				"admin_deliveries"	=> $admin_template,
+				"admin_attempts"	=> $admin_template,
+			),
 		),
 		"Monitor"		=> array(
 			"roles"			=> array(
@@ -441,6 +447,13 @@
 							"view_order"	=> 60,
 							"alt"			=> "Terms of Use",
 							"description"	=> "Terms of Use"
+						),
+						array (
+							"title"	=> "Email",
+							"target"	=> "/_email/admin_messages",
+							"view_order"	=> 65,
+							"alt"			=> "Email Queue",
+							"description"	=> "Queued email messages, deliveries, and attempts"
 						),
 						array (
 							"title" => "Audit Log",
