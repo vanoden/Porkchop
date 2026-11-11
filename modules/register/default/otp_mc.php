@@ -154,6 +154,11 @@ if ($can_proceed) {
 				$setResult = $GLOBALS['_SESSION_']->setOTPVerified(true);
 				app_log("setOTPVerified result: " . ($setResult ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
 
+				// Remember where they were going before this field is cleared.
+				$target = $GLOBALS['_SESSION_']->otpReturnTarget((string)($GLOBALS['_SESSION_']->refer_url ?? ''));
+				if ($target === '') $target = $GLOBALS['_SESSION_']->otpReturnTarget((string)($_REQUEST['target'] ?? ''));
+				if ($target === '') $target = '/_register/account';
+
 				// Clear the refer_url to allow access to the target page
 				app_log("Clearing refer_url", 'debug', __FILE__, __LINE__, 'otplogs');
 				$updateResult = $GLOBALS['_SESSION_']->update(array('refer_url' => null));
@@ -164,8 +169,6 @@ if ($can_proceed) {
 				$auditResult = $customer->auditRecord('OTP_VERIFIED', 'OTP code verified successfully');
 				app_log("Audit result: " . ($auditResult ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
 				
-				// Redirect to target or default page
-				$target = $GLOBALS['_SESSION_']->refer_url ?? '/_register/account';
 				app_log("Redirecting to: " . $target, 'debug', __FILE__, __LINE__, 'otplogs');
 				header("Location: " . $target);
 				exit;
@@ -187,9 +190,13 @@ if ($can_proceed) {
 	// Save the target URL in the session if a new one is provided
 	$target = $_REQUEST['target'] ?? null;
 	if (isset($target) && !empty($target)) {
+		$target = $GLOBALS['_SESSION_']->otpReturnTarget($target);
 		// Validate the target URL to prevent potential security issues
 		// Allow query parameters and common URL-safe characters
-		if (!filter_var($target, FILTER_VALIDATE_URL) && !preg_match('/^\/[a-zA-Z0-9\/_\-]*(\?[a-zA-Z0-9\/_\-=&]*)?$/', $target)) {
+		if ($target === '') {
+			// Logout, login, and this code page are not places to return to.
+		}
+		elseif (!filter_var($target, FILTER_VALIDATE_URL) && !preg_match('/^\/[a-zA-Z0-9\/_\-]*(\?[a-zA-Z0-9\/_\-=&]*)?$/', $target)) {
 			$page->addError("Invalid target URL format");
 		}
 		else {

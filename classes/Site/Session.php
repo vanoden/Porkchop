@@ -952,14 +952,18 @@ use Register\Customer;
 			app_log("Current URI: " . $_SERVER['REQUEST_URI'], 'trace', __FILE__, __LINE__, 'otplogs');
 			
 			if ($configuration->getValueBool("use_otp") && isset($this->customer->id) && $this->customer?->requiresOTP() && $this->customer->id > 0 && $this->getOTPVerified() === false) {
-				// If OTP is required and not verified, redirect to OTP page
-				// But don't redirect if we're already on the OTP page to prevent loops
-				if (!preg_match('/\/_register\/otp/', $_SERVER['REQUEST_URI'])) {
+				// These pages have to work before the code is entered. Logout in particular
+				// must not be sent back here, or target=/_register/logout refreshes forever.
+				if (!$this->requestSkipsOtpGate()) {
 					app_log("Customer logged in but OTP not verified, redirecting to OTP page",'trace',__FILE__,__LINE__, 'otplogs');
-					header("Location: /_register/otp?target=".urlencode($_SERVER['REQUEST_URI']));
+					$returnTo = $_SERVER['REQUEST_URI'] ?? '/';
+					if ($this->otpReturnTarget($returnTo) === '') $returnTo = '';
+					$location = '/_register/otp';
+					if ($returnTo !== '') $location .= '?target='.urlencode($returnTo);
+					header("Location: ".$location);
 					exit;
 				} else {
-					app_log("Already on OTP page, not redirecting to prevent loop",'trace',__FILE__,__LINE__, 'otplogs');
+					app_log("OTP not verified, allowing ".$this->requestPath(),'trace',__FILE__,__LINE__, 'otplogs');
 				}
 			}
 			if (isset($this->customer->id) && $this->customer->id > 0) {
@@ -969,6 +973,24 @@ use Register\Customer;
 				app_log("User Not Yet Authenticated - no customer ID", 'trace', __FILE__, __LINE__, 'otplogs');
 				return false;
 			}
+		}
+
+		/** Pages a signed-in user can open before the authenticator code is accepted. */
+		private function requestSkipsOtpGate(): bool {
+			return (bool) preg_match('#^/_register/(otp|otp_recovery_sent|backup_code|recover_otp|reset_otp|logout)(/|$)#', $this->requestPath());
+		}
+
+		/** Drop return URLs that would send the browser back through login, logout, or the code page. */
+		public function otpReturnTarget(string $target): string {
+			$path = parse_url($target, PHP_URL_PATH);
+			if (!is_string($path) || $path === '') $path = $target;
+			if (preg_match('#^/_register/(otp|otp_recovery_sent|backup_code|recover_otp|reset_otp|logout|login)(/|$)#', $path)) return '';
+			return $target;
+		}
+
+		private function requestPath(): string {
+			$path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+			return is_string($path) ? $path : '';
 		}
 
 		/** @method isUser(user_id)
