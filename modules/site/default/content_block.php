@@ -1,5 +1,5 @@
 <?php /* TinyMCE: If you see "invalid-origin" or read-only editors, add this site's domain (e.g. https://yoursite.com) in Tiny Cloud dashboard under Domain registration. Use HTTPS in production. */ ?>
-<script src="<?=$GLOBALS['_config']->TinyMCEURL?>" referrerpolicy="origin"></script>
+<script src="<?= htmlspecialchars((string)($GLOBALS['_config']->TinyMCEURL ?? ''), ENT_QUOTES, 'UTF-8') ?>" referrerpolicy="origin"></script>
 <script>
 	tinymce.init({
 		selector: '#content',
@@ -45,6 +45,9 @@
 		<div class="form-actions filter-bar">
 			<div class="button-group filter-bar__actions">
 				<button type="submit" class="button" name="updateSubmit" id="updateSubmit" value="Update">Update</button>
+<?php	if (!empty($message->id)) { ?>
+				<button type="submit" class="button secondary" name="deleteSubmit" value="Delete" onclick="return confirm('Delete this content block?');">Delete</button>
+<?php	} ?>
 			</div>
 		</div>
 	</div>

@@ -30,6 +30,11 @@
 			<a href="/_content/<?=$message->target?>">View</a>
 <?php		if ($GLOBALS['_SESSION_']->customer->has_privilege('edit content messages')) { ?>
 			<a href="/_site/content_block/<?=$message->target?>">Edit</a>
+			<form method="post" action="/_site/content_block/<?=htmlspecialchars($message->target)?>" style="display:inline" onsubmit="return confirm('Delete this content block?');">
+				<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+				<input type="hidden" name="id" value="<?=(int)$message->id?>">
+				<button type="submit" name="deleteSubmit" value="Delete">Delete</button>
+			</form>
 <?php		} ?>
 		</div>
 	</div>

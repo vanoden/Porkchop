@@ -25,7 +25,7 @@
 			$get_contents_query = "
 				SELECT	id
 				FROM	content_messages
-				WHERE	id = id";
+				WHERE	deleted = 0";
 
 			if (isset($parameters['target']) && strlen($parameters['target']))
 				$get_contents_query .= "

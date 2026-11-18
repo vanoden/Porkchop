@@ -29,6 +29,22 @@
 	}
 	$show_add_page = false;
 
+	if (!empty($_REQUEST['deleteSubmit'])) {
+		if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) {
+			$page->addError("Invalid Request");
+		}
+		elseif (empty($message->id)) {
+			$page->addError("Content block not found");
+		}
+		elseif (!$message->delete()) {
+			$page->addError("Cannot delete block: " . $message->error());
+		}
+		else {
+			header("Location: /_site/content_blocks");
+			exit;
+		}
+	}
+
 	// handle page submit
 	if (isset($_REQUEST['updateSubmit'])) {
 		if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {

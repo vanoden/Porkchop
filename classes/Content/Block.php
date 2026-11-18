@@ -133,6 +133,19 @@
 			return $this->update($parameters);
 		}
 
+		public function delete(): bool {
+			$this->clearError();
+			if (! $this->id) {
+				$this->error("id parameter required to delete content");
+				return false;
+			}
+			if (! $this->update(array('deleted' => 1))) {
+				return false;
+			}
+			$this->recordAuditEvent($this->id, 'Deleted content message');
+			return true;
+		}
+
         public function update($parameters = []): bool {
 			// Clear any existing errors and cache
 			$this->clearError();
@@ -156,6 +169,7 @@
 				"name"		=> "name",
 				"content"	=> "content",
 				"title"		=> "title",
+				"deleted"	=> "deleted",
 			);
 
 			// Prepare Update Query
