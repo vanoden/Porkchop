@@ -73,6 +73,8 @@
 					'description' => ($sourceVersion && $sourceVersion->exists()) ? (string)$sourceVersion->description : '',
 					'instructions' => ($sourceVersion && $sourceVersion->exists()) ? (string)$sourceVersion->instructions : '',
 					'require_captcha' => ($sourceVersion && $sourceVersion->exists()) ? (int)$sourceVersion->require_captcha : 0,
+					'send_email' => ($sourceVersion && $sourceVersion->exists()) ? (int)$sourceVersion->send_email : 0,
+					'notify_email' => ($sourceVersion && $sourceVersion->exists()) ? (string)$sourceVersion->notify_email : '',
 				);
 				if (! $version->add($newVersionParams)) {
 					$page->addError("Error creating new version: " . $version->error());
@@ -372,6 +374,10 @@
 				$versionCode = $porkchop->biguuid();
 			}
 		}
+		$notifyEmail = trim((string)($_POST['notify_email'] ?? ''));
+		if (! empty($_POST['send_email']) && $notifyEmail !== '' && ! filter_var($notifyEmail, FILTER_VALIDATE_EMAIL)) {
+			$page->addError("Submission email address is not valid");
+		}
 		$parameters = array(
 			'code' => $versionCode,
 			'name' => $_POST['name'] ?? '',
@@ -380,6 +386,8 @@
 			'description' => $_POST['description'] ?? '',
 			'instructions' => $_POST['instructions'] ?? '',
 			'require_captcha' => ! empty($_POST['require_captcha']) ? 1 : 0,
+			'send_email' => ! empty($_POST['send_email']) ? 1 : 0,
+			'notify_email' => trim((string)($_POST['notify_email'] ?? '')),
 		);
 		if (! $page->errorCount()) {
 			if (! $version->exists()) {

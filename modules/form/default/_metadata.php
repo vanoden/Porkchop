@@ -1,6 +1,6 @@
 <?php
 	$modules['Form'] = array(
-		"schema"    => 2,
+		"schema"    => 3,
 		"privileges"	=> array(
 			"manage forms"
 		),

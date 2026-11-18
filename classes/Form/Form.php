@@ -342,6 +342,7 @@
 			}
 			$out['success'] = true;
 			$out['submission'] = $sub;
+			$this->emailSubmission($version, $normalized);
 			return $out;
 		}
 
@@ -686,6 +687,54 @@
 				$form_content .= '<script src="/js/form.public.js"></script>';
 			}
 			return (string)$form_content;
+		}
+
+		private function emailSubmission(Version $version, array $normalized): void {
+			if (empty($version->send_email)) {
+				return;
+			}
+			$to = trim((string)($version->notify_email ?? ''));
+			if ($to === '' || ! filter_var($to, FILTER_VALIDATE_EMAIL)) {
+				app_log("Form ".$this->code." is set to email submissions but notify_email is empty", 'notice', __FILE__, __LINE__);
+				return;
+			}
+			$lines = array("Form: ".$this->title, "Version: ".$version->name, "");
+			foreach ($version->questions() as $question) {
+				$qType = strtolower((string)$question->type);
+				if ($qType === 'submit' || $qType === 'hidden') {
+					continue;
+				}
+				$value = $normalized[$question->id] ?? '';
+				if (is_array($value)) {
+					$value = implode(', ', $value);
+				}
+				$lines[] = $this->questionLabel($question).': '.$value;
+			}
+			$message = new \Email\Message();
+			$message->to($to);
+			$from = (string)($GLOBALS['_config']->site->support_email ?? '');
+			if ($from !== '') {
+				$message->from($from);
+			}
+			$message->subject('Form submission: '.$this->title);
+			$message->body(implode("\n", $lines));
+			try {
+				$transportFactory = new \Email\Transport();
+				$transport = $transportFactory->Create(array(
+					'provider' => $GLOBALS['_config']->email->provider ?? '',
+				));
+				if (! isset($transport)) {
+					app_log("Form submission stored but email transport is not configured", 'error', __FILE__, __LINE__);
+					return;
+				}
+				$transport->hostname($GLOBALS['_config']->email->hostname ?? '');
+				$transport->token($GLOBALS['_config']->email->token ?? '');
+				if (! $transport->deliver($message)) {
+					app_log("Form submission stored but email failed: ".$transport->error(), 'error', __FILE__, __LINE__);
+				}
+			} catch (\Throwable $e) {
+				app_log("Form submission stored but email failed: ".$e->getMessage(), 'error', __FILE__, __LINE__);
+			}
 		}
 
 		private function questionLabel($question): string {

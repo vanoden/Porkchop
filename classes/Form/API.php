@@ -770,6 +770,8 @@
 				'description' => $src->description,
 				'instructions' => $src->instructions,
 				'require_captcha' => (int)$src->require_captcha,
+				'send_email' => (int)$src->send_email,
+				'notify_email' => (string)$src->notify_email,
 			))) {
 				$this->error($nv->error() ?: "Could not create version");
 			}

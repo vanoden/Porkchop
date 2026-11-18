@@ -11,6 +11,8 @@
 		public $description;			// Description of this version, why was it created?
 		public $instructions;			// Instructions for this version, used for display purposes
 		public $require_captcha = 0;	// When 1, public and preview submissions must pass reCAPTCHA
+		public $send_email = 0;			// When 1, email the submission in addition to storing it
+		public $notify_email = '';		// Address that receives the submission email
 		public $user_id_activated;		// ID of user that activated this version
 		public $date_activated;			// Date this version was activated, if a newer active one exists, this one is inactive
 

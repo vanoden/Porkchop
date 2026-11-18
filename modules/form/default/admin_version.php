@@ -204,7 +204,7 @@
 </div>
 <?php } else { ?>
 
-<script src="https://cdn.tiny.cloud/1/owxjg74mr7ujxhw9soo7iquo7iul2mclregqovcp7ophazmn/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="<?= htmlspecialchars((string)($GLOBALS['_config']->TinyMCEURL ?? ''), ENT_QUOTES, 'UTF-8') ?>" referrerpolicy="origin"></script>
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
 		if (!window.tinymce) return;
@@ -264,6 +264,17 @@
 	?> />
 	Require CAPTCHA
 </label>
+<label class="formSendEmail" style="display:block;margin:.75em 0">
+	<input type="checkbox" name="send_email" value="1"<?php
+		$sendEmailOn = $hasErrors
+			? ! empty($_POST['send_email'])
+			: ! empty($version->send_email);
+		if ($sendEmailOn) print ' checked';
+	?> />
+	Also email this submission
+</label>
+<label for="notify_email" style="display:block;margin:.35em 0">Send submissions to</label>
+<input type="email" id="notify_email" name="notify_email" value="<?= $h($postScalar('notify_email', $version->notify_email ?? '')) ?>" placeholder="name@example.com" />
 </div>
 
 <h3>Groups</h3>

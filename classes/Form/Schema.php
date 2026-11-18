@@ -178,6 +178,22 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
+			if ($this->version() < 3) {
+				app_log("Upgrading ".$this->module." schema to version 3",'notice',__FILE__,__LINE__);
+
+				$add_send_email = "
+					ALTER TABLE `form_versions`
+					ADD COLUMN `send_email` tinyint NOT NULL DEFAULT 0,
+					ADD COLUMN `notify_email` varchar(255) NOT NULL DEFAULT ''
+				";
+				if (! $this->executeSQL($add_send_email)) {
+					return false;
+				}
+
+				$this->setVersion(3);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}
