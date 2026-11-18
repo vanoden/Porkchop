@@ -431,7 +431,9 @@ use Register\Customer;
 					if (isset($foundObject->otpVerified)) $this->otpVerified = $foundObject->otpVerified;
 					if (isset($foundObject->isMobile)) $this->isMobile = $foundObject->isMobile;
 					if (empty($foundObject->csrfToken)) {
-						$foundObject->csrfToken = $this->generateCSRFToken();
+						$cachedToken = $cache->getElement('csrfToken');
+						$foundObject->csrfToken = !empty($cachedToken) ? $cachedToken : $this->generateCSRFToken();
+						$cache->setElement('csrfToken', $foundObject->csrfToken);
 						$cache->set($foundObject,600);
 					}
 					$this->csrfToken = $foundObject->csrfToken;
@@ -1150,17 +1152,34 @@ use Register\Customer;
 		 */
 		public function getCSRFToken() {
 			if (empty($this->csrfToken)) {
-				$this->csrfToken = $this->generateCSRFToken();
-				// cache() is null until the session has an id; verifyCSRFToken() already
-				// tolerates an uncached token, so skip caching instead of failing the page.
 				$cache = $this->cache();
-				if (empty($cache)) {
-					app_log("No cache available to store CSRF token for session " . $this->id, 'debug');
-				} else {
-					$cache->setElement('csrfToken', $this->csrfToken);
+				if ($cache && ! $cache->error()) {
+					$cachedToken = $cache->getElement('csrfToken');
+					if (! empty($cachedToken)) {
+						$this->csrfToken = $cachedToken;
+					}
 				}
 			}
+			if (empty($this->csrfToken)) {
+				$this->csrfToken = $this->generateCSRFToken();
+			}
+			$this->persistCSRFToken();
 			return $this->csrfToken;
+		}
+
+		private function persistCSRFToken(): void {
+			if (empty($this->csrfToken)) return;
+			$cache = $this->cache();
+			if (empty($cache) || $cache->error()) {
+				app_log("No cache available to store CSRF token for session " . $this->id, 'debug');
+				return;
+			}
+			$cache->setElement('csrfToken', $this->csrfToken);
+			$cachedObject = $cache->get();
+			if (is_object($cachedObject) && (($cachedObject->csrfToken ?? '') !== $this->csrfToken)) {
+				$cachedObject->csrfToken = $this->csrfToken;
+				$cache->set($cachedObject, 3600);
+			}
 		}
 
 		/** @method setOTPVerified(verified)

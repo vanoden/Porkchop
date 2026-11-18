@@ -25,7 +25,7 @@
 		<ul id="register_form" class="section-grid grid-col-4">
 			<li class="form-field">
 				<label for="login">Login</label>
-				<input type="text" id="login" name="login" autofocus/>
+				<input type="text" id="login" name="login" value="<?= htmlspecialchars((string)($_REQUEST['login'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" autofocus/>
 			</li>
 			<li class="form-field">
 				<label for="password">Password</label>
