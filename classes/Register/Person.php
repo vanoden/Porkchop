@@ -688,6 +688,7 @@ class Person Extends \BaseModel {
      * @return bool True if password has expired
      */
 	public function password_expired() {
+		if (empty($this->password_age)) return false;
 		if (isset($this->organization()->password_expiration_days) && !empty($this->organization()->password_expiration_days)) {
 			$passwordAllowedAgeSeconds = $this->organization()->password_expiration_days * 86400;
 			$passwordAgeSeconds = time() - $this->password_age;

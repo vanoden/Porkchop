@@ -848,9 +848,18 @@
 			// Best-effort queue + admin notification — must not fail the user-facing verification
 			try {
 				$queuedCustomer = new \Register\Queue();
-				$queuedCustomer->getByQueuedLogin($customer->id);
-				if (!empty($queuedCustomer->status) && $queuedCustomer->status == "VERIFYING") {
-					$queuedCustomer->update(array('status'=>'PENDING'));
+				if ($queuedCustomer->getByQueuedLogin($customer->id)) {
+					$queueStatus = strtoupper(trim((string)($queuedCustomer->status ?? '')));
+					if ($queueStatus === '' || $queueStatus === 'VERIFYING') {
+						if (! $queuedCustomer->update(array('status'=>'PENDING'))) {
+							app_log("Verified customer ".$customer->id." but the registration queue was not moved to PENDING: ".$queuedCustomer->error(), 'error', __FILE__, __LINE__);
+						}
+					}
+				} else {
+					app_log("Verified customer ".$customer->id." but no registration queue row was found", 'error', __FILE__, __LINE__);
+				}
+				if (! $customer->isActive() && $customer->status !== 'BLOCKED' && $customer->status !== 'EXPIRED') {
+					$customer->update(array('status' => 'NEW'));
 				}
 
 				if ($verified_now && isset($GLOBALS['_config']->register->registration_notification)) {

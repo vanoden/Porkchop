@@ -369,9 +369,9 @@
 			$add_object_query = "
 				INSERT
 				INTO	register_queue
-					(name, code, date_created, is_reseller, assigned_reseller_id, address, city, state, zip, product_id, serial_number, register_user_id)
+					(name, code, date_created, status, is_reseller, assigned_reseller_id, address, city, state, zip, product_id, serial_number, register_user_id)
 				VALUES
-					(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+					(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 					";
 
 			// zero out empty values for int DB fields
@@ -386,6 +386,7 @@
 					$parameters['name'],
 					$parameters['code'],
 					$date_created,
+					'VERIFYING',
 					$parameters['is_reseller'],
 					$parameters['assigned_reseller_id'],
 					$parameters['address'],
