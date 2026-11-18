@@ -204,9 +204,9 @@
 						else {
 							$failures = (int) $customer->auth_failures();
 							$remaining = $max_auth_failures_before_block - $failures;
-							$page->addError("Authentication Failed");
-							if ($remaining > 0) {
-								$page->addError($remaining." attempt".($remaining === 1 ? '' : 's')." remaining before your account is locked");
+							$page->addError("Sign-in failed.");
+							if ($failures >= 3 && $remaining > 0) {
+								$page->addError($remaining." attempt".($remaining === 1 ? '' : 's')." left before the account is locked.");
 							}
 							if ($captcha_configured && ($customer->status == 'EXPIRED' || $failures >= $captcha_after_failures)) {
 								$CAPTCHA_GO = true;
