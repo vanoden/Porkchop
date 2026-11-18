@@ -167,9 +167,9 @@
     <input type="hidden" name="method" value="register">
 
     <?php	if ($page->errorCount()) { ?>
-      <section id="form-message">
+      <div id="form-message">
         <ul class="connectBorder errorText"><li><?=$page->errorString()?></li></ul>
-      </section>
+      </div>
     <?php	} ?>
 
     <h2>Company/Organization Name:</h2>
