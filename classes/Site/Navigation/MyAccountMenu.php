@@ -23,11 +23,16 @@
 			}
 			$target = (string) ($item->target ?? '');
 			$title = (string) ($item->title ?? '');
-			if (strcasecmp($title, 'Administration') === 0 || strpos($target, '/admin_home') !== false) {
+			$titleKey = strtolower($title);
+			$targetKey = strtolower($target);
+			if (strpos($titleKey, 'administration') !== false || strpos($targetKey, 'admin_home') !== false) {
 				if (!$loggedIn || !$customer->has_role('administrator')) return false;
 			}
-			if (strcasecmp($title, 'Calibration Verification') === 0 || strpos($target, 'calibration_verification') !== false) {
-				if (!$loggedIn || !$customer->has_role('calibrator')) return false;
+			if (strpos($titleKey, 'calibration') !== false || strpos($targetKey, 'calibration_verification') !== false) {
+				$canCalibrate = $customer->has_role('calibrator')
+					|| $customer->can('calibrate devices', \Register\PrivilegeLevel::CUSTOMER)
+					|| $customer->can('calibrate monitors', \Register\PrivilegeLevel::CUSTOMER);
+				if (!$loggedIn || !$canCalibrate) return false;
 			}
 			return true;
 		}
